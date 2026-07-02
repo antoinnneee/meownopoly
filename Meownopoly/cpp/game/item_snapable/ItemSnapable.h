@@ -15,6 +15,7 @@
 #include "decorationparameter.h"
 #include "ZoneParameter.h"
 #include "npcparameter.h"
+#include "enemyparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -26,6 +27,7 @@ class ItemSnapable : public QObject
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
     Q_PROPERTY(ZoneParameter * zoneParameter READ zoneParameter WRITE setZoneParameter NOTIFY zoneParameterChanged FINAL)
     Q_PROPERTY(NPCParameter * npcParameter READ npcParameter WRITE setNpcParameter NOTIFY npcParameterChanged FINAL)
+    Q_PROPERTY(EnemyParameter * enemyParameter READ enemyParameter WRITE setEnemyParameter NOTIFY enemyParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
 
@@ -43,7 +45,8 @@ public:
         CaseTile,
         DecorationTile,
         PhysicZoneTile,
-        NPCTile,        // toute nouvelle valeur DOIT rester la plus haute
+        NPCTile,
+        EnemyTile,      // toute nouvelle valeur DOIT rester la plus haute
                         // (borne de validation du ctor JSON)
     };
     Q_ENUM(TileType)
@@ -58,6 +61,8 @@ public:
     void setZoneParameter(ZoneParameter * zoneParameter);
     NPCParameter * npcParameter() const;
     void setNpcParameter(NPCParameter * npcParameter);
+    EnemyParameter * enemyParameter() const;
+    void setEnemyParameter(EnemyParameter * enemyParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
     void applyJson(const QJsonObject &json);
@@ -121,6 +126,11 @@ public:
                 if (!(*m_decorationParameter == *other.m_decorationParameter))
                     return false;
             break;
+        case EnemyTile:
+            if (m_enemyParameter && other.m_enemyParameter)
+                if (!(*m_enemyParameter == *other.m_enemyParameter))
+                    return false;
+            break;
         case CaseTile:
             if (m_caseData && other.m_caseData)
                 if (m_caseData->toJSON() != other.m_caseData->toJSON())
@@ -144,6 +154,7 @@ signals:
     void decorationParameterChanged();
     void zoneParameterChanged();
     void npcParameterChanged();
+    void enemyParameterChanged();
 
     void uniqueIdChanged();
 
@@ -155,6 +166,7 @@ private :
     DecorationParameter * m_decorationParameter = new DecorationParameter;
     ZoneParameter * m_zoneParameter = new ZoneParameter;
     NPCParameter * m_npcParameter = new NPCParameter;
+    EnemyParameter * m_enemyParameter = new EnemyParameter;
     QJsonObject m_json;
     QString m_lastKnownJson;
     QUuid m_uniqueId;

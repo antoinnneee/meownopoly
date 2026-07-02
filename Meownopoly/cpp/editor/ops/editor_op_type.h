@@ -44,6 +44,9 @@ enum Value : quint8 {
 
     // PNJ (NPCTile) — édition du NPCParameter (nom, lignes, trigger).
     SetNpcParameter         = 17,  // target: uuid, fields: {...}
+
+    // Ennemi (EnemyTile) — édition du EnemyParameter (stats de combat).
+    SetEnemyParameter       = 18,  // target: uuid, fields: {...}
 };
 Q_ENUM_NS(Value)
 

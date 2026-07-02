@@ -14,6 +14,7 @@ SnapableDecoration 1.0 snapable/SnapableDecoration.qml
 SnapableExclusionZone 1.0 snapable/SnapableExclusionZone.qml
 SnapableCaseTile 1.0 snapable/SnapableCaseTile.qml
 SnapableNPC 1.0 snapable/SnapableNPC.qml
+SnapableEnemy 1.0 snapable/SnapableEnemy.qml
 AssetPreviewCursor 1.0 preview/AssetPreviewCursor.qml
 LinkPreviewCursor 1.0 preview/LinkPreviewCursor.qml
 PolygonPreviewCursor 1.0 preview/PolygonPreviewCursor.qml

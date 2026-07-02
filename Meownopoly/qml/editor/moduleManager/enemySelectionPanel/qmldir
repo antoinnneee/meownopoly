@@ -1,0 +1,3 @@
+module enemySelectionPanel
+Enemy_Content 1.0 Enemy_Content.qml
+EnemyPanel 1.0 EnemyPanel.qml

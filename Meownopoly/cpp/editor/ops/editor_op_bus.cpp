@@ -293,6 +293,16 @@ QJsonObject EditorOpBus::makeSetNpcParameterOp(const QString &uuid,
     };
 }
 
+QJsonObject EditorOpBus::makeSetEnemyParameterOp(const QString &uuid,
+                                                 const QJsonObject &fields) const
+{
+    return QJsonObject{
+        { "op",     static_cast<int>(EditorOpType::SetEnemyParameter) },
+        { "target", uuid },
+        { "fields", fields },
+    };
+}
+
 // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────────
 
 void EditorOpBus::submitFromDelta(int type,

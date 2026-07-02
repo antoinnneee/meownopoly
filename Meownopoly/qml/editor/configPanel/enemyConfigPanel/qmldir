@@ -1,0 +1,4 @@
+module enemyConfigPanel
+EnemyConfigurationPanelSection 1.0 EnemyConfigurationPanelSection.qml
+ECP_IdentitySection 1.0 ECP_IdentitySection.qml
+ECP_CombatSection 1.0 ECP_CombatSection.qml

@@ -14,3 +14,7 @@ NPCDialogueController 1.0 NPCDialogueController.qml
 NPCDialogueOverlay 1.0 NPCDialogueOverlay.qml
 DialogueBox 1.0 DialogueBox.qml
 NPCSpawner 1.0 NPCSpawner.qml
+EnemySpawner 1.0 EnemySpawner.qml
+CombatController 1.0 CombatController.qml
+EnemyHealthOverlay 1.0 EnemyHealthOverlay.qml
+PlayerHealthHud 1.0 PlayerHealthHud.qml

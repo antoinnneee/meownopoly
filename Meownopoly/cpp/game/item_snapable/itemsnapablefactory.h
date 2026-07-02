@@ -21,6 +21,7 @@ public:
     Q_INVOKABLE ItemSnapable *createItemSnapableFromJson(const QJsonObject &json);
     Q_INVOKABLE ItemSnapable *createPhysicZone();
     Q_INVOKABLE ItemSnapable *createNPC();
+    Q_INVOKABLE ItemSnapable *createEnemy();
 
     /// Demande la création d'un item depuis C++ ou QML.
     /// Émet createItemRequested(jsonData) que l'éditeur QML intercepte.

@@ -51,6 +51,7 @@ Item {
         { "id": "deco",     "label": "Déco",     "icon": "🌳" },
         { "id": "zone",     "label": "Zone",       "icon": "🟥" },
         { "id": "npc",      "label": "PNJ",        "icon": "🎭" },
+        { "id": "enemy",    "label": "Ennemis",    "icon": "👹" },
         { "id": "template", "label": "Template",   "icon": "🧩" },
         { "id": "player",   "label": "Joueur",     "icon": "🐱" },
         { "id": "config",   "label": "Config",     "icon": "⚙️" },

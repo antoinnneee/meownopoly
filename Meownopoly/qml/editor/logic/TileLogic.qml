@@ -26,7 +26,21 @@ QtObject {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)
         gridY = gridY - Math.trunc(currentElementHeight/2)
-        if (logic.npcPoseArmed) {        // place PNJ
+        if (logic.enemyPoseArmed) {      // place ennemi
+            const ecfg = logic.enemyPoseConfig || ({})
+            snapableParameters = ItemSnapableFactory.createEnemy()
+            snapableParameters.enemyParameter.enemyName = ecfg.enemyName || ""
+            snapableParameters.enemyParameter.modelName = ecfg.modelName || ""
+            if (ecfg.maxHp !== undefined) snapableParameters.enemyParameter.maxHp = ecfg.maxHp
+            if (ecfg.attackDamage !== undefined) snapableParameters.enemyParameter.attackDamage = ecfg.attackDamage
+            if (ecfg.attackRange !== undefined) snapableParameters.enemyParameter.attackRange = ecfg.attackRange
+            if (ecfg.attackCooldownMs !== undefined) snapableParameters.enemyParameter.attackCooldownMs = ecfg.attackCooldownMs
+            if (ecfg.aggroRange !== undefined) snapableParameters.enemyParameter.aggroRange = ecfg.aggroRange
+            if (ecfg.moveSpeed !== undefined) snapableParameters.enemyParameter.moveSpeed = ecfg.moveSpeed
+            if (ecfg.respawnEnabled !== undefined) snapableParameters.enemyParameter.respawnEnabled = ecfg.respawnEnabled
+            if (ecfg.respawnDelayMs !== undefined) snapableParameters.enemyParameter.respawnDelayMs = ecfg.respawnDelayMs
+        }
+        else if (logic.npcPoseArmed) {   // place PNJ
             const cfg = logic.npcPoseConfig || ({})
             snapableParameters = ItemSnapableFactory.createNPC()
             snapableParameters.npcParameter.npcName = cfg.npcName || ""
@@ -56,7 +70,7 @@ QtObject {
         // Lamport tick — zOrder unique monotone + jitter sub-1.0 par peer
         // pour désambigüer les ticks concurrents en collab.
         snapableParameters.displayParameter.zOrder = Game.tickLamport()
-        if (!logic.npcPoseArmed) {
+        if (!logic.npcPoseArmed && !logic.enemyPoseArmed) {
             snapableParameters.decorationParameter.decorationCategory = logic.currentSelectedAssetCategory
             snapableParameters.decorationParameter.decorationType = logic.currentSelectedAssetType
             snapableParameters.decorationParameter.decorationId = logic.currentSelectedAssetId
@@ -122,6 +136,8 @@ QtObject {
             tileComponent = dynamicComponent.snapablePhysicZoneComponent
         } else if (itemSnapableData.tileType === ItemSnapable.NPCTile) {
             tileComponent = dynamicComponent.snapableNPCComponent
+        } else if (itemSnapableData.tileType === ItemSnapable.EnemyTile) {
+            tileComponent = dynamicComponent.snapableEnemyComponent
         }
         var newTile = tileComponent ? tileComponent.createObject(workArea, {
             "generalMA": mainMa,

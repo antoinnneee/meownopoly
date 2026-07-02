@@ -23,6 +23,8 @@ ItemSnapable::~ItemSnapable() {
         delete m_zoneParameter;
     if (m_npcParameter)
         delete m_npcParameter;
+    if (m_enemyParameter)
+        delete m_enemyParameter;
 }
 
 void ItemSnapable::registerQml()
@@ -33,6 +35,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
     qmlRegisterType<ZoneParameter>("ZoneParameter", 1, 0, "ZoneParameter"); // Register ZoneParameter class
     qmlRegisterType<NPCParameter>("NPCParameter", 1, 0, "NPCParameter"); // Register NPCParameter class
+    qmlRegisterType<EnemyParameter>("EnemyParameter", 1, 0, "EnemyParameter"); // Register EnemyParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -61,7 +64,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 
     // Valider et parser le tileType
     int rawTileType = m_json["tileType"].toInt(-1);
-    if (rawTileType < CaseTile || rawTileType > NPCTile) {
+    if (rawTileType < CaseTile || rawTileType > EnemyTile) {
         qWarning() << "ITEM_SNAPABLE: tileType invalide:" << rawTileType
                     << "pour la tile" << m_json["uniqueId"].toString() << "- défaut à DecorationTile";
         m_tileType = DecorationTile;
@@ -118,6 +121,13 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
             m_npcParameter = new NPCParameter(m_json["npcParameter"].toObject(), this);
         } else {
             qWarning() << "ITEM_SNAPABLE: 'npcParameter' invalide pour tile" << m_uniqueId.toString();
+        }
+    }
+    if (m_json.contains("enemyParameter")) {
+        if (m_json["enemyParameter"].isObject()) {
+            m_enemyParameter = new EnemyParameter(m_json["enemyParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'enemyParameter' invalide pour tile" << m_uniqueId.toString();
         }
     }
     commitCurrentState();
@@ -192,6 +202,16 @@ void ItemSnapable::setNpcParameter(NPCParameter * npcParameter) {
     m_npcParameter = npcParameter; emit npcParameterChanged();
 }
 
+EnemyParameter *ItemSnapable::enemyParameter() const {
+    return m_enemyParameter;
+}
+
+void ItemSnapable::setEnemyParameter(EnemyParameter * enemyParameter) {
+    if (m_enemyParameter)
+        delete m_enemyParameter;
+    m_enemyParameter = enemyParameter; emit enemyParameterChanged();
+}
+
 QString ItemSnapable::toJSON()
 {
     QString json;
@@ -211,6 +231,11 @@ QString ItemSnapable::toJSON()
         // toJSON() de NPCParameter est déjà un objet JSON valide (échappement
         // via QJsonDocument), la concat reste sûre ici.
         json += "    \"npcParameter\": " + m_npcParameter->toJSON() + ",\n";
+    }
+    if (m_enemyParameter != nullptr && m_tileType == EnemyTile) {
+        // toJSON() de EnemyParameter est déjà un objet JSON valide (échappement
+        // via QJsonDocument), la concat reste sûre ici.
+        json += "    \"enemyParameter\": " + m_enemyParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
@@ -348,6 +373,9 @@ void ItemSnapable::applyJson(const QJsonObject &json)
 
     if (json.contains("npcParameter"))
         m_npcParameter->applyJson(json["npcParameter"].toObject());
+
+    if (json.contains("enemyParameter"))
+        m_enemyParameter->applyJson(json["enemyParameter"].toObject());
 
     // NB: uniqueId jamais override (identité de la tile) ;
     // next/prev gérés par Map::rewireLinks après applyJson.

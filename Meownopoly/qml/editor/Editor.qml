@@ -40,6 +40,7 @@ import playerConfigPanel 1.0
 import playerPanel
 import zonePanel
 import npcSelectionPanel
+import enemySelectionPanel
 import templatePanel
 import assetSelectionPanel
 import caseSelectionPanel
@@ -62,7 +63,7 @@ Base_Board {
     // Hauteur du panneau de module "bas" actif (deco/case/zone/template/player) ;
     // 0 sinon. Remplace l'ancien selectionPanel.height (D4).
     readonly property bool _bottomModuleActive:
-        ["deco", "case", "zone", "npc", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
+        ["deco", "case", "zone", "npc", "enemy", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
     readonly property real _bottomPanelHeight: _bottomModuleActive ? Screen.pixelDensity * 75 : 0
 
     property int availableHeight: height - _bottomPanelHeight
@@ -533,6 +534,15 @@ Base_Board {
                 if (nt && nt.snapableParameters
                         && nt.snapableParameters.npcParameter && op.fields) {
                     nt.snapableParameters.npcParameter.applyJson(op.fields)
+                }
+                break
+            }
+
+            case EditorOpType.SetEnemyParameter: {
+                const et = findByUuid(op.target)
+                if (et && et.snapableParameters
+                        && et.snapableParameters.enemyParameter && op.fields) {
+                    et.snapableParameters.enemyParameter.applyJson(op.fields)
                 }
                 break
             }
@@ -1519,6 +1529,39 @@ Base_Board {
             tilesRevision: root._npcTilesRev
         }
 
+        // --- Combat (ennemis) ---
+        // Le contrôleur tient l'IA (aggro/poursuite/attaque) et les PV via le
+        // HealthModule ; le spawner instancie body Kinematic + SkinnedModel
+        // par EnemyTile ; l'overlay affiche les barres de vie en coords
+        // workArea (suit pan/zoom).
+        CombatController {
+            id: combatController
+            physicsWorld: pattounxWorld
+            gridManager: gameGrid
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
+        EnemySpawner {
+            id: enemySpawner
+            world3D: gameScene
+            physicsWorld: pattounxWorld
+            combat: combatController
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
+        EnemyHealthOverlay {
+            id: enemyHealthOverlay
+            anchors.fill: parent
+            z: 99998
+            combat: combatController
+            physicsWorld: pattounxWorld
+            gridManager: gameGrid
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
         // PhysicsActor lit bodyState et positionne `gameScene.entity`.
         // Quand un profil est en test, ses params remplacent les défauts via
@@ -1620,8 +1663,10 @@ Base_Board {
                 left:          Qt.Key_Q,
                 right:         Qt.Key_D,
                 sprint:        Qt.Key_Shift,
-                freeCamToggle: Qt.Key_F
+                freeCamToggle: Qt.Key_F,
+                attack:        Qt.Key_Space
             })
+            onAttackRequested: combatController.playerAttack()
             // En démarrage, on est en mode FreeCam (cohérent avec ancien
             // EntityEngine.freeCamMode = true par défaut). Donc input
             // personnage désactivé, input caméra actif.
@@ -2078,6 +2123,30 @@ Base_Board {
         id: npcPanel
         logic: logic
         visible: moduleManager.selectedModuleId === "npc"
+        onFocusReleased: root.focus = true
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
+    // HUD de vie du joueur local — visible seulement quand le moteur
+    // physique tourne (mode jeu) via combat.active.
+    PlayerHealthHud {
+        combat: combatController
+        z: UiStyle.z_HUD
+        anchors.top: parent.top
+        anchors.topMargin: Theme.spacingM
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    // Conteneur bespoke du module "Ennemis".
+    EnemyPanel {
+        id: enemyPanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "enemy"
         onFocusReleased: root.focus = true
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
@@ -2669,6 +2738,48 @@ Base_Board {
 
             info.npcName = placed.snapableParameters.npcParameter.npcName
             info.lineCount = placed.snapableParameters.npcParameter.lineCount()
+            return { ok: true, tile: info }
+        }
+
+        // Pose un ennemi à (gridX, gridY) via le chemin UI complet
+        // (armEnemyPose → placeSelectedAsset branche enemyPoseArmed →
+        // Game.updateMap), compatible collab/undo.
+        //
+        // modelName : nom du modèle 3D (facultatif).
+        // options (facultatives) : name, maxHp, attackDamage, attackRange,
+        //   attackCooldownMs, aggroRange, moveSpeed, respawnEnabled,
+        //   respawnDelayMs.
+        function placeEnemy(modelName, gridX, gridY, options) {
+            const opt = options || {}
+            logic.armEnemyPose({
+                enemyName: opt.name || "",
+                modelName: modelName || "",
+                maxHp: opt.maxHp,
+                attackDamage: opt.attackDamage,
+                attackRange: opt.attackRange,
+                attackCooldownMs: opt.attackCooldownMs,
+                aggroRange: opt.aggroRange,
+                moveSpeed: opt.moveSpeed,
+                respawnEnabled: opt.respawnEnabled,
+                respawnDelayMs: opt.respawnDelayMs
+            })
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            logic.clearAssetSelection()
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de l'ennemi" }
+
+            const ep = placed.snapableParameters.enemyParameter
+            info.enemyName = ep.enemyName
+            info.maxHp = ep.maxHp
+            info.attackDamage = ep.attackDamage
             return { ok: true, tile: info }
         }
 

@@ -54,7 +54,8 @@ Item {
         left:          [Qt.Key_Q, Qt.Key_Left],
         right:         [Qt.Key_D, Qt.Key_Right],
         sprint:        Qt.Key_Shift,
-        freeCamToggle: Qt.Key_F
+        freeCamToggle: Qt.Key_F,
+        attack:        Qt.Key_Space
     })
 
     // État des touches.
@@ -64,6 +65,11 @@ Item {
     property bool _r: false
 
     signal toggleFreeCamRequested()
+    // Émis sur la touche d'attaque (keymap.attack). L'attaque est un
+    // événement ponctuel, PAS un input continu : elle ne passe pas par le
+    // vecteur pushInput (réservé au mouvement) — le consommateur (contrôleur
+    // de combat) décide de la résolution.
+    signal attackRequested()
 
     // Match d'une touche contre une entrée keymap (int OU array d'int).
     // Centralisé pour éviter de dupliquer la logique press/release.
@@ -115,6 +121,10 @@ Item {
         if (_matches(k, keymap.right)) { _r = true; _push(); return }
         if (_matches(k, keymap.sprint))        { sprint = true; _push(); return }
         if (_matches(k, keymap.freeCamToggle)) { toggleFreeCamRequested(); return }
+        if (_matches(k, keymap.attack)) {
+            if (enabled) attackRequested()
+            return
+        }
     }
 
     function handleRelease(event) {

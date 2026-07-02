@@ -165,6 +165,17 @@
         <file>qml/editor/configPanel/npcConfigPanel/NCP_IdentitySection.qml</file>
         <file>qml/editor/configPanel/npcConfigPanel/NCP_DialogueSection.qml</file>
         <file>qml/editor/configPanel/npcConfigPanel/NCP_TriggerSection.qml</file>
+        <file>qml/editor/moduleManager/enemySelectionPanel/qmldir</file>
+        <file>qml/editor/moduleManager/enemySelectionPanel/Enemy_Content.qml</file>
+        <file>qml/editor/moduleManager/enemySelectionPanel/EnemyPanel.qml</file>
+        <file>qml/editor/configPanel/enemyConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/enemyConfigPanel/EnemyConfigurationPanelSection.qml</file>
+        <file>qml/editor/configPanel/enemyConfigPanel/ECP_IdentitySection.qml</file>
+        <file>qml/editor/configPanel/enemyConfigPanel/ECP_CombatSection.qml</file>
+        <file>qml/world3d/EnemySpawner.qml</file>
+        <file>qml/world3d/CombatController.qml</file>
+        <file>qml/world3d/EnemyHealthOverlay.qml</file>
+        <file>qml/world3d/PlayerHealthHud.qml</file>
         <file>qml/world3d/shaders/tint.frag</file>
     </qresource>
 </RCC>
