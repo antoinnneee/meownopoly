@@ -141,6 +141,8 @@ Item {
                     { "id": "case",     "icon": "📦", "label": "Cases" },
                     { "id": "zone",     "icon": "🟥", "label": "Zones" },
                     { "id": "npc",      "icon": "🎭", "label": "PNJ" },
+                    { "id": "enemy",    "icon": "👹", "label": "Ennemis" },
+                    { "id": "crate",    "icon": "🗃️", "label": "Caisses" },
                     { "id": "template", "icon": "🧩", "label": "Templates" },
                     { "id": "player",   "icon": "🐱", "label": "Joueurs" },
                     { "id": "config3d", "icon": "🧊", "label": "Réglages 3D" }
