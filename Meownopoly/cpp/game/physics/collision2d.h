@@ -1,11 +1,9 @@
 #ifndef COLLISION2D_H
 #define COLLISION2D_H
 
-#include <QObject>
 #include <QVector2D>
 #include <QVector>
 #include <QRectF>
-#include <QVariantList>
 #include <cmath>
 
 /**
@@ -15,12 +13,7 @@ struct Polygon2D {
     QVector<QVector2D> points;      // Points du polygone
     QVector<QVector2D> normals;     // Normales pré-calculées des segments
     QRectF boundingBox;             // Boîte englobante pour optimisation
-    
-    /**
-     * @brief Construit un polygone à partir d'une liste de points QVariant
-     */
-    static Polygon2D fromVariantList(const QVariantList& points);
-    
+
     /**
      * @brief Recalcule les normales et la bounding box
      */

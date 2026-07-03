@@ -146,6 +146,10 @@ private:
     // Helpers
     static Polygon2D buildPolygon(const QVector<QVector2D> &points);
     void wakeUp(InternalBody &body);
+    // Liste des zones à EFFET (non-exclusion), rebuild paresseux sur
+    // mutation de m_zones — évite d'itérer tous les murs dans
+    // applyGroundFrictionAndZones (O(bodies × zones) à 60 Hz).
+    const QVector<const InternalZone *> &effectZones();
     // Réveille les bodies endormis dont l'AABB (gonflée du rayon) touche la
     // zone — appelé sur upsertZone/removeZone : une zone draguée sur une
     // caisse endormie resterait sinon ignorée par toute la détection.
@@ -154,6 +158,15 @@ private:
     QHash<QString, InternalBody> m_bodies;
     QHash<QString, InternalZone> m_zones;
     QHash<QString, QSet<QString>> m_activeZonesPerBody;
+
+    // Cache des zones d'effet (cf. effectZones()). Les pointeurs visent des
+    // valeurs de m_zones — invalidés par toute mutation, d'où le flag dirty
+    // remis par upsertZone/removeZone/clearZones.
+    QVector<const InternalZone *> m_effectZonesCache;
+    bool m_effectZonesDirty = true;
+    // Scratch réutilisé par applyGroundFrictionAndZones (évite d'allouer un
+    // QSet par body et par frame).
+    QSet<QString> m_scratchZones;
 
     // Contacts résiduels accumulés au cours du step pour le solver.
     struct ResidualContact

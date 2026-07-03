@@ -64,14 +64,14 @@
 
 ### Performance moteur
 
-- [ ] 🟠 **M18 — Allocations + lookups hash dans la boucle chaude body-body**
+- [x] 🟠 **M18 — Allocations + lookups hash dans la boucle chaude body-body** *(corrigé 2026-07-03 : `QVector<InternalBody*>` (pointeurs QHash stables, aucune mutation pendant la passe), non-cercles filtrés d'emblée, early-out AABB des capsules de mouvement (marge EPSILON) avant `sweepCircleCircle`)*
   `pattounx_engine_v2.cpp:377-390`. `QVector<QString>` reconstruit chaque step + 2 hash-lookups QString par paire O(n²) à 60 Hz.
   **Fix** : `QVector<InternalBody*>` construit une fois (pointeurs QHash stables), filtrer d'emblée non-cercles/statiques, early-out AABB avant `sweepCircleCircle`.
 
-- [ ] 🟡 **M19 — `QSet<QString>` alloué par body/frame dans `applyGroundFrictionAndZones`** — `pattounx_engine_v2.cpp:154-199` + O(bodies × zones) `pointInPolygon`. Fix : diff in-place + index spatial grossier des zones (grid hash sur bbox) partagé avec `resolveBodyZoneCCD`.
-- [ ] 🟡 **M20 — Double boucle bodies×zones dupliquée** entre sweep et détection résiduelle — `collision2d.cpp:310-374`. Factoriser en un seul parcours.
-- [ ] 🟡 **M21 — Déterminisme : itération sur `QHash` partout** — `pattounx_engine_v2.cpp:146, 170, 298, 358, 383`. L'ordre de résolution body-body dépend du seed de hash → deux instances divergent à inputs égaux. OK en host-authoritative, mais ferme la porte au lockstep/replay. Fix si souhaité : ids entiers + `std::vector` trié, ou a minima trier `ids` dans `resolveBodyBodyCCD`.
-- [ ] 🟡 **M22 — Le "cœur Qt-free" inclut `QObject` (inutilisé) et du code de bridge QML** — `collision2d.h:4-8`. `fromVariantList` à déplacer côté `PhysicsWorld`.
+- [x] 🟡 **M19 — `QSet<QString>` alloué par body/frame dans `applyGroundFrictionAndZones`** *(corrigé 2026-07-03, partiellement : cache `effectZones()` (zones non-exclusion, rebuild paresseux sur mutation) + early-out si aucune zone d'effet ni état précédent (cas courant : que des murs) + scratch QSet membre réutilisé. L'index spatial grossier reste une piste si le nombre de zones d'effet explose)* — `pattounx_engine_v2.cpp:154-199` + O(bodies × zones) `pointInPolygon`. Fix : diff in-place + index spatial grossier des zones (grid hash sur bbox) partagé avec `resolveBodyZoneCCD`.
+- [x] 🟡 **M20 — Double boucle bodies×zones dupliquée** *(sans objet depuis M5, 2026-07-03 : la collecte des résiduels doit s'exécuter APRÈS `resolveBodyBodyCCD` — fusionner les deux parcours réintroduirait le bug de pipeline que M5 corrige)* entre sweep et détection résiduelle — `collision2d.cpp:310-374`. Factoriser en un seul parcours.
+- [x] 🟡 **M21 — Déterminisme : itération sur `QHash` partout** *(corrigé 2026-07-03 pour le body-body : tri par `spec.id` du vecteur de M18 — l'ordre de résolution des paires est désormais stable entre instances. Les autres itérations QHash (intégration, zones) sont commutatives par body et restent en l'état)* — `pattounx_engine_v2.cpp:146, 170, 298, 358, 383`. L'ordre de résolution body-body dépend du seed de hash → deux instances divergent à inputs égaux. OK en host-authoritative, mais ferme la porte au lockstep/replay. Fix si souhaité : ids entiers + `std::vector` trié, ou a minima trier `ids` dans `resolveBodyBodyCCD`.
+- [x] 🟡 **M22 — Le "cœur Qt-free" inclut `QObject` (inutilisé) et du code de bridge QML** *(corrigé 2026-07-03 : includes `QObject`/`QVariantList` retirés de collision2d.h ; `Polygon2D::fromVariantList` supprimé — code mort, aucun appelant, la conversion vit dans `PhysicsWorld::zoneFromVariant`)* — `collision2d.h:4-8`. `fromVariantList` à déplacer côté `PhysicsWorld`.
 
 ---
 

@@ -3,22 +3,8 @@
 #include <limits>
 
 // ==================== Polygon2D ====================
-
-Polygon2D Polygon2D::fromVariantList(const QVariantList& variantPoints)
-{
-    Polygon2D polygon;
-    polygon.points.reserve(variantPoints.size());
-    
-    for (const QVariant& var : variantPoints) {
-        QVariantMap pointMap = var.toMap();
-        qreal x = pointMap.value("x", 0.0).toReal();
-        qreal y = pointMap.value("y", 0.0).toReal();
-        polygon.points.append(QVector2D(x, y));
-    }
-    
-    polygon.computeCache();
-    return polygon;
-}
+// (fromVariantList supprimé : code mort de bridge QML — la conversion
+//  QVariant → polygone vit côté PhysicsWorld::zoneFromVariant.)
 
 void Polygon2D::computeCache()
 {

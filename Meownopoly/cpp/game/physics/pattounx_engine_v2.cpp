@@ -26,6 +26,18 @@ void PattounX_engine::wakeUp(InternalBody &body)
     }
 }
 
+const QVector<const PattounX_engine::InternalZone *> &PattounX_engine::effectZones()
+{
+    if (m_effectZonesDirty) {
+        m_effectZonesCache.clear();
+        for (auto it = m_zones.constBegin(); it != m_zones.constEnd(); ++it) {
+            if (!it->spec.exclusion) m_effectZonesCache.append(&it.value());
+        }
+        m_effectZonesDirty = false;
+    }
+    return m_effectZonesCache;
+}
+
 void PattounX_engine::wakeBodiesTouchingZone(const InternalZone &zone)
 {
     // Test grossier AABB gonflée du rayon — un faux positif ne coûte qu'un
@@ -149,6 +161,7 @@ void PattounX_engine::upsertZone(const ZoneSpec &spec)
     if (old != m_zones.end()) wakeBodiesTouchingZone(old.value());
     wakeBodiesTouchingZone(z);
     m_zones.insert(spec.id, z);
+    m_effectZonesDirty = true;
 }
 
 void PattounX_engine::removeZone(const QString &id)
@@ -157,6 +170,7 @@ void PattounX_engine::removeZone(const QString &id)
     if (it != m_zones.end()) {
         wakeBodiesTouchingZone(it.value());
         m_zones.erase(it);
+        m_effectZonesDirty = true;
     }
     // purger des activeZones
     for (auto it = m_activeZonesPerBody.begin(); it != m_activeZonesPerBody.end(); ++it) {
@@ -167,6 +181,7 @@ void PattounX_engine::removeZone(const QString &id)
 void PattounX_engine::clearZones()
 {
     m_zones.clear();
+    m_effectZonesDirty = true;
     for (auto it = m_activeZonesPerBody.begin(); it != m_activeZonesPerBody.end(); ++it) {
         it->clear();
     }
@@ -218,7 +233,6 @@ void PattounX_engine::integrateBodies(qreal dt)
 
 void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
 {
-    QSet<QString> currentZones;
     // Base = damping de la spec du body. Avant le fix, on initialisait à
     // DEFAULT_GROUND_DAMPING (constante 0.05), ce qui faisait que
     // body.spec.linearDamping était ignoré côté QML/JSON et que tous les
@@ -230,22 +244,39 @@ void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
     qreal currentAccelMul = 1.0;
     qreal currentSpeedMul = 1.0;
 
+    // Cache des zones à effet : la plupart des maps n'ont que des murs
+    // (exclusion) — inutile d'itérer m_zones entier par body à 60 Hz.
+    const QVector<const InternalZone *> &zones = effectZones();
+    QSet<QString> &prev = m_activeZonesPerBody[body.spec.id];
+
+    if (zones.isEmpty() && prev.isEmpty()) {
+        // Cas courant : rien à diffuser ni à diff-er. Le clamp reste
+        // nécessaire (spec.linearDamping non borné en amont, cf. M3).
+        body.currentDamping = std::clamp(currentDamping, 0.0, 0.999);
+        body.zoneAccelerationMultiplier = 1.0;
+        body.zoneSpeedMultiplier = 1.0;
+        return;
+    }
+
+    // Scratch réutilisé (pas d'allocation par body/frame ; l'affectation
+    // finale à `prev` est un shallow copy COW).
+    QSet<QString> &currentZones = m_scratchZones;
+    currentZones.clear();
+
     QVector2D pos = body.position;
 
-    for (auto it = m_zones.begin(); it != m_zones.end(); ++it) {
-        const InternalZone &zone = it.value();
-        if (zone.spec.exclusion) continue; // les zones d'exclusion ne diffusent pas d'effet
-        if (!zone.polygon.boundingBox.contains(pos.x(), pos.y())) continue;
-        if (!Collision2D::pointInPolygon(pos, zone.polygon)) continue;
+    for (const InternalZone *zone : zones) {
+        if (!zone->polygon.boundingBox.contains(pos.x(), pos.y())) continue;
+        if (!Collision2D::pointInPolygon(pos, zone->polygon)) continue;
 
-        currentZones.insert(zone.spec.id);
-        currentDamping = std::max(currentDamping, zone.spec.frictionStrength);
+        currentZones.insert(zone->spec.id);
+        currentDamping = std::max(currentDamping, zone->spec.frictionStrength);
 
-        if (zone.spec.velocityForce.lengthSquared() > 0.0) {
-            body.forceAccumulator += zone.spec.velocityForce;
+        if (zone->spec.velocityForce.lengthSquared() > 0.0) {
+            body.forceAccumulator += zone->spec.velocityForce;
         }
-        currentAccelMul *= zone.spec.accelerationMultiplier;
-        currentSpeedMul *= zone.spec.speedMultiplier;
+        currentAccelMul *= zone->spec.accelerationMultiplier;
+        currentSpeedMul *= zone->spec.speedMultiplier;
     }
 
     // Clamp de sécurité : damping >= 1 (valeur pilotée par l'éditeur, non
@@ -256,7 +287,6 @@ void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
     body.zoneAccelerationMultiplier = currentAccelMul;
     body.zoneSpeedMultiplier = currentSpeedMul;
 
-    QSet<QString> &prev = m_activeZonesPerBody[body.spec.id];
     for (const QString &z : currentZones) {
         if (!prev.contains(z))
             m_pendingEvents.entered.append({ body.spec.id, z });
@@ -265,7 +295,7 @@ void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
         if (!currentZones.contains(z))
             m_pendingEvents.exited.append({ body.spec.id, z });
     }
-    m_activeZonesPerBody[body.spec.id] = currentZones;
+    prev = currentZones;
 }
 
 void PattounX_engine::integrateBody(InternalBody &body, qreal dt)
@@ -486,17 +516,30 @@ void PattounX_engine::resolveBodyBodyCCD()
 {
     // O(n²) — adéquat tant qu'on a < ~20 bodies dynamiques. À optimiser
     // si nécessaire avec un grid hashing en Phase 6+ (multi-actors).
-    QVector<QString> ids;
-    ids.reserve(m_bodies.size());
-    for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) ids.append(it.key());
+    //
+    // Collecte de POINTEURS (stables dans QHash tant qu'on ne mute pas la
+    // table — aucune mutation ici) : évite la reconstruction d'un
+    // QVector<QString> + 2 lookups hash QString par paire à 60 Hz. Les
+    // non-cercles sont filtrés d'emblée (aucune résolution ne les gère).
+    // Tri par id : l'ordre d'itération d'un QHash dépend du seed de hash,
+    // donc l'ordre de résolution des paires (et le résultat de la frame)
+    // divergeait entre deux instances à inputs égaux — sans conséquence en
+    // host-authoritative, mais gratuit à stabiliser à cette échelle.
+    QVector<InternalBody *> bodies;
+    bodies.reserve(m_bodies.size());
+    for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) {
+        if (it->spec.shape.type != ShapeType::Circle) continue;
+        bodies.append(&it.value());
+    }
+    std::sort(bodies.begin(), bodies.end(),
+              [](const InternalBody *a, const InternalBody *b) {
+                  return a->spec.id < b->spec.id;
+              });
 
-    for (int i = 0; i < ids.size(); ++i) {
-        for (int j = i + 1; j < ids.size(); ++j) {
-            InternalBody &A = m_bodies[ids[i]];
-            InternalBody &B = m_bodies[ids[j]];
-
-            if (A.spec.shape.type != ShapeType::Circle) continue;
-            if (B.spec.shape.type != ShapeType::Circle) continue;
+    for (int i = 0; i < bodies.size(); ++i) {
+        for (int j = i + 1; j < bodies.size(); ++j) {
+            InternalBody &A = *bodies[i];
+            InternalBody &B = *bodies[j];
 
             // Skip si les deux sont statiques ou les deux dorment
             if (A.spec.type == BodyType::Static && B.spec.type == BodyType::Static) continue;
@@ -506,6 +549,22 @@ void PattounX_engine::resolveBodyBodyCCD()
             QVector2D endA = A.position;
             QVector2D startB = B.previousPosition;
             QVector2D endB = B.position;
+
+            // Early-out AABB des capsules de mouvement avant le sweep
+            // quadratique (la grande majorité des paires est loin l'une de
+            // l'autre). Marge EPSILON pour ne pas rater un contact exact
+            // au bord.
+            const qreal rA = A.spec.shape.radius;
+            const qreal rB = B.spec.shape.radius;
+            const QRectF boxA(std::min(startA.x(), endA.x()) - rA - EPSILON,
+                              std::min(startA.y(), endA.y()) - rA - EPSILON,
+                              std::abs(endA.x() - startA.x()) + 2 * (rA + EPSILON),
+                              std::abs(endA.y() - startA.y()) + 2 * (rA + EPSILON));
+            const QRectF boxB(std::min(startB.x(), endB.x()) - rB,
+                              std::min(startB.y(), endB.y()) - rB,
+                              std::abs(endB.x() - startB.x()) + 2 * rB,
+                              std::abs(endB.y() - startB.y()) + 2 * rB);
+            if (!boxA.intersects(boxB)) continue;
 
             QVector2D normal;
             qreal t = Collision2D::sweepCircleCircle(
