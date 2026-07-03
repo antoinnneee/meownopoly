@@ -205,9 +205,13 @@ EBP_Content {
                     Layout.alignment: Qt.AlignHCenter
                 }
 
+                // labelWidth resserré : labels courts + spinbox Monnaie large
+                // (99 999) — la colonne fait 220px, le labelWidth par défaut
+                // (120) ferait déborder la ligne sur la colonne Action.
                 MeowPropertyRow {
                     Layout.fillWidth: true
                     label: "Monnaie"
+                    labelWidth: Theme.px(64)
                     MeowSpinBox {
                         id: lootCurrencySpin
                         Layout.fillWidth: true
@@ -218,6 +222,7 @@ EBP_Content {
                 MeowPropertyRow {
                     Layout.fillWidth: true
                     label: "Objet"
+                    labelWidth: Theme.px(64)
                     MeowTextField {
                         id: lootItemField
                         Layout.fillWidth: true
@@ -228,6 +233,7 @@ EBP_Content {
                 MeowPropertyRow {
                     Layout.fillWidth: true
                     label: "Quantité"
+                    labelWidth: Theme.px(64)
                     visible: lootItemField.text !== ""
                     MeowSpinBox {
                         id: lootQtySpin

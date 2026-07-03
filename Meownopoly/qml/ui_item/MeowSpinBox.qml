@@ -19,10 +19,23 @@ Item {
     property int value: 0
     property int stepSize: 1
     property bool editable: true
-    property string suffix: "K"
+    // Suffixe d'unité optionnel (ex: "K", " min") — vide par défaut : un
+    // spinbox générique affiche la valeur brute, les sites monétaires
+    // déclarent leur "K" explicitement.
+    property string suffix: ""
 
     implicitHeight: 32
-    implicitWidth: 150
+    // Largeur implicite dérivée de la valeur max formatée : les layouts
+    // réservent assez de place pour ne jamais tronquer l'affichage
+    // (boutons ± 2×28 + séparateurs + marge du champ).
+    implicitWidth: Math.max(112, 58 + _fm.advanceWidth(formatNumber(root.to) + root.suffix) + 16)
+    Layout.minimumWidth: implicitWidth
+
+    FontMetrics {
+        id: _fm
+        font.pixelSize: Theme.fontSizeBody
+        font.bold: true
+    }
 
     // Main container
     Rectangle {
@@ -102,6 +115,10 @@ Item {
                 text: formatNumber(root.value) + root.suffix
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
+                // Le padding par défaut du style mange ~24px : dans les
+                // panneaux étroits il ne restait qu'un caractère visible.
+                leftPadding: 2
+                rightPadding: 2
 
                 color: Theme.textPrimary
                 font.pixelSize: Theme.fontSizeBody
