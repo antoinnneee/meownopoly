@@ -1,5 +1,6 @@
 import QtQuick
 import ItemSnapable
+import Case
 
 // Registre unique type d'élément → onglets de l'inspecteur.
 // Remplace le double dispatch historique (MouseLogic_Base.updateCaseConfiguration
@@ -9,12 +10,35 @@ import ItemSnapable
 QtObject {
 
     // Onglets pour un élément unique sélectionné.
-    // Phase 1 : seul l'onglet Visuel est branché ; les onglets par type
-    // (Général/Économie/Zone/PNJ/Ennemi/Caisse/Liens) arrivent en Phase 2/3.
     function tabsFor(element) {
         if (!element || !element.snapableParameters)
             return []
-        return [_visualTab()]
+        const sp = element.snapableParameters
+        const tabs = []
+        switch (sp.tileType) {
+        case ItemSnapable.CaseTile:
+            // Nom + type de case vivent dans le header ; seuls les 4 types à
+            // config économique ont un onglet dédié (les 6 autres n'ont
+            // aucune donnée spécifique — CatNip, Jail, ToJail, CatDoor,
+            // FreeNap, Taxe).
+            if (sp.caseData && _hasEconomy(sp.caseData.type))
+                tabs.push({ id: "economy", label: "Économie", source: "InspectorTab_CaseEconomy.qml" })
+            break
+        case ItemSnapable.PhysicZoneTile:
+            tabs.push({ id: "zone", label: "Zone", source: "InspectorTab_Zone.qml" })
+            break
+        case ItemSnapable.NPCTile:
+            tabs.push({ id: "npc", label: "PNJ", source: "InspectorTab_Npc.qml" })
+            break
+        case ItemSnapable.EnemyTile:
+            tabs.push({ id: "enemy", label: "Ennemi", source: "InspectorTab_Enemy.qml" })
+            break
+        case ItemSnapable.PhysicalObjectTile:
+            tabs.push({ id: "crate", label: "Caisse", source: "InspectorTab_Crate.qml" })
+            break
+        }
+        tabs.push(_visualTab())
+        return tabs
     }
 
     // Onglets pour une multi-sélection : intersection des propriétés
@@ -25,7 +49,7 @@ QtObject {
 
     // Infos de header pour un élément unique : icône (mêmes emojis que le
     // rail NewEditorChrome), libellé du type, et présence du sélecteur de
-    // type de case (Phase 2).
+    // type de case.
     function headerInfo(element) {
         if (!element || !element.snapableParameters)
             return { icon: "❓", typeLabel: "", showCaseTypeSelector: false }
@@ -44,6 +68,13 @@ QtObject {
             return { icon: "🗃️", typeLabel: "Caisse", showCaseTypeSelector: false }
         }
         return { icon: "❓", typeLabel: "", showCaseTypeSelector: false }
+    }
+
+    function _hasEconomy(caseType) {
+        return caseType === Case.CS_RestArea
+            || caseType === Case.CS_KibbleDispenser
+            || caseType === Case.CS_CardBoardBox
+            || caseType === Case.CS_Device
     }
 
     function _visualTab() {

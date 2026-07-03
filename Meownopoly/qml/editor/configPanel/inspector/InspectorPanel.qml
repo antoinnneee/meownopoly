@@ -1,6 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Game
+import EditDelta 1.0
+import EditorOpBus 1.0   // fournit aussi l'enum EditorOpType
+import ItemSnapable
 import theme
 
 // Inspecteur contextuel (nouvelle UI) : dock droit vertical affiché dès
@@ -78,6 +82,61 @@ Rectangle {
         return tab && tab.getCurrentEffects ? tab.getCurrentEffects() : ({})
     }
 
+    // Même contrat que editorSidePanel.zoneConfigurationPanel — consommé par
+    // le flush d'ops SetZoneParameter dans Editor.qml.
+    function getCurrentPhysicSettings() {
+        const tab = _tabItem("zone")
+        return tab && tab.getCurrentPhysicSettings ? tab.getCurrentPhysicSettings() : ({})
+    }
+
+    // ── Mutations depuis le header (cases) ──────────────────────────────
+    // Contrairement aux live-edits CCPS_* historiques (gap connu), le nom et
+    // le type passent par l'op bus → répliqués en collab (remote apply
+    // SetCaseData déjà en place dans Editor.qml).
+    // caseData de l'élément courant si c'est bien une CASE — les autres
+    // types de tuile (PNJ, ennemi…) portent un caseData par défaut non-null
+    // qu'il ne faut ni afficher ni muter.
+    readonly property var _currentCaseData:
+        (currentElement && currentElement.snapableParameters
+         && currentElement.snapableParameters.tileType === ItemSnapable.CaseTile
+         && currentElement.snapableParameters.caseData)
+        ? currentElement.snapableParameters.caseData : null
+
+    function _renameCase(newName) {
+        if (!_currentCaseData)
+            return
+        const sp = currentElement.snapableParameters
+        if (sp.caseData.name === newName)
+            return
+        sp.caseData.name = newName
+        EditorOpBus.recordOp({
+            "op":     EditorOpType.SetCaseData,
+            "target": String(sp.uniqueId),
+            "fields": { "name": newName }
+        })
+        Game.updateMap(EditDelta.TileModified, sp)
+    }
+
+    function _changeCaseType(newType) {
+        if (!_currentCaseData)
+            return
+        const sp = currentElement.snapableParameters
+        if (sp.caseData.type === newType)
+            return
+        // Remplacement du sous-objet caseData — même chemin que
+        // BottomSidePanel_Content.onRequestChangeType.
+        sp.changeCaseDataType(newType)
+        EditorOpBus.recordOp({
+            "op":     EditorOpType.SetCaseData,
+            "target": String(sp.uniqueId),
+            "fields": { "type": newType }
+        })
+        Game.updateMap(EditDelta.TileModified, sp)
+        // Re-résout les onglets (Économie apparaît/disparaît) et repousse la
+        // nouvelle caseData dans les contrôles.
+        refresh()
+    }
+
     function _tabItem(tabId) {
         for (let i = 0; i < _tabs.length; i++) {
             if (_tabs[i].id === tabId) {
@@ -116,6 +175,9 @@ Rectangle {
     // en ops.
     function _pushTargets() {
         _updating = true
+        header.updatingValues = true
+        header.updateControls()
+        header.updatingValues = false
         for (let i = 0; i < tabRepeater.count; i++) {
             const loader = tabRepeater.itemAt(i)
             if (loader && loader.item)
@@ -148,6 +210,9 @@ Rectangle {
             selectionCount: root.selection.length
             icon: root.currentElement ? registry.headerInfo(root.currentElement).icon : ""
             typeLabel: root.currentElement ? registry.headerInfo(root.currentElement).typeLabel : ""
+            targetCase: root._currentCaseData
+            onNameEdited: function(newName) { root._renameCase(newName) }
+            onCaseTypeSelected: function(newType) { root._changeCaseType(newType) }
         }
 
         // Barre d'onglets (masquée s'il n'y a qu'un onglet).
@@ -225,6 +290,11 @@ Rectangle {
                     required property var modelData
                     source: modelData.source
                     onLoaded: {
+                        // Injection de la logique éditeur (les sections
+                        // réutilisées s'en servent pour sauvegarder).
+                        if (item.logic !== undefined)
+                            item.logic = root.logic
+
                         // Relais des signaux d'édition, filtrés par la garde
                         // anti-boucle.
                         if (item.effectChanged)

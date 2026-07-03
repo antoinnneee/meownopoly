@@ -1067,6 +1067,13 @@ Base_Board {
                 : root.editorSidePanel.visualEffectsPanel
     }
 
+    // Idem pour les settings physiques de zone (getCurrentPhysicSettings()).
+    function _activeZonePanel() {
+        return (root._useNewUi && inspectorLoader.item)
+                ? inspectorLoader.item
+                : root.editorSidePanel.zoneConfigurationPanel
+    }
+
     function _upsertRemoteCursor(pid, x, y) {
         // Important : réassigner un nouvel objet (pas de mutation en place)
         // pour que le binding `_entry` du delegate Repeater se ré-évalue.
@@ -1352,7 +1359,10 @@ Base_Board {
                 const effects = getCurrentEffects()
                 root._applyToSelectionAndSave("display", function(el) { el.applyVisualEffects(effects) })
             }
-            // zoneConfigurationChanged : branché en Phase 2 (onglet Zone).
+            onZoneConfigurationChanged: {
+                const physicSettings = getCurrentPhysicSettings()
+                root._applyToSelectionAndSave("zone", function(el) { el.applyPhysicSettings(physicSettings) })
+            }
         }
     }
 
@@ -2395,7 +2405,7 @@ Base_Board {
                         })
                     }
                 } else if (pendingOpKind === "zone") {
-                    const physic = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+                    const physic = root._activeZonePanel().getCurrentPhysicSettings()
                     for (var j = 0; j < els.length; j++) {
                         if (!els[j] || !els[j].snapableParameters) continue
                         EditorOpBus.recordOp({

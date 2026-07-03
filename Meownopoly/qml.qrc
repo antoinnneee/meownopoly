@@ -114,6 +114,11 @@
         <file>qml/editor/configPanel/inspector/InspectorHeader.qml</file>
         <file>qml/editor/configPanel/inspector/InspectorRegistry.qml</file>
         <file>qml/editor/configPanel/inspector/InspectorTab_Visual.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_CaseEconomy.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_Zone.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_Npc.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_Enemy.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_Crate.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/editorBottomPanel/qmldir</file>
