@@ -567,11 +567,21 @@ void PattounX_engine::correctPositions()
 
         QVector2D toBody = body.position - m.closestPoint;
         qreal currentDist = toBody.length();
-        qreal residual = body.spec.shape.radius - currentDist;
+
+        // Centre à l'intérieur du polygone : le contact résiduel porte une
+        // normale d'EXPULSION (cf. checkCirclePolygonAll) qui pointe du
+        // centre vers l'extérieur, donc à l'opposé de `toBody`. Dans ce cas
+        // la pénétration réelle est radius + dist (franchir l'arête puis
+        // s'en écarter d'un rayon) et la poussée doit suivre la normale
+        // stockée — recalculer depuis closestPoint enfoncerait le body.
+        const bool inside = QVector2D::dotProduct(toBody, m.normal) < 0.0;
+        qreal residual = inside ? (body.spec.shape.radius + currentDist)
+                                : (body.spec.shape.radius - currentDist);
         if (residual <= PENETRATION_SLOP) continue;
 
         qreal mag = (residual - PENETRATION_SLOP) * POSITION_CORRECTION_PERCENT;
-        QVector2D normal = (currentDist > EPSILON) ? toBody / currentDist : m.normal;
+        QVector2D normal = inside ? m.normal
+                                  : ((currentDist > EPSILON) ? toBody / currentDist : m.normal);
         body.position += normal * mag;
     }
 }

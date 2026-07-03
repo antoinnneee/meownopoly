@@ -151,6 +151,7 @@ void PhysicsWorld::start()
     m_buffers[2] = pattounx::WorldSnapshot();
     m_guiInUse = &m_buffers[1];
     m_pending.store(&m_buffers[2], std::memory_order_release);
+    m_pendingTick.store(0, std::memory_order_release);
 
     m_thread = new QThread(this);
     m_thread->setObjectName(QStringLiteral("PhysicsWorker"));
@@ -159,7 +160,7 @@ void PhysicsWorld::start()
     m_worker->moveToThread(m_thread);
     m_worker->setTargetTickRateHz(m_tickRate);
     m_worker->setSimulationEnabled(m_simEnabled);
-    m_worker->setSnapshotSink(&m_pending, &m_buffers[0]);
+    m_worker->setSnapshotSink(&m_pending, &m_pendingTick, &m_buffers[0]);
 
     // Pilotage par signaux queued
     connect(this, &PhysicsWorld::startLoop, m_worker, &PhysicsWorker::runLoop);
@@ -245,6 +246,7 @@ void PhysicsWorld::stop()
     m_thread = nullptr;
 
     m_pending.store(nullptr, std::memory_order_release);
+    m_pendingTick.store(0, std::memory_order_release);
     m_guiInUse = nullptr;
 }
 
@@ -323,15 +325,21 @@ void PhysicsWorld::tryAdvanceGuiBuffer()
     // récupèrent le buffer qu'on venait de déposer = un tick antérieur,
     // donnant l'illusion que la position physique régresse → jitter.
     //
-    // Avec le peek, on ne consomme que si pending->tick > m_guiInUse->tick.
-    // Sinon on rejoue la même frame (correct : pas de nouvelle physique).
+    // Le peek lit m_pendingTick (atomique dédié, stocké par le worker
+    // APRÈS son exchange) — JAMAIS `m_pending->tick` : la GUI ne possède
+    // pas le buffer pending, le worker peut le récupérer et y réécrire
+    // pendant la lecture (data race UB). Le store post-exchange garantit
+    // (release/acquire) que si on observe tick T, m_pending contient un
+    // buffer de tick ≥ T ; au pire on voit un tick en retard d'une
+    // publication et on rejoue la même frame (correct : rattrapé à la
+    // frame suivante).
     //
-    // Race possible : entre load et exchange, le worker peut publier. Mais
-    // le worker dépose toujours un tick ≥ celui qui était dans pending
-    // (worker_back contient le tick qu'il vient d'écrire, > publication
-    // précédente). Donc l'exchange ne peut que ramener un tick ≥ peek.
-    pattounx::WorldSnapshot *peek = m_pending.load(std::memory_order_acquire);
-    if (!peek || peek->tick <= m_guiInUse->tick) return;
+    // On ne consomme que si pendingTick > m_guiInUse->tick. Race possible :
+    // entre le load et l'exchange, le worker peut publier — mais il dépose
+    // toujours un tick ≥ celui observé, donc l'exchange ne peut que ramener
+    // un tick ≥ peek.
+    const quint64 pendingTick = m_pendingTick.load(std::memory_order_acquire);
+    if (pendingTick <= m_guiInUse->tick) return;
 
     const quint64 prevTick = m_guiInUse->tick;
     pattounx::WorldSnapshot *fresh

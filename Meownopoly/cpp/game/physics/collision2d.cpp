@@ -145,30 +145,40 @@ CollisionResult Collision2D::checkCirclePolygon(
         }
     }
     
-    // Pas de collision si distance > rayon
-    if (minDist >= radius) {
+    // Cas centre À L'INTÉRIEUR du polygone : la géométrie "distance aux
+    // arêtes" ne suffit plus — `center - closestPoint` pointerait vers
+    // l'intérieur (normale inversée) et le cas profond (minDist >= radius)
+    // ne serait pas détecté du tout. On force alors un contact d'expulsion
+    // vers l'arête la plus proche : normale orientée du centre VERS
+    // l'extérieur, pénétration = radius + minDist (le centre doit franchir
+    // l'arête puis s'en écarter d'un rayon).
+    const bool inside = pointInPolygon(center, polygon);
+
+    // Pas de collision si distance > rayon (et centre dehors)
+    if (!inside && minDist >= radius) {
         return result;
     }
-    
+
     // Calculer la normale de collision (du mur vers le cercle)
     QVector2D toCenter = center - closestPoint;
     qreal toCenterLen = toCenter.length();
-    
+
     QVector2D normal;
     if (toCenterLen > EPSILON) {
         normal = toCenter / toCenterLen;
+        if (inside) normal = -normal; // expulsion : vers l'arête puis au-delà
     } else {
         // Centre exactement sur le segment, utiliser la normale du segment
         normal = segmentNormal;
     }
-    
+
     // Remplir le résultat
     result.colliding = true;
     result.distance = minDist;
     result.normal = normal;
     result.closestPoint = closestPoint;
-    result.penetration = radius - minDist;
-    
+    result.penetration = inside ? (radius + minDist) : (radius - minDist);
+
     return result;
 }
 
@@ -209,27 +219,61 @@ QVector<CollisionResult> Collision2D::checkCirclePolygonAll(
     const Polygon2D& polygon)
 {
     QVector<CollisionResult> results;
-    
+
     if (!polygon.isValid() || !checkCircleAABB(center, radius, polygon.boundingBox)) {
         return results;
     }
-    
+
+    // Centre à l'intérieur du polygone : un SEUL contact d'expulsion via
+    // l'arête la plus proche. Les contacts per-edge n'ont pas de sens ici
+    // (leurs normales pointeraient vers l'intérieur et s'annuleraient
+    // mutuellement), et le cas profond (aucune arête à moins de radius)
+    // ne produirait aucun contact du tout.
+    if (pointInPolygon(center, polygon)) {
+        qreal minDist = std::numeric_limits<qreal>::max();
+        QVector2D closestPoint;
+        QVector2D segmentNormal;
+        for (int i = 0; i < polygon.points.size(); ++i) {
+            int j = (i + 1) % polygon.points.size();
+            SegmentResult segResult = pointToSegmentDistance(
+                center, polygon.points[i], polygon.points[j]);
+            if (segResult.distance < minDist) {
+                minDist = segResult.distance;
+                closestPoint = segResult.closestPoint;
+                segmentNormal = polygon.normals[i];
+            }
+        }
+        CollisionResult result;
+        result.colliding = true;
+        result.distance = minDist;
+        result.closestPoint = closestPoint;
+        result.penetration = radius + minDist;
+        QVector2D toCenter = center - closestPoint;
+        if (toCenter.lengthSquared() > EPSILON * EPSILON) {
+            result.normal = -toCenter.normalized(); // expulsion vers l'extérieur
+        } else {
+            result.normal = segmentNormal;
+        }
+        results.append(result);
+        return results;
+    }
+
     for (int i = 0; i < polygon.points.size(); ++i) {
         int j = (i + 1) % polygon.points.size();
-        
+
         SegmentResult segResult = pointToSegmentDistance(
             center,
             polygon.points[i],
             polygon.points[j]
         );
-        
+
         if (segResult.distance < radius) {
             CollisionResult result;
             result.colliding = true;
             result.distance = segResult.distance;
             result.closestPoint = segResult.closestPoint;
             result.penetration = radius - segResult.distance;
-            
+
             QVector2D toCenter = center - segResult.closestPoint;
             if (toCenter.lengthSquared() > EPSILON * EPSILON) {
                 result.normal = toCenter.normalized();
@@ -239,7 +283,7 @@ QVector<CollisionResult> Collision2D::checkCirclePolygonAll(
             results.append(result);
         }
     }
-    
+
     return results;
 }
 

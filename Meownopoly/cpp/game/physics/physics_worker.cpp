@@ -14,9 +14,11 @@ PhysicsWorker::PhysicsWorker(QObject *parent)
 PhysicsWorker::~PhysicsWorker() = default;
 
 void PhysicsWorker::setSnapshotSink(std::atomic<pattounx::WorldSnapshot *> *pending,
+                                    std::atomic<quint64> *pendingTick,
                                     pattounx::WorldSnapshot *initialBack)
 {
     m_pending = pending;
+    m_pendingTick = pendingTick;
     m_workerBack = initialBack;
 }
 
@@ -154,6 +156,17 @@ void PhysicsWorker::runStep()
         }
         // Si prev est null, on garde notre buffer courant pour la prochaine
         // écriture — la GUI en a un qu'elle est en train de lire.
+
+        // Publier le tick APRÈS le dépôt dans m_pending (release) : quand
+        // la GUI observe ce tick (acquire), le buffer correspondant — ou
+        // un plus récent — est garanti présent dans m_pending. La GUI peek
+        // ce tick au lieu de déréférencer le buffer pending (data race :
+        // le worker pourrait le récupérer et y écrire pendant la lecture).
+        // Le store étant post-exchange, la GUI peut voir un tick en retard
+        // d'une publication → au pire elle rejoue une frame, jamais l'inverse.
+        if (m_pendingTick)
+            m_pendingTick->store(m_tick, std::memory_order_release);
+
         qint64 stepNs = 1'000'000'000LL / m_tickHz.load();
         emit snapshotPublished(m_tick, nowNs, stepNs);
     }

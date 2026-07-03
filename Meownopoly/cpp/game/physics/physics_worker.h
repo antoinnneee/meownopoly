@@ -27,11 +27,17 @@ public:
 
     /**
      * Initialise le worker avec le buffer de back qu'il possède au
-     * démarrage et le pointeur atomique partagé `pending`.
+     * démarrage, le pointeur atomique partagé `pending`, et l'atomique
+     * `pendingTick` (tick de la dernière publication, mis à jour APRÈS le
+     * dépôt dans `pending`). La GUI peek `pendingTick` au lieu de
+     * déréférencer le buffer pending — qu'elle ne possède pas encore
+     * (déréférencer serait une data race : le worker peut le récupérer et
+     * y écrire pendant la lecture).
      * Doit être appelé AVANT runLoop, depuis le thread GUI ou via
      * BlockingQueuedConnection.
      */
     void setSnapshotSink(std::atomic<pattounx::WorldSnapshot *> *pending,
+                         std::atomic<quint64> *pendingTick,
                          pattounx::WorldSnapshot *initialBack);
 
 public slots:
@@ -71,6 +77,7 @@ private:
     quint64 m_tick = 0;
 
     std::atomic<pattounx::WorldSnapshot *> *m_pending = nullptr;
+    std::atomic<quint64> *m_pendingTick = nullptr;
     pattounx::WorldSnapshot *m_workerBack = nullptr;
 };
 

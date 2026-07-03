@@ -177,6 +177,12 @@ private:
     // Triple buffer Fraser-Harris.
     pattounx::WorldSnapshot m_buffers[3];
     std::atomic<pattounx::WorldSnapshot *> m_pending { nullptr };
+    // Tick de la dernière publication worker, stocké par le worker APRÈS
+    // le dépôt dans m_pending. Le peek GUI lit CET atomique — jamais
+    // `m_pending->tick`, car la GUI ne possède pas le buffer pending
+    // (le worker peut le récupérer par exchange et y écrire pendant la
+    // lecture = data race). Cf. tryAdvanceGuiBuffer / PhysicsWorker::runStep.
+    std::atomic<quint64> m_pendingTick { 0 };
     pattounx::WorldSnapshot *m_guiInUse = nullptr;
 
     // Empêche `bodyState` de consommer plusieurs frames pendant le même

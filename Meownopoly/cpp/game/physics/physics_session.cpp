@@ -12,6 +12,8 @@
 #include <QJsonValue>
 #include <QtQml>
 
+#include <cmath>
+
 PhysicsSession *PhysicsSession::m_pThis = nullptr;
 
 // ── Singleton ────────────────────────────────────────────────────────────────
@@ -343,7 +345,10 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         break;
 
     case PhysicsMessageType::BodiesAnnounce: {
-        if (m_isHost) break; // réservé au client
+        // Réservé au client, et seul l'hôte fait autorité sur la table
+        // idIndex — un pair tiers pourrait sinon corrompre le décodage des
+        // snapshots de tout le monde (même garde que Snapshot/CombatEvent).
+        if (m_isHost || senderId != m_hostPlayerId) break;
         QJsonObject payload;
         PhysicsMessageType::Value t;
         if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
@@ -368,9 +373,28 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
         const QString actorId = payload.value(QStringLiteral("actorId")).toString();
         if (actorId.isEmpty()) break;
-        const float x = static_cast<float>(payload.value(QStringLiteral("x")).toDouble());
-        const float y = static_cast<float>(payload.value(QStringLiteral("y")).toDouble());
-        m_world->pushInput(actorId, QVector2D(x, y));
+        // Sécurité : seul le client qui a claimé cet acteur (via Hello) peut
+        // le piloter — sinon n'importe quel pair peut bouger l'acteur de
+        // l'hôte, des autres clients, ou tout body input-driven.
+        if (m_remoteClaims.value(senderId) != actorId) {
+            static int rejected = 0;
+            if ((rejected++ & 0x3F) == 0) {
+                qWarning() << "[PhysicsSession] HOST : InputUpdate rejeté —"
+                           << senderId << "n'a pas claimé" << actorId
+                           << "(Hello perdu ou paquet forgé, " << rejected
+                           << "rejets cumulés)";
+            }
+            break;
+        }
+        // Sécurité : borner l'input. Un NaN empoisonnerait toute la sim
+        // (positions NaN propagées à tous les clients via snapshot) ; une
+        // norme > 1 est un speed-hack (l'input est un vecteur directionnel).
+        const double xd = payload.value(QStringLiteral("x")).toDouble();
+        const double yd = payload.value(QStringLiteral("y")).toDouble();
+        if (!std::isfinite(xd) || !std::isfinite(yd)) break;
+        QVector2D input(static_cast<float>(xd), static_cast<float>(yd));
+        if (input.lengthSquared() > 1.0f) input.normalize();
+        m_world->pushInput(actorId, input);
         break;
     }
 
