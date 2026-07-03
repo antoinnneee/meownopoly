@@ -18,7 +18,12 @@
  *    actor + les actors revendiqués par les clients (remoteClaimedActors).
  *
  * Stats d'attaque du joueur : lues dans `playerProfile` (PlayerProfile de la
- * map, cf. onglet Joueurs) quand il est fourni, sinon défauts.
+ * map, cf. onglet Joueurs) quand il est fourni, sinon défauts. Si le
+ * StatsModule est actif, le profil est poussé en STATS DE BASE
+ * (`damage`/`maxHealth`) et le combat lit les stats EFFECTIVES (base +
+ * modificateurs d'équipement/effets) — cf. philosophie de StatsModule.
+ * La stat `maxHealth` est répercutée sur HealthModule par le câblage du
+ * GameplayModuleManager (statChanged → setMaxHp).
  *
  * IA par ennemi vivant : dist ≤ attackRange → stop + attaque (cooldown) ;
  * ≤ aggroRange → poursuite (pushInput) ; sinon immobile. Mort d'un ennemi →
@@ -55,13 +60,19 @@ Item {
         (networked && !PhysicsSession.isHost && PhysicsSession.claimedActorId !== "")
             ? PhysicsSession.claimedActorId : playerActorId
 
-    // ── Stats d'attaque du joueur (PlayerProfile ou défauts) ──────────────
+    // ── Stats d'attaque du joueur (StatsModule > PlayerProfile > défauts) ──
     /// PlayerProfile de la map appliqué au joueur local (null = défauts).
     property var playerProfile: null
     readonly property real playerAttackRange:
         playerProfile ? playerProfile.attackRange : 1.5
-    readonly property int playerAttackDamage:
-        playerProfile ? playerProfile.attackDamage : 10
+    /// Dégâts effectifs : stat `damage` (base profil + modificateurs) quand
+    /// le StatsModule est actif, sinon le profil brut.
+    readonly property int playerAttackDamage: {
+        statsRevision
+        if (statsDriven)
+            return Math.max(0, Math.round(_stats.effectiveStat(localActorId, "damage")))
+        return playerProfile ? playerProfile.attackDamage : 10
+    }
     readonly property int playerAttackCooldownMs:
         playerProfile ? playerProfile.attackCooldownMs : 400
     property int playerRespawnDelayMs: 3000
@@ -69,6 +80,13 @@ Item {
     readonly property var _health: GameplayModuleManager.healthModule
     readonly property var _currency: GameplayModuleManager.currencyModule
     readonly property var _inventory: GameplayModuleManager.inventoryModule
+    readonly property var _stats: GameplayModuleManager.statsModule
+
+    /// True si le StatsModule pilote les stats de combat du joueur.
+    readonly property bool statsDriven: _stats ? _stats.enabled : false
+    /// Incrémenté sur statChanged — les bindings de stats effectives s'y
+    /// suspendent (effectiveStat est un appel de fonction, pas observable).
+    property int statsRevision: 0
 
     // État interne par uuid d'ennemi :
     // { dead, lastAttackMs, respawnAtMs, registered }
@@ -164,11 +182,27 @@ Item {
         return out
     }
 
+    /// PV max effectifs du joueur : stat `maxHealth` quand le StatsModule
+    /// est actif, sinon le profil (0 = defaultMaxHp du HealthModule).
+    function _effectiveMaxHp() {
+        if (statsDriven)
+            return Math.max(1, Math.round(_stats.effectiveStat(localActorId, "maxHealth")))
+        return playerProfile ? playerProfile.maxHp : 0
+    }
+
+    /// Pousse le profil en stats de base (l'équipement/les effets empilent
+    /// leurs modificateurs par-dessus).
+    function _pushProfileBaseStats() {
+        if (!statsDriven || !playerProfile) return
+        _stats.setBaseStat(localActorId, "damage", playerProfile.attackDamage)
+        _stats.setBaseStat(localActorId, "maxHealth", playerProfile.maxHp)
+    }
+
     function _registerLocalPlayer() {
         if (!_health) return
         _health.enabled = true
-        _health.registerPlayer(localActorId,
-                               playerProfile ? playerProfile.maxHp : 0)
+        _pushProfileBaseStats()
+        _health.registerPlayer(localActorId, _effectiveMaxHp())
         _playerDead = _health.isDead(localActorId)
     }
 
@@ -204,6 +238,22 @@ Item {
                     type: "hp", id: playerId, hp: hp, maxHp: maxHp
                 })
             }
+        }
+    }
+
+    // Stats : re-suspend les bindings de stats effectives (damage, maxHealth).
+    // La répercussion maxHealth → HealthModule.setMaxHp est faite par le
+    // GameplayModuleManager, pas ici.
+    Connections {
+        target: root._stats
+        function onStatChanged(playerId, statKey, baseValue, effectiveValue) {
+            root.statsRevision++
+        }
+        function onEnabledChanged() {
+            // Activation/désactivation du module pendant le test : resynchro
+            // complète (base stats + maxHp, full heal — mode test éditeur).
+            if (root.active) root._registerLocalPlayer()
+            root.statsRevision++
         }
     }
 

@@ -53,6 +53,33 @@ Décalqué sur la feature PNJ (commit `c3f252f7`, cf.
   affiche 💰 solde (si CurrencyModule actif) + 🎒 total d'objets (si
   InventoryModule actif) — lecture directe des modules via `stateRevision`.
 
+### v3 — branchement StatsModule (damage / maxHealth / speed)
+Post-merge des modules statistiques/équipement (`182bacbd`). Règle :
+**profil = stats de base, équipement/effets = modificateurs** ; le combat lit
+les stats EFFECTIVES quand le `StatsModule` est actif, sinon le profil brut
+(comportement inchangé module OFF).
+- `CombatController` : `statsDriven` (= `statsModule.enabled`) +
+  `statsRevision` (les bindings se re-suspendent sur `statChanged`).
+  `playerAttackDamage` lit `effectiveStat(localActorId, "damage")` ;
+  `_registerLocalPlayer` pousse d'abord le profil en stats de base
+  (`_pushProfileBaseStats` : `damage`, `maxHealth`) puis enregistre le joueur
+  au `maxHealth` effectif. La répercussion `maxHealth → HealthModule.setMaxHp`
+  est faite par le câblage du `GameplayModuleManager` (pas de soin gratuit :
+  hp inchangé quand le max monte). Toggle du module en cours de test →
+  resynchro complète (full heal, assumé en mode test).
+- `Editor.qml` : stat `speed` **multiplicative** (base 1.0) —
+  `_statSpeedFactor()` (borne basse 0.1) multiplie `maxSpeed` ET
+  `acceleration` dans `_resyncMainPlayer` (réactivité de conduite conservée) ;
+  re-upsert du body sur `statChanged("speed")` / `enabledChanged`.
+- `attackRange`/`attackCooldownMs` restent profil-only (pas dans
+  `knownStats()` v1).
+- Hooks automation : `setStatsModuleEnabled(on)`,
+  `addPlayerStatModifier(statKey, value)` (source `"automation"`),
+  `getPlayerCombatStats()`.
+- Vérifié en runtime : OFF → 10 dmg/100 PV/×1.0 ; ON + modificateurs
+  (+15 dmg, +50 maxHealth, +0.5 speed) → 25 dmg / 150 PV max (hp 100
+  conservé) / ×1.5 ; retour OFF → défauts restaurés.
+
 ### v1 — base (historique)
 
 ### Backend C++

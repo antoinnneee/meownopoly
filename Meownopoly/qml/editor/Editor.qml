@@ -26,6 +26,7 @@ import ui_item
 import Catway 1.0
 import EditorSession 1.0
 import EditorOpBus 1.0
+import GameplayModuleManager 1.0
 import Meownopoly.Account 1.0
 
 import chat
@@ -1636,17 +1637,29 @@ Base_Board {
             return m.mapInfo.playerProfileById(id)
         }
 
+        /// Facteur de vitesse issu de la stat `speed` (multiplicative, base
+        /// 1.0 — cf. StatsModule). 1.0 si le module stats est inactif.
+        /// Borne basse pour ne jamais figer le joueur sur un malus extrême.
+        function _statSpeedFactor() {
+            const stats = GameplayModuleManager.statsModule
+            if (!stats || !stats.enabled) return 1.0
+            return Math.max(0.1, stats.effectiveStat(combatController.localActorId, "speed"))
+        }
+
         function _resyncMainPlayer() {
             if (!pattounxWorld || !pattounxWorld.running) return
             const p = workArea._testedProfile
+            const sf = workArea._statSpeedFactor()
             if (p) {
                 pattounxWorld.createKinematicActor("player",
                     Qt.vector2d(0, 0),   // ignoré : upsertBody préserve la pos
                     p.radius,
                     {
                         mass:            p.mass,
-                        acceleration:    p.acceleration,
-                        maxSpeed:        p.maxSpeed,
+                        // Accélération scalée avec la vitesse pour garder la
+                        // même réactivité de conduite quel que soit le bonus.
+                        acceleration:    p.acceleration * sf,
+                        maxSpeed:        p.maxSpeed * sf,
                         linearDamping:   p.linearDamping,
                         staticFriction:  p.staticFriction,
                         dynamicFriction: p.dynamicFriction,
@@ -1657,7 +1670,7 @@ Base_Board {
                 pattounxWorld.createKinematicActor("player",
                     Qt.vector2d(0, 0),
                     0.2,
-                    { acceleration: 30.0, maxSpeed: 30.0, linearDamping: 0.1 })
+                    { acceleration: 30.0 * sf, maxSpeed: 30.0 * sf, linearDamping: 0.1 })
             }
         }
 
@@ -1668,6 +1681,16 @@ Base_Board {
         Connections {
             target: PCP_TestController
             function onProfileIdChanged() { workArea._resyncMainPlayer() }
+        }
+
+        // La stat `speed` (StatsModule) module le maxSpeed du body joueur :
+        // re-upsert sur changement de la stat ou activation du module.
+        Connections {
+            target: GameplayModuleManager.statsModule
+            function onStatChanged(playerId, statKey, baseValue, effectiveValue) {
+                if (statKey === "speed") workArea._resyncMainPlayer()
+            }
+            function onEnabledChanged() { workArea._resyncMainPlayer() }
         }
 
         // Live update : la cible Connections suit `_testedProfile`. Quand le
@@ -2925,6 +2948,34 @@ Base_Board {
                 return { ok: true, triggerMode: zp.triggerMode }
             }
             return { ok: false, error: "tile introuvable: " + uuid }
+        }
+
+        // ── Stats de gameplay (StatsModule) ──────────────────────────────
+        // Active/désactive le module de statistiques.
+        function setStatsModuleEnabled(on) {
+            GameplayModuleManager.statsModule.enabled = (on === true)
+            return { ok: true, enabled: GameplayModuleManager.statsModule.enabled }
+        }
+
+        // Empile un modificateur de stat sur le joueur local (source
+        // "automation" — retirable via removeModifiersFromSource).
+        function addPlayerStatModifier(statKey, value) {
+            const stats = GameplayModuleManager.statsModule
+            const pid = combatController.localActorId
+            stats.addModifier(pid, "automation", String(statKey), Number(value))
+            return { ok: true, effective: stats.effectiveStat(pid, String(statKey)) }
+        }
+
+        // Stats de combat effectives du joueur local (vérification).
+        function getPlayerCombatStats() {
+            const pid = combatController.localActorId
+            return {
+                statsDriven: combatController.statsDriven,
+                attackDamage: combatController.playerAttackDamage,
+                hp: GameplayModuleManager.healthModule.hp(pid),
+                maxHp: GameplayModuleManager.healthModule.maxHp(pid),
+                speedFactor: workArea._statSpeedFactor()
+            }
         }
 
         // Force une sauvegarde de la carte courante (AUTOSAVE par défaut,
