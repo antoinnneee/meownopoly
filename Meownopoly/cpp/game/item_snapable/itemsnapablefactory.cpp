@@ -82,6 +82,14 @@ ItemSnapable *ItemSnapableFactory::createEnemy()
     return snap;
 }
 
+ItemSnapable *ItemSnapableFactory::createPhysicalObject()
+{
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::PhysicalObjectTile);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
+    return snap;
+}
+
 void ItemSnapableFactory::requestCreateItem(const QJsonObject &jsonData)
 {
     emit createItemRequested(jsonData);

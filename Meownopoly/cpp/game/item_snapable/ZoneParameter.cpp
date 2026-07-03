@@ -43,6 +43,11 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_speedMultiplier = json.value("speedMultiplier").toDouble(1);
     m_accelerationMultiplier = json.value("accelerationMultiplier").toDouble(1);
     m_screenEffectId = json.value("screenEffectId").toString("");
+    m_triggerMode = qBound(0, json.value("triggerMode").toInt(0), 1);
+    m_triggerOnce = json.value("triggerOnce").toBool(false);
+    m_rewardCurrency = qMax(0, json.value("rewardCurrency").toInt(0));
+    m_rewardItemName = json.value("rewardItemName").toString("");
+    m_rewardItemQuantity = qMax(1, json.value("rewardItemQuantity").toInt(1));
 }
 
 ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
@@ -57,6 +62,11 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
     , m_speedMultiplier(other.m_speedMultiplier)
     , m_accelerationMultiplier(other.m_accelerationMultiplier)
     , m_screenEffectId(other.m_screenEffectId)
+    , m_triggerMode(other.m_triggerMode)
+    , m_triggerOnce(other.m_triggerOnce)
+    , m_rewardCurrency(other.m_rewardCurrency)
+    , m_rewardItemName(other.m_rewardItemName)
+    , m_rewardItemQuantity(other.m_rewardItemQuantity)
 {
 }
 
@@ -84,6 +94,11 @@ void ZoneParameter::applyJson(const QJsonObject &json)
     setSpeedMultiplier(json.value("speedMultiplier").toDouble(1));
     setAccelerationMultiplier(json.value("accelerationMultiplier").toDouble(1));
     setScreenEffectId(json.value("screenEffectId").toString(""));
+    setTriggerMode(json.value("triggerMode").toInt(0));
+    setTriggerOnce(json.value("triggerOnce").toBool(false));
+    setRewardCurrency(json.value("rewardCurrency").toInt(0));
+    setRewardItemName(json.value("rewardItemName").toString(""));
+    setRewardItemQuantity(json.value("rewardItemQuantity").toInt(1));
 }
 
 QString ZoneParameter::toJSON()
@@ -113,7 +128,12 @@ QString ZoneParameter::toJSON()
     json += "    \"exclusion\": " + exclusionStr + ",\n";
     json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + ",\n";
     json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + ",\n";
-    json += "    \"screenEffectId\": \"" + m_screenEffectId + "\"\n";
+    json += "    \"screenEffectId\": \"" + m_screenEffectId + "\",\n";
+    json += "    \"triggerMode\": " + QString::number(m_triggerMode) + ",\n";
+    json += "    \"triggerOnce\": " + QString(m_triggerOnce ? "true" : "false") + ",\n";
+    json += "    \"rewardCurrency\": " + QString::number(m_rewardCurrency) + ",\n";
+    json += "    \"rewardItemName\": \"" + m_rewardItemName + "\",\n";
+    json += "    \"rewardItemQuantity\": " + QString::number(m_rewardItemQuantity) + "\n";
     json += "}";
     
     return json;
@@ -267,6 +287,49 @@ void ZoneParameter::setAccelerationMultiplier(qreal newAccelerationMultiplier)
         return;
     m_accelerationMultiplier = newAccelerationMultiplier;
     emit accelerationMultiplierChanged();
+}
+
+void ZoneParameter::setTriggerMode(int newTriggerMode)
+{
+    newTriggerMode = qBound(0, newTriggerMode, 1);
+    if (m_triggerMode == newTriggerMode)
+        return;
+    m_triggerMode = newTriggerMode;
+    emit triggerModeChanged();
+}
+
+void ZoneParameter::setTriggerOnce(bool newTriggerOnce)
+{
+    if (m_triggerOnce == newTriggerOnce)
+        return;
+    m_triggerOnce = newTriggerOnce;
+    emit triggerOnceChanged();
+}
+
+void ZoneParameter::setRewardCurrency(int newRewardCurrency)
+{
+    newRewardCurrency = qMax(0, newRewardCurrency);
+    if (m_rewardCurrency == newRewardCurrency)
+        return;
+    m_rewardCurrency = newRewardCurrency;
+    emit rewardCurrencyChanged();
+}
+
+void ZoneParameter::setRewardItemName(const QString &newRewardItemName)
+{
+    if (m_rewardItemName == newRewardItemName)
+        return;
+    m_rewardItemName = newRewardItemName;
+    emit rewardItemNameChanged();
+}
+
+void ZoneParameter::setRewardItemQuantity(int newRewardItemQuantity)
+{
+    newRewardItemQuantity = qMax(1, newRewardItemQuantity);
+    if (m_rewardItemQuantity == newRewardItemQuantity)
+        return;
+    m_rewardItemQuantity = newRewardItemQuantity;
+    emit rewardItemQuantityChanged();
 }
 
 QString ZoneParameter::screenEffectId() const

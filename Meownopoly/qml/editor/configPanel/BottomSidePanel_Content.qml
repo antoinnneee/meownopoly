@@ -6,6 +6,7 @@ import meowComponent
 import editor
 import npcConfigPanel
 import enemyConfigPanel
+import crateConfigPanel
 
 ColumnLayout {
     id: panelContent
@@ -22,6 +23,7 @@ ColumnLayout {
     property alias zoneConfigurationPanel: zoneConfigurationPanelSection
     property alias npcConfigurationPanel: npcConfigurationPanelSection
     property alias enemyConfigurationPanel: enemyConfigurationPanelSection
+    property alias crateConfigurationPanel: crateConfigurationPanelSection
    // property alias transformSection: transformSection
 
     VisualEffectsPanel {
@@ -91,6 +93,16 @@ ColumnLayout {
     // Onglet Configuration Ennemi
     EnemyConfigurationPanelSection {
         id: enemyConfigurationPanelSection
+        isCollapsed: true
+        logic: panelContent.logic
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        Layout.fillWidth: true
+        onFocusReleased: panelContent.focusReleased()
+    }
+
+    // Onglet Configuration Caisse
+    CrateConfigurationPanelSection {
+        id: crateConfigurationPanelSection
         isCollapsed: true
         logic: panelContent.logic
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop

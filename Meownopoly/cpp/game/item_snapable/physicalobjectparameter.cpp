@@ -52,6 +52,13 @@ void PhysicalObjectParameter::setLinearDamping(qreal v)
     emit linearDampingChanged();
 }
 
+void PhysicalObjectParameter::setGrabbable(bool v)
+{
+    if (m_grabbable == v) return;
+    m_grabbable = v;
+    emit grabbableChanged();
+}
+
 QString PhysicalObjectParameter::toJSON() const
 {
     QString json;
@@ -59,7 +66,8 @@ QString PhysicalObjectParameter::toJSON() const
     json += "    \"mass\": "             + QString::number(m_mass, 'f', 4)            + ",\n";
     json += "    \"bounceFactor\": "     + QString::number(m_bounceFactor, 'f', 4)    + ",\n";
     json += "    \"frictionStrength\": " + QString::number(m_frictionStrength, 'f', 4) + ",\n";
-    json += "    \"linearDamping\": "    + QString::number(m_linearDamping, 'f', 4)   + "\n";
+    json += "    \"linearDamping\": "    + QString::number(m_linearDamping, 'f', 4)   + ",\n";
+    json += "    \"grabbable\": "        + QString(m_grabbable ? "true" : "false")    + "\n";
     json += "}";
     return json;
 }
@@ -70,4 +78,5 @@ void PhysicalObjectParameter::applyJson(const QJsonObject &json)
     if (json.contains("bounceFactor"))     setBounceFactor(json["bounceFactor"].toDouble(m_bounceFactor));
     if (json.contains("frictionStrength")) setFrictionStrength(json["frictionStrength"].toDouble(m_frictionStrength));
     if (json.contains("linearDamping"))    setLinearDamping(json["linearDamping"].toDouble(m_linearDamping));
+    if (json.contains("grabbable"))        setGrabbable(json["grabbable"].toBool(m_grabbable));
 }

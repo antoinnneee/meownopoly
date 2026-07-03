@@ -27,6 +27,8 @@ class PhysicalObjectParameter : public QObject
     Q_PROPERTY(qreal bounceFactor    READ bounceFactor    WRITE setBounceFactor    NOTIFY bounceFactorChanged)
     Q_PROPERTY(qreal frictionStrength READ frictionStrength WRITE setFrictionStrength NOTIFY frictionStrengthChanged)
     Q_PROPERTY(qreal linearDamping   READ linearDamping   WRITE setLinearDamping   NOTIFY linearDampingChanged)
+    // La caisse peut-elle être saisie (grab) par le joueur en jeu ?
+    Q_PROPERTY(bool grabbable        READ grabbable       WRITE setGrabbable       NOTIFY grabbableChanged)
 
 public:
     explicit PhysicalObjectParameter(QObject *parent = nullptr);
@@ -44,6 +46,9 @@ public:
     qreal linearDamping() const { return m_linearDamping; }
     void setLinearDamping(qreal v);
 
+    bool grabbable() const { return m_grabbable; }
+    void setGrabbable(bool v);
+
     QString toJSON() const;
     void applyJson(const QJsonObject &json);
 
@@ -51,7 +56,8 @@ public:
         return qFuzzyCompare(m_mass,             other.m_mass)
             && qFuzzyCompare(m_bounceFactor,     other.m_bounceFactor)
             && qFuzzyCompare(m_frictionStrength, other.m_frictionStrength)
-            && qFuzzyCompare(m_linearDamping,    other.m_linearDamping);
+            && qFuzzyCompare(m_linearDamping,    other.m_linearDamping)
+            && m_grabbable == other.m_grabbable;
     }
 
 signals:
@@ -59,12 +65,14 @@ signals:
     void bounceFactorChanged();
     void frictionStrengthChanged();
     void linearDampingChanged();
+    void grabbableChanged();
 
 private:
     qreal m_mass            = 1.0;
     qreal m_bounceFactor    = 0.3;
     qreal m_frictionStrength = 0.4;
     qreal m_linearDamping   = 0.1;
+    bool  m_grabbable       = true;
 };
 
 #endif // PHYSICALOBJECTPARAMETER_H

@@ -33,6 +33,7 @@ Rectangle {
     property alias caseConfigurationPanel: content.caseConfigurationPanel
     property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
     property alias zoneConfigurationPanel: content.zoneConfigurationPanel
+    property alias crateConfigurationPanel: content.crateConfigurationPanel
     property alias npcConfigurationPanel: content.npcConfigurationPanel
     property alias enemyConfigurationPanel: content.enemyConfigurationPanel
 
@@ -261,6 +262,7 @@ Rectangle {
         zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
         npcConfigurationPanel.setTargetNpc(snapableParameter)
         enemyConfigurationPanel.setTargetEnemy(snapableParameter)
+        crateConfigurationPanel.setTargetCrate(snapableParameter)
        root. blockEffectChangedSignal = false
     }
 }

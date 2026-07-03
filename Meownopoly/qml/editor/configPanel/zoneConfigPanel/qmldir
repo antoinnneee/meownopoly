@@ -4,3 +4,4 @@ ZCP_FrictionSection 1.0 ZCP_FrictionSection.qml
 ZCP_VectorDirectionPicker 1.0 ZCP_VectorDirectionPicker.qml
 ZCP_DirectionsSection 1.0 ZCP_DirectionsSection.qml
 ZCP_GeneralSection 1.0 ZCP_GeneralSection.qml
+ZCP_TriggerSection 1.0 ZCP_TriggerSection.qml

@@ -55,7 +55,8 @@ Item {
         right:         [Qt.Key_D, Qt.Key_Right],
         sprint:        Qt.Key_Shift,
         freeCamToggle: Qt.Key_F,
-        attack:        Qt.Key_Space
+        attack:        Qt.Key_Space,
+        grab:          Qt.Key_E
     })
 
     // État des touches.
@@ -70,6 +71,9 @@ Item {
     // vecteur pushInput (réservé au mouvement) — le consommateur (contrôleur
     // de combat) décide de la résolution.
     signal attackRequested()
+    // Émis sur la touche de saisie (keymap.grab). Événement ponctuel toggle :
+    // le consommateur (GrabController) attrape/relâche la caisse la plus proche.
+    signal grabRequested()
 
     // Match d'une touche contre une entrée keymap (int OU array d'int).
     // Centralisé pour éviter de dupliquer la logique press/release.
@@ -123,6 +127,10 @@ Item {
         if (_matches(k, keymap.freeCamToggle)) { toggleFreeCamRequested(); return }
         if (_matches(k, keymap.attack)) {
             if (enabled) attackRequested()
+            return
+        }
+        if (_matches(k, keymap.grab)) {
+            if (enabled) grabRequested()
             return
         }
     }

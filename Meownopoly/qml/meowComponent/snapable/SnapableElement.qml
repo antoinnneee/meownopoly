@@ -356,6 +356,17 @@ Rectangle {
         // undefined pour ne pas écraser sur d'anciens appelants sans ce champ.
         if (physicSettings.screenEffectId !== undefined)
             snapableParameters.zoneParameter.screenEffectId = physicSettings.screenEffectId
+        // Déclencheur "plaque de pression" (mêmes gardes undefined).
+        if (physicSettings.triggerMode !== undefined)
+            snapableParameters.zoneParameter.triggerMode = physicSettings.triggerMode
+        if (physicSettings.triggerOnce !== undefined)
+            snapableParameters.zoneParameter.triggerOnce = physicSettings.triggerOnce
+        if (physicSettings.rewardCurrency !== undefined)
+            snapableParameters.zoneParameter.rewardCurrency = physicSettings.rewardCurrency
+        if (physicSettings.rewardItemName !== undefined)
+            snapableParameters.zoneParameter.rewardItemName = physicSettings.rewardItemName
+        if (physicSettings.rewardItemQuantity !== undefined)
+            snapableParameters.zoneParameter.rewardItemQuantity = physicSettings.rewardItemQuantity
     }
 
     // ─── liserés des sélections distantes ───────────────────────

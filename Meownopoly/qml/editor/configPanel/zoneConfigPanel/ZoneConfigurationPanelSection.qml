@@ -37,12 +37,23 @@ CollapsableGroupBox {
             id: directionsSection
             Layout.fillWidth: true
             updatingValues: root.updatingValues
-            
+
             onConfigurationChanged: root.configurationChanged()
             onFocusReleased:root.focusReleased()
+        },
+
+        // Déclencheur "plaque de pression" (caisse dans la zone → ouvre les
+        // éléments liés / crédite une récompense).
+        ZCP_TriggerSection {
+            id: triggerSection
+            Layout.fillWidth: true
+            updatingValues: root.updatingValues
+
+            onConfigurationChanged: root.configurationChanged()
+            onFocusReleased: root.focusReleased()
         }
     ]
-    
+
     function getCurrentPhysicSettings() {
         return {
             zoneName: generalSection.zoneName,
@@ -53,14 +64,20 @@ CollapsableGroupBox {
             velocityStrength: directionsSection.velocityStrength,
             frictionStrength: generalSection.frictionStrength,
             accelerationMultiplier: generalSection.accelerationMultiplier,
-            screenEffectId: generalSection.screenEffectId
+            screenEffectId: generalSection.screenEffectId,
+            triggerMode: triggerSection.triggerMode,
+            triggerOnce: triggerSection.triggerOnce,
+            rewardCurrency: triggerSection.rewardCurrency,
+            rewardItemName: triggerSection.rewardItemName,
+            rewardItemQuantity: triggerSection.rewardItemQuantity
         }
     }
     function updateFromZoneParameter(zoneParam) {
       if (root.effectsLocked) return
-        
+
         // Update sliders from target values
         generalSection.updateFromZoneParameter(zoneParam)
         directionsSection.updateFromZoneParameter(zoneParam)
+        triggerSection.updateFromZoneParameter(zoneParam)
     }
 }

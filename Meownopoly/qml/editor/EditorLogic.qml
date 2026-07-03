@@ -56,6 +56,13 @@ Base_logic {
     property bool enemyPoseArmed: false
     property var enemyPoseConfig: ({})
 
+    // Pose caisse armée (module "crate"). Prioritaire sur asset/case dans
+    // TileLogic.placeSelectedAsset. cratePoseConfig porte les valeurs saisies
+    // dans le CratePanel : { mass, bounceFactor, frictionStrength,
+    // linearDamping, grabbable }.
+    property bool cratePoseArmed: false
+    property var cratePoseConfig: ({})
+
     // Modes "spécialisés" : on n'y force pas EM_POSE/EM_NORMAL sur (dé)sélection
     // (reprend les gardes des anciens handlers du SelectionPanel).
     function _isSpecializedMode() {
@@ -72,6 +79,7 @@ Base_logic {
         currentSelectedAssetId = ""
         caseTypeSelected = -1
         enemyPoseArmed = false
+        cratePoseArmed = false
         npcPoseConfig = config || ({})
         npcPoseArmed = true
         if (!_isSpecializedMode() && mouseLogic)
@@ -85,8 +93,23 @@ Base_logic {
         currentSelectedAssetId = ""
         caseTypeSelected = -1
         npcPoseArmed = false
+        cratePoseArmed = false
         enemyPoseConfig = config || ({})
         enemyPoseArmed = true
+        if (!_isSpecializedMode() && mouseLogic)
+            mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+    }
+
+    // Arme la pose d'une caisse. Désarme asset/case/PNJ/ennemi.
+    function armCratePose(config) {
+        currentSelectedAssetCategory = ""
+        currentSelectedAssetType = ""
+        currentSelectedAssetId = ""
+        caseTypeSelected = -1
+        npcPoseArmed = false
+        enemyPoseArmed = false
+        cratePoseConfig = config || ({})
+        cratePoseArmed = true
         if (!_isSpecializedMode() && mouseLogic)
             mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
     }
@@ -101,6 +124,7 @@ Base_logic {
         }
         npcPoseArmed = false
         enemyPoseArmed = false
+        cratePoseArmed = false
         caseTypeSelected = -1
         currentSelectedAssetCategory = category
         currentSelectedAssetType = type
@@ -120,6 +144,7 @@ Base_logic {
         caseTypeSelected = -1
         npcPoseArmed = false
         enemyPoseArmed = false
+        cratePoseArmed = false
         if (!_isSpecializedMode() && mouseLogic)
             mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
     }
@@ -133,6 +158,7 @@ Base_logic {
             currentSelectedAssetId = ""
             npcPoseArmed = false
             enemyPoseArmed = false
+            cratePoseArmed = false
         }
         caseTypeSelected = type
         if (!_isSpecializedMode() && mouseLogic)

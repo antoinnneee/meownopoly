@@ -41,6 +41,7 @@ import playerPanel
 import zonePanel
 import npcSelectionPanel
 import enemySelectionPanel
+import crateSelectionPanel
 import templatePanel
 import assetSelectionPanel
 import caseSelectionPanel
@@ -63,7 +64,7 @@ Base_Board {
     // Hauteur du panneau de module "bas" actif (deco/case/zone/template/player) ;
     // 0 sinon. Remplace l'ancien selectionPanel.height (D4).
     readonly property bool _bottomModuleActive:
-        ["deco", "case", "zone", "npc", "enemy", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
+        ["deco", "case", "zone", "npc", "enemy", "crate", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
     readonly property real _bottomPanelHeight: _bottomModuleActive ? Screen.pixelDensity * 75 : 0
 
     property int availableHeight: height - _bottomPanelHeight
@@ -543,6 +544,15 @@ Base_Board {
                 if (et && et.snapableParameters
                         && et.snapableParameters.enemyParameter && op.fields) {
                     et.snapableParameters.enemyParameter.applyJson(op.fields)
+                }
+                break
+            }
+
+            case EditorOpType.SetPhysicalObjectParameter: {
+                const pt = findByUuid(op.target)
+                if (pt && pt.snapableParameters
+                        && pt.snapableParameters.physicalObjectParameter && op.fields) {
+                    pt.snapableParameters.physicalObjectParameter.applyJson(op.fields)
                 }
                 break
             }
@@ -1567,6 +1577,38 @@ Base_Board {
             tilesRevision: root._npcTilesRev
         }
 
+        // --- Caisses (objets physiques) + plaques de pression ---
+        // Le spawner instancie un body Dynamic + cube 3D par caisse ; le
+        // GrabController gère la saisie (touche E, ressort amorti) ; le
+        // TriggerController active les zones "plaque de pression" (porte
+        // ouverte / récompense via les modules de gameplay).
+        CrateSpawner {
+            id: crateSpawner
+            world3D: gameScene
+            physicsWorld: pattounxWorld
+            combat: combatController
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
+        GrabController {
+            id: grabController
+            physicsWorld: pattounxWorld
+            combat: combatController
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
+        TriggerController {
+            id: triggerController
+            physicsWorld: pattounxWorld
+            combat: combatController
+            grab: grabController
+            physicsBridge: editorPhysicsBridge
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
         // PhysicsActor lit bodyState et positionne `gameScene.entity`.
         // Quand un profil est en test, ses params remplacent les défauts via
@@ -1669,9 +1711,11 @@ Base_Board {
                 right:         Qt.Key_D,
                 sprint:        Qt.Key_Shift,
                 freeCamToggle: Qt.Key_F,
-                attack:        Qt.Key_Space
+                attack:        Qt.Key_Space,
+                grab:          Qt.Key_E
             })
             onAttackRequested: combatController.playerAttack()
+            onGrabRequested: grabController.toggleGrab()
             // En démarrage, on est en mode FreeCam (cohérent avec ancien
             // EntityEngine.freeCamMode = true par défaut). Donc input
             // personnage désactivé, input caméra actif.
@@ -2152,6 +2196,20 @@ Base_Board {
         id: enemyPanel
         logic: logic
         visible: moduleManager.selectedModuleId === "enemy"
+        onFocusReleased: root.focus = true
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
+    // Conteneur bespoke du module "Caisses".
+    CratePanel {
+        id: cratePanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "crate"
         onFocusReleased: root.focus = true
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
@@ -2789,6 +2847,84 @@ Base_Board {
             info.maxHp = ep.maxHp
             info.attackDamage = ep.attackDamage
             return { ok: true, tile: info }
+        }
+
+        // Pose une caisse (PhysicalObjectTile) via le chemin UI exact
+        // (armCratePose + placeSelectedAsset), compatible collab/undo.
+        // options: { mass, bounceFactor, frictionStrength, linearDamping,
+        //            grabbable }
+        function placeCrate(gridX, gridY, options) {
+            const opt = options || {}
+            logic.armCratePose({
+                mass: opt.mass,
+                bounceFactor: opt.bounceFactor,
+                frictionStrength: opt.frictionStrength,
+                linearDamping: opt.linearDamping,
+                grabbable: opt.grabbable
+            })
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            logic.clearAssetSelection()
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de la caisse" }
+
+            const pp = placed.snapableParameters.physicalObjectParameter
+            info.mass = pp.mass
+            info.grabbable = pp.grabbable
+            return { ok: true, tile: info }
+        }
+
+        // Configure le déclencheur "plaque de pression" d'une zone existante
+        // (par uuid). options: { triggerMode, triggerOnce, rewardCurrency,
+        // rewardItemName, rewardItemQuantity }
+        function setZoneTrigger(uuid, options) {
+            if (!uuid) return { ok: false, error: "uuid requis" }
+            const opt = options || {}
+            const tiles = root.snapableTilesList
+            for (let i = 0; i < tiles.length; i++) {
+                const t = tiles[i]
+                if (!t || !t.snapableParameters) continue
+                if (String(t.snapableParameters.uniqueId) !== String(uuid)) continue
+                const zp = t.snapableParameters.zoneParameter
+                if (!zp) return { ok: false, error: "tile sans zoneParameter" }
+                if (opt.triggerMode !== undefined) zp.triggerMode = opt.triggerMode
+                if (opt.triggerOnce !== undefined) zp.triggerOnce = opt.triggerOnce
+                if (opt.rewardCurrency !== undefined) zp.rewardCurrency = opt.rewardCurrency
+                if (opt.rewardItemName !== undefined) zp.rewardItemName = opt.rewardItemName
+                if (opt.rewardItemQuantity !== undefined) zp.rewardItemQuantity = opt.rewardItemQuantity
+                // Set COMPLET : le remote-apply passe par applyPhysicSettings
+                // qui écrit les champs de base sans garde undefined.
+                EditorOpBus.recordOp({
+                    "op":     EditorOpType.SetZoneParameter,
+                    "target": String(t.snapableParameters.uniqueId),
+                    "fields": {
+                        zoneName: zp.zoneName,
+                        exclusion: zp.exclusion,
+                        speedMultiplier: zp.speedMultiplier,
+                        velocityDirectionX: zp.velocityDirection.x,
+                        velocityDirectionY: zp.velocityDirection.y,
+                        velocityStrength: zp.velocityStrength,
+                        frictionStrength: zp.frictionStrength,
+                        accelerationMultiplier: zp.accelerationMultiplier,
+                        screenEffectId: zp.screenEffectId,
+                        triggerMode: zp.triggerMode,
+                        triggerOnce: zp.triggerOnce,
+                        rewardCurrency: zp.rewardCurrency,
+                        rewardItemName: zp.rewardItemName,
+                        rewardItemQuantity: zp.rewardItemQuantity
+                    }
+                })
+                Game.updateMap(EditDelta.TileModified, t.snapableParameters)
+                return { ok: true, triggerMode: zp.triggerMode }
+            }
+            return { ok: false, error: "tile introuvable: " + uuid }
         }
 
         // Force une sauvegarde de la carte courante (AUTOSAVE par défaut,

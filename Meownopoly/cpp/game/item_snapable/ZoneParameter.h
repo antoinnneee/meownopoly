@@ -23,6 +23,19 @@ class ZoneParameter : public QObject
     // Référence (id) vers un ScreenEffect de la bibliothèque de la carte
     // (MapInfo::screenEffects). Vide = aucun effet visuel à l'entrée de zone.
     Q_PROPERTY(QString screenEffectId READ screenEffectId WRITE setScreenEffectId NOTIFY screenEffectIdChanged FINAL)
+    // Déclencheur "plaque de pression" (zones NON-exclusion uniquement) :
+    // 0 = aucun, 1 = plaque de pression (activée quand une caisse
+    // PhysicalObjectTile est dans la zone). À l'activation : les éléments
+    // liés (next) sont "ouverts" (zone d'exclusion retirée du moteur,
+    // décoration estompée) et la récompense éventuelle est créditée via les
+    // modules de gameplay. Cf. TriggerController.qml.
+    Q_PROPERTY(int triggerMode READ triggerMode WRITE setTriggerMode NOTIFY triggerModeChanged FINAL)
+    // true = l'activation est permanente (latch) ; false = la porte se
+    // referme quand la caisse quitte la zone (la récompense reste one-shot).
+    Q_PROPERTY(bool triggerOnce READ triggerOnce WRITE setTriggerOnce NOTIFY triggerOnceChanged FINAL)
+    Q_PROPERTY(int rewardCurrency READ rewardCurrency WRITE setRewardCurrency NOTIFY rewardCurrencyChanged FINAL)
+    Q_PROPERTY(QString rewardItemName READ rewardItemName WRITE setRewardItemName NOTIFY rewardItemNameChanged FINAL)
+    Q_PROPERTY(int rewardItemQuantity READ rewardItemQuantity WRITE setRewardItemQuantity NOTIFY rewardItemQuantityChanged FINAL)
 
 public:
 
@@ -39,7 +52,12 @@ public:
                && m_exclusion             == other.m_exclusion
                && m_speedMultiplier       == other.m_speedMultiplier
                && m_accelerationMultiplier == other.m_accelerationMultiplier
-               && m_screenEffectId        == other.m_screenEffectId;
+               && m_screenEffectId        == other.m_screenEffectId
+               && m_triggerMode           == other.m_triggerMode
+               && m_triggerOnce           == other.m_triggerOnce
+               && m_rewardCurrency        == other.m_rewardCurrency
+               && m_rewardItemName        == other.m_rewardItemName
+               && m_rewardItemQuantity    == other.m_rewardItemQuantity;
     }
 
     explicit ZoneParameter(QObject *parent = nullptr);
@@ -85,6 +103,21 @@ public:
     QString screenEffectId() const;
     void setScreenEffectId(const QString &newScreenEffectId);
 
+    int triggerMode() const { return m_triggerMode; }
+    void setTriggerMode(int newTriggerMode);
+
+    bool triggerOnce() const { return m_triggerOnce; }
+    void setTriggerOnce(bool newTriggerOnce);
+
+    int rewardCurrency() const { return m_rewardCurrency; }
+    void setRewardCurrency(int newRewardCurrency);
+
+    QString rewardItemName() const { return m_rewardItemName; }
+    void setRewardItemName(const QString &newRewardItemName);
+
+    int rewardItemQuantity() const { return m_rewardItemQuantity; }
+    void setRewardItemQuantity(int newRewardItemQuantity);
+
 
 
 signals:
@@ -107,6 +140,11 @@ signals:
     void accelerationMultiplierChanged();
 
     void screenEffectIdChanged();
+    void triggerModeChanged();
+    void triggerOnceChanged();
+    void rewardCurrencyChanged();
+    void rewardItemNameChanged();
+    void rewardItemQuantityChanged();
 
 private:
     QVariantList m_polygonPoints;
@@ -119,6 +157,11 @@ private:
     qreal m_speedMultiplier = 1;
     qreal m_accelerationMultiplier = 1;
     QString m_screenEffectId;
+    int m_triggerMode = 0;          // 0 = None, 1 = PressurePlate
+    bool m_triggerOnce = false;
+    int m_rewardCurrency = 0;
+    QString m_rewardItemName;
+    int m_rewardItemQuantity = 1;
 };
 
 #endif // ZONEPARAMETER_H

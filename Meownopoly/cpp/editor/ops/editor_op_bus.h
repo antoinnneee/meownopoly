@@ -132,6 +132,10 @@ public:
     Q_INVOKABLE QJsonObject makeSetEnemyParameterOp(const QString &uuid,
                                                     const QJsonObject &fields) const;
 
+    /// Construit une op SetPhysicalObjectParameter { op, target, fields }.
+    Q_INVOKABLE QJsonObject makeSetPhysicalObjectParameterOp(const QString &uuid,
+                                                             const QJsonObject &fields) const;
+
     // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────
 
     /// Construit une op ApplyState depuis un delta. Si `groupId` n'est pas

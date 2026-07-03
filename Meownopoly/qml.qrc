@@ -127,6 +127,7 @@
         <file>qml/editor/configPanel/zoneConfigPanel/ZCP_DirectionsSection.qml</file>
         <file>qml/editor/configPanel/zoneConfigPanel/ZCP_VectorDirectionPicker.qml</file>
         <file>qml/editor/configPanel/zoneConfigPanel/ZCP_GeneralSection.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZCP_TriggerSection.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapInfoDrawer.qml</file>
         <file>qml/editor/moduleManager/templatePanel/qmldir</file>
         <file>qml/editor/moduleManager/templatePanel/TP_Content.qml</file>
@@ -173,8 +174,16 @@
         <file>qml/editor/configPanel/enemyConfigPanel/EnemyConfigurationPanelSection.qml</file>
         <file>qml/editor/configPanel/enemyConfigPanel/ECP_IdentitySection.qml</file>
         <file>qml/editor/configPanel/enemyConfigPanel/ECP_CombatSection.qml</file>
+        <file>qml/editor/moduleManager/crateSelectionPanel/qmldir</file>
+        <file>qml/editor/moduleManager/crateSelectionPanel/Crate_Content.qml</file>
+        <file>qml/editor/moduleManager/crateSelectionPanel/CratePanel.qml</file>
+        <file>qml/editor/configPanel/crateConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/crateConfigPanel/CrateConfigurationPanelSection.qml</file>
         <file>qml/world3d/EnemySpawner.qml</file>
         <file>qml/world3d/CombatController.qml</file>
+        <file>qml/world3d/CrateSpawner.qml</file>
+        <file>qml/world3d/GrabController.qml</file>
+        <file>qml/world3d/TriggerController.qml</file>
         <file>qml/world3d/EnemyHealthOverlay.qml</file>
         <file>qml/world3d/PlayerHealthHud.qml</file>
         <file>qml/world3d/shaders/tint.frag</file>

@@ -18,3 +18,6 @@ EnemySpawner 1.0 EnemySpawner.qml
 CombatController 1.0 CombatController.qml
 EnemyHealthOverlay 1.0 EnemyHealthOverlay.qml
 PlayerHealthHud 1.0 PlayerHealthHud.qml
+CrateSpawner 1.0 CrateSpawner.qml
+GrabController 1.0 GrabController.qml
+TriggerController 1.0 TriggerController.qml

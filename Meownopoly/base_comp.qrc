@@ -53,6 +53,7 @@
         <file>qml/meowComponent/snapable/SnapableExclusionZone.qml</file>
         <file>qml/meowComponent/snapable/SnapableNPC.qml</file>
         <file>qml/meowComponent/snapable/SnapableEnemy.qml</file>
+        <file>qml/meowComponent/snapable/SnapablePhysicalObject.qml</file>
         <file>qml/meowComponent/AdminCommandPanel.qml</file>
         <file>qml/meowComponent/Background.qml</file>
         <file>qml/meowComponent/Base_Board.qml</file>

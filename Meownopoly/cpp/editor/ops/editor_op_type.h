@@ -47,6 +47,9 @@ enum Value : quint8 {
 
     // Ennemi (EnemyTile) — édition du EnemyParameter (stats de combat).
     SetEnemyParameter       = 18,  // target: uuid, fields: {...}
+
+    // Caisse (PhysicalObjectTile) — édition du PhysicalObjectParameter.
+    SetPhysicalObjectParameter = 19,  // target: uuid, fields: {...}
 };
 Q_ENUM_NS(Value)
 

@@ -26,7 +26,16 @@ QtObject {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)
         gridY = gridY - Math.trunc(currentElementHeight/2)
-        if (logic.enemyPoseArmed) {      // place ennemi
+        if (logic.cratePoseArmed) {      // place caisse
+            const ccfg = logic.cratePoseConfig || ({})
+            snapableParameters = ItemSnapableFactory.createPhysicalObject()
+            if (ccfg.mass !== undefined) snapableParameters.physicalObjectParameter.mass = ccfg.mass
+            if (ccfg.bounceFactor !== undefined) snapableParameters.physicalObjectParameter.bounceFactor = ccfg.bounceFactor
+            if (ccfg.frictionStrength !== undefined) snapableParameters.physicalObjectParameter.frictionStrength = ccfg.frictionStrength
+            if (ccfg.linearDamping !== undefined) snapableParameters.physicalObjectParameter.linearDamping = ccfg.linearDamping
+            if (ccfg.grabbable !== undefined) snapableParameters.physicalObjectParameter.grabbable = ccfg.grabbable
+        }
+        else if (logic.enemyPoseArmed) { // place ennemi
             const ecfg = logic.enemyPoseConfig || ({})
             snapableParameters = ItemSnapableFactory.createEnemy()
             snapableParameters.enemyParameter.enemyName = ecfg.enemyName || ""
@@ -73,7 +82,7 @@ QtObject {
         // Lamport tick — zOrder unique monotone + jitter sub-1.0 par peer
         // pour désambigüer les ticks concurrents en collab.
         snapableParameters.displayParameter.zOrder = Game.tickLamport()
-        if (!logic.npcPoseArmed && !logic.enemyPoseArmed) {
+        if (!logic.npcPoseArmed && !logic.enemyPoseArmed && !logic.cratePoseArmed) {
             snapableParameters.decorationParameter.decorationCategory = logic.currentSelectedAssetCategory
             snapableParameters.decorationParameter.decorationType = logic.currentSelectedAssetType
             snapableParameters.decorationParameter.decorationId = logic.currentSelectedAssetId
@@ -141,6 +150,8 @@ QtObject {
             tileComponent = dynamicComponent.snapableNPCComponent
         } else if (itemSnapableData.tileType === ItemSnapable.EnemyTile) {
             tileComponent = dynamicComponent.snapableEnemyComponent
+        } else if (itemSnapableData.tileType === ItemSnapable.PhysicalObjectTile) {
+            tileComponent = dynamicComponent.snapablePhysicalObjectComponent
         }
         var newTile = tileComponent ? tileComponent.createObject(workArea, {
             "generalMA": mainMa,
