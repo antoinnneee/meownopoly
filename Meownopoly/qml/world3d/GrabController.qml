@@ -1,12 +1,14 @@
 /*
  * GrabController — saisie des caisses (PhysicalObjectTile) à la touche E.
  *
- * Toggle : E attrape la caisse "grabbable" la plus proche (≤ grabRange),
- * E à nouveau la relâche. Une caisse tenue est tractée vers un point de
- * maintien près du joueur par un ressort amorti (applyImpulse à ~30 Hz) —
- * jamais de téléportation : la caisse reste un body Dynamic qui respecte
- * les collisions (murs, autres caisses), ce qui permet de la pousser
- * proprement dans une zone "plaque de pression".
+ * Toggle : E attrape la caisse "grabbable" la plus proche (portée = grabRange
+ * + rayon de la caisse + rayon du joueur, cf. _radiusOf — sinon une grosse
+ * caisse serait physiquement inatteignable, son propre rayon de collision
+ * dépassant à lui seul une portée fixe), E à nouveau la relâche. Une caisse
+ * tenue est tractée vers un point de maintien près du joueur par un ressort
+ * amorti (applyImpulse à ~30 Hz) — jamais de téléportation : la caisse reste
+ * un body Dynamic qui respecte les collisions (murs, autres caisses), ce qui
+ * permet de la pousser proprement dans une zone "plaque de pression".
  *
  * Résolution host-authoritative (même modèle que CombatController) :
  *  - autorité : résout les toggles, applique les impulsions de maintien,
@@ -29,17 +31,35 @@ Item {
     required property var physicsWorld
     /// CombatController (autorité, localActorId, canal réseau partagé).
     required property var combat
+    /// World3D hôte — nécessaire pour convertir la taille (px) des tiles
+    /// caisse en cellules de grille (gridManager.gridSize), afin que la
+    /// portée de saisie/maintien s'adapte au rayon physique réel de chaque
+    /// caisse (une grosse caisse a un rayon de collision qui, ajouté au
+    /// rayon du joueur, peut à lui seul dépasser une portée fixe : sans ça
+    /// impossible de s'approcher assez près pour la saisir).
+    required property var world3D
     /// snapableTilesList de l'éditeur.
     property var tilesList: []
     /// Incrémenté par l'hôte sur snapableTilesListUpdated.
     property int tilesRevision: 0
 
-    /// Portée de saisie et distance de maintien, en cellules de grille.
+    /// Portée de saisie et distance de maintien, en cellules de grille —
+    /// marge AU-DELÀ du contact surface-à-surface (rayon caisse + rayon
+    /// joueur), pas une distance centre-à-centre absolue.
     property real grabRange: 1.6
     property real holdDistance: 0.9
     /// Distance au-delà de laquelle la caisse est lâchée automatiquement
-    /// (coincée derrière un mur, joueur téléporté…).
+    /// (coincée derrière un mur, joueur téléporté…) — marge au-delà du
+    /// point de maintien effectif (cf. _effectiveHoldDistance).
     property real autoReleaseDistance: 3.0
+    /// Rayon du joueur (fallback si aucun profil en test) — cf.
+    /// LocalPlayerSpawner.radius par défaut.
+    property real playerRadius: 0.2
+    /// Rayon effectif : celui du profil en test s'il en expose un, sinon
+    /// `playerRadius` (même logique que `Editor.qml._resyncMainPlayer`).
+    readonly property real _playerRadius:
+        (combat && combat.playerProfile && combat.playerProfile.radius !== undefined)
+            ? combat.playerProfile.radius : playerRadius
 
     /// Ressort amorti du maintien (impulsions ~30 Hz) : raideur (fraction de
     /// l'écart au point de maintien convertie en Δv), amortissement (fraction
@@ -90,13 +110,26 @@ Item {
     function bodyIdFor(uuid) { return BodyIds.crate(uuid) }
 
     // Index uuid → tile des caisses, reconstruit avec la liste filtrée —
-    // _massOf est dans le tick-path 30 Hz du maintien (review Q15).
+    // _massOf/_radiusOf sont dans le tick-path 30 Hz du maintien (review Q15).
     readonly property var _crateTileByUuid: {
         const m = ({})
         const tiles = _crateTiles
         for (let i = 0; i < tiles.length; i++)
             m[String(tiles[i].snapableParameters.uniqueId)] = tiles[i]
         return m
+    }
+
+    /// Rayon physique réel de la caisse (même formule que
+    /// CrateSpawner.bodyRadius — cercle inscrit de la tile × 0.9). Fallback
+    /// 0.45 (caisse 1x1) si le gridManager n'est pas encore prêt.
+    function _radiusOf(crateUuid) {
+        const tile = _crateTileByUuid[String(crateUuid)]
+        const gm = root.world3D ? root.world3D.gridManager : null
+        const gs = gm ? gm.gridSize : 0
+        if (!tile || gs <= 0) return 0.45
+        const cellsW = tile.width / gs
+        const cellsH = tile.height / gs
+        return Math.max(0.1, Math.min(cellsW, cellsH) / 2 * 0.9)
     }
 
     /// uuid de la caisse tenue par le joueur local ("" si aucune).
@@ -112,6 +145,10 @@ Item {
 
     /// Touche E : toggle local (autorité) ou requête à l'hôte (client).
     function toggleGrab() {
+        console.log("[GrabController] toggleGrab() actorId=", combat.localActorId,
+                    "active=", active, "isAuthority=", combat.isAuthority,
+                    "world3D=", !!world3D, "gridManager=", !!(world3D && world3D.gridManager),
+                    "gridSize=", (world3D && world3D.gridManager) ? world3D.gridManager.gridSize : "n/a")
         if (!active) return
         if (!combat.isAuthority) {
             PhysicsSession.sendCombatRequest({
@@ -124,34 +161,43 @@ Item {
 
     /// Autorité : résout un toggle grab pour un actor (local ou distant).
     function _resolveGrabToggle(actorId) {
-        if (actorId === "" || !physicsWorld) return
+        if (actorId === "" || !physicsWorld) { console.log("[GrabController] abort: actorId vide ou physicsWorld null"); return }
         const held = _heldBy[actorId]
         if (held) {
             _release(actorId, held)
             return
         }
         const ps = physicsWorld.bodyState(actorId)
-        if (!ps.id) return
+        if (!ps.id) { console.log("[GrabController] abort: bodyState(", actorId, ") introuvable"); return }
 
         let best = ""
-        let bestDist = grabRange
+        let bestDist = Infinity
         const tiles = _crateTiles
+        console.log("[GrabController] tentative depuis", actorId, "@", ps.position,
+                    "playerRadius=", _playerRadius, "—", tiles.length, "caisse(s) candidate(s)")
         for (let i = 0; i < tiles.length; i++) {
             const sp = tiles[i].snapableParameters
-            if (!sp.physicalObjectParameter.grabbable) continue
+            if (!sp.physicalObjectParameter.grabbable) { console.log("[GrabController]  caisse", sp.uniqueId, "non grabbable"); continue }
             const uuid = String(sp.uniqueId)
             // Déjà tenue par quelqu'un d'autre ?
             let taken = false
             for (const a in _heldBy) if (_heldBy[a] === uuid) { taken = true; break }
-            if (taken) continue
+            if (taken) { console.log("[GrabController]  caisse", uuid, "déjà tenue"); continue }
             const cs = physicsWorld.bodyState(bodyIdFor(uuid))
-            if (!cs.id) continue
+            if (!cs.id) { console.log("[GrabController]  bodyState(", bodyIdFor(uuid), ") introuvable"); continue }
             const dx = cs.position.x - ps.position.x
             const dy = cs.position.y - ps.position.y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist <= bestDist) { bestDist = dist; best = uuid }
+            // Portée effective = marge de saisie + rayons des deux corps —
+            // sinon une grosse caisse serait physiquement impossible à
+            // atteindre (son propre rayon de collision dépasserait la portée).
+            const radius = _radiusOf(uuid)
+            const reach = grabRange + radius + _playerRadius
+            console.log("[GrabController]  caisse", uuid, "@", cs.position, "dist =", dist,
+                        "radius =", radius, "reach =", reach)
+            if (dist <= reach && dist < bestDist) { bestDist = dist; best = uuid }
         }
-        if (best === "") return
+        if (best === "") { console.log("[GrabController] abort: aucune caisse en portée"); return }
         _heldBy[actorId] = best
         _lastHolder[best] = actorId
         grabRevision++
@@ -214,17 +260,25 @@ Item {
             const cs = physicsWorld.bodyState(bodyId)
             if (!ps.id || !cs.id) { _release(actorId, uuid); continue }
 
+            // Rayon de la caisse tenue : le point de maintien et la distance
+            // d'auto-relâche doivent rester au-delà de son propre rayon de
+            // collision, sinon le ressort vise un point à l'intérieur de la
+            // caisse (impossible à atteindre, jitter permanent).
+            const crateRadius = _radiusOf(uuid)
+            const effectiveHold = Math.max(holdDistance, crateRadius + _playerRadius + 0.15)
+            const effectiveRelease = Math.max(autoReleaseDistance, effectiveHold + 1.5)
+
             const dx = cs.position.x - ps.position.x
             const dy = cs.position.y - ps.position.y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist > autoReleaseDistance) { _release(actorId, uuid); continue }
+            if (dist > effectiveRelease) { _release(actorId, uuid); continue }
 
-            // Point de maintien : à holdDistance du joueur, dans la
+            // Point de maintien : à effectiveHold du joueur, dans la
             // direction actuelle de la caisse (elle "traîne" autour de lui).
             const ux = dist > 0.001 ? dx / dist : 1
             const uy = dist > 0.001 ? dy / dist : 0
-            const tx = ps.position.x + ux * holdDistance
-            const ty = ps.position.y + uy * holdDistance
+            const tx = ps.position.x + ux * effectiveHold
+            const ty = ps.position.y + uy * effectiveHold
 
             // Ressort amorti. applyImpulse = Δv × masse côté moteur ; on
             // borne la norme pour rester stable sur les caisses légères.

@@ -1690,6 +1690,7 @@ Base_Board {
             id: grabController
             physicsWorld: pattounxWorld
             combat: combatController
+            world3D: gameScene
             tilesList: root.snapableTilesList
             tilesRevision: root._npcTilesRev
         }
