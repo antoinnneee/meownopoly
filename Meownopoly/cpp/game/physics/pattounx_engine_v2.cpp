@@ -26,10 +26,34 @@ void PattounX_engine::wakeUp(InternalBody &body)
     }
 }
 
+void PattounX_engine::wakeBodiesTouchingZone(const InternalZone &zone)
+{
+    // Test grossier AABB gonflée du rayon — un faux positif ne coûte qu'un
+    // réveil (le body se rendort en ~30 frames s'il n'est pas concerné).
+    const QRectF box = zone.polygon.boundingBox;
+    for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) {
+        InternalBody &b = it.value();
+        if (!b.isSleeping) continue;
+        const qreal r = (b.spec.shape.type == ShapeType::Circle) ? b.spec.shape.radius : 0.0;
+        if (box.adjusted(-r, -r, r, r).contains(b.position.x(), b.position.y()))
+            wakeUp(b);
+    }
+}
+
 // --- Mutations bodies ---
 
 void PattounX_engine::upsertBody(const BodySpec &spec)
 {
+    if (spec.shape.type != ShapeType::Circle) {
+        // ShapeType::Polygon est déclaré dans l'API mais non implémenté par
+        // les résolutions (toutes skippent les non-cercles) : un body
+        // polygone ne collisionnerait avec RIEN, silencieusement. Rejet
+        // explicite plutôt qu'un body fantôme.
+        qWarning("PattounX: upsertBody('%s') rejeté — seul ShapeType::Circle est supporté",
+                 qPrintable(spec.id));
+        return;
+    }
+
     auto it = m_bodies.find(spec.id);
     if (it == m_bodies.end()) {
         InternalBody body;
@@ -38,13 +62,27 @@ void PattounX_engine::upsertBody(const BodySpec &spec)
         body.previousPosition = spec.position;
         m_bodies.insert(spec.id, body);
     } else {
-        // Préserver la cinématique en cours, ne mettre à jour que les params.
+        // Préserver la cinématique en cours, ne mettre à jour que les params
+        // (spec.position ignorée — cf. doc du .h, setBodyPosition pour
+        // téléporter). Un changement de shape réveille le body : un radius
+        // agrandi peut créer une pénétration sous un body endormi.
+        const bool shapeChanged = it->spec.shape.type != spec.shape.type
+                                  || it->spec.shape.radius != spec.shape.radius;
         it->spec = spec;
+        if (shapeChanged) wakeUp(*it);
     }
 }
 
 void PattounX_engine::removeBody(const QString &id)
 {
+    // Émettre les `exited` des zones encore actives avant de retirer le
+    // body : les consommateurs à pile de zones (QML) garderaient sinon un
+    // état orphelin pour toujours.
+    auto zit = m_activeZonesPerBody.constFind(id);
+    if (zit != m_activeZonesPerBody.constEnd()) {
+        for (const QString &z : zit.value())
+            m_pendingEvents.exited.append({ id, z });
+    }
     m_bodies.remove(id);
     m_activeZonesPerBody.remove(id);
 }
@@ -92,20 +130,34 @@ void PattounX_engine::applyImpulse(const QString &id, QVector2D impulse)
 
 void PattounX_engine::upsertZone(const ZoneSpec &spec)
 {
+    auto old = m_zones.find(spec.id);
     if (spec.polygon.size() < 3) {
         // polygone temporairement invalide → ignorer plutôt que crash
-        m_zones.remove(spec.id);
+        if (old != m_zones.end()) {
+            wakeBodiesTouchingZone(old.value());
+            m_zones.erase(old);
+        }
         return;
     }
     InternalZone z;
     z.spec = spec;
     z.polygon = buildPolygon(spec.polygon);
+    // Réveiller les bodies endormis touchés par l'ANCIENNE et la NOUVELLE
+    // empreinte : une zone draguée sur une caisse endormie resterait sinon
+    // enfouie (les résolutions skippent les bodies endormis) ; symétriquement
+    // une zone qui s'éloigne doit laisser la détection re-statuer.
+    if (old != m_zones.end()) wakeBodiesTouchingZone(old.value());
+    wakeBodiesTouchingZone(z);
     m_zones.insert(spec.id, z);
 }
 
 void PattounX_engine::removeZone(const QString &id)
 {
-    m_zones.remove(id);
+    auto it = m_zones.find(id);
+    if (it != m_zones.end()) {
+        wakeBodiesTouchingZone(it.value());
+        m_zones.erase(it);
+    }
     // purger des activeZones
     for (auto it = m_activeZonesPerBody.begin(); it != m_activeZonesPerBody.end(); ++it) {
         it->remove(id);
@@ -128,8 +180,16 @@ void PattounX_engine::step(qreal dt)
 
     m_residualContacts.clear();
 
+    // isColliding : reset en début de step pour les bodies éveillés, puis
+    // levé par CHAQUE résolution (body-zone CCD, body-body, résiduels) —
+    // avant, seul le body-zone le pilotait et uniquement dans certaines
+    // branches. Un body endormi garde son dernier état (cinématique gelée).
+    for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) {
+        if (!it->isSleeping) it->isColliding = false;
+    }
+
     integrateBodies(dt);
-    resolveBodyZoneCCD();
+    resolveBodyZoneCCD(dt);
     resolveBodyBodyCCD();
     // Collecte APRÈS le body-body : un body poussé dans une zone d'exclusion
     // par la résolution body-body doit avoir son contact résiduel CE frame,
@@ -256,9 +316,12 @@ void PattounX_engine::integrateBody(InternalBody &body, qreal dt)
         body.velocity += externalAccel * dt;
     }
 
-    // Cap soft sur vitesse max
+    // Cap soft sur vitesse max — décélération minimale garantie : à damping
+    // nul, decel vaudrait 1.0 et un body recevant une grosse impulsion
+    // (applyImpulse, velocityForce de zone) dépasserait maxSpeed indéfiniment.
     if (body.velocity.length() > effectiveMaxSpeed + 0.01) {
-        qreal decel = std::pow(1.0 - body.currentDamping, dt * 60.0);
+        qreal capDamping = std::max(body.currentDamping, DEFAULT_GROUND_DAMPING);
+        qreal decel = std::pow(1.0 - capDamping, dt * 60.0);
         body.velocity *= decel;
         if (body.velocity.length() < effectiveMaxSpeed) {
             body.velocity = body.velocity.normalized() * effectiveMaxSpeed;
@@ -283,7 +346,7 @@ void PattounX_engine::integrateBody(InternalBody &body, qreal dt)
     body.forceAccumulator = QVector2D();
 }
 
-void PattounX_engine::resolveBodyZoneCCD()
+void PattounX_engine::resolveBodyZoneCCD(qreal dt)
 {
     for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) {
         InternalBody &body = it.value();
@@ -291,51 +354,59 @@ void PattounX_engine::resolveBodyZoneCCD()
         if (body.isSleeping) continue;
         if (body.spec.shape.type != ShapeType::Circle) continue; // v2 ne gère que cercles
 
-        QVector2D p0 = body.previousPosition;
-        QVector2D p1 = body.position;
-        QVector2D movement = p1 - p0;
-        if (movement.lengthSquared() < EPSILON * EPSILON) continue;
+        const qreal radius = body.spec.shape.radius;
 
-        qreal earliestT = 1.0;
-        bool hasContact = false;
-        QString contactZoneId;
-        QVector2D contactNormal;
-        QVector2D contactClosest;
+        // Après un impact, le mouvement restant du frame est ré-intégré avec
+        // la vélocité post-rebond puis re-sweepé — avant, la fraction
+        // (1-t)*dt était jetée : murs "collants", slide oblique ralenti.
+        // Itérations bornées (MAX_SLIDE_ITERATIONS) : le résiduel éventuel
+        // est repris par collectResidualZoneContacts + correctPositions.
+        QVector2D sweepStart = body.previousPosition;
+        qreal remainingDt = dt;
 
-        qreal radius = body.spec.shape.radius;
+        for (int pass = 0; pass <= MAX_SLIDE_ITERATIONS; ++pass) {
+            const QVector2D p0 = sweepStart;
+            const QVector2D p1 = body.position;
+            const QVector2D movement = p1 - p0;
+            if (movement.lengthSquared() < EPSILON * EPSILON) break;
 
-        for (auto zit = m_zones.begin(); zit != m_zones.end(); ++zit) {
-            const InternalZone &zone = zit.value();
-            if (!zone.spec.exclusion) continue;
+            qreal earliestT = 1.0;
+            bool hasContact = false;
+            QString contactZoneId;
+            QVector2D contactNormal;
 
-            QRectF extBox = zone.polygon.boundingBox.adjusted(-radius, -radius, radius, radius);
-            QRectF moveBox(
-                std::min(p0.x(), p1.x()) - radius,
-                std::min(p0.y(), p1.y()) - radius,
-                std::abs(p1.x() - p0.x()) + 2 * radius,
-                std::abs(p1.y() - p0.y()) + 2 * radius);
-            if (!moveBox.intersects(extBox)) continue;
+            for (auto zit = m_zones.begin(); zit != m_zones.end(); ++zit) {
+                const InternalZone &zone = zit.value();
+                if (!zone.spec.exclusion) continue;
 
-            QVector<CollisionResult> results
-                = Collision2D::checkCirclePolygonSweepAll(p0, p1, radius, zone.polygon);
+                QRectF extBox = zone.polygon.boundingBox.adjusted(-radius, -radius, radius, radius);
+                QRectF moveBox(
+                    std::min(p0.x(), p1.x()) - radius,
+                    std::min(p0.y(), p1.y()) - radius,
+                    std::abs(p1.x() - p0.x()) + 2 * radius,
+                    std::abs(p1.y() - p0.y()) + 2 * radius);
+                if (!moveBox.intersects(extBox)) continue;
 
-            for (const CollisionResult &r : results) {
-                if (r.t < earliestT) {
-                    earliestT = r.t;
-                    hasContact = true;
-                    contactZoneId = zone.spec.id;
-                    contactNormal = r.normal;
-                    contactClosest = r.closestPoint;
+                QVector<CollisionResult> results
+                    = Collision2D::checkCirclePolygonSweepAll(p0, p1, radius, zone.polygon);
+
+                for (const CollisionResult &r : results) {
+                    if (r.t < earliestT) {
+                        earliestT = r.t;
+                        hasContact = true;
+                        contactZoneId = zone.spec.id;
+                        contactNormal = r.normal;
+                    }
                 }
             }
-        }
 
-        if (hasContact && earliestT < 1.0) {
-            QVector2D contactPos = p0 + earliestT * movement;
+            if (!hasContact || earliestT >= 1.0) break;
+
+            const QVector2D contactPos = p0 + earliestT * movement;
             body.position = contactPos + contactNormal * TUNNELING_BUFFER;
 
-            qreal velAlongNormal = QVector2D::dotProduct(body.velocity, contactNormal);
-            qreal impactSpeed = std::abs(velAlongNormal);
+            const qreal velAlongNormal = QVector2D::dotProduct(body.velocity, contactNormal);
+            const qreal impactSpeed = std::abs(velAlongNormal);
 
             if (velAlongNormal < 0) {
                 body.velocity = Collision2D::applyBounce(
@@ -352,8 +423,16 @@ void PattounX_engine::resolveBodyZoneCCD()
             c.normal = contactNormal;
             c.impactSpeed = impactSpeed;
             m_pendingEvents.collisions.append(c);
-        } else {
-            body.isColliding = false;
+
+            // Ré-intégration du temps restant avec la vélocité post-impact.
+            // Sur la dernière passe autorisée on s'arrête au point de contact
+            // (pas de mouvement non re-sweepé laissé en l'état).
+            remainingDt *= (1.0 - earliestT);
+            if (pass == MAX_SLIDE_ITERATIONS || remainingDt <= 0.0) break;
+            if (body.velocity.lengthSquared() < EPSILON * EPSILON) break;
+
+            sweepStart = body.position;
+            body.position += body.velocity * remainingDt;
         }
     }
 
@@ -392,8 +471,11 @@ void PattounX_engine::collectResidualZoneContacts()
                 if (cit == contactIndexByBody.constEnd()) {
                     contactIndexByBody.insert(body.spec.id, m_residualContacts.size());
                     m_residualContacts.append(rc);
+                    body.isColliding = true;
+                    body.lastCollisionNormal = rc.normal;
                 } else if (rc.penetration > m_residualContacts[cit.value()].penetration) {
                     m_residualContacts[cit.value()] = rc;
+                    body.lastCollisionNormal = rc.normal;
                 }
             }
         }
@@ -493,6 +575,13 @@ void PattounX_engine::resolveBodyBodyCCD()
             }
 
             // Impulsion : j = -(1+e) * vRel·n / (invA + invB)
+            // Contact avéré (t valide) : refléter dans l'état des deux bodies,
+            // quel que soit le chemin de résolution pris ensuite.
+            A.isColliding = true;
+            B.isColliding = true;
+            A.lastCollisionNormal = normal;
+            B.lastCollisionNormal = -normal;
+
             QVector2D vRel = A.velocity - B.velocity;
             qreal velAlongNormal = QVector2D::dotProduct(vRel, normal);
             if (velAlongNormal > 0) {
@@ -532,7 +621,8 @@ void PattounX_engine::resolveBodyBodyCCD()
                     qreal jt = -QVector2D::dotProduct(vRelAfter, tangent) / totalInv;
                     qreal muS = std::sqrt(A.spec.staticFriction * B.spec.staticFriction);
                     QVector2D frictionImpulse;
-                    if (std::abs(jt) < jMag * muS) {
+                    // <= : régime statique jusqu'à la limite de Coulomb incluse.
+                    if (std::abs(jt) <= jMag * muS) {
                         frictionImpulse = jt * tangent;
                     } else {
                         qreal muD = std::sqrt(A.spec.dynamicFriction * B.spec.dynamicFriction);
@@ -585,16 +675,19 @@ void PattounX_engine::runStaticPass()
         tangent.normalize();
 
         qreal jt = -QVector2D::dotProduct(rv, tangent) / inv;
-        // Friction zone vs body
+        // Friction zone vs body — la valeur de la zone est prise telle
+        // quelle (clampée ≥ 0) : frictionStrength == 0 est légitime (zone
+        // glissante). Le défaut 0.5 ne couvre que le cas "zone disparue
+        // entre la collecte et le solve".
         qreal zoneFriction = 0.5;
         auto zit = m_zones.find(m.zoneId);
         if (zit != m_zones.end()) {
-            qreal zf = zit->spec.frictionStrength;
-            if (zf > 0.0) zoneFriction = zf;
+            zoneFriction = std::max<qreal>(0.0, zit->spec.frictionStrength);
         }
         qreal muS = std::sqrt(body.spec.staticFriction * zoneFriction);
         QVector2D frictionImpulse;
-        if (std::abs(jt) < jMag * muS) {
+        // <= : le régime statique tient jusqu'à la limite de Coulomb incluse.
+        if (std::abs(jt) <= jMag * muS) {
             frictionImpulse = jt * tangent;
         } else {
             qreal muD = std::sqrt(body.spec.dynamicFriction * zoneFriction);

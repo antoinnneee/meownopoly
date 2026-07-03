@@ -210,6 +210,13 @@ public:
 
     /**
      * @brief Constantes pour les calculs
+     *
+     * EPSILON est exprimé dans l'unité du monde (coordonnées grille : une
+     * cellule = 1.0, rayons typiques 0.2–0.5). Il est volontairement partagé
+     * entre des grandeurs hétérogènes : longueurs (seuil brut), longueurs au
+     * carré et produits scalaires (via EPSILON²). C'est grossier mais adapté
+     * à l'échelle actuelle — si une échelle de monde très différente
+     * apparaît, introduire des epsilons dédiés par grandeur.
      */
     static constexpr qreal EPSILON = 0.0001;
 };

@@ -28,6 +28,13 @@ public:
     ~PattounX_engine();
 
     // --- Mutations ---
+    // Crée le body s'il n'existe pas. Sur un body EXISTANT, seule la spec
+    // (params) est mise à jour : la cinématique en cours est préservée et
+    // spec.position est IGNORÉE — passer par setBodyPosition pour téléporter.
+    // Un changement de shape (radius) réveille le body (une pénétration peut
+    // apparaître sous un body endormi). Seul ShapeType::Circle est supporté :
+    // un body Polygon est rejeté avec warning (il ne collisionnerait avec
+    // rien, silencieusement).
     void upsertBody(const BodySpec &spec);
     void removeBody(const QString &id);
     void clearBodies();
@@ -74,6 +81,9 @@ public:
     // --- Constantes simu ---
     static constexpr qreal EPSILON = Collision2D::EPSILON;
     static constexpr int   VELOCITY_ITERATIONS = 4;
+    // Nombre max de ré-intégrations post-impact dans resolveBodyZoneCCD
+    // (le résiduel éventuel est repris par les contacts résiduels).
+    static constexpr int   MAX_SLIDE_ITERATIONS = 2;
     static constexpr qreal PENETRATION_SLOP = 0.01;
     static constexpr qreal POSITION_CORRECTION_PERCENT = 0.6;
     static constexpr qreal TUNNELING_BUFFER = 0.02;
@@ -119,7 +129,9 @@ private:
     void integrateBodies(qreal dt);
     void applyGroundFrictionAndZones(InternalBody &body);
     void integrateBody(InternalBody &body, qreal dt);
-    void resolveBodyZoneCCD();
+    // `dt` sert à ré-intégrer le temps restant du frame après un impact
+    // (vélocité post-rebond), sinon murs "collants" et slide oblique ralenti.
+    void resolveBodyZoneCCD(qreal dt);
     void resolveBodyBodyCCD();
     // Collecte les contacts résiduels body-zone aux positions finales du
     // frame — appelée APRÈS resolveBodyBodyCCD pour voir aussi les bodies
@@ -134,6 +146,10 @@ private:
     // Helpers
     static Polygon2D buildPolygon(const QVector<QVector2D> &points);
     void wakeUp(InternalBody &body);
+    // Réveille les bodies endormis dont l'AABB (gonflée du rayon) touche la
+    // zone — appelé sur upsertZone/removeZone : une zone draguée sur une
+    // caisse endormie resterait sinon ignorée par toute la détection.
+    void wakeBodiesTouchingZone(const InternalZone &zone);
 
     QHash<QString, InternalBody> m_bodies;
     QHash<QString, InternalZone> m_zones;

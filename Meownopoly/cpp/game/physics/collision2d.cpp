@@ -190,11 +190,14 @@ bool Collision2D::pointInPolygon(
         return false;
     }
     
-    // Test rapide avec bounding box
-    if (!polygon.boundingBox.contains(point.x(), point.y())) {
+    // Test rapide avec bounding box, gonflée d'un epsilon : un point
+    // exactement sur un bord peut tomber marginalement hors de la bbox en
+    // flottant — le ray casting ci-dessous reste le juge exact.
+    if (!polygon.boundingBox.adjusted(-EPSILON, -EPSILON, EPSILON, EPSILON)
+             .contains(point.x(), point.y())) {
         return false;
     }
-    
+
     // Algorithme du ray casting
     bool inside = false;
     int n = polygon.points.size();
@@ -333,6 +336,20 @@ qreal Collision2D::sweepCircleSegment(
         qreal a = QVector2D::dotProduct(movement, movement);
         qreal b = 2.0 * QVector2D::dotProduct(d, movement);
         qreal c = QVector2D::dotProduct(d, d) - radius * radius;
+
+        // Départ déjà dans le disque du sommet : contact immédiat à t=0,
+        // cohérent avec sweepCircleCircle (qui retourne 0 sur overlap
+        // initial). Sans ce cas, aucun contact n'était produit et le body
+        // traversait le coin sans dépénétration.
+        if (c <= 0.0) {
+            if (bestT != 0.0) {
+                bestT = 0.0;
+                outClosest = vertex;
+                qreal len = d.length();
+                outNormal = (len > EPSILON) ? d / len : QVector2D(0, 1);
+            }
+            return;
+        }
 
         qreal discriminant = b * b - 4.0 * a * c;
         if (discriminant < 0 || a < EPSILON * EPSILON) return;
