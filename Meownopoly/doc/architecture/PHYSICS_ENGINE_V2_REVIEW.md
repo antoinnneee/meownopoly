@@ -175,32 +175,32 @@
 
 ### Bugs
 
-- [ ] 🟠 **Q1 — EditorPhysicsBridge : le "debounce 30 Hz" est un trailing debounce — zéro sync pendant un drag continu**
+- [x] 🟠 **Q1 — EditorPhysicsBridge : le "debounce 30 Hz" est un trailing debounce — zéro sync pendant un drag continu** *(corrigé 2026-07-03 : throttle leading — `if (!flushTimer.running) flushTimer.start()`, le timer n'est plus repoussé par les events → flush de l'état le plus récent toutes les ~33 ms pendant un drag, dernier état garanti < 33 ms après l'arrêt)*
   `EditorPhysicsBridge.qml:70-75,98`. `flushTimer.restart()` à chaque event : tant que `tileMoved` pleut, `_flushPending` n'est jamais appelé → zone fantôme dans le moteur pendant tout le drag.
   **Fix** : throttle leading — `if (!flushTimer.running) flushTimer.start()` (sans restart), ou flush immédiat si `now - _lastFlushMs > flushIntervalMs`.
 
-- [ ] 🟠 **Q2 — CameraRig : `FixedTopDown`/`OrbitDebug` écrasent définitivement pitch/yaw**
+- [x] 🟠 **Q2 — CameraRig : `FixedTopDown`/`OrbitDebug` écrasent définitivement pitch/yaw** *(corrigé 2026-07-03 : `_savedAngles` capturé à l'entrée du PREMIER mode destructeur (pas d'écrasement FixedTopDown↔OrbitDebug), restauré dans `setMode` avant le `recomputeOffset()` du mode entrant ; + `onEulerRotationChanged → invalidateGridBasis()` dans les Connections caméra de World3D)*
   `CameraRig.qml:89-94,195-207`. Le pitch d'origine (-55) n'est sauvegardé nulle part : retour en Follow → `recomputeOffset()` avec `tan(-90°)` → caméra top-down pour toujours ; yaw résiduel d'OrbitDebug casse le mapping affine (pas d'invalidation de `_gridBasis` sur `eulerRotation`).
   **Fix** : capturer `{pitch, yaw}` à l'entrée des modes destructeurs, restaurer dans `setMode` avant `recomputeOffset()` ; invalider le basis sur `eulerRotationChanged`.
 
-- [ ] 🟠 **Q3 — Spawners : `isAuthority` non réactif → bodies dupliqués ou manquants au changement d'autorité**
+- [x] 🟠 **Q3 — Spawners : `isAuthority` non réactif → bodies dupliqués ou manquants au changement d'autorité** *(corrigé 2026-07-03 : `isAuthority` intégré au `wantBody` (plus d'early-return) + `Connections { target: combat; onIsAuthorityChanged: _syncBody() }` dans les delegates des deux spawners)*
   `CrateSpawner.qml:98`, `EnemySpawner.qml:76`. L'autorité n'est évaluée qu'aux triggers existants : session démarrée après création des bodies → doublons locaux + snapshots hôte ; promotion en hôte → bodies jamais créés.
   **Fix** : `wantBody = running && isAuthority && !dead` dans `_syncBody` + `Connections { onIsAuthorityChanged: _syncBody() }` dans chaque delegate.
 
-- [ ] 🟠 **Q4 — CombatController : aucun reset d'état à l'arrêt du moteur**
+- [x] 🟠 **Q4 — CombatController : aucun reset d'état à l'arrêt du moteur** *(corrigé 2026-07-03 : branche `else` de `onActiveChanged` — reset `_states`/`_pendingPlayerRespawns`/`_playerDead`/`_playerLastAttackMs` + `stateRevision++`, aligné sur TriggerController)*
   `CombatController.qml:210`. `_states`/`_pendingPlayerRespawns`/`_playerDead` survivent au stop : ennemis restent morts au test suivant, respawns pendants fired instantanément, flags `registered` périmés. TriggerController (`:134-145`) fait le nettoyage correctement — s'aligner.
   **Fix** : `else { _states = ({}); _pendingPlayerRespawns = ({}); stateRevision++ }` dans `onActiveChanged`.
 
-- [ ] 🟠 **Q5 — GrabController : `_heldBy`/`_lastHolder` jamais purgés à l'arrêt**
+- [x] 🟠 **Q5 — GrabController : `_heldBy`/`_lastHolder` jamais purgés à l'arrêt** *(corrigé 2026-07-03 : `onActiveChanged` purge `_heldBy` ET `_lastHolder` + `grabRevision++` quand `!active`)*
   `GrabController.qml:47-50`. Au redémarrage, impulsions de ressort appliquées à des caisses que personne ne tient ; `_lastHolder` périmé fausse l'attribution des loots.
   **Fix** : `onActiveChanged: if (!active) { _heldBy = ({}); grabRevision++ }`.
 
-- [ ] 🟠 **Q6 — PhysicsActor : lissage exponentiel dépendant du framerate**
+- [x] 🟠 **Q6 — PhysicsActor : lissage exponentiel dépendant du framerate** *(corrigé 2026-07-03 : le tick de World3D passe `frameTime` (secondes) à `pullAndApply(dt)` ; `smoothing`/`orientLerp` gardent leur sémantique "fraction par frame 60 Hz de référence" et sont convertis par `1 - pow(1-s, dt·60)` — même pattern que le damping moteur et CameraRig ; fallback dt=1/60)*
   `PhysicsActor.qml:150-151`. `smoothing = 0.3` par frame : ~2.4× plus raide à 144 Hz qu'à 60 Hz — même famille que la régression jitter déjà corrigée. CameraRig (`:169`) fait correctement `1-exp(-k·dt)`.
   **Fix** : passer `frameTime` depuis le tick de World3D (le paramètre `_unusedAlpha` est déjà là) et `const t = 1 - Math.exp(-k * dt)`.
 
 - [ ] 🟡 **Q7 — Fantôme à l'origine côté client avant le premier snapshot** — `CrateSpawner.qml:144-146`, `EnemySpawner.qml:149-151`. `visible: running` mais `bodyState` échoue tant que le BodiesAnnounce n'est pas arrivé → node à (0,0,0) ; body retiré côté hôte = node figé (rien ne couvre les caisses). Fix : exposer `seeded` sur PhysicsActor et conditionner `visible` dessus ; dé-seeder après N échecs de `bodyState`.
-- [ ] 🟡 **Q8 — Calcul d'alpha triplement cassé (code mort)** — `World3D.qml:245-248`. `stepDurationNs` référencé sans parenthèses (Q_INVOKABLE → référence de fonction), `Date.now()*1e6` vs horloge worker, et alpha ignoré par `pullAndApply`. Fix : supprimer (ou implémenter réellement l'interpolation prev/next → lié à N13).
+- [x] 🟡 **Q8 — Calcul d'alpha triplement cassé (code mort)** *(corrigé 2026-07-03 avec Q6 : calcul d'alpha supprimé, le tick passe désormais `frameTime` à `pullAndApply(dt)` ; la vraie interpolation prev/next reste liée au chantier N13)* — `World3D.qml:245-248`. `stepDurationNs` référencé sans parenthèses (Q_INVOKABLE → référence de fonction), `Date.now()*1e6` vs horloge worker, et alpha ignoré par `pullAndApply`. Fix : supprimer (ou implémenter réellement l'interpolation prev/next → lié à N13).
 - [ ] 🟡 **Q9 — Orientation `atan2(vx, vy)` incohérente avec le mapping `Z3D = -gy`** — `PhysicsActor.qml:156` vs `World3D.qml:52`. Yaw en miroir sur Z, peut-être compensé par le modèle — vérifier visuellement, corriger ou documenter.
 - [ ] 🟡 **Q10 — `enemyParameter` déréférencé sans garde** — `CombatController.qml:164-166`. TypeError au milieu de `_aiTick` si tile Enemy sans paramètre (partout ailleurs il est traité nullable).
 - [ ] 🟡 **Q11 — Caisse déplacée dans l'éditeur moteur tournant : body jamais repositionné** — contrairement aux zones (bridge `tileMoved`). Documenter le choix, ou écouter `tileMoved` et `removeBody`+`create` (ou commande `teleportBody`).

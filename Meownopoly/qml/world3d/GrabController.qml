@@ -42,6 +42,18 @@ Item {
 
     readonly property bool active: physicsWorld ? physicsWorld.running : false
 
+    // Purge à l'arrêt du moteur : sinon au redémarrage le tick de maintien
+    // applique des impulsions de ressort à des caisses que personne ne
+    // tient, et `_lastHolder` périmé fausse l'attribution des récompenses
+    // de TriggerController.
+    onActiveChanged: {
+        if (!active) {
+            _heldBy = ({})
+            _lastHolder = ({})
+            grabRevision++
+        }
+    }
+
     // actorId → uuid de caisse tenue (autorité : vérité ; client : miroir).
     property var _heldBy: ({})
     // uuid de caisse → dernier actorId porteur (attribution des récompenses).

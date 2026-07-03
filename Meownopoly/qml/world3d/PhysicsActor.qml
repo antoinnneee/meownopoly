@@ -38,13 +38,19 @@ Item {
     // une plateforme à Y constant non nul.
     property real restY: 0
 
-    // Lissage : 0 = pas de lissage (saut direct), 1 = jamais atteint.
-    // 0.3 ≈ 70 % du chemin parcouru en 3 frames (~50 ms à 60 Hz).
+    // Lissage : fraction du chemin parcourue par frame DE RÉFÉRENCE 60 Hz
+    // (0 = figé sur place, 1 = snap immédiat). 0.3 ≈ 66 % du chemin en
+    // 3 frames (~50 ms à 60 Hz). La conversion framerate-indépendante
+    // (1 - pow(1-s, dt·60), équivalent 1-exp(-k·dt)) est faite dans
+    // pullAndApply — un facteur appliqué "par frame" serait ~2.4× plus
+    // raide à 144 Hz qu'à 60 Hz (même famille que la régression jitter
+    // du triple buffer déjà corrigée ; CameraRig fait pareil).
     property bool interpolate: true
     property real smoothing: 0.3
 
     // Orientation auto depuis la velocity. Lerp doux pour éviter le jitter
-    // d'orientation quand la velocity est presque nulle.
+    // d'orientation quand la velocity est presque nulle. Même sémantique
+    // 60 Hz de référence + conversion framerate-indépendante que smoothing.
     property bool autoOrient: true
     property real orientLerp: 0.2
 
@@ -122,10 +128,15 @@ Item {
         _traceFrameIdx++
     }
 
-    function pullAndApply(_unusedAlpha) {
+    // `dt` : durée de la frame de rendu en secondes (frameTime du tick de
+    // World3D). Sert au lissage framerate-indépendant ; fallback 1/60 si
+    // absent (premier tick, appelant legacy).
+    function pullAndApply(dt) {
         if (!world3D || !world3D.physicsWorld || !node3D) return
         const s = world3D.physicsWorld.bodyState(bodyId)
         if (!s.id) return                       // body pas (encore) créé
+
+        const frameDt = (dt !== undefined && dt > 0) ? dt : 1 / 60
 
         // gridToWorldStable : mapping affine figé (origin + base capturés
         // au démarrage). Évite le jitter dû au coupling caméra↔mapping.
@@ -147,8 +158,10 @@ Item {
             node3D.z = pos3D.z
             _seeded = true
         } else {
-            node3D.x += (pos3D.x - node3D.x) * smoothing
-            node3D.z += (pos3D.z - node3D.z) * smoothing
+            const t = smoothing >= 1 ? 1
+                    : 1 - Math.pow(1 - smoothing, frameDt * 60)
+            node3D.x += (pos3D.x - node3D.x) * t
+            node3D.z += (pos3D.z - node3D.z) * t
         }
         node3D.y = visualY
 
@@ -158,7 +171,9 @@ Item {
             let d = target - cur
             while (d < -180) d += 360
             while (d >  180) d -= 360
-            node3D.eulerRotation.y = cur + d * orientLerp
+            const ot = orientLerp >= 1 ? 1
+                     : 1 - Math.pow(1 - orientLerp, frameDt * 60)
+            node3D.eulerRotation.y = cur + d * ot
         }
 
         if (_traceFramesLeft > 0) {

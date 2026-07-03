@@ -46,6 +46,13 @@ Item {
     property real orbitPitch: -55
     property real orbitDistance: 600
 
+    // Angles caméra capturés à l'entrée d'un mode "destructeur"
+    // (FixedTopDown écrase pitch à -90, OrbitDebug pilote pitch/yaw chaque
+    // frame). Sans restauration, le retour en Follow ferait recomputeOffset()
+    // avec tan(-90°) → caméra top-down définitive, et un yaw résiduel
+    // d'OrbitDebug casserait le mapping affine caméra↔grille.
+    property var _savedAngles: null
+
     // Recalcule un offset qui centre `target` à l'écran sous l'angle
     // actuel de la caméra. Appelé à `setTarget` et toujours réutilisable.
     // (Anciennement `setOffsetFromCameraAngle` dans le plan §5.10.)
@@ -83,6 +90,22 @@ Item {
         if (newMode === mode) return
         const cam = world3D ? world3D.camera : null
         if (!cam) { mode = newMode; return }
+
+        // Capture des angles d'origine à l'entrée du PREMIER mode
+        // destructeur (pas d'écrasement en passant FixedTopDown↔OrbitDebug),
+        // restauration à la sortie AVANT le recomputeOffset du mode entrant.
+        const destructive = (newMode === CameraRig.FixedTopDown
+                             || newMode === CameraRig.OrbitDebug)
+        if (destructive && _savedAngles === null) {
+            _savedAngles = { x: cam.eulerRotation.x,
+                             y: cam.eulerRotation.y,
+                             z: cam.eulerRotation.z }
+        } else if (!destructive && _savedAngles !== null) {
+            cam.eulerRotation.x = _savedAngles.x
+            cam.eulerRotation.y = _savedAngles.y
+            cam.eulerRotation.z = _savedAngles.z
+            _savedAngles = null
+        }
 
         if (newMode === CameraRig.Follow) {
             recomputeOffset()

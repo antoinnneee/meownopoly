@@ -94,9 +94,12 @@ Item {
 
             function _syncBody() {
                 if (!root.physicsWorld || uuid === "") return
-                // Client réseau : bodies possédés par l'hôte (snapshots).
-                if (!root.combat.isAuthority) return
+                // L'autorité fait partie du wantBody (pas un early-return) :
+                // une session démarrée APRÈS la création des bodies doit
+                // retirer les bodies locaux d'un client (ils arrivent par
+                // snapshot), et une promotion en hôte doit les créer.
                 const wantBody = root.physicsWorld.running
+                                 && root.combat.isAuthority
                 if (wantBody && !_bodySpawned) {
                     root.physicsWorld.createDynamicCircle(
                         bodyId, _spawnPos(), bodyRadius,
@@ -127,6 +130,13 @@ Item {
             Connections {
                 target: root.physicsWorld
                 function onRunningChanged() { crateEntry._syncBody() }
+            }
+
+            // Changement d'autorité à chaud (session démarrée/arrêtée,
+            // promotion en hôte) : re-statuer sur la possession du body.
+            Connections {
+                target: root.combat
+                function onIsAuthorityChanged() { crateEntry._syncBody() }
             }
 
             Connections {

@@ -207,7 +207,21 @@ Item {
     }
 
     // Activation du combat : module de vie ON + joueur enregistré.
-    onActiveChanged: if (active) _registerLocalPlayer()
+    // Arrêt : reset complet de l'état interne — sinon les ennemis restent
+    // morts au test suivant, les respawns pendants firent instantanément à
+    // la reprise et les flags `registered` sont périmés (TriggerController
+    // fait ce nettoyage correctement — on s'aligne).
+    onActiveChanged: {
+        if (active) {
+            _registerLocalPlayer()
+        } else {
+            _states = ({})
+            _pendingPlayerRespawns = ({})
+            _playerDead = false
+            _playerLastAttackMs = 0
+            stateRevision++
+        }
+    }
     // Profil (re)créé ou changé pendant le test : re-register (full heal —
     // acceptable en mode test éditeur, le maxHp doit suivre le profil).
     onPlayerProfileChanged: if (active) _registerLocalPlayer()

@@ -71,10 +71,12 @@ Item {
 
             function _syncBody() {
                 if (!root.physicsWorld || uuid === "") return
-                // Client réseau : les bodies ennemis appartiennent à l'hôte
-                // (ils arrivent par snapshot) — ne jamais les créer/retirer.
-                if (!root.combat.isAuthority) return
-                const wantBody = root.physicsWorld.running && !dead
+                // L'autorité fait partie du wantBody (pas un early-return) :
+                // une session démarrée APRÈS la création des bodies doit
+                // retirer les bodies locaux d'un client (ils arrivent par
+                // snapshot), et une promotion en hôte doit les créer.
+                const wantBody = root.physicsWorld.running
+                                 && root.combat.isAuthority && !dead
                 if (wantBody && !_bodySpawned) {
                     root.physicsWorld.createKinematicActor(
                         bodyId,
@@ -110,6 +112,13 @@ Item {
             Connections {
                 target: root.physicsWorld
                 function onRunningChanged() { enemyEntry._syncBody() }
+            }
+
+            // Changement d'autorité à chaud (session démarrée/arrêtée,
+            // promotion en hôte) : re-statuer sur la possession du body.
+            Connections {
+                target: root.combat
+                function onIsAuthorityChanged() { enemyEntry._syncBody() }
             }
 
             // Vitesse éditable à chaud depuis le panneau de config.

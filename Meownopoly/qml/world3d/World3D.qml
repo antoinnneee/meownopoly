@@ -114,6 +114,11 @@ Item {
         target: cameraOrthographic
         function onHorizontalMagnificationChanged() { root.invalidateGridBasis() }
         function onVerticalMagnificationChanged()   { root.invalidateGridBasis() }
+        // La ROTATION caméra change aussi la projection (contrairement à la
+        // translation, absorbée par construction) : FixedTopDown/OrbitDebug
+        // du CameraRig pilotent eulerRotation — sans recapture, le mapping
+        // affine resterait calé sur l'ancien angle au retour en Follow.
+        function onEulerRotationChanged()           { root.invalidateGridBasis() }
     }
     Connections {
         target: gridManager
@@ -238,16 +243,20 @@ Item {
     property alias registryRef: registry
 
     FrameAnimation {
+        id: renderTick
         running: physicsWorld && physicsWorld.running
         onTriggered: {
             if (!physicsWorld) return
             physicsWorld.beginFrame()
-            const stepNs = physicsWorld.stepDurationNs
-            const nowNs  = Date.now() * 1e6
-            const snapNs = physicsWorld.currentTimestampNs
-            const alpha  = stepNs > 0 ? Math.min(1, (nowNs - snapNs) / stepNs) : 1
+            // dt de la frame de rendu (secondes, property du FrameAnimation)
+            // — consommé par le lissage framerate-indépendant des actors.
+            // (L'ancien calcul d'alpha était triplement cassé et ignoré :
+            // stepDurationNs référencé sans parenthèses, horloge Date.now()
+            // vs horloge worker — supprimé, cf. review Q8 ; une vraie
+            // interpolation prev/next viendra avec le chantier N13.)
+            const dt = renderTick.frameTime
             for (let i = 0; i < registry.actors.length; i++)
-                registry.actors[i].pullAndApply(alpha)
+                registry.actors[i].pullAndApply(dt)
         }
     }
 

@@ -28,10 +28,13 @@ Item {
     // Cible : moteur physique à alimenter. Doit être assigné par l'appelant.
     property var physicsWorld: null
 
-    // Période de debounce en ms (= ~30 Hz). Pendant un drag répété, on
-    // accumule les events et on n'envoie qu'un seul upsert par tile à
-    // l'expiration. Au repos (pas d'event), le dernier état est garanti
-    // d'avoir été pushé < `flushIntervalMs` après l'arrêt des mutations.
+    // Période de throttle en ms (= ~30 Hz). Pendant un drag répété, on
+    // accumule les events et on flush l'état le plus récent au plus une
+    // fois par période — throttle LEADING : le timer démarre au premier
+    // event et n'est PAS repoussé par les suivants (un restart à chaque
+    // event ferait un trailing debounce → zéro sync pendant tout un drag
+    // continu, zone fantôme dans le moteur). Au repos, le dernier état est
+    // garanti pushé < `flushIntervalMs` après l'arrêt des mutations.
     property int flushIntervalMs: 33
 
     // Logs (optionnel) — utile en bring-up Phase 3 et tests collab.
@@ -64,9 +67,9 @@ Item {
         }
     }
 
-    // Timer de coalescing. Restart à chaque enqueue : tant que les events
-    // pleuvent (drag actif), il ne triggere pas. Dès qu'on s'arrête > 33 ms,
-    // il flush l'état le plus récent.
+    // Timer de coalescing. Démarré au premier enqueue d'une fenêtre, jamais
+    // repoussé : les events d'un drag actif s'accumulent et sont flushés
+    // toutes les ~33 ms (l'event suivant le flush ré-arme le timer).
     Timer {
         id: flushTimer
         interval: root.flushIntervalMs
@@ -95,7 +98,7 @@ Item {
     function _enqueueUpsert(tile) {
         const id = _idForTile(tile)
         _pendingByUuid[id] = tile  // dernier wins
-        flushTimer.restart()
+        if (!flushTimer.running) flushTimer.start()
     }
 
     function _flushPending() {
