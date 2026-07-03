@@ -136,6 +136,11 @@ private:
     void connectToCatway();
     void disconnectFromCatway();
 
+    /// Client : envoie le Hello (demande de full table + claim) à l'hôte.
+    /// Retourne false si l'hôte est introuvable dans Catway (P2P pas encore
+    /// établi) — dans ce cas le retry timer doit rester armé.
+    bool sendHelloToHost();
+
     /// Hôte : envoie BodiesAnnounce reliable si pending non vide.
     void flushPendingAnnouncements();
 
@@ -157,6 +162,10 @@ private:
     int m_snapshotHz = 30;
     QTimer m_snapshotTimer;
     QTimer m_fullTableTimer; // re-broadcast périodique de la table (couvre late-join + paquets perdus)
+    // Client : retry du Hello tant que l'hôte n'est pas joignable dans Catway
+    // (startAsClient peut précéder l'établissement P2P). Une fois le Hello
+    // parti, reliable.io garantit la livraison → le timer s'arrête.
+    QTimer m_helloRetryTimer;
 
     QString m_claimedActorId;
 

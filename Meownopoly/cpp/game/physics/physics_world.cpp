@@ -509,6 +509,21 @@ void PhysicsWorld::applyRemoteSnapshot(const QByteArray &payload)
         return;
     }
 
+    // Gate anti-obsolète : une retransmission reliable.io peut livrer un
+    // snapshot APRÈS un plus récent — l'appliquer ferait reculer tous les
+    // bodies d'une frame (rubber-banding). Comparaison wraparound-aware
+    // sur quint32 (le tick réseau est tronqué depuis le quint64 moteur).
+    // Prérequis de tout passage du transport en lossy (cf. review N12).
+    if (m_hasRemoteTick && static_cast<qint32>(tick - m_lastRemoteTick) <= 0) {
+        static int stale = 0;
+        if ((stale++ & 0x1F) == 0) {
+            qDebug() << "[PhysicsWorld] applyRemoteSnapshot: snapshot obsolète droppé"
+                     << "(tick" << tick << "<= dernier" << m_lastRemoteTick
+                     << "," << stale << "drops cumulés)";
+        }
+        return;
+    }
+
     // On reconstruit intégralement m_remoteBuffer.bodies à chaque snapshot
     // — les bodies absents disparaissent naturellement (équivalent removeBody).
     pattounx::WorldSnapshot fresh;
@@ -550,6 +565,8 @@ void PhysicsWorld::applyRemoteSnapshot(const QByteArray &payload)
     m_remoteBuffer = std::move(fresh);
     m_lastTick = tick;
     m_lastTimestampNs = ts;
+    m_lastRemoteTick = tick;
+    m_hasRemoteTick = true;
     if (!m_useRemoteBuffer) {
         m_useRemoteBuffer = true;
         qDebug() << "[PhysicsWorld] mode remote buffer activé";
@@ -627,4 +644,6 @@ void PhysicsWorld::resetNetworkState()
     m_nextIdIndex = 1;
     m_pendingAnnouncements.added.clear();
     m_pendingAnnouncements.removed.clear();
+    m_hasRemoteTick = false;
+    m_lastRemoteTick = 0;
 }

@@ -140,16 +140,16 @@
   `physics_session.cpp:430-448`. Un client qui crash flèche enfoncée laisse son acteur courir dans un mur indéfiniment.
   **Fix** : dans le branch host de `onPlayerTimedOut`, `m_world->pushInput(claimedActor, QVector2D(0,0))` avant de retirer le claim.
 
-- [ ] 🟠 **N6 — Aucun rejet des snapshots obsolètes / out-of-order**
+- [x] 🟠 **N6 — Aucun rejet des snapshots obsolètes / out-of-order** *(corrigé 2026-07-03 : gate `qint32(tick - m_lastRemoteTick) <= 0` wraparound-aware dans `applyRemoteSnapshot`, membres dédiés `m_hasRemoteTick`/`m_lastRemoteTick` — distincts de `m_lastTick` qui est aussi alimenté par la sim locale — reset par `resetNetworkState()`)*
   `physics_world.cpp:494-543`. `m_lastTick` stocké mais jamais comparé : une retransmission reliable.io livrée après un snapshot plus récent est appliquée → rubber-banding. Prérequis de tout passage en transport lossy (N12).
   **Fix** : `if (!first && int32(tick - m_lastTick) <= 0) return;` (wraparound-aware sur quint32).
 
-- [ ] 🟠 **N7 — Claims fragiles (3 bugs liés)**
+- [x] 🟠 **N7 — Claims fragiles (3 bugs liés)** *(corrigé 2026-07-03 : `sendHelloToHost()` factorisé + retry QTimer 500 ms tant que l'hôte est introuvable dans Catway ; `setClaimedActorId` re-Hello si `m_active && !m_isHost` ; côté hôte, claim refusé si déjà pris par un autre sender (premier arrivé premier servi, TODO Welcome de refus cf. N11), et l'acteur relâché lors d'un changement de claim voit son input neutralisé comme N5)*
   - Hello jamais renvoyé si l'hôte est introuvable au `startAsClient` (`physics_session.cpp:130-142`) → l'hôte ignore le claim, clavier hôte et inputs client se battent pour le même acteur. **Fix** : retry QTimer 500 ms ou re-Hello sur `Catway::playerConnected`.
   - `setClaimedActorId` après `startAsClient` ne re-notifie pas l'hôte (`physics_session.cpp:60-65`). **Fix** : renvoyer un Hello si `m_active && !m_isHost`.
   - Conflit de claims entre deux clients non arbitré (`physics_session.cpp:386-392`) : deux senders peuvent claimer le même acteur, leurs inputs s'écrasent. **Fix** : refuser le claim déjà pris (→ Welcome de refus, cf. N11) + vérifier `m_remoteClaims.value(senderId) == actorId` dans InputUpdate (= N1).
 
-- [ ] 🟡 **N8 — Claim vide non purgé** — `physics_session.cpp:386-392`. `if (!claim.isEmpty())` ne retire jamais l'ancien claim. Fix : `remove(senderId)` si vide.
+- [x] 🟡 **N8 — Claim vide non purgé** *(corrigé 2026-07-03, avec N7 : Hello sans claim → `m_remoteClaims.remove(senderId)` + input de l'ancien acteur remis à zéro)* — `physics_session.cpp:386-392`. `if (!claim.isEmpty())` ne retire jamais l'ancien claim. Fix : `remove(senderId)` si vide.
 - [ ] 🟡 **N9 — Full table 1 Hz mergée au lieu de remplacée** — `physics_session.cpp:301-310` + `physics_world.cpp:583-597`. Un client qui rate un delta `removed` garde un mapping fantôme pour toujours ; devient une vraie corruption dès que les idIndex sont recyclés (N15). Fix : flag `"full": true` → remplacement intégral côté client.
 - [ ] 🟡 **N10 — Retour en sim locale après perte d'hôte = téléportation** — `physics_session.cpp:433-439`. `stop()` client purge le remote buffer puis reprend la sim locale sur l'état d'avant-session. Fix : réinjecter le dernier snapshot dans le moteur local avant purge (ou documenter que l'appelant re-spawne).
 - [ ] 🟡 **N11 — Hello sans Welcome** — `physics_message_type.h:42`. Le client ne sait jamais si son claim a été accepté (la "réponse" est un BodiesAnnounce anonyme). Fix : message `Welcome` hôte→client avec `{claimAccepted: bool}`.

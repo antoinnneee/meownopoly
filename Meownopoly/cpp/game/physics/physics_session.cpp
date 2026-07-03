@@ -31,6 +31,16 @@ PhysicsSession::PhysicsSession(QObject *parent) : QObject(parent)
     connect(&m_fullTableTimer, &QTimer::timeout, this, [this]() {
         if (m_active && m_isHost) broadcastFullBodyTable();
     });
+
+    // Retry du Hello côté client : tant que l'hôte n'est pas dans Catway
+    // (hole punch en cours), on re-tente toutes les 500 ms. Le timer 1 Hz de
+    // l'hôte couvre la full table mais PAS le claim — sans Hello, les inputs
+    // du client sont rejetés par la garde N1 côté hôte.
+    m_helloRetryTimer.setInterval(500);
+    connect(&m_helloRetryTimer, &QTimer::timeout, this, [this]() {
+        if (!m_active || m_isHost) { m_helloRetryTimer.stop(); return; }
+        if (sendHelloToHost()) m_helloRetryTimer.stop();
+    });
 }
 
 PhysicsSession *PhysicsSession::instance()
@@ -64,6 +74,12 @@ void PhysicsSession::setClaimedActorId(const QString &actorId)
     if (m_claimedActorId == actorId) return;
     m_claimedActorId = actorId;
     emit claimedActorIdChanged();
+
+    // Claim changé APRÈS startAsClient : re-notifier l'hôte, sinon il garde
+    // l'ancien claim (ou aucun) et les InputUpdate du nouveau claim sont
+    // rejetés par sa garde de sécurité.
+    if (m_active && !m_isHost && !sendHelloToHost())
+        m_helloRetryTimer.start();
 }
 
 void PhysicsSession::setPhysicsWorld(QObject *world)
@@ -128,19 +144,13 @@ bool PhysicsSession::startAsClient(const QString &localPlayerId,
 
     // Hello explicite à l'host : demande la full table d'idIndex sans
     // attendre le timer 1 Hz, et embarque le claim local pour que l'host
-    // sache quel actor il ne doit plus pousser localement.
-    if (PlayerNetwork *host = Catway::instance()->playerById(hostPlayerId)) {
-        QJsonObject helloPayload;
-        if (!m_claimedActorId.isEmpty())
-            helloPayload.insert(QStringLiteral("claim"), m_claimedActorId);
-        const QByteArray pkt = PhysicsProtocol::packJson(
-            PhysicsMessageType::Hello, helloPayload);
-        Catway::instance()->sendReliableToPlayer(host, pkt);
-        qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << hostPlayerId
-                 << "claim =" << m_claimedActorId;
-    } else {
+    // sache quel actor il ne doit plus pousser localement. Si l'hôte n'est
+    // pas encore joignable (hole punch en cours), retry 500 ms — le timer
+    // 1 Hz de l'hôte ne couvre pas le claim, seulement la full table.
+    if (!sendHelloToHost()) {
         qWarning() << "[PhysicsSession] CLIENT start : host introuvable dans Catway"
-                   << hostPlayerId << "— Hello non envoyé, attendra le timer 1 Hz";
+                   << hostPlayerId << "— Hello non envoyé, retry armé (500 ms)";
+        m_helloRetryTimer.start();
     }
 
     emit localPlayerIdChanged();
@@ -167,6 +177,7 @@ void PhysicsSession::stop()
     disconnectFromCatway();
     m_snapshotTimer.stop();
     m_fullTableTimer.stop();
+    m_helloRetryTimer.stop();
 
     if (m_world) {
         if (!m_isHost) {
@@ -214,6 +225,23 @@ void PhysicsSession::disconnectFromCatway()
 {
     disconnect(m_reliableConn);
     disconnect(m_timeoutConn);
+}
+
+bool PhysicsSession::sendHelloToHost()
+{
+    if (m_hostPlayerId.isEmpty()) return false;
+    PlayerNetwork *host = Catway::instance()->playerById(m_hostPlayerId);
+    if (!host) return false;
+
+    QJsonObject helloPayload;
+    if (!m_claimedActorId.isEmpty())
+        helloPayload.insert(QStringLiteral("claim"), m_claimedActorId);
+    const QByteArray pkt = PhysicsProtocol::packJson(
+        PhysicsMessageType::Hello, helloPayload);
+    Catway::instance()->sendReliableToPlayer(host, pkt);
+    qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << m_hostPlayerId
+             << "claim =" << m_claimedActorId;
+    return true;
 }
 
 // ── Inputs ──────────────────────────────────────────────────────────────────
@@ -418,11 +446,38 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         PhysicsMessageType::Value t;
         if (PhysicsProtocol::unpackJson(data, t, helloPayload)) {
             const QString claim = helloPayload.value(QStringLiteral("claim")).toString();
-            if (!claim.isEmpty()) {
-                m_remoteClaims.insert(senderId, claim);
-                emit remoteClaimsChanged();
-                qDebug() << "[PhysicsSession] HOST : claim enregistré"
-                         << senderId << "→" << claim;
+            const QString previous = m_remoteClaims.value(senderId);
+            if (claim != previous) {
+                // Arbitrage : premier arrivé, premier servi. Sans ce refus,
+                // deux clients claimant le même acteur verraient leurs
+                // InputUpdate s'écraser mutuellement à chaque frame.
+                QString takenBy;
+                for (auto it = m_remoteClaims.constBegin();
+                     it != m_remoteClaims.constEnd(); ++it) {
+                    if (it.value() == claim && it.key() != senderId) {
+                        takenBy = it.key();
+                        break;
+                    }
+                }
+                if (!claim.isEmpty() && !takenBy.isEmpty()) {
+                    qWarning() << "[PhysicsSession] HOST : claim refusé —"
+                               << claim << "déjà pris par" << takenBy
+                               << "(demandé par" << senderId << ")";
+                    // TODO N11 : renvoyer un Welcome {claimAccepted:false}
+                    // pour que le client sache que ses inputs seront rejetés.
+                } else {
+                    // L'acteur précédemment claimé par ce sender est relâché :
+                    // neutraliser son dernier input (même logique que N5).
+                    if (!previous.isEmpty() && m_world)
+                        m_world->pushInput(previous, QVector2D(0.0f, 0.0f));
+                    if (claim.isEmpty())
+                        m_remoteClaims.remove(senderId); // purge (Hello sans claim)
+                    else
+                        m_remoteClaims.insert(senderId, claim);
+                    emit remoteClaimsChanged();
+                    qDebug() << "[PhysicsSession] HOST : claim de" << senderId
+                             << ":" << previous << "→" << claim;
+                }
             }
         }
         const QVariantMap full = m_world->currentBodyTable();

@@ -215,6 +215,15 @@ private:
     // au lieu du triple buffer worker (qui peut être inactif si simEnabled=false).
     bool m_useRemoteBuffer = false;
     pattounx::WorldSnapshot m_remoteBuffer;
+
+    // Client : gate anti-snapshot-obsolète. Le tick réseau est un quint32
+    // (tronqué depuis le quint64 moteur) — la comparaison passe par
+    // `qint32(tick - m_lastRemoteTick) <= 0`, wraparound-aware (arithmétique
+    // non signée modulaire, comme les sequence numbers TCP). Reset par
+    // resetNetworkState() pour que le premier snapshot d'une nouvelle
+    // session soit toujours accepté.
+    bool m_hasRemoteTick = false;
+    quint32 m_lastRemoteTick = 0;
 };
 
 #endif // PHYSICS_WORLD_H
