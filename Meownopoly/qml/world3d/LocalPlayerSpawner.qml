@@ -31,6 +31,11 @@ Item {
 
     Component.onCompleted: _spawnIfReady()
     Component.onDestruction: {
+        // Conditionné à `running` À DESSEIN : moteur arrêté = worker (et son
+        // engine) détruits, il n'y a plus de body à retirer et la commande
+        // queued partirait dans le vide. NOTE : `actorId` (souvent "player")
+        // est global au PhysicsWorld — deux scènes montées simultanément
+        // avec le même actorId partageraient le même body (review Q12).
         if (physicsWorld && physicsWorld.running) physicsWorld.removeBody(actorId)
     }
 

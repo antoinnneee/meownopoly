@@ -14,7 +14,7 @@
  *  - cible décoration → estompée (runtime uniquement, jamais persisté).
  *  - récompense (rewardCurrency / rewardItemName) créditée UNE SEULE FOIS
  *    par session au dernier porteur de la caisse déclencheuse (fallback
- *    joueur local de l'autorité), via CombatController._applyLoot (modules
+ *    joueur local de l'autorité), via CombatController.applyLoot (modules
  *    monnaie/inventaire).
  *
  * Réseau : l'autorité broadcast {type:"zoneTrigger", uuid, active} (visuel +
@@ -24,13 +24,14 @@
 import QtQuick
 import ItemSnapable
 import Pattounx 1.0
+import "BodyIds.js" as BodyIds
 
 Item {
     id: root
     visible: false
 
     required property var physicsWorld
-    /// CombatController (autorité, _applyLoot, localActorId).
+    /// CombatController (autorité, applyLoot, localActorId).
     required property var combat
     /// GrabController (lastHolderOf pour l'attribution des récompenses).
     property var grab: null
@@ -81,28 +82,38 @@ Item {
         return s
     }
 
-    function _tileByUuid(uuid) {
+    // Index uuid → tile (liste complète + zones trigger), reconstruits par
+    // revision — _triggerTileForZoneId est dans le chemin chaud des events
+    // enter/exit du moteur (review Q15).
+    readonly property var _tilesByUuidMap: {
+        tilesRevision
+        const m = ({})
         const list = root.tilesList
-        if (!list) return null
+        if (!list) return m
         for (let i = 0; i < list.length; i++) {
             const t = list[i]
-            if (t && t.snapableParameters
-                    && String(t.snapableParameters.uniqueId) === uuid)
-                return t
+            if (t && t.snapableParameters)
+                m[String(t.snapableParameters.uniqueId)] = t
         }
-        return null
+        return m
+    }
+    readonly property var _triggerTileByUuidMap: {
+        const m = ({})
+        const zones = _triggerZoneTiles
+        for (let i = 0; i < zones.length; i++)
+            m[String(zones[i].snapableParameters.uniqueId)] = zones[i]
+        return m
+    }
+
+    function _tileByUuid(uuid) {
+        return _tilesByUuidMap[String(uuid)] || null
     }
 
     // Les ids de zone du moteur sont les uniqueId AVEC accolades
     // (EditorPhysicsBridge._idForTile). Les uuid de tiles côté QML aussi
     // (String(uniqueId) === "{...}") — comparaison directe.
     function _triggerTileForZoneId(zoneId) {
-        const zones = _triggerZoneTiles
-        for (let i = 0; i < zones.length; i++) {
-            if (String(zones[i].snapableParameters.uniqueId) === zoneId)
-                return zones[i]
-        }
-        return null
+        return _triggerTileByUuidMap[String(zoneId)] || null
     }
 
     // ── Détection (autorité uniquement — le moteur ne tourne que chez elle) ─
@@ -110,17 +121,17 @@ Item {
         target: root.physicsWorld
         function onActorEnteredZone(actorId, zoneId) {
             if (!root.combat.isAuthority) return
-            if (String(actorId).indexOf("crate:") !== 0) return
+            if (!BodyIds.isCrate(actorId)) return
             const tile = root._triggerTileForZoneId(String(zoneId))
             if (!tile) return
             const zUuid = String(tile.snapableParameters.uniqueId)
             const s = root._stateFor(zUuid)
             s.crates[String(actorId)] = true
-            root._evaluate(tile, s, String(actorId).substring(6))
+            root._evaluate(tile, s, BodyIds.crateUuid(actorId))
         }
         function onActorExitedZone(actorId, zoneId) {
             if (!root.combat.isAuthority) return
-            if (String(actorId).indexOf("crate:") !== 0) return
+            if (!BodyIds.isCrate(actorId)) return
             const tile = root._triggerTileForZoneId(String(zoneId))
             if (!tile) return
             const zUuid = String(tile.snapableParameters.uniqueId)
@@ -190,13 +201,21 @@ Item {
             if (target.tileType === ItemSnapable.PhysicZoneTile) {
                 // Porte physique : zone retirée du moteur à l'ouverture,
                 // re-upsertée à la fermeture (bridge, mêmes coordonnées).
-                if (open) {
-                    physicsWorld.removeZone(tUuid)
-                } else if (physicsBridge) {
-                    physicsBridge._upsertZoneNow(target)
+                // Autorité seulement : côté client la sim locale est OFF,
+                // les zones du moteur local ne servent à rien (l'état vient
+                // des snapshots de l'hôte) — cf. review Q12.
+                if (combat.isAuthority) {
+                    if (open) {
+                        physicsWorld.removeZone(tUuid)
+                    } else if (physicsBridge) {
+                        physicsBridge.upsertZoneNow(target)
+                    }
                 }
             }
-            // Feedback 2D runtime (jamais persisté).
+            // Feedback 2D runtime (jamais persisté). Set impératif assumé :
+            // il écraserait un binding `opacity` posé ailleurs sur la tile —
+            // aucun n'existe aujourd'hui, et l'état est restauré (1.0) à la
+            // fermeture/au stop.
             if (el) el.opacity = open ? 0.35 : 1.0
         }
     }
@@ -215,7 +234,7 @@ Item {
             to = grab.lastHolderOf(triggerCrateUuid)
         if (to === "") to = combat.localActorId
 
-        combat._applyLoot(to, currency, itemName, zp.rewardItemQuantity)
+        combat.applyLoot(to, currency, itemName, zp.rewardItemQuantity)
         if (combat.networked) {
             PhysicsSession.broadcastCombatEvent({
                 type: "loot", to: to, currency: currency,

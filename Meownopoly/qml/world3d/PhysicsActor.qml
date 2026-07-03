@@ -54,87 +54,43 @@ Item {
     property bool autoOrient: true
     property real orientLerp: 0.2
 
-    property bool _seeded: false
+    // True dès que le node a reçu au moins une position physique valide.
+    // Les spawners conditionnent la visibilité dessus côté client réseau :
+    // sans ça, un node est affiché à l'origine (0,0,0) tant que le
+    // BodiesAnnounce n'est pas arrivé, et reste figé si le body disparaît
+    // côté hôte (dé-seed après _missTolerance échecs consécutifs).
+    property bool seeded: false
+    // Nombre de frames consécutives sans bodyState avant de dé-seeder
+    // (~1,5 s à 60 Hz : tolère les trous transitoires de table idIndex).
+    property int missTolerance: 90
+    property int _missCount: 0
 
-    // ---- Debug jitter ---------------------------------------------------
-    // `startJitterTrace(N)` active un log CSV pendant N frames. Tous les
-    // observateurs sont capturés dans la même frame de rendu pour pouvoir
-    // corréler. Format conçu pour être grep-é puis chargé dans un tableur.
-    //
-    // Colonnes :
-    //   frame, lastTick, dTick, frameMs,
-    //   physGx, physGy, physVx, physVy,
-    //   stableX, stableZ, unstableX, unstableZ, mapDx, mapDz,
-    //   nodePreX, nodePreZ, nodePostX, nodePostZ, nodeDx, nodeDz,
-    //   camX, camZ
-    //
-    // dTick : nombre de ticks physiques écoulés depuis la frame précédente
-    //   (devrait être 0 ou 1 à 60Hz tick = 60Hz rendu ; 2+ = saut).
-    // mapDx/Dz : delta entre stable et unstable mapping → quantifie le
-    //   tremblement basse-fréquence dû au coupling caméra.
-    // nodeDx/Dz : déplacement effectif du node entre 2 frames (utile pour
-    //   spotter les sauts visibles).
-    property int  _traceFramesLeft: 0
-    property int  _traceFrameIdx: 0
-    property real _traceLastMs: 0
-    property int  _traceLastTick: -1
-    property real _traceLastNodeX: 0
-    property real _traceLastNodeZ: 0
-
-    function startJitterTrace(frames) {
-        _traceFramesLeft = frames > 0 ? frames : 180
-        _traceFrameIdx   = 0
-        _traceLastMs     = Date.now()
-        _traceLastTick   = -1
-        _traceLastNodeX  = node3D ? node3D.x : 0
-        _traceLastNodeZ  = node3D ? node3D.z : 0
-        console.log("[JITTER] trace start frames=" + _traceFramesLeft
-                    + " bodyId=" + bodyId)
-        console.log("[JITTER] CSV header: "
-                    + "frame,tick,dTick,frameMs,"
-                    + "physGx,physGy,physVx,physVy,"
-                    + "stableX,stableZ,unstableX,unstableZ,mapDx,mapDz,"
-                    + "nodePreX,nodePreZ,nodePostX,nodePostZ,nodeDx,nodeDz,"
-                    + "camX,camZ")
-    }
-
-    function _logTrace(s, posStable, posUnstable, prePosX, prePosZ) {
-        const nowMs   = Date.now()
-        const dtMs    = _traceLastMs > 0 ? (nowMs - _traceLastMs) : 0
-        _traceLastMs  = nowMs
-        const tick    = world3D.physicsWorld.currentGuiTick
-                        ? world3D.physicsWorld.currentGuiTick() : 0
-        const dTick   = _traceLastTick < 0 ? 0 : (tick - _traceLastTick)
-        _traceLastTick = tick
-        const cam = world3D.camera
-        const camX = cam ? cam.x : 0
-        const camZ = cam ? cam.z : 0
-        const nodeDx = node3D.x - _traceLastNodeX
-        const nodeDz = node3D.z - _traceLastNodeZ
-        _traceLastNodeX = node3D.x
-        _traceLastNodeZ = node3D.z
-        console.log("[JITTER] " + _traceFrameIdx
-            + "," + tick + "," + dTick + "," + dtMs.toFixed(2)
-            + "," + s.position.x.toFixed(5) + "," + s.position.y.toFixed(5)
-            + "," + s.velocity.x.toFixed(3) + "," + s.velocity.y.toFixed(3)
-            + "," + posStable.x.toFixed(3) + "," + posStable.z.toFixed(3)
-            + "," + posUnstable.x.toFixed(3) + "," + posUnstable.z.toFixed(3)
-            + "," + (posStable.x - posUnstable.x).toFixed(4)
-            + "," + (posStable.z - posUnstable.z).toFixed(4)
-            + "," + prePosX.toFixed(3) + "," + prePosZ.toFixed(3)
-            + "," + node3D.x.toFixed(3) + "," + node3D.z.toFixed(3)
-            + "," + nodeDx.toFixed(4) + "," + nodeDz.toFixed(4)
-            + "," + camX.toFixed(3) + "," + camZ.toFixed(3))
-        _traceFrameIdx++
+    /// Force un re-seed : le prochain état valide est appliqué sans lissage
+    /// (respawn, re-création du body).
+    function reseed() {
+        seeded = false
+        _missCount = 0
     }
 
     // `dt` : durée de la frame de rendu en secondes (frameTime du tick de
     // World3D). Sert au lissage framerate-indépendant ; fallback 1/60 si
     // absent (premier tick, appelant legacy).
     function pullAndApply(dt) {
-        if (!world3D || !world3D.physicsWorld || !node3D) return
-        const s = world3D.physicsWorld.bodyState(bodyId)
-        if (!s.id) return                       // body pas (encore) créé
+        if (!world3D || !world3D.physicsWorld) return
+        applyState(world3D.physicsWorld.bodyState(bodyId), dt)
+    }
+
+    // Variante batch : World3D tire les états de TOUS les actors en un seul
+    // appel C++ (bodyStates) et distribue ici — cf. review T13/Q13.
+    function applyState(s, dt) {
+        if (!node3D) return
+        if (!s || !s.id) {
+            // Body pas (encore) créé — ou disparu côté hôte : dé-seed après
+            // tolérance pour que la visibilité (spawners) retombe.
+            if (seeded && ++_missCount >= missTolerance) reseed()
+            return
+        }
+        _missCount = 0
 
         const frameDt = (dt !== undefined && dt > 0) ? dt : 1 / 60
 
@@ -142,21 +98,10 @@ Item {
         // au démarrage). Évite le jitter dû au coupling caméra↔mapping.
         const pos3D = world3D.gridToWorldStable(s.position.x, s.position.y)
 
-        // Pour le trace : capturer aussi le mapping non-stable pour mesurer
-        // l'écart caméra-induit, et la position node3D AVANT lissage pour
-        // mesurer ce que le lissage absorbe.
-        let posUnstable = null
-        let prePosX = 0, prePosZ = 0
-        if (_traceFramesLeft > 0) {
-            posUnstable = world3D.gridPositionTo3D(s.position.x, s.position.y)
-            prePosX = node3D.x
-            prePosZ = node3D.z
-        }
-
-        if (!_seeded || !interpolate) {
+        if (!seeded || !interpolate) {
             node3D.x = pos3D.x
             node3D.z = pos3D.z
-            _seeded = true
+            seeded = true
         } else {
             const t = smoothing >= 1 ? 1
                     : 1 - Math.pow(1 - smoothing, frameDt * 60)
@@ -165,6 +110,12 @@ Item {
         }
         node3D.y = visualY
 
+        // Orientation : atan2(vx, vy) sur la velocity GRILLE alors que le
+        // mapping monde est Z3D = -gy — le yaw est donc en miroir sur Z par
+        // rapport à un mapping naïf. C'est compensé par l'orientation de
+        // base des modèles (validé visuellement : les actors regardent dans
+        // leur direction de déplacement). Ne pas "corriger" sans re-tester
+        // tous les modèles — cf. review Q9.
         if (autoOrient && s.velocity.length() > 0.1) {
             const target = Math.atan2(s.velocity.x, s.velocity.y) * 180 / Math.PI
             const cur = node3D.eulerRotation.y
@@ -174,13 +125,6 @@ Item {
             const ot = orientLerp >= 1 ? 1
                      : 1 - Math.pow(1 - orientLerp, frameDt * 60)
             node3D.eulerRotation.y = cur + d * ot
-        }
-
-        if (_traceFramesLeft > 0) {
-            _logTrace(s, pos3D, posUnstable, prePosX, prePosZ)
-            _traceFramesLeft--
-            if (_traceFramesLeft === 0)
-                console.log("[JITTER] trace end")
         }
     }
 

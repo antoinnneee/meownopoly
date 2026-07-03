@@ -10,11 +10,8 @@
  * (ex: joueur 1 = ZQSD, joueur 2 = flèches). Un même InputController peut
  * écouter plusieurs touches par direction (`up: [Qt.Key_Z, Qt.Key_Up]`).
  *
- * Deux moyens de routage :
- *  - via la property `keysHandler` (Item focusable) si on a un parent qui
- *    veut déléguer Keys.onPressed/onReleased ;
- *  - via les fonctions `handlePress(event)` / `handleRelease(event)` à
- *    appeler depuis un Keys.onPressed parent (utilisé dans Editor.qml).
+ * Routage : les fonctions `handlePress(event)` / `handleRelease(event)` à
+ * appeler depuis un Keys.onPressed parent (utilisé dans Editor.qml).
  *
  * Le toggle FreeCam est exposé en signal pour que le rig caméra
  * décide de basculer son mode (séparation des concerns). La touche
@@ -145,9 +142,7 @@ Item {
         if (_matches(k, keymap.sprint)) { sprint = false; _push(); return }
     }
 
-    property Item keysHandler: Item {
-        focus: true
-        Keys.onPressed:  e => root.handlePress(e)
-        Keys.onReleased: e => root.handleRelease(e)
-    }
+    // (L'ancienne property `keysHandler` — un Item focusable jamais parenté,
+    //  donc jamais focusable en pratique — était du code mort trompeur : le
+    //  routage réel passe par handlePress/handleRelease. Supprimée, review Q12.)
 }

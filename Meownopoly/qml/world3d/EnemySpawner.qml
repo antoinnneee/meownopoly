@@ -20,10 +20,18 @@
 import QtQuick
 import QtQuick3D
 import ItemSnapable
+import "BodyIds.js" as BodyIds
 
 Item {
     id: root
     visible: false
+
+    /// Spec physique commune des ennemis (promue en properties — était
+    /// dupliquée en littéraux dans _syncBody ET onMoveSpeedChanged, avec
+    /// divergence garantie à la première retouche).
+    property real enemyBodyRadius: 0.25
+    property real enemyAcceleration: 30.0
+    property real enemyLinearDamping: 0.1
 
     /// World3D hôte (scene + helpers de conversion + registry).
     required property var world3D
@@ -69,6 +77,16 @@ Item {
 
             property bool _bodySpawned: false
 
+            // Spec unique du body ennemi — consommée par la création ET la
+            // ré-upsert à chaud (upsertBody C++ préserve position/velocity).
+            function _bodySpec() {
+                return {
+                    acceleration: root.enemyAcceleration,
+                    maxSpeed: enemy ? enemy.moveSpeed : 2.0,
+                    linearDamping: root.enemyLinearDamping
+                }
+            }
+
             function _syncBody() {
                 if (!root.physicsWorld || uuid === "") return
                 // L'autorité fait partie du wantBody (pas un early-return) :
@@ -81,17 +99,13 @@ Item {
                     root.physicsWorld.createKinematicActor(
                         bodyId,
                         root.combat.spawnPosFor(tile),
-                        0.25,
-                        {
-                            acceleration: 30.0,
-                            maxSpeed: enemy ? enemy.moveSpeed : 2.0,
-                            linearDamping: 0.1
-                        })
+                        root.enemyBodyRadius,
+                        _bodySpec())
                     _bodySpawned = true
                 } else if (!wantBody && _bodySpawned) {
                     root.physicsWorld.removeBody(bodyId)
                     _bodySpawned = false
-                    actor._seeded = false   // re-seed position au respawn
+                    actor.reseed()   // re-seed position au respawn
                 }
             }
 
@@ -130,12 +144,8 @@ Item {
                         root.physicsWorld.createKinematicActor(
                             enemyEntry.bodyId,
                             root.combat.spawnPosFor(enemyEntry.tile),
-                            0.25,
-                            {
-                                acceleration: 30.0,
-                                maxSpeed: enemyEntry.enemy.moveSpeed,
-                                linearDamping: 0.1
-                            })
+                            root.enemyBodyRadius,
+                            enemyEntry._bodySpec())
                     }
                 }
             }
@@ -154,10 +164,11 @@ Item {
                 parent: root.world3D ? root.world3D.scene : null
                 // Visible tant que vivant ou pendant l'anim de mort. Côté
                 // client (non-autorité), pas de _bodySpawned local : la
-                // position vient des snapshots réseau.
+                // position vient des snapshots réseau — `actor.seeded` évite
+                // le fantôme à l'origine avant le premier snapshot.
                 visible: (root.combat.isAuthority
                           ? (enemyEntry._bodySpawned || deathAnim.running)
-                          : root.physicsWorld.running)
+                          : (root.physicsWorld.running && actor.seeded))
                          && (!enemyEntry.dead || deathAnim.running)
 
                 SkinnedModel {

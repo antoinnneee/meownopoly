@@ -35,6 +35,7 @@ import QtQuick
 import ItemSnapable
 import GameplayModuleManager 1.0
 import Pattounx 1.0
+import "BodyIds.js" as BodyIds
 
 Item {
     id: root
@@ -119,7 +120,7 @@ Item {
         return out
     }
 
-    function bodyIdFor(uuid) { return "enemy:" + uuid }
+    function bodyIdFor(uuid) { return BodyIds.enemy(uuid) }
 
     function isDead(uuid) {
         const s = _states[String(uuid)]
@@ -134,15 +135,6 @@ Item {
     function maxHpOf(uuid) {
         if (!_health) return 1
         return _health.maxHp(bodyIdFor(String(uuid)))
-    }
-
-    function _tileByUuid(uuid) {
-        const tiles = _enemyTiles
-        for (let i = 0; i < tiles.length; i++) {
-            if (String(tiles[i].snapableParameters.uniqueId) === uuid)
-                return tiles[i]
-        }
-        return null
     }
 
     /// Centre de la tile en coords grille (position de spawn/respawn).
@@ -160,9 +152,11 @@ Item {
             s = { dead: false, lastAttackMs: 0, respawnAtMs: 0, registered: false }
             _states[uuid] = s
         }
-        if (!s.registered && _health && _health.enabled) {
-            _health.registerPlayer(bodyIdFor(uuid),
-                                   tile.snapableParameters.enemyParameter.maxHp)
+        // `enemyParameter` est nullable (tile Enemy sans paramètre) — garde
+        // comme partout ailleurs, cf. review Q10.
+        const ep = tile.snapableParameters.enemyParameter
+        if (!s.registered && _health && _health.enabled && ep) {
+            _health.registerPlayer(bodyIdFor(uuid), ep.maxHp)
             s.registered = true
         }
         return s
@@ -233,7 +227,7 @@ Item {
             if (playerId === root.localActorId) root._playerDead = true
             // L'autorité planifie le respawn de tout joueur (local ou
             // distant) — jamais des ennemis (respawn géré par _states).
-            if (root.isAuthority && playerId.indexOf("enemy:") !== 0) {
+            if (root.isAuthority && !BodyIds.isEnemy(playerId)) {
                 root._pendingPlayerRespawns[playerId] =
                         Date.now() + root.playerRespawnDelayMs
             }
@@ -307,6 +301,12 @@ Item {
         if (!ev || !_health) return
         switch (ev.type) {
         case "hp": {
+            // NOTE : le combat force `enabled = true` sur les modules qu'il
+            // consomme (ici et dans _registerLocalPlayer/applyLoot). Choix
+            // assumé en mode test éditeur : un event de combat qui arrive
+            // PROUVE que la feature est en usage — mais ça ré-active un
+            // module que l'utilisateur vient de couper. À déplacer vers le
+            // câblage du GameplayModuleManager si ça devient gênant (Q20).
             _health.enabled = true
             const id = String(ev.id)
             // registerPlayer si maxHp inconnu/différent (met full), puis setHp
@@ -335,8 +335,8 @@ Item {
             playerHit(String(ev.uuid), Number(ev.damage) || 0)
             break
         case "loot":
-            _applyLoot(String(ev.to), Number(ev.currency) || 0,
-                       String(ev.itemName || ""), Number(ev.itemQuantity) || 1)
+            applyLoot(String(ev.to), Number(ev.currency) || 0,
+                      String(ev.itemName || ""), Number(ev.itemQuantity) || 1)
             break
         }
     }
@@ -413,7 +413,7 @@ Item {
         const itemName = ep.lootItemName
         const itemQty = ep.lootItemQuantity
         if (currency > 0 || itemName !== "") {
-            _applyLoot(killerActorId, currency, itemName, itemQty)
+            applyLoot(killerActorId, currency, itemName, itemQty)
             if (networked) {
                 PhysicsSession.broadcastCombatEvent({
                     type: "loot", to: killerActorId, currency: currency,
@@ -424,7 +424,9 @@ Item {
     }
 
     /// Applique le loot dans les modules (autorité ET miroirs clients).
-    function _applyLoot(actorId, currency, itemName, itemQuantity) {
+    /// API PUBLIQUE : aussi consommée par TriggerController pour les
+    /// récompenses de plaques de pression (cf. review Q19).
+    function applyLoot(actorId, currency, itemName, itemQuantity) {
         if (actorId === "") return
         if (currency > 0 && _currency) {
             _currency.enabled = true
@@ -438,9 +440,12 @@ Item {
         lootGranted(actorId, currency, itemName, itemQuantity)
     }
 
+    /// Cadence du tick IA (poursuite/attaque), en ms.
+    property int aiTickIntervalMs: 100
+
     // ── Tick IA (autorité uniquement) ─────────────────────────────────────
     Timer {
-        interval: 100
+        interval: root.aiTickIntervalMs
         repeat: true
         running: root.active && root.isAuthority
         onTriggered: root._aiTick()
@@ -473,6 +478,9 @@ Item {
             const tile = tiles[i]
             const sp = tile.snapableParameters
             const ep = sp.enemyParameter
+            // Nullable (tile Enemy sans paramètre) : TypeError au milieu du
+            // tick sinon — traité nullable partout ailleurs (review Q10).
+            if (!ep) continue
             const uuid = String(sp.uniqueId)
             const s = _ensureState(tile)
             const bodyId = bodyIdFor(uuid)

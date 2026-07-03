@@ -39,6 +39,10 @@ Item {
     property real smoothSpeed: 2.0
     property vector3d offset: Qt.vector3d(0, 0, 0)
 
+    // Distance (unités monde) devant la caméra du point de référence au sol
+    // utilisé par moveManual pour mesurer le déplacement écran de la grille.
+    property real groundRefDistance: 600
+
     // --- Paramètres du mode OrbitDebug ---
     // Yaw en degrés autour de l'axe Y du target ; pitch en degrés (clamp
     // -89..89 pour éviter le gimbal). Distance horizontale projetée au sol.
@@ -141,7 +145,7 @@ Item {
         if (dx === 0 && dz === 0) return
 
         // Point de référence au sol pour mesurer le déplacement écran.
-        const refPoint3D = Qt.vector3d(cam.x, 0, cam.z - 600)
+        const refPoint3D = Qt.vector3d(cam.x, 0, cam.z - groundRefDistance)
         const screenPosPre = view3D.mapFrom3DScene(refPoint3D)
 
         cam.x += dx

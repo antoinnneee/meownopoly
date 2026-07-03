@@ -255,8 +255,15 @@ Item {
             // vs horloge worker — supprimé, cf. review Q8 ; une vraie
             // interpolation prev/next viendra avec le chantier N13.)
             const dt = renderTick.frameTime
-            for (let i = 0; i < registry.actors.length; i++)
-                registry.actors[i].pullAndApply(dt)
+            const actors = registry.actors
+            // Batch : UN appel QML→C++ pour tous les actors de la frame
+            // (bodyStates retourne une liste alignée sur les ids) au lieu
+            // de N bodyState() — cf. review T13/Q13.
+            const ids = []
+            for (let i = 0; i < actors.length; i++) ids.push(actors[i].bodyId)
+            const states = physicsWorld.bodyStates(ids)
+            for (let i = 0; i < actors.length; i++)
+                actors[i].applyState(states[i], dt)
         }
     }
 

@@ -179,6 +179,7 @@
         <file>qml/editor/moduleManager/crateSelectionPanel/CratePanel.qml</file>
         <file>qml/editor/configPanel/crateConfigPanel/qmldir</file>
         <file>qml/editor/configPanel/crateConfigPanel/CrateConfigurationPanelSection.qml</file>
+        <file>qml/world3d/BodyIds.js</file>
         <file>qml/world3d/EnemySpawner.qml</file>
         <file>qml/world3d/CombatController.qml</file>
         <file>qml/world3d/CrateSpawner.qml</file>

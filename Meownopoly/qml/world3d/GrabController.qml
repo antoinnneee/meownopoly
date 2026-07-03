@@ -20,6 +20,7 @@
 import QtQuick
 import ItemSnapable
 import Pattounx 1.0
+import "BodyIds.js" as BodyIds
 
 Item {
     id: root
@@ -39,6 +40,14 @@ Item {
     /// Distance au-delà de laquelle la caisse est lâchée automatiquement
     /// (coincée derrière un mur, joueur téléporté…).
     property real autoReleaseDistance: 3.0
+
+    /// Ressort amorti du maintien (impulsions ~30 Hz) : raideur (fraction de
+    /// l'écart au point de maintien convertie en Δv), amortissement (fraction
+    /// de la vélocité retranchée) et norme max d'impulsion par unité de masse
+    /// (stabilité sur les caisses légères).
+    property real springStiffness: 0.5
+    property real springDamping: 0.12
+    property real maxImpulsePerMass: 2.0
 
     readonly property bool active: physicsWorld ? physicsWorld.running : false
 
@@ -78,7 +87,17 @@ Item {
         return out
     }
 
-    function bodyIdFor(uuid) { return "crate:" + uuid }
+    function bodyIdFor(uuid) { return BodyIds.crate(uuid) }
+
+    // Index uuid → tile des caisses, reconstruit avec la liste filtrée —
+    // _massOf est dans le tick-path 30 Hz du maintien (review Q15).
+    readonly property var _crateTileByUuid: {
+        const m = ({})
+        const tiles = _crateTiles
+        for (let i = 0; i < tiles.length; i++)
+            m[String(tiles[i].snapableParameters.uniqueId)] = tiles[i]
+        return m
+    }
 
     /// uuid de la caisse tenue par le joueur local ("" si aucune).
     function heldByLocal() {
@@ -210,22 +229,21 @@ Item {
             // Ressort amorti. applyImpulse = Δv × masse côté moteur ; on
             // borne la norme pour rester stable sur les caisses légères.
             const mass = _massOf(uuid)
-            let ix = ((tx - cs.position.x) * 0.5 - cs.velocity.x * 0.12) * mass
-            let iy = ((ty - cs.position.y) * 0.5 - cs.velocity.y * 0.12) * mass
+            let ix = ((tx - cs.position.x) * springStiffness
+                      - cs.velocity.x * springDamping) * mass
+            let iy = ((ty - cs.position.y) * springStiffness
+                      - cs.velocity.y * springDamping) * mass
             const n = Math.sqrt(ix * ix + iy * iy)
-            const maxImpulse = 2.0 * mass
+            const maxImpulse = maxImpulsePerMass * mass
             if (n > maxImpulse) { ix = ix / n * maxImpulse; iy = iy / n * maxImpulse }
             physicsWorld.applyImpulse(bodyId, Qt.vector2d(ix, iy))
         }
     }
 
     function _massOf(crateUuid) {
-        const tiles = _crateTiles
-        for (let i = 0; i < tiles.length; i++) {
-            const sp = tiles[i].snapableParameters
-            if (String(sp.uniqueId) === crateUuid)
-                return Math.max(0.01, sp.physicalObjectParameter.mass)
-        }
+        const tile = _crateTileByUuid[String(crateUuid)]
+        if (tile)
+            return Math.max(0.01, tile.snapableParameters.physicalObjectParameter.mass)
         return 1.0
     }
 }

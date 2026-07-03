@@ -16,6 +16,8 @@
 import QtQuick
 import QtQuick3D
 import ItemSnapable
+import Pattounx 1.0
+import "BodyIds.js" as BodyIds
 
 Item {
     id: root
@@ -45,7 +47,7 @@ Item {
         return out
     }
 
-    function bodyIdFor(uuid) { return "crate:" + uuid }
+    function bodyIdFor(uuid) { return BodyIds.crate(uuid) }
 
     Instantiator {
         model: root._crateTiles
@@ -108,7 +110,7 @@ Item {
                 } else if (!wantBody && _bodySpawned) {
                     root.physicsWorld.removeBody(bodyId)
                     _bodySpawned = false
-                    actor._seeded = false
+                    actor.reseed()
                 }
             }
 
@@ -139,6 +141,20 @@ Item {
                 function onIsAuthorityChanged() { crateEntry._syncBody() }
             }
 
+            // Caisse déplacée dans l'éditeur pendant que le moteur tourne :
+            // repositionner le body (setBodyPosition synchronise
+            // previousPosition — pas de faux sweep CCD). Les zones ont déjà
+            // ce suivi via EditorPhysicsBridge, les caisses ne l'avaient pas.
+            Connections {
+                target: ItemSnapableEvents
+                function onTileMoved(movedTile) {
+                    if (movedTile !== crateEntry.tile) return
+                    if (crateEntry._bodySpawned)
+                        root.physicsWorld.setBodyPosition(crateEntry.bodyId,
+                                                          crateEntry._spawnPos())
+                }
+            }
+
             Connections {
                 target: crateEntry.crate
                 function onMassChanged() { crateEntry._reupsert() }
@@ -150,9 +166,12 @@ Item {
             Node {
                 id: crateNode
                 parent: root.world3D ? root.world3D.scene : null
+                // Côté client : `actor.seeded` évite le fantôme à l'origine
+                // tant que le premier snapshot/BodiesAnnounce n'est pas là,
+                // et retombe si le body disparaît côté hôte (dé-seed).
                 visible: root.combat.isAuthority
                          ? crateEntry._bodySpawned
-                         : root.physicsWorld.running
+                         : (root.physicsWorld.running && actor.seeded)
 
                 // Cube "caisse" dimensionné sur la tile : une cellule de
                 // grille en unités monde = norme du vecteur de base b1 du

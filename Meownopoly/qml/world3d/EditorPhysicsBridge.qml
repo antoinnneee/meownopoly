@@ -110,12 +110,15 @@ Item {
         for (let i = 0; i < ids.length; i++) {
             const tile = _pendingByUuid[ids[i]]
             if (!tile) continue
-            if (_isPhysicZone(tile)) _upsertZoneNow(tile)
+            if (_isPhysicZone(tile)) upsertZoneNow(tile)
         }
         _pendingByUuid = {}
     }
 
-    function _upsertZoneNow(tile) {
+    /// Upsert immédiat (sans throttle) d'une zone dans le moteur. API
+    /// PUBLIQUE : aussi consommée par TriggerController pour re-fermer les
+    /// "portes" (zones d'exclusion liées) à la désactivation d'une plaque.
+    function upsertZoneNow(tile) {
         if (!_isPhysicZone(tile)) return
         const zp = tile.zoneParameter
         const dp = tile.displayParameter
