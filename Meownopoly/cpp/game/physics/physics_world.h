@@ -213,6 +213,9 @@ private:
     QHash<QString, quint16> m_idIndexByActor;
     QHash<quint16, QString> m_actorByIdIndex;
     quint16 m_nextIdIndex = 1; // 0 réservé sentinel "non assigné"
+    // Index libérés par les bodies disparus, recyclés FIFO à l'allocation —
+    // sans ça, m_nextIdIndex wrappe vers 0 après 65535 spawns cumulés.
+    QList<quint16> m_freeIdIndices;
 
     // Hôte : delta cumulé entre serializeSnapshot() consécutifs. Vidé par
     // takePendingAnnouncements().

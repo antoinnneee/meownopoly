@@ -1,5 +1,6 @@
 #include "physics_protocol.h"
 
+#include <QDebug>
 #include <QJsonDocument>
 
 QByteArray PhysicsProtocol::packJson(PhysicsMessageType::Value type,
@@ -8,6 +9,7 @@ QByteArray PhysicsProtocol::packJson(PhysicsMessageType::Value type,
     QByteArray result;
     result.reserve(256);
     result.append(static_cast<char>(type));
+    result.append(static_cast<char>(kProtocolVersion));
     if (!payload.isEmpty()) {
         result.append(QJsonDocument(payload).toJson(QJsonDocument::Compact));
     }
@@ -18,8 +20,9 @@ QByteArray PhysicsProtocol::packBinary(PhysicsMessageType::Value type,
                                        const QByteArray &payload)
 {
     QByteArray result;
-    result.reserve(payload.size() + 1);
+    result.reserve(payload.size() + 2);
     result.append(static_cast<char>(type));
+    result.append(static_cast<char>(kProtocolVersion));
     result.append(payload);
     return result;
 }
@@ -38,6 +41,21 @@ bool PhysicsProtocol::peekType(const QByteArray &data,
                                PhysicsMessageType::Value &outType)
 {
     if (!isPhysicsPacket(data)) return false;
+    // Vérification de version au chokepoint de toute réception : deux
+    // builds au format différent rejettent proprement au lieu de
+    // désérialiser du garbage en silence.
+    if (data.size() < 2
+        || static_cast<quint8>(data.at(1)) != kProtocolVersion) {
+        static int mismatches = 0;
+        if ((mismatches++ & 0x3F) == 0) {
+            qWarning() << "[PhysicsProtocol] paquet rejeté — version"
+                       << (data.size() >= 2 ? static_cast<quint8>(data.at(1)) : 0)
+                       << "!= attendue" << kProtocolVersion
+                       << "(builds incompatibles ?" << mismatches
+                       << "rejets cumulés)";
+        }
+        return false;
+    }
     outType = static_cast<PhysicsMessageType::Value>(static_cast<quint8>(data.at(0)));
     return true;
 }
@@ -53,11 +71,11 @@ bool PhysicsProtocol::unpackJson(const QByteArray &data,
     // quelques KB). Un paquet forgé énorme ne doit pas passer par le
     // parseur JSON (allocation + parse coûteux sur le thread GUI).
     constexpr qsizetype kMaxJsonPayload = 64 * 1024;
-    if (data.size() - 1 > kMaxJsonPayload) return false;
+    if (data.size() - 2 > kMaxJsonPayload) return false;
 
-    if (data.size() > 1) {
+    if (data.size() > 2) {
         QJsonParseError err;
-        QJsonDocument doc = QJsonDocument::fromJson(data.mid(1), &err);
+        QJsonDocument doc = QJsonDocument::fromJson(data.mid(2), &err);
         if (err.error != QJsonParseError::NoError || !doc.isObject()) return false;
         outPayload = doc.object();
     } else {
@@ -68,6 +86,6 @@ bool PhysicsProtocol::unpackJson(const QByteArray &data,
 
 QByteArray PhysicsProtocol::payloadBytes(const QByteArray &data)
 {
-    if (data.size() <= 1) return {};
-    return data.mid(1);
+    if (data.size() <= 2) return {};
+    return data.mid(2);
 }

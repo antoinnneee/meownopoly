@@ -65,7 +65,9 @@ void PhysicsSession::setSnapshotHz(int hz)
     if (m_snapshotHz == hz) return;
     m_snapshotHz = hz;
     if (m_snapshotTimer.isActive()) {
-        m_snapshotTimer.setInterval(1000 / m_snapshotHz);
+        // qRound : la division entière biaisait la cadence vers le haut
+        // (ex. 30 Hz → 33 ms → 30.3 Hz effectifs ; 45 Hz → 22 ms → 45.5).
+        m_snapshotTimer.setInterval(qRound(1000.0 / m_snapshotHz));
     }
     emit snapshotHzChanged();
 }
@@ -118,7 +120,7 @@ bool PhysicsSession::startAsHost(const QString &localPlayerId)
     // Pump initial des announcements pour la table déjà existante.
     flushPendingAnnouncements();
 
-    m_snapshotTimer.start(1000 / m_snapshotHz);
+    m_snapshotTimer.start(qRound(1000.0 / m_snapshotHz));
     m_fullTableTimer.start();
 
     emit localPlayerIdChanged();
@@ -208,6 +210,7 @@ void PhysicsSession::stop()
     m_hostPlayerId.clear();
     m_remoteClaims.clear();
     m_combatReqWindows.clear();
+    m_lastSentInputs.clear();
     m_snapshotsSent = 0;
     m_snapshotsReceived = 0;
     if (!m_claimAccepted) {
@@ -253,6 +256,10 @@ bool PhysicsSession::sendHelloToHost()
     const QByteArray pkt = PhysicsProtocol::packJson(
         PhysicsMessageType::Hello, helloPayload);
     Catway::instance()->sendReliableToPlayer(host, pkt);
+    // Ré-armer la dédup d'inputs : les InputUpdate partis avant ce Hello ont
+    // pu être rejetés par l'hôte (claim pas encore enregistré) — un input
+    // constant maintenu doit pouvoir repartir même inchangé.
+    m_lastSentInputs.clear();
     qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << m_hostPlayerId
              << "claim =" << m_claimedActorId;
     return true;
@@ -282,6 +289,14 @@ void PhysicsSession::pushOrSendInput(const QString &actorId, QVector2D input)
     if (!m_claimedActorId.isEmpty() && actorId != m_claimedActorId) return;
     // Client : envoyer InputUpdate reliable au host.
     if (m_hostPlayerId.isEmpty()) return;
+    // Dédup : reliable garantit la livraison, inutile de renvoyer un vecteur
+    // identique à chaque frame (60-144 pkts/s pour un input constant). Le
+    // cache est purgé à chaque Hello (cf. sendHelloToHost) : les inputs
+    // envoyés AVANT l'enregistrement du claim ont été rejetés par l'hôte,
+    // il faut pouvoir les ré-émettre même inchangés.
+    const auto lastIt = m_lastSentInputs.constFind(actorId);
+    if (lastIt != m_lastSentInputs.constEnd() && lastIt.value() == input) return;
+    m_lastSentInputs.insert(actorId, input);
     QJsonObject payload{
         { "actorId", actorId },
         { "x", input.x() },

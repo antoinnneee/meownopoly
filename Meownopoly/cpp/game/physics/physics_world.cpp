@@ -514,7 +514,23 @@ QByteArray PhysicsWorld::serializeSnapshot()
         const QString &actorId = it.key();
         liveIds.insert(actorId);
         if (!m_idIndexByActor.contains(actorId)) {
-            const quint16 idx = m_nextIdIndex++;
+            // Allocation : recycler d'abord les index libérés (FIFO — le
+            // plus anciennement libéré en premier, les clients ont eu le
+            // temps de voir sa suppression via la full table 1 Hz). Sans
+            // recyclage, m_nextIdIndex wrappait vers 0 (sentinel !) après
+            // 65535 spawns cumulés puis produisait des collisions d'index.
+            quint16 idx;
+            if (!m_freeIdIndices.isEmpty()) {
+                idx = m_freeIdIndices.takeFirst();
+            } else {
+                idx = m_nextIdIndex++;
+                if (m_nextIdIndex == 0) {
+                    // 65535 bodies VIVANTS simultanément — pathologique.
+                    qCritical() << "[PhysicsWorld] table idIndex saturée,"
+                                << "wrap forcé (collisions d'index probables)";
+                    m_nextIdIndex = 1;
+                }
+            }
             m_idIndexByActor.insert(actorId, idx);
             m_actorByIdIndex.insert(idx, actorId);
             m_pendingAnnouncements.added.insert(idx, actorId);
@@ -531,6 +547,7 @@ QByteArray PhysicsWorld::serializeSnapshot()
     for (const QString &actorId : toErase) {
         const quint16 idx = m_idIndexByActor.take(actorId);
         m_actorByIdIndex.remove(idx);
+        m_freeIdIndices.append(idx); // recyclable (cf. allocation ci-dessus)
         if (m_pendingAnnouncements.added.remove(idx) == 0) {
             // Pas dans added (le body avait déjà été annoncé) → publier removal.
             m_pendingAnnouncements.removed.append(actorId);
@@ -720,7 +737,19 @@ void PhysicsWorld::setUseRemoteBuffer(bool on)
 {
     if (m_useRemoteBuffer == on) return;
     m_useRemoteBuffer = on;
-    if (!on) resetNetworkState();
+    if (!on) {
+        // Réinjecter le dernier état distant dans le moteur local AVANT la
+        // purge : sinon la sim locale reprend sur l'état d'avant-session et
+        // tous les bodies se téléportent brutalement (perte d'hôte, stop
+        // client). setBodyPosition no-ope pour les bodies inexistants
+        // localement (ceux possédés par l'hôte, recréés par les spawners)
+        // et synchronise previousPosition (pas de faux sweep CCD).
+        for (auto it = m_remoteBuffer.bodies.constBegin();
+             it != m_remoteBuffer.bodies.constEnd(); ++it) {
+            emit cmdSetBodyPosition(it.key(), it.value().position);
+        }
+        resetNetworkState();
+    }
     qDebug() << "[PhysicsWorld] setUseRemoteBuffer →" << on;
 }
 
@@ -730,6 +759,7 @@ void PhysicsWorld::resetNetworkState()
     m_idIndexByActor.clear();
     m_actorByIdIndex.clear();
     m_nextIdIndex = 1;
+    m_freeIdIndices.clear();
     m_pendingAnnouncements.added.clear();
     m_pendingAnnouncements.removed.clear();
     m_hasRemoteTick = false;

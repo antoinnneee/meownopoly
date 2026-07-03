@@ -197,6 +197,11 @@ private:
     // l'hôte. {senderId → (débutFenêtreMs, compteur)}.
     QHash<QString, QPair<qint64, int>> m_combatReqWindows;
 
+    // Client : dernier vecteur d'input envoyé par actorId — reliable
+    // garantissant la livraison, on ne renvoie que les changements. Purgé
+    // au stop ET à chaque Hello (les inputs pré-claim ont été rejetés).
+    QHash<QString, QVector2D> m_lastSentInputs;
+
     // Hôte uniquement : suivi des actorId revendiqués par chaque client
     // distant. Renseigné via le payload du Hello reçu d'un peer. Sert à
     // ignorer les pushInput locaux pour des actors qu'un client contrôle
