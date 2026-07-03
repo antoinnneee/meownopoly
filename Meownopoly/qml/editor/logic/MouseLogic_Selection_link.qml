@@ -7,7 +7,13 @@ MouseLogic_Selection {
     
     // Paramètre pour le type de lien
     property string kind: ""
-    
+
+    // Mode « Chemin » (nouvelle UI) : chaînage A→B→C — après chaque lien créé,
+    // la cible devient la nouvelle source. Premier clic sans source = choix de
+    // la source. Défaut false = comportement historique (UI classique, boutons
+    // Ajouter Précédent/Suivant : source fixe, liens en étoile).
+    property bool chainMode: false
+
     // Propriétés pour la gestion des liens
     property var linkSourceCase: null
     
@@ -20,14 +26,33 @@ MouseLogic_Selection {
     function clickedLeft(mouse, drag)
     {
         mouse.accepted = true
+
+        // Mode chemin sans source : le premier clic sur un élément le désigne
+        // comme point de départ du tracé.
+        if (chainMode && !linkSourceCase) {
+            if (clickElement.length > 0) {
+                linkSourceCase = clickElement[0]
+                showLinkPreview()
+            }
+            clickElement = []
+            return
+        }
+
         if (clickElement.length > 0) {
             if (clickElement[0] !== linkSourceCase)
             {
                 console.log(clickElement[0], linkSourceCase)
                 logic.tileLogic.createSnapableLink(linkSourceCase, clickElement[0], kind)
+                if (chainMode) {
+                    // Chaînage : la cible devient la nouvelle source (recrée
+                    // la prévisualisation, ancrée sur l'ancien élément).
+                    hideLinkPreview()
+                    linkSourceCase = clickElement[0]
+                    showLinkPreview()
+                }
                 clickElement = []
-                
-                
+
+
                 // Ne pas masquer la prévisualisation pour permettre plusieurs liens
                 return
             }

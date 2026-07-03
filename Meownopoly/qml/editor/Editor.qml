@@ -1074,6 +1074,33 @@ Base_Board {
                 : root.editorSidePanel.zoneConfigurationPanel
     }
 
+    // Mode « Chemin » (nouvelle UI) : toggle du mode EM_SELECTION_LINK en
+    // chainMode (chaînage A→B→C, sens « suivant » uniquement — le backend
+    // symétrique previous/next est inchangé). sourceElement optionnel :
+    // point de départ explicite (onglet Liens), sinon la sélection courante
+    // si unique, sinon le premier clic désignera la source.
+    function _togglePathMode(sourceElement) {
+        if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
+            if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview)
+                logic.mouseLogic.hideLinkPreview()
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+            return
+        }
+        var src = sourceElement || null
+        if (!src && logic.mouseLogic
+                && logic.mouseLogic.selectedElements.length === 1)
+            src = logic.mouseLogic.selectedElements[0]
+
+        // Ordre important : les propriétés se posent APRÈS changeMouseMode
+        // (le mouseLogic est rechargé par Loader au changement de mode).
+        logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
+        logic.mouseLogic.kind = "next"
+        logic.mouseLogic.chainMode = true
+        logic.mouseLogic.linkSourceCase = src
+        if (src && logic.mouseLogic.showLinkPreview)
+            logic.mouseLogic.showLinkPreview()
+    }
+
     function _upsertRemoteCursor(pid, x, y) {
         // Important : réassigner un nouvel objet (pas de mutation en place)
         // pour que le binding `_entry` du delegate Repeater se ré-évalue.
@@ -1335,6 +1362,7 @@ Base_Board {
             onMapInfoRequested: mapInfoPanel.openDrawer()
             onChatRequested: chatDrawer.open()
             onMenuRequested: escMenu.show()
+            onPathModeToggled: root._togglePathMode(null)
         }
     }
 
@@ -1363,6 +1391,7 @@ Base_Board {
                 const physicSettings = getCurrentPhysicSettings()
                 root._applyToSelectionAndSave("zone", function(el) { el.applyPhysicSettings(physicSettings) })
             }
+            onPathModeRequested: root._togglePathMode(currentElement)
         }
     }
 

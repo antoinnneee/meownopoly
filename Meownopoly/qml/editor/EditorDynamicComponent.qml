@@ -36,6 +36,7 @@ Item{
         SnapableCaseTile {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
@@ -45,6 +46,7 @@ Item{
         SnapableDecoration {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
@@ -54,6 +56,7 @@ Item{
         SnapableExclusionZone {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
@@ -63,6 +66,7 @@ Item{
         SnapableNPC {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
@@ -72,6 +76,7 @@ Item{
         SnapableEnemy {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
@@ -81,6 +86,7 @@ Item{
         SnapablePhysicalObject {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+                               || logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }

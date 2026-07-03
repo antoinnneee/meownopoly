@@ -8,3 +8,4 @@ InspectorTab_Zone 1.0 InspectorTab_Zone.qml
 InspectorTab_Npc 1.0 InspectorTab_Npc.qml
 InspectorTab_Enemy 1.0 InspectorTab_Enemy.qml
 InspectorTab_Crate 1.0 InspectorTab_Crate.qml
+InspectorTab_Links 1.0 InspectorTab_Links.qml

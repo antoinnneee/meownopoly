@@ -35,6 +35,9 @@ Rectangle {
     signal effectChanged()
     signal zoneConfigurationChanged()
     signal focusReleased()
+    // Demande d'entrée en mode « Chemin » depuis l'onglet Liens (la source
+    // sera l'élément couramment inspecté).
+    signal pathModeRequested()
 
     visible: selection.length > 0
     width: Theme.px(320)
@@ -307,6 +310,8 @@ Rectangle {
                             })
                         if (item.focusReleased)
                             item.focusReleased.connect(root.focusReleased)
+                        if (item.pathModeRequested)
+                            item.pathModeRequested.connect(root.pathModeRequested)
 
                         // Un Loader créé après _pushTargets (reconstruction du
                         // modèle) reçoit sa cible ici.

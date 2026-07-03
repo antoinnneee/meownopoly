@@ -38,6 +38,9 @@ QtObject {
             break
         }
         tabs.push(_visualTab())
+        // Consultation/suppression des connexions — la création passe par le
+        // mode « Chemin » (rail 🔗).
+        tabs.push({ id: "links", label: "Liens", source: "InspectorTab_Links.qml" })
         return tabs
     }
 

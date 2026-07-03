@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import EditorEnum
 import theme
 import "."
 
@@ -27,6 +28,8 @@ Item {
     signal mapInfoRequested()
     signal chatRequested()
     signal menuRequested()
+    // Toggle du mode « Chemin » (tracé des connexions entre cases).
+    signal pathModeToggled()
 
     // Largeur du rail — Editor.qml décale les panneaux du bas de cette valeur
     // pour qu'ils ne passent pas sous le rail.
@@ -165,6 +168,31 @@ Item {
             // module "config" à activer — la sélection est le déclencheur.
             // (Le module reste dans le catalogue ModuleManager pour l'UI
             // classique.)
+
+            // Outil « Chemin » : chaînage des connexions A→B→C au clic
+            // (mode EM_SELECTION_LINK en chainMode). Remplace les boutons
+            // « Ajouter Précédent/Suivant » du panneau de config.
+            RailButton {
+                icon: "🔗"
+                label: "Tracer un chemin"
+                active: root.editorLogic
+                        && root.editorLogic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
+                onClicked: root.pathModeToggled()
+            }
+
+            // Affichage persistant des flèches de connexion (indépendant du
+            // mode chemin, qui les force déjà pendant le tracé).
+            RailButton {
+                icon: "👁"
+                label: "Afficher les connexions"
+                active: root.editorLogic && root.editorLogic.tileLogic
+                        && root.editorLogic.tileLogic.displayLinkEnable === true
+                onClicked: {
+                    if (root.editorLogic && root.editorLogic.tileLogic)
+                        root.editorLogic.tileLogic.displayLinkEnable
+                                = !root.editorLogic.tileLogic.displayLinkEnable
+                }
+            }
 
             // Espace flexible : pousse les actions globales en bas du rail.
             Item { Layout.fillHeight: true; Layout.fillWidth: true }
