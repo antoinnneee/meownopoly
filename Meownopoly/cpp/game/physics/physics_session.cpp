@@ -154,6 +154,16 @@ bool PhysicsSession::startAsClient(const QString &localPlayerId,
 
 void PhysicsSession::stop()
 {
+    // Hôte qui part volontairement : prévenir les clients AVANT de couper,
+    // sinon ils restent gelés sur le dernier snapshot jusqu'au timeout
+    // Catway (~10-30 s). En cas de fermeture d'app, le QML doit laisser le
+    // paquet partir (Qt.quit() différé, cf. physics_message_type.h).
+    if (m_active && m_isHost) {
+        Catway::instance()->broadcastReliable(
+            PhysicsProtocol::packJson(PhysicsMessageType::HostLeaving, {}));
+        qDebug() << "[PhysicsSession] HOST → HostLeaving broadcasté";
+    }
+
     disconnectFromCatway();
     m_snapshotTimer.stop();
     m_fullTableTimer.stop();
@@ -448,6 +458,15 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         emit combatEventReceived(payload.toVariantMap());
         break;
     }
+
+    case PhysicsMessageType::HostLeaving:
+        // Départ volontaire de l'hôte : même traitement que le timeout,
+        // mais immédiat au lieu d'attendre le heartbeat Catway.
+        if (!m_isHost && senderId == m_hostPlayerId) {
+            qWarning() << "[PhysicsSession] hôte parti (HostLeaving) — retour en sim locale";
+            stop();
+        }
+        break;
     }
 }
 
@@ -464,10 +483,17 @@ void PhysicsSession::onPlayerTimedOut(const QString &playerId)
     }
     if (m_isHost) {
         // Un client est tombé : libère son claim, le host peut re-pousser
-        // localement l'actor s'il en a envie.
+        // localement l'actor s'il en a envie. On neutralise d'abord le
+        // dernier input reçu — sinon un client qui crash flèche enfoncée
+        // laisse son acteur courir dans un mur indéfiniment (le moteur
+        // garde la dernière valeur de setBodyInput).
+        const QString claimedActor = m_remoteClaims.value(playerId);
+        if (!claimedActor.isEmpty() && m_world)
+            m_world->pushInput(claimedActor, QVector2D(0.0f, 0.0f));
         if (m_remoteClaims.remove(playerId) > 0) {
             emit remoteClaimsChanged();
-            qDebug() << "[PhysicsSession] HOST : claim libéré pour" << playerId;
+            qDebug() << "[PhysicsSession] HOST : claim libéré pour" << playerId
+                     << "(input de" << claimedActor << "remis à zéro)";
         }
     }
 }

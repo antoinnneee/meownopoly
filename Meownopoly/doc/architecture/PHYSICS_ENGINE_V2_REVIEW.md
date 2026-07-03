@@ -81,11 +81,11 @@
   `physics_world.cpp:333-334` + `physics_worker.cpp:140,150-151`. Le peek déréférence `m_pending` sans ownership : entre le `load(acquire)` et la lecture de `peek->tick`, le worker peut faire son `exchange` puis, au tick suivant, `writeSnapshot` écrit dans ce buffer pendant que la GUI lit. Fenêtre ~16 ms — data race C++ réelle, pas théorique.
   **Fix** : `std::atomic<quint64> tick` dans `WorldSnapshot` (store release en fin de `writeSnapshot`, load acquire au peek), ou triple buffer canonique à index atomique + flag "new data", ou seqlock par buffer.
 
-- [ ] 🟠 **T2 — `stop()` réentrant : nested event loop + état publié trop tôt**
+- [x] 🟠 **T2 — `stop()` réentrant : nested event loop + état publié trop tôt** *(corrigé 2026-07-03 : plus de QEventLoop — `cmdRequestStop` (DirectConnection) + `quit()` + `wait(5000)` bloquant sans traitement d'événements ; `runningChanged` émis après le teardown complet. Règle aussi T6 : le destructeur n'exécute plus de nested loop)*
   `physics_world.cpp:208-231`. `m_running=false` + `runningChanged()` émis **avant** l'arrêt réel, puis `loop.exec()` (500 ms) : un handler QML peut rappeler `start()` qui réinitialise `m_buffers` pendant que l'ancien worker écrit dedans → corruption.
   **Fix** : supprimer la nested loop — `cmdRequestStop` est `DirectConnection`, donc `emit cmdRequestStop(); m_thread->quit(); m_thread->wait(2000);` suffit ; n'émettre `runningChanged` qu'après teardown. Règle aussi **T6** (`~PhysicsWorld()` qui exécute une nested loop pendant la destruction, `physics_world.cpp:115-118`).
 
-- [ ] 🟠 **T3 — `QThread::terminate()` + `deleteLater()` d'un thread potentiellement vivant**
+- [x] 🟠 **T3 — `QThread::terminate()` + `deleteLater()` d'un thread potentiellement vivant** *(corrigé 2026-07-03 : `terminate()` supprimé ; si `wait(5000)` échoue on fuit le thread avec qCritical au lieu de le tuer, et `deleteLater()` n'est appelé que si le wait a réussi)*
   `physics_world.cpp:233-245`. `terminate()` en plein step = UB documenté par Qt ; les retours de `wait()` sont ignorés → `deleteLater()` d'un QThread encore running possible.
   **Fix** : supprimer `terminate()` ; `wait()` sans timeout (ou timeout long + log), `deleteLater()` seulement si `wait()` a retourné true.
 
@@ -132,11 +132,11 @@
 
 ### Robustesse
 
-- [ ] 🟠 **N4 — L'hôte qui `stop()` ne prévient personne : clients gelés jusqu'au timeout Catway (~10-30 s)**
+- [x] 🟠 **N4 — L'hôte qui `stop()` ne prévient personne : clients gelés jusqu'au timeout Catway (~10-30 s)** *(corrigé 2026-07-03 : `HostLeaving = 0x46` ajouté (+ extension `isPhysicsPacket`), broadcasté en tête de `stop()` côté hôte ; le client fait `stop()` immédiat à réception. Reste à brancher le pattern Timer 300 ms côté QML pour la fermeture d'app — cf. doc du type)*
   `physics_session.cpp:153-188`. Pas d'équivalent du `HostLeaving` (0x2A) de l'éditeur.
   **Fix** : `PhysicsMessageType::HostLeaving = 0x46` (valeur la plus haute + étendre `isPhysicsPacket`), broadcasté dans `stop()` quand `m_isHost`, avec le pattern Timer 300 ms de `onClosing`.
 
-- [ ] 🟠 **N5 — Client déconnecté : son dernier input reste appliqué par l'hôte**
+- [x] 🟠 **N5 — Client déconnecté : son dernier input reste appliqué par l'hôte** *(corrigé 2026-07-03 : `pushInput(claimedActor, (0,0))` dans le branch host de `onPlayerTimedOut` avant libération du claim)*
   `physics_session.cpp:430-448`. Un client qui crash flèche enfoncée laisse son acteur courir dans un mur indéfiniment.
   **Fix** : dans le branch host de `onPlayerTimedOut`, `m_world->pushInput(claimedActor, QVector2D(0,0))` avant de retirer le claim.
 

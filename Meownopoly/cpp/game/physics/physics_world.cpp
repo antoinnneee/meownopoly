@@ -5,13 +5,11 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QDebug>
-#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMetaType>
 #include <QSet>
 #include <QThread>
-#include <QTimer>
 #include <QtQml>
 #include <cmath>
 
@@ -209,45 +207,48 @@ void PhysicsWorld::start()
 void PhysicsWorld::stop()
 {
     if (!m_running) return;
-    m_running = false;
-    emit runningChanged();
 
-    if (!m_worker || !m_thread) return;
-
-    // Bloque l'attente que `stopped()` soit émis avec timeout 500 ms.
-    QEventLoop loop;
-    QTimer timeout;
-    timeout.setSingleShot(true);
-    bool stoppedCleanly = false;
-
-    auto onStopped = [&]() {
-        stoppedCleanly = true;
-        loop.quit();
-    };
-    connect(m_worker, &PhysicsWorker::stopped, &loop, onStopped);
-    connect(&timeout, &QTimer::timeout, &loop, &QEventLoop::quit);
-
-    emit cmdRequestStop();
-    timeout.start(500);
-    loop.exec();
-
-    if (!stoppedCleanly) {
-        qWarning() << "[PhysicsWorld] Worker did not stop cleanly within 500 ms,"
-                   << "forcing thread terminate.";
-        m_thread->terminate();
-        m_thread->wait(100);
-    } else {
+    if (m_worker && m_thread) {
+        // Arrêt SANS nested event loop : l'ancienne QEventLoop::exec()
+        // traitait des événements GUI arbitraires pendant l'attente — un
+        // handler QML réagissant à runningChanged (émis trop tôt) pouvait
+        // ré-entrer start() et réinitialiser m_buffers pendant que le
+        // worker écrivait encore dedans. Appelé depuis le destructeur,
+        // l'exec() tournait en plus sur un objet à moitié détruit.
+        //
+        // cmdRequestStop est en DirectConnection (flag atomique) : runLoop
+        // sort de sa boucle en ≤ 5 ms (durée max de son usleep), draine,
+        // émet stopped() et rend la main à exec() — que quit() a déjà fait
+        // sortir. wait() bloque sans traiter d'événements → aucune
+        // réentrance possible.
+        emit cmdRequestStop();
         m_thread->quit();
-        m_thread->wait(500);
-    }
 
-    m_worker = nullptr; // delete via QThread::finished -> deleteLater
-    m_thread->deleteLater();
-    m_thread = nullptr;
+        // Pas de terminate() : tuer un thread en plein step moteur est un
+        // comportement indéfini documenté par Qt (locks jamais relâchés,
+        // heap potentiellement corrompu). Si le wait échoue (moteur bloqué
+        // — ne devrait jamais arriver vu le usleep ≤ 5 ms), on fuit le
+        // thread plutôt que de corrompre le process ; et on ne deleteLater
+        // PAS un QThread encore running (crash assuré).
+        if (m_thread->wait(5000)) {
+            m_thread->deleteLater();
+        } else {
+            qCritical() << "[PhysicsWorld] Worker thread did not stop within 5 s —"
+                        << "leaking the thread (terminate() would be UB).";
+        }
+        m_worker = nullptr; // delete via QThread::finished -> deleteLater
+        m_thread = nullptr;
+    }
 
     m_pending.store(nullptr, std::memory_order_release);
     m_pendingTick.store(0, std::memory_order_release);
     m_guiInUse = nullptr;
+
+    // Publier l'état APRÈS le teardown complet : un handler QML de
+    // runningChanged peut rappeler start() immédiatement — il doit trouver
+    // un monde propre, pas un worker en cours d'arrêt.
+    m_running = false;
+    emit runningChanged();
 }
 
 // --- Bodies ---

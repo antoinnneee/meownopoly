@@ -49,6 +49,14 @@ enum Value : quint8 {
     /// respawn, loot…). Les clients appliquent sur leurs miroirs locaux
     /// (HealthModule, états dead du CombatController).
     CombatEvent      = 0x45,
+
+    /// hôte → tous : l'hôte quitte volontairement la session. Les clients
+    /// repassent immédiatement en sim locale (stop()) au lieu de rester
+    /// gelés sur le dernier snapshot jusqu'au timeout Catway (~10-30 s).
+    /// Même rôle que EditorMessageType::HostLeaving (0x2A). Si l'app hôte
+    /// se ferme, le QML doit retarder Qt.quit() (pattern Timer 300 ms de
+    /// ApplicationWindow.onClosing) pour laisser le paquet partir.
+    HostLeaving      = 0x46,
 };
 Q_ENUM_NS(Value)
 
