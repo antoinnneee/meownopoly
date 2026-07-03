@@ -881,13 +881,21 @@ QJsonValue AutomationServer::cmdMouse(const QString &cmd, const QJsonObject &par
     const Qt::MouseButton button = Qt::LeftButton;
 
     auto post = [&](QEvent::Type t, Qt::MouseButtons buttons) {
+        // Pour un MouseMove, `button` (celui qui a changé d'état) doit être
+        // NoButton — seul `buttons` porte l'état courant, sinon la
+        // délivrance Qt Quick est perturbée.
         QMouseEvent ev(t, scenePos, win->mapToGlobal(scenePos.toPoint()),
-                       button, buttons, Qt::NoModifier);
+                       t == QEvent::MouseMove ? Qt::NoButton : button,
+                       buttons, Qt::NoModifier);
         QCoreApplication::sendEvent(win, &ev);
     };
 
     if (cmd == QLatin1String("move")) {
-        post(QEvent::MouseMove, Qt::NoButton);
+        // `pressed: true` → move avec bouton gauche maintenu (drags :
+        // sélection rectangle, poignées de resize, drag d'éléments).
+        const bool pressed = params.value(QStringLiteral("pressed")).toBool(false);
+        post(QEvent::MouseMove, pressed ? Qt::MouseButtons(Qt::LeftButton)
+                                        : Qt::MouseButtons(Qt::NoButton));
     } else if (cmd == QLatin1String("press")) {
         post(QEvent::MouseButtonPress, button);
     } else if (cmd == QLatin1String("release")) {

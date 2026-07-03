@@ -38,9 +38,21 @@ Rectangle {
     // Demande d'entrée en mode « Chemin » depuis l'onglet Liens (la source
     // sera l'élément couramment inspecté).
     signal pathModeRequested()
+    // Émis à la fin d'un redimensionnement — l'appelant persiste la largeur.
+    signal widthEdited()
+
+    // Largeur courante : persistée par Editor.qml (stUiConfig.inspectorWidth),
+    // injectée impérativement au chargement (pas de binding : le resize
+    // écrit panelWidth sans warning qt.qml.binding.removal).
+    property real panelWidth: 0
+    readonly property real minPanelWidth: Theme.px(260)
+    // Borne max basée sur la fenêtre — PAS sur root.parent (le Loader suit
+    // la largeur du panneau : boucle de rétroaction pendant le drag).
+    readonly property real maxPanelWidth:
+        Window.window ? Window.window.width * 0.6 : 1e6
 
     visible: selection.length > 0
-    width: Theme.px(320)
+    width: panelWidth > 0 ? panelWidth : Theme.px(320)
 
     // Chrome unifié : même surface tokenisée que les panneaux dockés.
     color: Theme.panelSurface
@@ -61,13 +73,76 @@ Rectangle {
         onWheel: function(wheel) { wheel.accepted = true }
     }
 
+    // Poignée de redimensionnement (bord gauche) — transposition horizontale
+    // du resizeMouseArea de BottomSidePanel. Le panneau étant ancré à droite,
+    // seule la largeur bouge.
+    Rectangle {
+        id: resizeHandle
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: Theme.px(8)
+        color: resizeMouseArea.pressed ? Theme.surfaceAlt : "transparent"
+        z: 15
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 2
+            height: parent.height * 0.15
+            radius: 1
+            color: resizeMouseArea.containsMouse || resizeMouseArea.pressed
+                   ? Theme.accent : Theme.textSecondary
+            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+        }
+
+        MouseArea {
+            id: resizeMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.SizeHorCursor
+
+            property real startWidth: 0
+            property real startGlobalX: 0
+
+            // Coordonnées ÉCRAN (mapToGlobal) : la poignée et son parent se
+            // déplacent pendant le resize, tout repère relatif dériverait.
+            onPressed: function(mouse) {
+                startWidth = root.width
+                startGlobalX = mapToGlobal(mouse.x, mouse.y).x
+            }
+            onPositionChanged: function(mouse) {
+                if (!pressed)
+                    return
+                const delta = mapToGlobal(mouse.x, mouse.y).x - startGlobalX
+                root.panelWidth = Math.max(root.minPanelWidth,
+                                           Math.min(root.maxPanelWidth,
+                                                    startWidth - delta))
+            }
+            onReleased: root.widthEdited()
+        }
+    }
+
     // ── API ──────────────────────────────────────────────────────────────
+    // Débouncé : la sélection rectangle notifie en rafale pendant le drag,
+    // inutile de reconstruire les onglets à chaque événement.
+    property var _pendingSelection: []
+
     function setSelection(elements) {
+        _pendingSelection = elements ? elements.slice() : []
+        selectionDebounce.restart()
+    }
+
+    Timer {
+        id: selectionDebounce
+        interval: 50
+        onTriggered: root._applySelection()
+    }
+
+    function _applySelection() {
         const list = []
-        if (elements)
-            for (var i = 0; i < elements.length; i++)
-                if (elements[i])
-                    list.push(elements[i])
+        for (var i = 0; i < _pendingSelection.length; i++)
+            if (_pendingSelection[i])
+                list.push(_pendingSelection[i])
         selection = list
         _rebuildTabs(false)
     }

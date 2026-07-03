@@ -104,6 +104,8 @@ Base_Board {
         id: stUiConfig
         category: "Editor/UiConfig"
         property bool useNewUi: false
+        // Largeur de l'inspecteur contextuel (0 = défaut Theme.px(320)).
+        property real inspectorWidth: 0
     }
 
     signal openNewMapMenu
@@ -132,6 +134,12 @@ Base_Board {
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
         initializeEditor()
+
+        // Largeur persistée de l'inspecteur : ré-appliquée ici car le Loader
+        // peut charger l'item AVANT que stUiConfig n'ait lu ses valeurs
+        // (l'injection dans onLoaded voit alors le défaut 0).
+        if (inspectorLoader.item)
+            inspectorLoader.item.panelWidth = stUiConfig.inspectorWidth
 
         // Phase 4 — World3D + LocalPlayerSpawner + CameraRig + InputController
         // remplacent les anciens singletons EntityEngine / CameraController /
@@ -1378,7 +1386,12 @@ Base_Board {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         // Pas de width imposé : le Loader adopte la largeur de l'item.
-        onLoaded: logic.inspectorPanel = item
+        onLoaded: {
+            logic.inspectorPanel = item
+            // Injection impérative (pas de binding) : le resize écrit
+            // panelWidth sans warning de binding removal.
+            item.panelWidth = stUiConfig.inspectorWidth
+        }
         onActiveChanged: if (!active) logic.inspectorPanel = null
         sourceComponent: InspectorPanel {
             logic: logic
@@ -1392,6 +1405,10 @@ Base_Board {
                 root._applyToSelectionAndSave("zone", function(el) { el.applyPhysicSettings(physicSettings) })
             }
             onPathModeRequested: root._togglePathMode(currentElement)
+            onWidthEdited: {
+                stUiConfig.inspectorWidth = width
+                stUiConfig.sync()
+            }
         }
     }
 

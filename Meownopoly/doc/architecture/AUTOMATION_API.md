@@ -135,6 +135,9 @@ méthode a une valeur de retour.
 ### `click` / `doubleClick` / `move` / `press` / `release`
 Synthèse souris (bouton gauche) via `QMouseEvent` envoyés à la fenêtre aux coordonnées
 scène. Cible : un item (centre par défaut, ou `offsetX`/`offsetY`) **ou** `x`/`y` en scène.
+Pour un **drag** (sélection rectangle, poignée de resize…), enchaîner `press` puis des
+`move` avec `"pressed": true` (bouton gauche maintenu) puis `release` — un `move` sans
+`pressed` est envoyé sans bouton et ne déclenche aucun drag.
 ```json
 → { "cmd": "click", "params": { "objectName": "editorButton" } }
 → { "cmd": "click", "params": { "x": 640, "y": 360 } }
