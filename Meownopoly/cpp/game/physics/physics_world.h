@@ -81,6 +81,9 @@ public:
 
     // --- Lecture snapshot (lock-free, GUI thread uniquement) ---
     Q_INVOKABLE QVariantMap bodyState(const QString &id);
+    /// Version batch : un seul appel pour tous les actors d'une frame de
+    /// rendu. Liste alignée sur `ids`, entrée {} pour un body inconnu.
+    Q_INVOKABLE QVariantList bodyStates(const QStringList &ids);
     Q_INVOKABLE QStringList allBodyIds();
     Q_INVOKABLE qint64 stepDurationNs() const;
     // Tick de la frame physique actuellement lue par bodyState (=
@@ -171,6 +174,9 @@ signals:
 private:
     void onSnapshotPublished(quint64 tick, qint64 timestampNs, qint64 stepDurationNs);
     void tryAdvanceGuiBuffer();
+    /// Snapshot lisible du moment : remote buffer en mode client, sinon
+    /// triple buffer GUI (avec avancement). Peut retourner nullptr.
+    const pattounx::WorldSnapshot *readableSnapshot();
 
     QThread *m_thread = nullptr;
     PhysicsWorker *m_worker = nullptr;

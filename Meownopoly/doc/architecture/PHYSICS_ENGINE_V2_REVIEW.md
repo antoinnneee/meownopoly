@@ -89,28 +89,28 @@
   `physics_world.cpp:233-245`. `terminate()` en plein step = UB documenté par Qt ; les retours de `wait()` sont ignorés → `deleteLater()` d'un QThread encore running possible.
   **Fix** : supprimer `terminate()` ; `wait()` sans timeout (ou timeout long + log), `deleteLater()` seulement si `wait()` a retourné true.
 
-- [ ] 🟠 **T4 — Snapshot GUI gelé si personne n'appelle `beginFrame()`**
+- [x] 🟠 **T4 — Snapshot GUI gelé si personne n'appelle `beginFrame()`** *(corrigé 2026-07-03 : `m_guiAdvancedThisFrame = false` aussi dans `onSnapshotPublished` — auto-expiration à chaque publication worker ; la garantie "1 frame physique max par frame de rendu" tient toujours quand beginFrame est appelé, les queued étant délivrés entre les frames)*
   `physics_world.h:184` + `physics_world.cpp:308-316`. `m_guiAdvancedThisFrame` n'est reset que par `beginFrame()` : un consommateur sans FrameAnimation (ex. hôte réseau qui sérialise à 30 Hz sans scène 3D montée) avance une fois puis reste figé pour toujours.
   **Fix** : auto-expirer le verrou — reset dans `onSnapshotPublished`, ou compteur de frame au lieu d'un bool.
 
-- [ ] 🟠 **T5 — Ownership de `ItemSnapableEvents` cédé au moteur QML**
+- [x] 🟠 **T5 — Ownership de `ItemSnapableEvents` cédé au moteur QML** *(corrigé 2026-07-03 : `setObjectOwnership(inst, CppOwnership)` dans `qmlInstance`)*
   `item_snapable_events.cpp:20-30`. Le QQmlEngine prend l'ownership du singleton retourné par callback et le détruit avec l'engine, alors que `instance()` est aussi utilisé côté C++ → pointeur pendouillant.
   **Fix** : `QQmlEngine::setObjectOwnership(inst, QQmlEngine::CppOwnership)` dans `qmlInstance`.
 
-- [ ] 🟠 **T7 — Tile détruite hors flow Map : pas de `tileDeleted` → zone physique orpheline**
+- [x] 🟠 **T7 — Tile détruite hors flow Map : pas de `tileDeleted` → zone physique orpheline** *(corrigé 2026-07-03 : uuid/type capturés par valeur au connect, `tileDeleted` émis dans la lambda destroyed, garde anti-double via le retour de `m_attachedTiles.remove`)*
   `item_snapable_events.cpp:127-130`. La lambda `destroyed` retire du set mais n'émet pas `tileDeleted` → le bridge ne fait jamais `removeZone`.
   **Fix** : capturer `uniqueId`/`tileType` par valeur au connect et émettre `tileDeleted` dans la lambda (garde anti-double-émission via le retour de `m_attachedTiles.remove`).
 
-- [ ] 🟡 **T8 — Branche `prev == nullptr` du worker : aliasing latent** — `physics_worker.cpp:150-156`. Si `exchange` retournait null, le worker garderait un pointeur déjà déposé dans `m_pending`. Inatteignable aujourd'hui mais piège pour toute évolution. Fix : `Q_ASSERT(prev)` + `m_workerBack = nullptr` si null.
-- [ ] 🟡 **T9 — Premier snapshot jamais consommé (off-by-one)** — `physics_worker.cpp:108-109,140`. Premier tick publié = 0 = tick initial des buffers GUI → rejeté par le peek. Fix : incrémenter `m_tick` avant `runStep`.
-- [ ] 🟡 **T10 — `m_tick` avance quand `!m_simEnabled`** — `physics_worker.cpp:108-109`. Saut de ticks à la reprise, dangereux pour tout dt dérivé de Δtick. Fix : n'incrémenter que quand on steppe (ou documenter).
-- [ ] 🟡 **T11 — Anti-spiral avec `now` périmé + busy-spin possible** — `physics_worker.cpp:100-113`. Re-échantillonner `now` après le step ; clamp `sleepUs` à un minimum.
-- [ ] 🟡 **T12 — Événements worker livrés après `stop()`** — `physics_world.cpp:208-249`. `snapshotPublished`/`actorCollided` queued délivrés après `runningChanged(false)`. Fix : garde `if (!m_running) return;` dans les forwards.
-- [ ] 🟡 **T13 — `bodyState()` : 1 QVariantMap par body par frame de rendu** — `physics_world.cpp:364-405`. Voir Q13 (fix commun : API batch). Côté worker, `WorldSnapshot::bodies` en QHash re-copie les QString à 60 Hz — `QVector<BodySnapshot>` réutilisé serait plus doux.
-- [ ] 🟡 **T14 — `onTileRemovedFromMap` : scan linéaire** — `item_snapable_events.cpp:113-117`. O(n²) sur purge de map. Fix : index `QHash<QUuid, ItemSnapable*>`.
-- [ ] 🟡 **T15 — `ItemSnapableEvents` silencieusement inerte si construit avant `MapFileManager`** — `item_snapable_events.cpp:35-41`. Fix : `qWarning` a minima, ou connexion différée.
-- [ ] 🟡 **T16 — `velocityForce` : `{x,y}` JS silencieusement perdu** — `physics_world.cpp:74-79`. Seul QVector2D accepté, contrairement aux points de polygone. Fix : même fallback `toMap()`.
-- [ ] 🟡 **T17 — `qmlRegisterType<PhysicsWorld>` rend le monde instanciable en QML** — `physics_world.cpp:107`. Un `PhysicsWorld {}` par erreur = second thread physique concurrent. Fix : `qmlRegisterUncreatableType`.
+- [x] 🟡 **T8 — Branche `prev == nullptr` du worker : aliasing latent** *(corrigé 2026-07-03 : `Q_ASSERT_X(prev)` + affectation directe — si null, `m_workerBack` devient null et la publication est suspendue au lieu d'aliaser)* — `physics_worker.cpp:150-156`. Si `exchange` retournait null, le worker garderait un pointeur déjà déposé dans `m_pending`. Inatteignable aujourd'hui mais piège pour toute évolution. Fix : `Q_ASSERT(prev)` + `m_workerBack = nullptr` si null.
+- [x] 🟡 **T9 — Premier snapshot jamais consommé (off-by-one)** *(corrigé 2026-07-03 : `++m_tick` déplacé AVANT `runStep()` → premier snapshot publié à tick=1)* — `physics_worker.cpp:108-109,140`. Premier tick publié = 0 = tick initial des buffers GUI → rejeté par le peek. Fix : incrémenter `m_tick` avant `runStep`.
+- [x] 🟡 **T10 — `m_tick` avance quand `!m_simEnabled`** *(corrigé 2026-07-03, avec T9 : incrément uniquement dans la branche `m_simEnabled`)* — `physics_worker.cpp:108-109`. Saut de ticks à la reprise, dangereux pour tout dt dérivé de Δtick. Fix : n'incrémenter que quand on steppe (ou documenter).
+- [x] 🟡 **T11 — Anti-spiral avec `now` périmé + busy-spin possible** *(corrigé 2026-07-03 : `now` re-échantillonné après le step ; `sleepUs` clampé [100 µs, 5 ms])* — `physics_worker.cpp:100-113`. Re-échantillonner `now` après le step ; clamp `sleepUs` à un minimum.
+- [x] 🟡 **T12 — Événements worker livrés après `stop()`** *(corrigé 2026-07-03 : forwards actorEnteredZone/ExitedZone/Collided passés en lambdas gardées sur `m_running` + garde en tête de `onSnapshotPublished`)* — `physics_world.cpp:208-249`. `snapshotPublished`/`actorCollided` queued délivrés après `runningChanged(false)`. Fix : garde `if (!m_running) return;` dans les forwards.
+- [x] 🟡 **T13 — `bodyState()` : 1 QVariantMap par body par frame de rendu** *(corrigé 2026-07-03 : API batch `bodyStates(QStringList) → QVariantList` alignée sur les ids, `readableSnapshot()` factorisé ; câblage QML côté Q13. L'optimisation `QVector<BodySnapshot>` worker-side reste une piste future)* — `physics_world.cpp:364-405`. Voir Q13 (fix commun : API batch). Côté worker, `WorldSnapshot::bodies` en QHash re-copie les QString à 60 Hz — `QVector<BodySnapshot>` réutilisé serait plus doux.
+- [x] 🟡 **T14 — `onTileRemovedFromMap` : scan linéaire** *(corrigé 2026-07-03 : index `m_tilesByUuid` tenu en phase par attach/detach/destroyed/detachMap)* — `item_snapable_events.cpp:113-117`. O(n²) sur purge de map. Fix : index `QHash<QUuid, ItemSnapable*>`.
+- [x] 🟡 **T15 — `ItemSnapableEvents` silencieusement inerte si construit avant `MapFileManager`** *(corrigé 2026-07-03 : qWarning explicite dans le ctor)* — `item_snapable_events.cpp:35-41`. Fix : `qWarning` a minima, ou connexion différée.
+- [x] 🟡 **T16 — `velocityForce` : `{x,y}` JS silencieusement perdu** *(corrigé 2026-07-03 : fallback `toMap()` {x,y}, même tolérance que les points de polygone)* — `physics_world.cpp:74-79`. Seul QVector2D accepté, contrairement aux points de polygone. Fix : même fallback `toMap()`.
+- [x] 🟡 **T17 — `qmlRegisterType<PhysicsWorld>` rend le monde instanciable en QML** *(corrigé 2026-07-03 : `qmlRegisterUncreatableType` avec message explicite vers la contextProperty `pattounxWorld`)* — `physics_world.cpp:107`. Un `PhysicsWorld {}` par erreur = second thread physique concurrent. Fix : `qmlRegisterUncreatableType`.
 
 ---
 

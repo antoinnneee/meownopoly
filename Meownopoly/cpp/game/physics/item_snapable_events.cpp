@@ -19,7 +19,13 @@ ItemSnapableEvents *ItemSnapableEvents::instance()
 
 QObject *ItemSnapableEvents::qmlInstance(QQmlEngine *, QJSEngine *)
 {
-    return ItemSnapableEvents::instance();
+    ItemSnapableEvents *inst = ItemSnapableEvents::instance();
+    // Le QQmlEngine prend par défaut l'ownership du singleton retourné par
+    // ce callback et le DÉTRUIT avec l'engine — alors que instance() est
+    // aussi consommé côté C++ (bridge, tests) → pointeur pendouillant à la
+    // destruction de l'engine (navigation, fermeture).
+    QQmlEngine::setObjectOwnership(inst, QQmlEngine::CppOwnership);
+    return inst;
 }
 
 void ItemSnapableEvents::registerQml()
@@ -38,6 +44,12 @@ ItemSnapableEvents::ItemSnapableEvents(QObject *parent)
                 this, &ItemSnapableEvents::onCurrentMapChanged);
         // Map déjà active au moment du registerQml ? Adopter direct.
         if (mfm->getCurrentMap()) attachMap(mfm->getCurrentMap());
+    } else {
+        // Sans MapFileManager, l'agrégateur est définitivement inerte (aucun
+        // rebranchement ultérieur) — le bridge physique ne verra jamais
+        // aucune tile. Ordre d'initialisation à corriger dans qmlapp.cpp.
+        qWarning() << "[ItemSnapableEvents] construit AVANT MapFileManager —"
+                   << "agrégateur inerte, aucun événement de tile ne sera émis";
     }
 }
 
@@ -97,6 +109,7 @@ void ItemSnapableEvents::detachMap(Map *map, bool emitDeletedForAllTiles)
         detachTile(tile);
     }
     m_attachedTiles.clear();
+    m_tilesByUuid.clear();
     m_map.clear();
 }
 
@@ -109,12 +122,9 @@ void ItemSnapableEvents::onTileAddedToMap(ItemSnapable *tile)
 
 void ItemSnapableEvents::onTileRemovedFromMap(const QUuid &tileId, int tileType)
 {
-    // Trouver la tile attachée correspondante (peut déjà être en pendingDestroy).
-    ItemSnapable *match = nullptr;
-    for (ItemSnapable *t : m_attachedTiles) {
-        if (t && t->uniqueId() == tileId) { match = t; break; }
-    }
-    if (match) detachTile(match);
+    // Lookup O(1) via l'index uuid (peut déjà être en pendingDestroy).
+    if (ItemSnapable *match = m_tilesByUuid.value(tileId))
+        detachTile(match);
     emit tileDeleted(tileId, tileType);
 }
 
@@ -122,11 +132,22 @@ void ItemSnapableEvents::attachTile(ItemSnapable *tile)
 {
     if (!tile || m_attachedTiles.contains(tile)) return;
     m_attachedTiles.insert(tile);
+    m_tilesByUuid.insert(tile->uniqueId(), tile);
 
     // Si la tile est détruite hors flow Map (ex: deleteLater post-finalize),
-    // se désabonner pour éviter les pointeurs morts dans le set.
-    connect(tile, &QObject::destroyed, this, [this, tile]() {
-        m_attachedTiles.remove(tile);
+    // se désabonner ET émettre tileDeleted — sinon le bridge physique ne
+    // fait jamais removeZone (zone orpheline qui continue de bloquer les
+    // actors). uuid/type capturés PAR VALEUR : la tile est en cours de
+    // destruction, ses accesseurs ne sont plus sûrs dans la lambda. Le
+    // retour de remove() garde contre la double émission (tile déjà passée
+    // par le flow normal detachTile → remove renvoie false).
+    const QUuid uid = tile->uniqueId();
+    const int type = static_cast<int>(tile->tileType());
+    connect(tile, &QObject::destroyed, this, [this, tile, uid, type]() {
+        if (m_attachedTiles.remove(tile)) {
+            m_tilesByUuid.remove(uid);
+            emit tileDeleted(uid, type);
+        }
     });
 
     // Mouvement / resize → tileMoved
@@ -161,4 +182,5 @@ void ItemSnapableEvents::detachTile(ItemSnapable *tile)
     if (ZoneParameter    *zp = tile->zoneParameter())    disconnect(zp, nullptr, this, nullptr);
     disconnect(tile, &QObject::destroyed, this, nullptr);
     m_attachedTiles.remove(tile);
+    m_tilesByUuid.remove(tile->uniqueId());
 }

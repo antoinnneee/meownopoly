@@ -101,17 +101,28 @@ void PhysicsWorker::runLoop()
 
         qint64 now = clock.nsecsElapsed();
         if (now < nextNs) {
-            qint64 sleepUs = std::max<qint64>(0, (nextNs - now) / 1000);
-            // Yield au minimum, jamais > 5 ms (réactivité aux commandes)
-            QThread::usleep(std::min<qint64>(sleepUs, 5000));
+            // Clamp [100 µs, 5 ms] : jamais 0 (usleep(0) = busy-spin qui
+            // sature un cœur), jamais > 5 ms (réactivité aux commandes).
+            qint64 sleepUs = (nextNs - now) / 1000;
+            QThread::usleep(std::clamp<qint64>(sleepUs, 100, 5000));
             continue;
         }
 
-        if (m_simEnabled.load()) runStep();
-        ++m_tick;
+        if (m_simEnabled.load()) {
+            // Tick incrémenté AVANT le step : le premier snapshot publié
+            // porte tick=1 > tick initial 0 des buffers GUI (sinon il est
+            // rejeté par le peek et jamais consommé, off-by-one). Et
+            // UNIQUEMENT quand on steppe : sinon une pause sim fait sauter
+            // des ticks à la reprise — dangereux pour tout dt dérivé de
+            // Δtick.
+            ++m_tick;
+            runStep();
+        }
         nextNs += stepNs;
 
-        // Anti spiral-of-death : si on a > 5 ticks de retard, on resync
+        // Anti spiral-of-death : re-échantillonner APRÈS le step — un step
+        // long rendait `now` périmé et le retard sous-estimé (resync raté).
+        now = clock.nsecsElapsed();
         if (now - nextNs > stepNs * 5) nextNs = now + stepNs;
     }
 
@@ -151,11 +162,16 @@ void PhysicsWorker::runStep()
         // ou tick == m_tick - 1).
         pattounx::WorldSnapshot *prev
             = m_pending->exchange(m_workerBack, std::memory_order_acq_rel);
-        if (prev) {
-            m_workerBack = prev;
-        }
-        // Si prev est null, on garde notre buffer courant pour la prochaine
-        // écriture — la GUI en a un qu'elle est en train de lire.
+        // Invariant triple buffer : l'exchange retourne toujours un buffer
+        // (3 buffers pour 2 acteurs). Un null signifierait un invariant
+        // cassé — garder alors m_workerBack (déjà déposé dans m_pending)
+        // serait un ALIASING : la prochaine écriture ciblerait le buffer
+        // que la GUI peut être en train de lire. On coupe la publication
+        // (m_workerBack = nullptr → le garde en tête de bloc skippe)
+        // plutôt que de corrompre.
+        Q_ASSERT_X(prev, "PhysicsWorker::runStep",
+                   "triple buffer : exchange a retourné null (invariant cassé)");
+        m_workerBack = prev;
 
         // Publier le tick APRÈS le dépôt dans m_pending (release) : quand
         // la GUI observe ce tick (acquire), le buffer correspondant — ou

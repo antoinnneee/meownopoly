@@ -72,7 +72,18 @@ ZoneSpec zoneFromVariant(const QString &zoneId,
     QVector2D vForce;
     if (p.contains(QStringLiteral("velocityForce"))) {
         QVariant vf = p.value(QStringLiteral("velocityForce"));
-        if (vf.canConvert<QVector2D>()) vForce = vf.value<QVector2D>();
+        if (vf.canConvert<QVector2D>()) {
+            vForce = vf.value<QVector2D>();
+        } else {
+            // Fallback objet JS {x, y} — même tolérance que les points de
+            // polygone ci-dessous (un {x,y} passé depuis QML était
+            // silencieusement perdu → force nulle sans erreur).
+            const QVariantMap m = vf.toMap();
+            if (m.contains(QStringLiteral("x")) && m.contains(QStringLiteral("y"))) {
+                vForce = QVector2D(m.value(QStringLiteral("x")).toFloat(),
+                                   m.value(QStringLiteral("y")).toFloat());
+            }
+        }
     }
     z.velocityForce = vForce;
 
@@ -102,7 +113,14 @@ void PhysicsWorld::registerQml()
     qRegisterMetaType<pattounx::WorldSnapshot>("pattounx::WorldSnapshot");
     qRegisterMetaType<QVector2D>("QVector2D");
 
-    qmlRegisterType<PhysicsWorld>("Pattounx", 1, 0, "PhysicsWorld");
+    // Uncreatable : un `PhysicsWorld {}` déclaré par erreur en QML créerait
+    // un SECOND thread physique concurrent du monde global. Le type reste
+    // enregistré pour les propriétés/paramètres typés, mais l'instanciation
+    // passe par la contextProperty `pattounxWorld` (cf. qmlapp.cpp).
+    qmlRegisterUncreatableType<PhysicsWorld>(
+        "Pattounx", 1, 0, "PhysicsWorld",
+        QStringLiteral("PhysicsWorld est une instance globale unique — "
+                       "utiliser la contextProperty pattounxWorld"));
 }
 
 PhysicsWorld::PhysicsWorld(QObject *parent)
@@ -185,13 +203,23 @@ void PhysicsWorld::start()
     connect(this, &PhysicsWorld::cmdClearZones, m_worker,
             &PhysicsWorker::cmdClearZones);
 
-    // Évents physique → GUI
+    // Évents physique → GUI. Gardés sur m_running : les événements queued
+    // émis par le worker juste avant l'arrêt sont délivrés APRÈS
+    // runningChanged(false) — un handler QML les recevrait sur un monde
+    // arrêté (états gameplay ressuscités post-stop).
     connect(m_worker, &PhysicsWorker::actorEnteredZone, this,
-            &PhysicsWorld::actorEnteredZone);
+            [this](const QString &actorId, const QString &zoneId) {
+                if (m_running) emit actorEnteredZone(actorId, zoneId);
+            });
     connect(m_worker, &PhysicsWorker::actorExitedZone, this,
-            &PhysicsWorld::actorExitedZone);
+            [this](const QString &actorId, const QString &zoneId) {
+                if (m_running) emit actorExitedZone(actorId, zoneId);
+            });
     connect(m_worker, &PhysicsWorker::actorCollided, this,
-            &PhysicsWorld::actorCollided);
+            [this](const QString &actorId, const QString &other,
+                   QVector2D normal, qreal impactSpeed) {
+                if (m_running) emit actorCollided(actorId, other, normal, impactSpeed);
+            });
     connect(m_worker, &PhysicsWorker::snapshotPublished, this,
             &PhysicsWorld::onSnapshotPublished);
 
@@ -364,33 +392,73 @@ void PhysicsWorld::tryAdvanceGuiBuffer()
 void PhysicsWorld::onSnapshotPublished(quint64 tick, qint64 timestampNs,
                                        qint64 stepDurationNs)
 {
+    if (!m_running) return; // événement queued résiduel post-stop (cf. start())
     m_lastTick = tick;
     m_lastTimestampNs = timestampNs;
     m_lastStepDurationNs = stepDurationNs;
+    // Auto-expiration du verrou d'avancement GUI : sans FrameAnimation
+    // active (ex : hôte réseau headless qui sérialise à 30 Hz sans scène 3D
+    // montée), personne n'appelle beginFrame() et bodyState resterait figé
+    // sur la première frame pour toujours. Une nouvelle publication worker
+    // ré-autorise un avancement — au plus un par publication, la garantie
+    // "une frame physique max par frame de rendu" reste tenue quand
+    // beginFrame est appelé (les queued sont délivrés entre les frames).
+    m_guiAdvancedThisFrame = false;
     emit snapshotAvailable(tick);
+}
+
+namespace {
+QVariantMap bodySnapshotToMap(const pattounx::BodySnapshot &src)
+{
+    QVariantMap out;
+    out.insert(QStringLiteral("id"), src.id);
+    out.insert(QStringLiteral("position"), QVariant::fromValue(src.position));
+    out.insert(QStringLiteral("velocity"), QVariant::fromValue(src.velocity));
+    out.insert(QStringLiteral("isSleeping"), src.isSleeping);
+    out.insert(QStringLiteral("isColliding"), src.isColliding);
+    return out;
+}
+} // namespace
+
+const pattounx::WorldSnapshot *PhysicsWorld::readableSnapshot()
+{
+    if (m_useRemoteBuffer) {
+        // Côté client en mode remote : pas d'avancement GUI/triple buffer
+        // (le worker est typiquement off via setSimulationEnabled(false)).
+        return &m_remoteBuffer;
+    }
+    tryAdvanceGuiBuffer();
+    return m_guiInUse;
 }
 
 QVariantMap PhysicsWorld::bodyState(const QString &id)
 {
-    QVariantMap out;
-    const pattounx::BodySnapshot *src = nullptr;
-    if (m_useRemoteBuffer) {
-        // Côté client en mode remote : pas d'avancement GUI/triple buffer
-        // (le worker est typiquement off via setSimulationEnabled(false)).
-        auto it = m_remoteBuffer.bodies.find(id);
-        if (it != m_remoteBuffer.bodies.end()) src = &it.value();
-    } else {
-        tryAdvanceGuiBuffer();
-        if (!m_guiInUse) return out;
-        auto it = m_guiInUse->bodies.find(id);
-        if (it != m_guiInUse->bodies.end()) src = &it.value();
+    const pattounx::WorldSnapshot *snap = readableSnapshot();
+    if (!snap) return {};
+    const auto it = snap->bodies.constFind(id);
+    if (it == snap->bodies.constEnd()) return {};
+    return bodySnapshotToMap(it.value());
+}
+
+QVariantList PhysicsWorld::bodyStates(const QStringList &ids)
+{
+    // Version batch de bodyState : un seul appel QML→C++ par frame de rendu
+    // pour tous les actors (au lieu de N QVariantMap churn à 144 Hz × 20
+    // entités). Retourne une liste ALIGNÉE sur `ids` — entrée vide ({}) pour
+    // un body inconnu, comme bodyState.
+    QVariantList out;
+    out.reserve(ids.size());
+    const pattounx::WorldSnapshot *snap = readableSnapshot();
+    for (const QString &id : ids) {
+        if (snap) {
+            const auto it = snap->bodies.constFind(id);
+            if (it != snap->bodies.constEnd()) {
+                out.append(bodySnapshotToMap(it.value()));
+                continue;
+            }
+        }
+        out.append(QVariantMap());
     }
-    if (!src) return out;
-    out.insert(QStringLiteral("id"), src->id);
-    out.insert(QStringLiteral("position"), QVariant::fromValue(src->position));
-    out.insert(QStringLiteral("velocity"), QVariant::fromValue(src->velocity));
-    out.insert(QStringLiteral("isSleeping"), src->isSleeping);
-    out.insert(QStringLiteral("isColliding"), src->isColliding);
     return out;
 }
 

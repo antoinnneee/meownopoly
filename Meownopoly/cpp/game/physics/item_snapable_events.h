@@ -66,6 +66,9 @@ private:
 
     QPointer<Map>          m_map;
     QSet<ItemSnapable *>   m_attachedTiles;
+    // Index uuid → tile pour onTileRemovedFromMap (sinon scan linéaire du
+    // set = O(n²) sur une purge de map). Tenu en phase avec m_attachedTiles.
+    QHash<QUuid, ItemSnapable *> m_tilesByUuid;
 };
 
 #endif // ITEM_SNAPABLE_EVENTS_H
