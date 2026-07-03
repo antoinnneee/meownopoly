@@ -121,6 +121,13 @@ private:
     void integrateBody(InternalBody &body, qreal dt);
     void resolveBodyZoneCCD();
     void resolveBodyBodyCCD();
+    // Collecte les contacts résiduels body-zone aux positions finales du
+    // frame — appelée APRÈS resolveBodyBodyCCD pour voir aussi les bodies
+    // poussés dans une zone par la résolution body-body. Un seul contact
+    // par body (le plus pénétrant) : checkCirclePolygonAll produit un
+    // contact par arête, et dans un coin deux impulsions avec restitution
+    // chacune = sur-restitution + jitter.
+    void collectResidualZoneContacts();
     void runStaticPass();
     void correctPositions();
 

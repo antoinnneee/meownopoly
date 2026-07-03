@@ -374,6 +374,12 @@ qreal Collision2D::sweepCircleSegment(
         // d0 + t*dv = ±radius => t = (±radius - d0) / dv
         auto trySegmentSide = [&](qreal targetDist) {
             if (std::abs(dv) < EPSILON) return; // Mouvement parallèle au segment
+            // N'accepter que les crossings RAPPROCHANTS : atteindre +radius en
+            // venant de plus loin exige dv < 0, atteindre -radius exige dv > 0.
+            // Sinon un cercle qui démarre DANS la bande ±radius (près d'un
+            // coin) et s'en éloigne produit un t valide au moment où il QUITTE
+            // la capsule → faux contact, et le rewind CCD le stoppe/colle.
+            if (targetDist > 0.0 ? dv > 0.0 : dv < 0.0) return;
             qreal t = (targetDist - d0) / dv;
 
             if (t >= -EPSILON && t <= 1.0 + EPSILON) {

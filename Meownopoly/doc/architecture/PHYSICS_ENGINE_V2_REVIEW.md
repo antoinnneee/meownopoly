@@ -30,23 +30,23 @@
   Détection purement "distance aux arêtes" : centre à l'intérieur → `toCenter` pointe vers l'intérieur → normale inversée ; `runStaticPass` (`pattounx_engine_v2.cpp:522-523`) skip l'impulsion et `correctPositions` (`:568-575`) pousse le body **plus profondément**. Centre au cœur du polygone (> radius de toute arête) → aucune collision détectée du tout. Le sweep CCD ne couvre pas : spawn dans une zone, téléport (`setBodyPosition`), **zone déplacée sur un body** (cas réel : drag éditeur avec sync live 30 Hz), body poussé dans une zone par la résolution body-body.
   **Fix** : tester `pointInPolygon(center)` dans `checkCirclePolygon*` ; si vrai, normale orientée extérieur + `penetration = radius + minDist` ; chemin de dépénétration "expulser vers l'arête la plus proche".
 
-- [ ] 🟠 **M2 — `trySegmentSide` accepte les crossings de *sortie* de la bande ±radius**
+- [x] 🟠 **M2 — `trySegmentSide` accepte les crossings de *sortie* de la bande ±radius** *(corrigé 2026-07-03 : garde `targetDist > 0 ? dv > 0 : dv < 0` → return, seuls les crossings rapprochants produisent un contact)*
   `collision2d.cpp:331-352`. Un cercle qui démarre dans la bande (près d'un coin) et s'en éloigne produit un `t > 0` valide au moment où il **quitte** la capsule → faux contact ; `resolveBodyZoneCCD` (`pattounx_engine_v2.cpp:324-326`) applique le rewind de position même si le bounce est skippé → body stoppé/collé en quittant un coin.
   **Fix** : n'accepter `+radius` que si `dv < 0` et `-radius` que si `dv > 0` (crossing rapprochant).
 
-- [ ] 🟠 **M3 — NaN si `currentDamping >= 1`**
+- [x] 🟠 **M3 — NaN si `currentDamping >= 1`** *(corrigé 2026-07-03 : `std::clamp(currentDamping, 0.0, 0.999)` dans `applyGroundFrictionAndZones` — couvre les deux sources, `spec.linearDamping` et `zone.frictionStrength`)*
   `pattounx_engine_v2.cpp:229/234/252`. `std::pow(1.0 - damping, dt*60)` avec damping > 1 (valeur pilotée par l'éditeur, non bornée) → NaN qui contamine velocity puis position définitivement — et se propage à tous les clients via snapshot.
   **Fix** : `std::clamp(currentDamping, 0.0, 0.999)` dans `applyGroundFrictionAndZones` (ou clamp à l'entrée `upsertBody`/`upsertZone`).
 
-- [ ] 🟠 **M4 — Pas de correction positionnelle pour les overlaps body-body installés**
+- [x] 🟠 **M4 — Pas de correction positionnelle pour les overlaps body-body installés** *(corrigé 2026-07-03 : sur `t == 0`, plus de rewind — correction Baumgarte proportionnelle à la profondeur (mêmes `PENETRATION_SLOP`/`POSITION_CORRECTION_PERCENT` que `correctPositions`), normale recalculée aux positions courantes, répartie selon `effInvMass` avec fallback 50/50 si mobiles sans masse ; `effInvMass` hissé et dédupliqué)*
   `pattounx_engine_v2.cpp:408-433`. Sur `t=0` (déjà en interpénétration), séparation par `push` fixe de 0.01/frame indépendant de la profondeur : deux cercles enfoncés de 0.3 mettent ~30 frames à se séparer, avec normale instable (centres quasi confondus) → jitter.
   **Fix** : sur `t == 0`, `penetration = (rA+rB) - |relStart|` + correction Baumgarte proportionnelle (mêmes `PENETRATION_SLOP`/`POSITION_CORRECTION_PERCENT`), répartie selon `invMass`. Utiliser le `sumR` actuellement calculé puis ignoré (`(void)sumR`, `:416/434`).
 
-- [ ] 🟠 **M5 — Ordre du pipeline : `resolveBodyBodyCCD` après la collecte des contacts résiduels body-zone**
+- [x] 🟠 **M5 — Ordre du pipeline : `resolveBodyBodyCCD` après la collecte des contacts résiduels body-zone** *(corrigé 2026-07-03 : collecte extraite dans `collectResidualZoneContacts()`, appelée dans `step()` APRÈS `resolveBodyBodyCCD`)*
   `pattounx_engine_v2.cpp:131-141` (`step`). Un body poussé dans une zone d'exclusion par la résolution body-body n'a aucun contact résiduel ce frame → pénétration d'au moins une frame, potentiellement définitive combiné à M1.
   **Fix** : déplacer la collecte des résiduels après `resolveBodyBodyCCD`, ou re-sweeper les bodies déplacés.
 
-- [ ] 🟠 **M6 — Impulsions dupliquées sur contacts multi-arêtes (coins)**
+- [x] 🟠 **M6 — Impulsions dupliquées sur contacts multi-arêtes (coins)** *(corrigé 2026-07-03 : dédup par body dans `collectResidualZoneContacts` — un seul contact résiduel, le plus pénétrant, toutes zones confondues ; le mur "perdant" est repris au frame suivant par la Baumgarte)*
   `pattounx_engine_v2.cpp:513-558` (`runStaticPass`). `checkCirclePolygonAll` produit un contact par arête : dans un coin, deux impulsions normales avec restitution chacune → sur-restitution + jitter ; idem `correctPositions` (jusqu'à 1.2× de sur-correction).
   **Fix** : dédupliquer les contacts par body (garder le plus pénétrant ou moyenner les normales), et/ou accumulated impulse avec clamp à la Box2D.
 

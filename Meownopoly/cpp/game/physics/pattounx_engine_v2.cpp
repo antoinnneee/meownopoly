@@ -131,6 +131,11 @@ void PattounX_engine::step(qreal dt)
     integrateBodies(dt);
     resolveBodyZoneCCD();
     resolveBodyBodyCCD();
+    // Collecte APRÈS le body-body : un body poussé dans une zone d'exclusion
+    // par la résolution body-body doit avoir son contact résiduel CE frame,
+    // sinon la pénétration persiste au moins une frame (définitivement dans
+    // le pire cas coin/inside).
+    collectResidualZoneContacts();
 
     // Solver itératif sur les contacts résiduels (zone-body uniquement —
     // les body-body sont résolus par impulsion en CCD direct, suffisant
@@ -183,7 +188,11 @@ void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
         currentSpeedMul *= zone.spec.speedMultiplier;
     }
 
-    body.currentDamping = currentDamping;
+    // Clamp de sécurité : damping >= 1 (valeur pilotée par l'éditeur, non
+    // bornée en amont) rendrait `std::pow(1.0 - damping, dt*60)` négatif ou
+    // NaN — qui contamine velocity puis position définitivement, et se
+    // propage à tous les clients via snapshot.
+    body.currentDamping = std::clamp(currentDamping, 0.0, 0.999);
     body.zoneAccelerationMultiplier = currentAccelMul;
     body.zoneSpeedMultiplier = currentSpeedMul;
 
@@ -348,7 +357,17 @@ void PattounX_engine::resolveBodyZoneCCD()
         }
     }
 
-    // Détection statique aux positions corrigées (résiduels au repos)
+}
+
+void PattounX_engine::collectResidualZoneContacts()
+{
+    // Détection statique aux positions finales du frame (post body-zone CCD
+    // ET post body-body — cf. commentaire dans step()). Dédup par body : on
+    // ne garde que le contact le plus pénétrant, sinon un coin (2 arêtes)
+    // applique deux impulsions avec restitution + jusqu'à 1.2× de
+    // sur-correction positionnelle → jitter. Le mur "perdant" est repris au
+    // frame suivant par la correction Baumgarte (convergence en 2-3 frames).
+    QHash<QString, int> contactIndexByBody;
     for (auto it = m_bodies.begin(); it != m_bodies.end(); ++it) {
         InternalBody &body = it.value();
         if (body.spec.type == BodyType::Static) continue;
@@ -368,7 +387,14 @@ void PattounX_engine::resolveBodyZoneCCD()
                 rc.normal = r.normal;
                 rc.closestPoint = r.closestPoint;
                 rc.penetration = r.penetration;
-                m_residualContacts.append(rc);
+
+                const auto cit = contactIndexByBody.constFind(body.spec.id);
+                if (cit == contactIndexByBody.constEnd()) {
+                    contactIndexByBody.insert(body.spec.id, m_residualContacts.size());
+                    m_residualContacts.append(rc);
+                } else if (rc.penetration > m_residualContacts[cit.value()].penetration) {
+                    m_residualContacts[cit.value()] = rc;
+                }
             }
         }
     }
@@ -407,31 +433,64 @@ void PattounX_engine::resolveBodyBodyCCD()
 
             if (t < 0.0) continue;
 
-            // Rewind aux positions de contact
-            QVector2D movA = endA - startA;
-            QVector2D movB = endB - startB;
-            QVector2D contactA = startA + t * movA;
-            QVector2D contactB = startB + t * movB;
-
             qreal sumR = A.spec.shape.radius + B.spec.shape.radius;
-            // Pousser légèrement hors contact
-            QVector2D push = normal * TUNNELING_BUFFER * 0.5;
 
             // Réponse cinématique : ne déplacer que les bodies "mobiles"
             bool aMovable = (A.spec.type != BodyType::Static);
             bool bMovable = (B.spec.type != BodyType::Static);
 
-            if (aMovable && bMovable) {
-                A.position = contactA + push;
-                B.position = contactB - push;
-            } else if (aMovable) {
-                A.position = contactA + push;
-                B.position = contactB;
-            } else if (bMovable) {
-                A.position = contactA;
-                B.position = contactB - push;
+            // Masse inertielle pour l'impulsion et la répartition de la
+            // correction : un Kinematic contribue avec sa vraie masse
+            // (≠ `invMass()` qui retourne 0 pour Kinematic dans les passes
+            // statiques où on n'écrit pas sa velocity). Sans ça, Kinematic
+            // = masse infinie et la masse de l'autre body s'annule
+            // mathématiquement → toutes les caisses, légères ou lourdes,
+            // reçoivent la même delta-vélocité.
+            auto effInvMass = [](const InternalBody &b) -> qreal {
+                if (b.spec.type == BodyType::Static) return 0.0;
+                return b.spec.mass > 0.0 ? 1.0 / b.spec.mass : 0.0;
+            };
+            qreal invA = effInvMass(A);
+            qreal invB = effInvMass(B);
+
+            if (t <= 0.0) {
+                // Déjà en interpénétration au début du frame : le rewind à
+                // t=0 annulerait le mouvement du frame sans séparer, et le
+                // push fixe TUNNELING_BUFFER/2 (0.01/frame, indépendant de
+                // la profondeur) mettrait ~30 frames à séparer deux cercles
+                // enfoncés de 0.3, avec normale instable → jitter.
+                // Correction proportionnelle à la profondeur (mêmes
+                // constantes que correctPositions), répartie selon invMass.
+                QVector2D delta = A.position - B.position;
+                qreal dist = delta.length();
+                if (dist > EPSILON) normal = delta / dist; // normale aux positions courantes
+                qreal penetration = sumR - dist;
+                if (penetration > PENETRATION_SLOP) {
+                    qreal corr = (penetration - PENETRATION_SLOP)
+                                 * POSITION_CORRECTION_PERCENT;
+                    qreal wA = aMovable ? invA : 0.0;
+                    qreal wB = bMovable ? invB : 0.0;
+                    qreal wSum = wA + wB;
+                    if (wSum <= 0.0) {
+                        // Mobiles sans masse exploitable (Kinematic mass<=0) :
+                        // répartition égale entre les bodies déplaçables.
+                        wA = aMovable ? 1.0 : 0.0;
+                        wB = bMovable ? 1.0 : 0.0;
+                        wSum = wA + wB;
+                    }
+                    if (wSum > 0.0) {
+                        A.position += normal * (corr * wA / wSum);
+                        B.position -= normal * (corr * wB / wSum);
+                    }
+                }
+            } else {
+                // Rewind aux positions de contact + léger push hors contact
+                QVector2D contactA = startA + t * (endA - startA);
+                QVector2D contactB = startB + t * (endB - startB);
+                QVector2D push = normal * TUNNELING_BUFFER * 0.5;
+                if (aMovable) A.position = contactA + (bMovable ? push : 2.0 * push);
+                if (bMovable) B.position = contactB - (aMovable ? push : 2.0 * push);
             }
-            (void)sumR;
 
             // Impulsion : j = -(1+e) * vRel·n / (invA + invB)
             QVector2D vRel = A.velocity - B.velocity;
@@ -447,19 +506,6 @@ void PattounX_engine::resolveBodyBodyCCD()
                 m_pendingEvents.collisions.append(c);
                 continue;
             }
-
-            // Masse inertielle pour le calcul d'impulsion : un Kinematic
-            // contribue avec sa vraie masse (≠ `invMass()` qui retourne 0
-            // pour Kinematic dans les passes statiques où on n'écrit pas
-            // sa velocity). Sans ça, Kinematic = masse infinie et la masse
-            // de l'autre body s'annule mathématiquement → toutes les
-            // caisses, légères ou lourdes, reçoivent la même delta-vélocité.
-            auto effInvMass = [](const InternalBody &b) -> qreal {
-                if (b.spec.type == BodyType::Static) return 0.0;
-                return b.spec.mass > 0.0 ? 1.0 / b.spec.mass : 0.0;
-            };
-            qreal invA = effInvMass(A);
-            qreal invB = effInvMass(B);
 
             // Application : seul un Dynamic reçoit la modification de
             // velocity. Un Kinematic conserve la sienne (input-driven), un
