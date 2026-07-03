@@ -26,6 +26,10 @@ Rectangle {
     readonly property var _health: GameplayModuleManager.healthModule
     readonly property var _inventory: GameplayModuleManager.inventoryModule
     readonly property var _currency: GameplayModuleManager.currencyModule
+    readonly property var _stats: GameplayModuleManager.statsModule
+    readonly property var _equipment: GameplayModuleManager.equipmentModule
+    readonly property var _level: GameplayModuleManager.levelModule
+    readonly property var _experience: GameplayModuleManager.levelModule.experienceModule
 
     // ── Joueurs de test ──────────────────────────────────────────────────
     property string _playerA: "Princess"
@@ -37,6 +41,17 @@ Rectangle {
     property bool _dead: false
     property int _balanceA: 0
     property int _balanceB: 0
+    // Stats du joueur A (base / effective).
+    property real _speedBase: 0
+    property real _speedEff: 0
+    property real _damageBase: 0
+    property real _damageEff: 0
+    // Vue de l'équipement du joueur A : [{ slot, label, name, bonuses }, ...].
+    property var _equipmentView: []
+    // Niveau & XP du joueur A.
+    property int _levelA: 1
+    property int _xpA: 0
+    property int _xpNextA: 0
 
     // ── Log d'événements commun ──────────────────────────────────────────
     function _log(line) {
@@ -61,11 +76,37 @@ Rectangle {
         root._balanceA = root._currency.balance(root._playerA)
         root._balanceB = root._currency.balance(root._playerB)
     }
+    function _refreshStats() {
+        root._speedBase = root._stats.baseStat(root._playerA, "speed")
+        root._speedEff = root._stats.effectiveStat(root._playerA, "speed")
+        root._damageBase = root._stats.baseStat(root._playerA, "damage")
+        root._damageEff = root._stats.effectiveStat(root._playerA, "damage")
+    }
+    function _refreshEquipment() {
+        root._equipmentView = root._equipment.equipment(root._playerA)
+    }
+    function _refreshLevel() {
+        root._levelA = root._level.level(root._playerA)
+        root._xpA = root._experience.xp(root._playerA)
+        root._xpNextA = root._experience.xpForNextLevel(root._playerA)
+    }
+    // Formate une map de bonus {statKey: valeur} en libellé lisible.
+    function _fmtBonuses(bonuses) {
+        if (!bonuses)
+            return ""
+        const parts = []
+        for (const k in bonuses)
+            parts.push(root._stats.statLabel(k) + " +" + bonuses[k])
+        return parts.join(", ")
+    }
 
     Component.onCompleted: {
         _refreshHealth()
         _refreshInventory()
         _refreshCurrency()
+        _refreshStats()
+        _refreshEquipment()
+        _refreshLevel()
     }
 
     // ── Connexions aux signaux des modules ───────────────────────────────
@@ -112,6 +153,54 @@ Rectangle {
         function onTransferFailed(fromId, toId, amount, reason) {
             root._log("⛔ Opération refusée (" + reason + ") : " + amount
                       + " de " + fromId + (toId.length > 0 ? " → " + toId : ""))
+        }
+    }
+    Connections {
+        target: root._stats
+        function onStatChanged(playerId, statKey, baseValue, effectiveValue) {
+            root._log("📊 " + playerId + " " + root._stats.statLabel(statKey)
+                      + " = " + effectiveValue.toFixed(2)
+                      + " (base " + baseValue.toFixed(2) + ")")
+            if (playerId === root._playerA) root._refreshStats()
+        }
+        function onModifierAdded(playerId, sourceId, statKey, value) {
+            root._log("➕ modif " + root._stats.statLabel(statKey) + " "
+                      + (value >= 0 ? "+" : "") + value + " [" + sourceId + "] → " + playerId)
+        }
+        function onModifiersRemoved(playerId, sourceId) {
+            root._log("➖ modifs retirées [" + sourceId + "] ← " + playerId)
+            if (playerId === root._playerA) root._refreshStats()
+        }
+    }
+    Connections {
+        target: root._equipment
+        function onItemEquipped(playerId, slot, itemName) {
+            root._log("🗡️ équipé « " + itemName + " » ("
+                      + root._equipment.slotLabel(slot) + ") → " + playerId)
+        }
+        function onItemUnequipped(playerId, slot, itemName) {
+            root._log("🧺 déséquipé « " + itemName + " » ("
+                      + root._equipment.slotLabel(slot) + ") ← " + playerId)
+        }
+        function onEquipmentChanged(playerId) {
+            if (playerId === root._playerA) root._refreshEquipment()
+        }
+    }
+    Connections {
+        target: root._level
+        function onLevelChanged(playerId, level) {
+            if (playerId === root._playerA) root._refreshLevel()
+        }
+        function onLeveledUp(playerId, newLevel) {
+            root._log("⭐ " + playerId + " passe niveau " + newLevel)
+            if (playerId === root._playerA) root._refreshLevel()
+        }
+    }
+    Connections {
+        target: root._experience
+        function onXpChanged(playerId, xp, xpForNext) {
+            root._log("✨ " + playerId + " XP = " + xp + " / " + xpForNext)
+            if (playerId === root._playerA) root._refreshLevel()
         }
     }
 
@@ -198,6 +287,9 @@ Rectangle {
                                     root._refreshHealth()
                                     root._refreshInventory()
                                     root._refreshCurrency()
+                                    root._refreshStats()
+                                    root._refreshEquipment()
+                                    root._refreshLevel()
                                 }
                             }
                             Text {
@@ -505,6 +597,392 @@ Rectangle {
                             MeowButton {
                                 text: "Reset"; variant: "secondary"; fontSize: Theme.fontSizeBody
                                 onClicked: { root._currency.reset(); root._refreshCurrency() }
+                            }
+                        }
+                    }
+                }
+
+                // ═══ Module de statistiques ═══
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: statsCol.implicitHeight + 2 * Theme.spacingL
+                    color: Theme.surface
+                    radius: Theme.radiusM
+                    border.color: Theme.border
+
+                    ColumnLayout {
+                        id: statsCol
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingL
+                        spacing: Theme.spacingM
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: root._stats.name
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeTitle
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+                            MeowSwitch {
+                                checked: root._stats.enabled
+                                onToggled: root._stats.enabled = checked
+                            }
+                        }
+
+                        // Ligne Vitesse
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingM
+                            Text {
+                                text: "Vitesse"
+                                color: Theme.textSecondary
+                                font.pixelSize: Theme.fontSizeBody
+                                Layout.preferredWidth: 90
+                            }
+                            Text {
+                                text: "base " + root._speedBase.toFixed(2)
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
+                            }
+                            Text {
+                                text: "→ eff " + root._speedEff.toFixed(2)
+                                color: Theme.accent
+                                font.pixelSize: Theme.fontSizeBody
+                                font.bold: true
+                            }
+                            Item { Layout.fillWidth: true }
+                            MeowButton {
+                                text: "-0.5"; variant: "danger"; fontSize: Theme.fontSizeBody
+                                enabled: root._stats.enabled
+                                onClicked: root._stats.setBaseStat(root._playerA, "speed",
+                                                                   root._speedBase - 0.5)
+                            }
+                            MeowButton {
+                                text: "+0.5"; variant: "success"; fontSize: Theme.fontSizeBody
+                                enabled: root._stats.enabled
+                                onClicked: root._stats.setBaseStat(root._playerA, "speed",
+                                                                   root._speedBase + 0.5)
+                            }
+                        }
+
+                        // Ligne Dommage
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingM
+                            Text {
+                                text: "Dommage"
+                                color: Theme.textSecondary
+                                font.pixelSize: Theme.fontSizeBody
+                                Layout.preferredWidth: 90
+                            }
+                            Text {
+                                text: "base " + root._damageBase.toFixed(2)
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
+                            }
+                            Text {
+                                text: "→ eff " + root._damageEff.toFixed(2)
+                                color: Theme.accent
+                                font.pixelSize: Theme.fontSizeBody
+                                font.bold: true
+                            }
+                            Item { Layout.fillWidth: true }
+                            MeowButton {
+                                text: "-5"; variant: "danger"; fontSize: Theme.fontSizeBody
+                                enabled: root._stats.enabled
+                                onClicked: root._stats.setBaseStat(root._playerA, "damage",
+                                                                   root._damageBase - 5)
+                            }
+                            MeowButton {
+                                text: "+5"; variant: "success"; fontSize: Theme.fontSizeBody
+                                enabled: root._stats.enabled
+                                onClicked: root._stats.setBaseStat(root._playerA, "damage",
+                                                                   root._damageBase + 5)
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingM
+                            enabled: root._stats.enabled
+
+                            MeowButton {
+                                text: "Modif test +2 dommage (source: test)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._stats.addModifier(root._playerA, "test",
+                                                                   "damage", 2)
+                            }
+                            MeowButton {
+                                text: "Retirer modifs test"
+                                variant: "warning"; fontSize: Theme.fontSizeBody
+                                onClicked: root._stats.removeModifiersFromSource(root._playerA, "test")
+                            }
+                            Item { Layout.fillWidth: true }
+                            MeowButton {
+                                text: "Reset"; variant: "secondary"; fontSize: Theme.fontSizeBody
+                                onClicked: { root._stats.reset(); root._refreshStats() }
+                            }
+                        }
+                    }
+                }
+
+                // ═══ Module d'équipement ═══
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: equipCol.implicitHeight + 2 * Theme.spacingL
+                    color: Theme.surface
+                    radius: Theme.radiusM
+                    border.color: Theme.border
+
+                    ColumnLayout {
+                        id: equipCol
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingL
+                        spacing: Theme.spacingM
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: root._equipment.name
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeTitle
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+                            MeowSwitch {
+                                checked: root._equipment.enabled
+                                onToggled: root._equipment.enabled = checked
+                            }
+                        }
+
+                        // Les 4 slots
+                        Repeater {
+                            model: root._equipmentView
+                            delegate: RowLayout {
+                                id: slotRow
+                                required property var modelData
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingM
+
+                                Text {
+                                    text: slotRow.modelData.label
+                                    color: Theme.textSecondary
+                                    font.pixelSize: Theme.fontSizeBody
+                                    Layout.preferredWidth: 90
+                                }
+                                Text {
+                                    text: (slotRow.modelData.name && slotRow.modelData.name.length > 0)
+                                          ? slotRow.modelData.name : "—"
+                                    color: Theme.textPrimary
+                                    font.pixelSize: Theme.fontSizeBody
+                                    font.bold: (slotRow.modelData.name && slotRow.modelData.name.length > 0)
+                                    Layout.preferredWidth: 160
+                                }
+                                Text {
+                                    text: root._fmtBonuses(slotRow.modelData.bonuses)
+                                    color: Theme.accent
+                                    font.pixelSize: Theme.fontSizeBody
+                                    Layout.fillWidth: true
+                                }
+                                MeowButton {
+                                    text: "Retirer"; variant: "danger"; fontSize: Theme.fontSizeCaption
+                                    enabled: root._equipment.enabled
+                                             && slotRow.modelData.name
+                                             && slotRow.modelData.name.length > 0
+                                    onClicked: root._equipment.unequip(root._playerA,
+                                                                       slotRow.modelData.slot)
+                                }
+                            }
+                        }
+
+                        // Boutons d'équipement d'items de démo
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingM
+                            enabled: root._equipment.enabled
+
+                            MeowButton {
+                                text: "Épée (+5 dommage)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._equipment.equip(root._playerA, "weapon",
+                                                                 "Épée", { "damage": 5 })
+                            }
+                            MeowButton {
+                                text: "Bottes de vent (+0.5 vitesse)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._equipment.equip(root._playerA, "boots",
+                                                                 "Bottes de vent", { "speed": 0.5 })
+                            }
+                            MeowButton {
+                                text: "Tunique (+0.2 vit, +2 dmg)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._equipment.equip(root._playerA, "tunic",
+                                                                 "Tunique matelassée",
+                                                                 { "speed": 0.2, "damage": 2 })
+                            }
+                            MeowButton {
+                                text: "Chapeau (+0.2 vitesse)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._equipment.equip(root._playerA, "hat",
+                                                                 "Chapeau pointu", { "speed": 0.2 })
+                            }
+                            MeowButton {
+                                text: "Tunique de vitalité (+20 vie max)"
+                                variant: "primary"; fontSize: Theme.fontSizeBody
+                                onClicked: root._equipment.equip(root._playerA, "tunic",
+                                                                 "Tunique de vitalité",
+                                                                 { "maxHealth": 20 })
+                            }
+                            MeowButton {
+                                text: "Reset"; variant: "secondary"; fontSize: Theme.fontSizeBody
+                                onClicked: { root._equipment.reset(); root._refreshEquipment() }
+                            }
+                        }
+                    }
+                }
+
+                // ═══ Module de niveau & sous-module d'expérience ═══
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: levelCol.implicitHeight + 2 * Theme.spacingL
+                    color: Theme.surface
+                    radius: Theme.radiusM
+                    border.color: Theme.border
+
+                    ColumnLayout {
+                        id: levelCol
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingL
+                        spacing: Theme.spacingM
+
+                        // En-tête du module de niveau
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: "⭐ " + root._level.name
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeTitle
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+                            MeowSwitch {
+                                checked: root._level.enabled
+                                onToggled: root._level.enabled = checked
+                            }
+                        }
+
+                        // Niveau courant
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingM
+                            opacity: root._level.effectiveEnabled ? 1.0 : 0.5
+                            Text {
+                                text: "Niveau"
+                                color: Theme.textSecondary
+                                font.pixelSize: Theme.fontSizeBody
+                                Layout.preferredWidth: 90
+                            }
+                            Text {
+                                text: root._levelA + " / " + root._level.maxLevel
+                                color: Theme.accent
+                                font.pixelSize: Theme.fontSizeMedium
+                                font.bold: true
+                            }
+                            Item { Layout.fillWidth: true }
+                        }
+
+                        // Sous-section Expérience (visuellement subordonnée)
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: Theme.spacingL
+                            Layout.preferredHeight: xpCol.implicitHeight + 2 * Theme.spacingM
+                            color: Theme.background
+                            radius: Theme.radiusS
+                            border.color: Theme.border
+                            // Grisé quand le parent Niveau est désactivé.
+                            opacity: root._level.effectiveEnabled ? 1.0 : 0.5
+
+                            ColumnLayout {
+                                id: xpCol
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingM
+                                spacing: Theme.spacingM
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        text: "↳ " + root._experience.name
+                                        color: Theme.textPrimary
+                                        font.pixelSize: Theme.fontSizeMedium
+                                        font.bold: true
+                                        Layout.fillWidth: true
+                                    }
+                                    MeowSwitch {
+                                        // Sous-module : opérable seulement si le parent est actif.
+                                        enabled: root._level.effectiveEnabled
+                                        checked: root._experience.enabled
+                                        onToggled: root._experience.enabled = checked
+                                    }
+                                }
+
+                                // Barre d'XP (xp / xpForNext)
+                                Item {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 22
+                                    opacity: root._experience.effectiveEnabled ? 1.0 : 0.4
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: Theme.radiusS
+                                        color: Theme.surfaceAlt
+                                        border.color: Theme.border
+
+                                        Rectangle {
+                                            height: parent.height - 4
+                                            y: 2; x: 2
+                                            width: (parent.width - 4)
+                                                   * (root._xpNextA > 0
+                                                      ? Math.min(1, root._xpA / root._xpNextA) : 0)
+                                            radius: Theme.radiusS
+                                            color: Theme.accentAlt
+                                            Behavior on width { NumberAnimation { duration: Theme.durationNormal } }
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: root._xpA + " / " + root._xpNextA + " XP"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: Theme.fontSizeCaption
+                                            font.bold: true
+                                        }
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Theme.spacingM
+                                    // Boutons opérables seulement si l'XP est effectivement active.
+                                    enabled: root._experience.effectiveEnabled
+
+                                    MeowButton {
+                                        text: "+10 XP"; variant: "success"; fontSize: Theme.fontSizeBody
+                                        onClicked: root._experience.addXp(root._playerA, 10)
+                                    }
+                                    MeowButton {
+                                        text: "+50 XP"; variant: "success"; fontSize: Theme.fontSizeBody
+                                        onClicked: root._experience.addXp(root._playerA, 50)
+                                    }
+                                    MeowButton {
+                                        text: "+500 XP"; variant: "primary"; fontSize: Theme.fontSizeBody
+                                        onClicked: root._experience.addXp(root._playerA, 500)
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    MeowButton {
+                                        text: "Reset"; variant: "secondary"; fontSize: Theme.fontSizeBody
+                                        onClicked: { root._level.reset(); root._refreshLevel() }
+                                    }
+                                }
                             }
                         }
                     }

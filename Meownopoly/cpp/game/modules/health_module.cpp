@@ -112,6 +112,27 @@ bool HealthModule::setHp(const QString &playerId, int hp)
     return true;
 }
 
+bool HealthModule::setMaxHp(const QString &playerId, int maxHp)
+{
+    // NON gatée par enabled() : surface d'intégration pilotée par la stat
+    // effective maxHealth (cf. sémantique de l'API de modificateurs de
+    // StatsModule). maxHp < 1 est interdit → clamp à 1 minimum.
+    maxHp = qMax(1, maxHp);
+    HealthState &st = stateFor(playerId);
+    const bool wasDead = st.hp <= 0;
+    st.maxHp = maxHp;
+    // Clamp des PV courants au nouveau max (si le max augmente, hp inchangé —
+    // pas de soin gratuit).
+    if (st.hp > st.maxHp)
+        st.hp = st.maxHp;
+    emit healthChanged(playerId, st.hp, st.maxHp);
+    // Le clamp ne peut pas tuer un joueur vivant (maxHp >= 1 garanti), mais on
+    // couvre le cas par cohérence avec le reste de l'API.
+    if (!wasDead && st.hp <= 0)
+        emit playerDied(playerId);
+    return true;
+}
+
 bool HealthModule::revive(const QString &playerId)
 {
     if (!enabled()) {
