@@ -57,6 +57,14 @@ enum Value : quint8 {
     /// se ferme, le QML doit retarder Qt.quit() (pattern Timer 300 ms de
     /// ApplicationWindow.onClosing) pour laisser le paquet partir.
     HostLeaving      = 0x46,
+
+    /// hôte → client : réponse au Hello. Payload JSON
+    /// { claimAccepted: bool, claim: str, takenBy?: str }. Sans lui, le
+    /// client ne sait jamais si son claim a été accepté (la "réponse" au
+    /// Hello n'était qu'un BodiesAnnounce anonyme) — un claim refusé
+    /// (déjà pris par un autre client, premier arrivé premier servi)
+    /// laissait tous ses InputUpdate rejetés silencieusement par l'hôte.
+    Welcome          = 0x47,
 };
 Q_ENUM_NS(Value)
 

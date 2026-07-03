@@ -31,7 +31,7 @@ bool PhysicsProtocol::isPhysicsPacket(const QByteArray &data)
     // Plage physique : Snapshot (0x40) → dernier type. À étendre quand
     // de nouveaux types apparaissent (cf. note dans physics_message_type.h).
     return rawType >= PhysicsMessageType::Snapshot
-        && rawType <= PhysicsMessageType::HostLeaving;
+        && rawType <= PhysicsMessageType::Welcome;
 }
 
 bool PhysicsProtocol::peekType(const QByteArray &data,
@@ -47,6 +47,13 @@ bool PhysicsProtocol::unpackJson(const QByteArray &data,
                                  QJsonObject &outPayload)
 {
     if (!peekType(data, outType)) return false;
+
+    // Garde-fou : aucun payload JSON légitime du protocole physique
+    // n'approche cette taille (le plus gros est la full table idIndex,
+    // quelques KB). Un paquet forgé énorme ne doit pas passer par le
+    // parseur JSON (allocation + parse coûteux sur le thread GUI).
+    constexpr qsizetype kMaxJsonPayload = 64 * 1024;
+    if (data.size() - 1 > kMaxJsonPayload) return false;
 
     if (data.size() > 1) {
         QJsonParseError err;

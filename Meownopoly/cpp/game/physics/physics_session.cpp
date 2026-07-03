@@ -6,6 +6,7 @@
 #include "communication/catway.h"
 #include "communication/player_network.h"
 
+#include <QDateTime>
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -74,6 +75,14 @@ void PhysicsSession::setClaimedActorId(const QString &actorId)
     if (m_claimedActorId == actorId) return;
     m_claimedActorId = actorId;
     emit claimedActorIdChanged();
+
+    // Nouveau claim → statut re-optimiste jusqu'au verdict (Welcome) de
+    // l'hôte. Un `claimAccepted == false` résiduel de l'ancien claim ne
+    // décrit plus rien.
+    if (!m_claimAccepted) {
+        m_claimAccepted = true;
+        emit claimAcceptedChanged();
+    }
 
     // Claim changé APRÈS startAsClient : re-notifier l'hôte, sinon il garde
     // l'ancien claim (ou aucun) et les InputUpdate du nouveau claim sont
@@ -198,8 +207,13 @@ void PhysicsSession::stop()
     m_localPlayerId.clear();
     m_hostPlayerId.clear();
     m_remoteClaims.clear();
+    m_combatReqWindows.clear();
     m_snapshotsSent = 0;
     m_snapshotsReceived = 0;
+    if (!m_claimAccepted) {
+        m_claimAccepted = true; // reset optimiste entre sessions
+        emit claimAcceptedChanged();
+    }
 
     emit activeChanged();
     emit isHostChanged();
@@ -343,14 +357,15 @@ void PhysicsSession::broadcastFullBodyTable()
     if (!m_active || !m_isHost || !m_world) return;
     const QVariantMap full = m_world->currentBodyTable();
     if (full.isEmpty()) return; // rien à annoncer
-    const QJsonObject payload = buildAnnouncePayload(full);
+    const QJsonObject payload = buildAnnouncePayload(full, {}, /*fullTable=*/true);
     const QByteArray packet = PhysicsProtocol::packJson(
         PhysicsMessageType::BodiesAnnounce, payload);
     Catway::instance()->broadcastReliable(packet);
 }
 
 QJsonObject PhysicsSession::buildAnnouncePayload(const QVariantMap &added,
-                                                 const QVariantList &removed)
+                                                 const QVariantList &removed,
+                                                 bool fullTable)
 {
     QJsonObject addedJson;
     for (auto it = added.constBegin(); it != added.constEnd(); ++it)
@@ -360,7 +375,23 @@ QJsonObject PhysicsSession::buildAnnouncePayload(const QVariantMap &added,
     QJsonObject payload;
     payload.insert(QStringLiteral("added"), addedJson);
     payload.insert(QStringLiteral("removed"), removedJson);
+    if (fullTable)
+        payload.insert(QStringLiteral("full"), true);
     return payload;
+}
+
+void PhysicsSession::sendWelcome(const QString &peerId, bool accepted,
+                                 const QString &claim, const QString &takenBy)
+{
+    QJsonObject payload;
+    payload.insert(QStringLiteral("claimAccepted"), accepted);
+    payload.insert(QStringLiteral("claim"), claim);
+    if (!takenBy.isEmpty())
+        payload.insert(QStringLiteral("takenBy"), takenBy);
+    const QByteArray pkt = PhysicsProtocol::packJson(
+        PhysicsMessageType::Welcome, payload);
+    if (PlayerNetwork *peer = Catway::instance()->playerById(peerId))
+        Catway::instance()->sendReliableToPlayer(peer, pkt);
 }
 
 // ── Réception ───────────────────────────────────────────────────────────────
@@ -398,9 +429,13 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         QStringList removed;
         removed.reserve(removedArr.size());
         for (const QJsonValue &v : removedArr) removed.append(v.toString());
+        // Full table (re-broadcast 1 Hz, réponse au Hello) : remplacement
+        // intégral de la table côté client, cf. applyBodiesAnnounce (N9).
+        const bool fullTable = payload.value(QStringLiteral("full")).toBool(false);
         qDebug() << "[PhysicsSession] CLIENT ← BodiesAnnounce de" << senderId
-                 << ": added =" << addedMap.size() << ", removed =" << removed.size();
-        m_world->applyBodiesAnnounce(addedMap, removed);
+                 << ": added =" << addedMap.size() << ", removed =" << removed.size()
+                 << (fullTable ? "(full)" : "(delta)");
+        m_world->applyBodiesAnnounce(addedMap, removed, fullTable);
         break;
     }
 
@@ -442,16 +477,29 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         // snapshots. On enregistre aussi son claim pour filtrer les pushInput
         // locaux conflictuels.
         if (!m_isHost) break;
+        // Valider le sender contre le roster Catway AVANT d'enregistrer le
+        // moindre claim — un Hello forgé d'un pair inconnu ne doit pas
+        // pouvoir réserver un acteur (et on a de toute façon besoin du peer
+        // pour répondre).
+        PlayerNetwork *peer = Catway::instance()->playerById(senderId);
+        if (!peer) {
+            qWarning() << "[PhysicsSession] Hello reçu mais sender hors roster :"
+                       << senderId << "— ignoré";
+            break;
+        }
         QJsonObject helloPayload;
         PhysicsMessageType::Value t;
+        QString requestedClaim;
+        bool claimAccepted = true;
+        QString takenBy;
         if (PhysicsProtocol::unpackJson(data, t, helloPayload)) {
             const QString claim = helloPayload.value(QStringLiteral("claim")).toString();
+            requestedClaim = claim;
             const QString previous = m_remoteClaims.value(senderId);
             if (claim != previous) {
                 // Arbitrage : premier arrivé, premier servi. Sans ce refus,
                 // deux clients claimant le même acteur verraient leurs
                 // InputUpdate s'écraser mutuellement à chaque frame.
-                QString takenBy;
                 for (auto it = m_remoteClaims.constBegin();
                      it != m_remoteClaims.constEnd(); ++it) {
                     if (it.value() == claim && it.key() != senderId) {
@@ -460,11 +508,10 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
                     }
                 }
                 if (!claim.isEmpty() && !takenBy.isEmpty()) {
+                    claimAccepted = false;
                     qWarning() << "[PhysicsSession] HOST : claim refusé —"
                                << claim << "déjà pris par" << takenBy
                                << "(demandé par" << senderId << ")";
-                    // TODO N11 : renvoyer un Welcome {claimAccepted:false}
-                    // pour que le client sache que ses inputs seront rejetés.
                 } else {
                     // L'acteur précédemment claimé par ce sender est relâché :
                     // neutraliser son dernier input (même logique que N5).
@@ -481,17 +528,42 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
             }
         }
         const QVariantMap full = m_world->currentBodyTable();
-        const QJsonObject payload = buildAnnouncePayload(full);
+        const QJsonObject payload = buildAnnouncePayload(full, {}, /*fullTable=*/true);
         const QByteArray pkt = PhysicsProtocol::packJson(
             PhysicsMessageType::BodiesAnnounce, payload);
-        if (PlayerNetwork *peer = Catway::instance()->playerById(senderId)) {
-            Catway::instance()->sendReliableToPlayer(peer, pkt);
-            qDebug() << "[PhysicsSession] HOST ← Hello de" << senderId
-                     << "→ envoi BodiesAnnounce full table (" << full.size()
-                     << "bodies)";
+        Catway::instance()->sendReliableToPlayer(peer, pkt);
+        qDebug() << "[PhysicsSession] HOST ← Hello de" << senderId
+                 << "→ envoi BodiesAnnounce full table (" << full.size()
+                 << "bodies)";
+        // Welcome : accusé du Hello + verdict du claim. Sans lui, un claim
+        // refusé laissait le client dans le noir (inputs rejetés en silence).
+        sendWelcome(senderId, claimAccepted, requestedClaim, takenBy);
+        break;
+    }
+
+    case PhysicsMessageType::Welcome: {
+        if (m_isHost || senderId != m_hostPlayerId) break; // réservé au client
+        QJsonObject payload;
+        PhysicsMessageType::Value t;
+        if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        const QString claim = payload.value(QStringLiteral("claim")).toString();
+        // Welcome périmé (le claim local a changé depuis ce Hello) : ignorer,
+        // le Hello du nouveau claim déclenchera son propre Welcome.
+        if (claim != m_claimedActorId) break;
+        const bool accepted = payload.value(QStringLiteral("claimAccepted")).toBool(true);
+        const QString takenBy = payload.value(QStringLiteral("takenBy")).toString();
+        if (m_claimAccepted != accepted) {
+            m_claimAccepted = accepted;
+            emit claimAcceptedChanged();
+        }
+        if (!accepted) {
+            qWarning() << "[PhysicsSession] CLIENT : claim" << claim
+                       << "refusé par l'hôte (déjà pris par" << takenBy
+                       << ") — les inputs de ce pair seront rejetés";
+            emit claimRejected(claim, takenBy);
         } else {
-            qWarning() << "[PhysicsSession] Hello reçu mais sender introuvable :"
-                       << senderId;
+            qDebug() << "[PhysicsSession] CLIENT ← Welcome : claim" << claim
+                     << "accepté";
         }
         break;
     }
@@ -501,6 +573,38 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         QJsonObject payload;
         PhysicsMessageType::Value t;
         if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        // Whitelist minimale : le payload est relayé tel quel au QML (JSON
+        // libre par design), mais on borne au moins aux types connus des
+        // contrôleurs (CombatController "attack", GrabController "grab").
+        const QString reqType = payload.value(QStringLiteral("type")).toString();
+        if (reqType != QLatin1String("attack") && reqType != QLatin1String("grab")) {
+            static int unknown = 0;
+            if ((unknown++ & 0x3F) == 0) {
+                qWarning() << "[PhysicsSession] HOST : AttackRequest de type inconnu"
+                           << reqType << "rejeté (sender" << senderId << ","
+                           << unknown << "rejets cumulés)";
+            }
+            break;
+        }
+        // Rate-limit par sender (fenêtre glissante 1 s) : chaque requête
+        // déclenche une résolution QML complète (scan des tiles) — un client
+        // fou ou forgé ne doit pas pouvoir saturer l'hôte. 20/s laisse une
+        // marge large au gameplay légitime (cooldown d'attaque ≥ 400 ms).
+        const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+        auto &window = m_combatReqWindows[senderId];
+        if (nowMs - window.first >= 1000) {
+            window.first = nowMs;
+            window.second = 0;
+        }
+        if (++window.second > 20) {
+            static int throttled = 0;
+            if ((throttled++ & 0x3F) == 0) {
+                qWarning() << "[PhysicsSession] HOST : AttackRequest de" << senderId
+                           << "rate-limité (> 20/s," << throttled
+                           << "drops cumulés)";
+            }
+            break;
+        }
         emit combatRequestReceived(senderId, payload.toVariantMap());
         break;
     }

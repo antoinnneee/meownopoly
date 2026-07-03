@@ -509,6 +509,19 @@ void PhysicsWorld::applyRemoteSnapshot(const QByteArray &payload)
         return;
     }
 
+    // Validation : la taille du payload doit correspondre EXACTEMENT au
+    // count annoncé (header 14 octets + 19 octets par body). Un count forgé
+    // trop grand échouerait de toute façon en parse error par body, mais un
+    // payload avec des octets excédentaires serait accepté silencieusement.
+    constexpr int kHeaderSize = 14; // quint32 + qint64 + quint16
+    constexpr int kBodySize   = 19; // quint16 + 4×qint32 + quint8
+    if (payload.size() != kHeaderSize + count * kBodySize) {
+        qWarning() << "[PhysicsWorld] applyRemoteSnapshot: taille invalide"
+                   << payload.size() << "octets pour count =" << count
+                   << "(attendu" << (kHeaderSize + count * kBodySize) << ")";
+        return;
+    }
+
     // Gate anti-obsolète : une retransmission reliable.io peut livrer un
     // snapshot APRÈS un plus récent — l'appliquer ferait reculer tous les
     // bodies d'une frame (rubber-banding). Comparaison wraparound-aware
@@ -604,8 +617,15 @@ QVariantMap PhysicsWorld::takePendingAnnouncements()
 }
 
 void PhysicsWorld::applyBodiesAnnounce(const QVariantMap &addedMap,
-                                       const QStringList &removed)
+                                       const QStringList &removed,
+                                       bool fullTable)
 {
+    if (fullTable) {
+        // État complet annoncé par l'hôte : on repart de zéro plutôt que de
+        // merger — cf. doc du .h (mapping fantôme sur delta `removed` raté).
+        m_actorByIdIndex.clear();
+        m_idIndexByActor.clear();
+    }
     for (auto it = addedMap.constBegin(); it != addedMap.constEnd(); ++it) {
         bool ok = false;
         const quint32 idx32 = it.key().toUInt(&ok);

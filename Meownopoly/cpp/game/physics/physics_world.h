@@ -121,8 +121,13 @@ public:
 
     /// Client : applique un BodiesAnnounce reçu (mise à jour de la table
     /// idIndex → actorId). `addedMap` : {string idIndex → string actorId}.
+    /// `fullTable` : true si `addedMap` est l'état COMPLET de la table (re-
+    /// broadcast 1 Hz, réponse au Hello) → remplacement intégral au lieu
+    /// d'un merge, sinon un delta `removed` raté laisse un mapping fantôme
+    /// pour toujours (vraie corruption dès que les idIndex sont recyclés).
     Q_INVOKABLE void applyBodiesAnnounce(const QVariantMap &addedMap,
-                                         const QStringList &removed);
+                                         const QStringList &removed,
+                                         bool fullTable = false);
 
     /// Client : true si un snapshot remote a été appliqué au moins une fois
     /// (bodyState/allBodyIds lisent depuis m_remoteBuffer plutôt que le triple

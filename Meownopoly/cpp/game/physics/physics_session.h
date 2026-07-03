@@ -47,6 +47,11 @@ class PhysicsSession : public QObject
     /// (évite que l'IC1 d'un client ne pousse "player1" alors que l'host le
     /// pilote lui-même). Vide = pas de filtre.
     Q_PROPERTY(QString claimedActorId READ claimedActorId WRITE setClaimedActorId NOTIFY claimedActorIdChanged)
+    /// (client) statut du claim tel qu'arbitré par l'hôte (via Welcome).
+    /// true par défaut (optimiste, et un claim vide est toujours accepté) ;
+    /// false si l'hôte a refusé le claim (déjà pris par un autre client) —
+    /// dans ce cas les InputUpdate de ce pair sont rejetés côté hôte.
+    Q_PROPERTY(bool claimAccepted READ claimAccepted NOTIFY claimAcceptedChanged)
 
 public:
     static void registerQml();
@@ -61,6 +66,7 @@ public:
     quint64 snapshotsSent() const     { return m_snapshotsSent; }
     quint64 snapshotsReceived() const { return m_snapshotsReceived; }
     QString claimedActorId() const    { return m_claimedActorId; }
+    bool claimAccepted() const        { return m_claimAccepted; }
 
     void setSnapshotHz(int hz);
     void setClaimedActorId(const QString &actorId);
@@ -114,6 +120,11 @@ signals:
     void snapshotsSentChanged();
     void snapshotsReceivedChanged();
     void claimedActorIdChanged();
+    void claimAcceptedChanged();
+    /// Client : l'hôte a refusé le claim courant (déjà pris par `takenBy`).
+    /// À afficher côté UI — sans ré-action, les inputs de ce pair resteront
+    /// rejetés tant qu'il ne claim pas un autre acteur.
+    void claimRejected(const QString &claim, const QString &takenBy);
 
     /// Hôte : un client demande une action de combat (à résoudre par le
     /// CombatController autoritaire).
@@ -147,10 +158,18 @@ private:
     /// Hôte : envoie le payload Snapshot (binaire) en reliable broadcast.
     void broadcastSnapshot();
 
-    /// Construit le payload JSON BodiesAnnounce { added: {idx → id}, removed: [id] }.
-    /// `removed` peut être omis (cas re-broadcast full table).
+    /// Construit le payload JSON BodiesAnnounce { added: {idx → id},
+    /// removed: [id], full?: true }. `removed` peut être omis (cas re-
+    /// broadcast full table). `fullTable` marque le payload comme état
+    /// COMPLET → le client remplace sa table au lieu de merger (cf. N9).
     static QJsonObject buildAnnouncePayload(const QVariantMap &added,
-                                            const QVariantList &removed = {});
+                                            const QVariantList &removed = {},
+                                            bool fullTable = false);
+
+    /// Hôte : met à jour le statut de claim d'un client + lui envoie le
+    /// Welcome { claimAccepted, claim, takenBy? }.
+    void sendWelcome(const QString &peerId, bool accepted,
+                     const QString &claim, const QString &takenBy);
 
     QPointer<PhysicsWorld> m_world;
 
@@ -168,6 +187,15 @@ private:
     QTimer m_helloRetryTimer;
 
     QString m_claimedActorId;
+    // Client : statut du claim tel qu'arbitré par l'hôte (Welcome). Reset à
+    // true (optimiste) au start/stop.
+    bool m_claimAccepted = true;
+
+    // Hôte : rate-limit des AttackRequest par sender (fenêtre glissante
+    // 1 s). Un AttackRequest déclenche une résolution QML complète (scan
+    // des tiles) — un client fou ou forgé ne doit pas pouvoir saturer
+    // l'hôte. {senderId → (débutFenêtreMs, compteur)}.
+    QHash<QString, QPair<qint64, int>> m_combatReqWindows;
 
     // Hôte uniquement : suivi des actorId revendiqués par chaque client
     // distant. Renseigné via le payload du Hello reçu d'un peer. Sert à
