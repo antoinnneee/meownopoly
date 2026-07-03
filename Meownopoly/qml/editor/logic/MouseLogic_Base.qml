@@ -159,6 +159,14 @@ QtObject {
 
         // Effacer la configuration de case
         clearCaseConfiguration()
+        notifyInspector()
+    }
+
+    // Point de dispatch unique vers l'inspecteur contextuel (nouvelle UI).
+    // No-op en UI classique (logic.inspectorPanel === null).
+    function notifyInspector() {
+        if (logic.inspectorPanel)
+            logic.inspectorPanel.setSelection(selectedElements)
     }
 
     // Fonction pour effacer la configuration de case
@@ -260,6 +268,10 @@ QtObject {
     }
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {
+        // L'inspecteur (nouvelle UI) est notifié quel que soit l'état des
+        // panneaux legacy ci-dessous — couvre tous les sites d'appel de
+        // MouseLogic_Selection sans les modifier.
+        notifyInspector()
 
         // Accéder au CaseConfigurationPanelSection via le SelectionPanel
         var caseConfigPanel = logic.editorSidePanel.caseConfigurationPanel
@@ -305,6 +317,7 @@ QtObject {
             selectedElements[i].elementPressed()
             createBindingsForElement(selectedElements[i])
         }
+        notifyInspector()
     }
 
     // Propriétés pour gérer les positions initiales sans changer le parent

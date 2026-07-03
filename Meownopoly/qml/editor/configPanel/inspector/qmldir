@@ -1,0 +1,5 @@
+module inspector
+InspectorPanel 1.0 InspectorPanel.qml
+InspectorHeader 1.0 InspectorHeader.qml
+InspectorRegistry 1.0 InspectorRegistry.qml
+InspectorTab_Visual 1.0 InspectorTab_Visual.qml

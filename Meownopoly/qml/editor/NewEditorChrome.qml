@@ -33,9 +33,6 @@ Item {
     readonly property real railWidth: Theme.px(58)
 
     readonly property string _activeModule: editorModuleManager ? editorModuleManager.selectedModuleId : ""
-    readonly property int _selectionCount:
-        (editorLogic && editorLogic.mouseLogic && editorLogic.mouseLogic.selectedElements)
-            ? editorLogic.mouseLogic.selectedElements.length : 0
 
     // ── Bouton de rail réutilisable (composant inline) ───────────────────
     component RailButton: Item {
@@ -163,17 +160,11 @@ Item {
                 color: Theme.border
             }
 
-            // Configuration de la sélection (panneau droit) — mise en avant
-            // quand un élément est sélectionné.
-            RailButton {
-                icon: "⚙️"
-                label: root._selectionCount > 0
-                       ? "Configurer la sélection (" + root._selectionCount + ")"
-                       : "Configurer la sélection"
-                active: root._activeModule === "config"
-                badgeCount: root._selectionCount
-                onClicked: if (root.editorModuleManager) root.editorModuleManager.toggleModule("config")
-            }
+            // La configuration de la sélection passe désormais par
+            // l'inspecteur contextuel (dock droit, InspectorPanel) : plus de
+            // module "config" à activer — la sélection est le déclencheur.
+            // (Le module reste dans le catalogue ModuleManager pour l'UI
+            // classique.)
 
             // Espace flexible : pousse les actions globales en bas du rail.
             Item { Layout.fillHeight: true; Layout.fillWidth: true }

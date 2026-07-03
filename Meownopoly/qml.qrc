@@ -109,6 +109,11 @@
         <file>qml/editor/configPanel/visualEffectPanel/VEP_Rotation.qml</file>
         <file>qml/editor/configPanel/visualEffectPanel/VEP_Slider.qml</file>
         <file>qml/editor/configPanel/visualEffectPanel/VisualEffectsPanel.qml</file>
+        <file>qml/editor/configPanel/inspector/qmldir</file>
+        <file>qml/editor/configPanel/inspector/InspectorPanel.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorHeader.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorRegistry.qml</file>
+        <file>qml/editor/configPanel/inspector/InspectorTab_Visual.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/editorBottomPanel/qmldir</file>

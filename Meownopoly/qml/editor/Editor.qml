@@ -47,6 +47,7 @@ import templatePanel
 import assetSelectionPanel
 import caseSelectionPanel
 import config3dPanel
+import inspector
 import "."
 
 import MeowPainter 1.0
@@ -93,6 +94,11 @@ Base_Board {
     // Décalage horizontal appliqué aux panneaux du bas pour ne pas passer sous
     // le rail latéral gauche de la nouvelle UI (0 en UI classique).
     readonly property real _newUiRailWidth: _useNewUi ? Theme.px(58) : 0
+    // Largeur occupée à droite par l'inspecteur contextuel (nouvelle UI) ;
+    // 0 si masqué ou en UI classique. Les panneaux du bas se décalent de
+    // cette valeur (anchors.rightMargin).
+    readonly property real _inspectorWidth:
+        inspectorLoader.item && inspectorLoader.item.visible ? inspectorLoader.item.width : 0
 
     Settings {
         id: stUiConfig
@@ -1052,6 +1058,15 @@ Base_Board {
         saveMapDelayer.restart()
     }
 
+    // Source active pour lire l'état courant des effets visuels au flush
+    // d'ops : l'inspecteur contextuel (nouvelle UI) ou le panel du
+    // BottomSidePanel (UI classique). Les deux exposent getCurrentEffects().
+    function _activeEffectsPanel() {
+        return (root._useNewUi && inspectorLoader.item)
+                ? inspectorLoader.item
+                : root.editorSidePanel.visualEffectsPanel
+    }
+
     function _upsertRemoteCursor(pid, x, y) {
         // Important : réassigner un nouvel objet (pas de mutation en place)
         // pour que le binding `_entry` du delegate Repeater se ré-évalue.
@@ -1275,6 +1290,7 @@ Base_Board {
     // ── Bascule d'interface (toujours visible, dans les deux UIs) ────────
     EditorUiToggle {
         id: uiToggle
+        objectName: "editorUiToggle"
         // Au-dessus du chrome HUD (rails, barres) mais SOUS les overlays modaux
         // (escMenu z_CONFIG_PANEL=10000, chat drawer) pour ne pas flotter dessus.
         z: UiStyle.z_HUD + 50
@@ -1312,6 +1328,31 @@ Base_Board {
             onMapInfoRequested: mapInfoPanel.openDrawer()
             onChatRequested: chatDrawer.open()
             onMenuRequested: escMenu.show()
+        }
+    }
+
+    // ── Inspecteur contextuel (nouvelle UI) — dock droit vertical ────────
+    // Affiché dès qu'une sélection existe (MouseLogic_Base.notifyInspector →
+    // setSelection). Remplace le module "config" (BottomSidePanel) côté
+    // nouvelle UI ; l'UI classique garde son flux intact.
+    Loader {
+        id: inspectorLoader
+        active: root._useNewUi
+        z: UiStyle.z_HUD + 1
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        // Pas de width imposé : le Loader adopte la largeur de l'item.
+        onLoaded: logic.inspectorPanel = item
+        onActiveChanged: if (!active) logic.inspectorPanel = null
+        sourceComponent: InspectorPanel {
+            logic: logic
+            onFocusReleased: root.focusReleased()
+            onEffectChanged: {
+                const effects = getCurrentEffects()
+                root._applyToSelectionAndSave("display", function(el) { el.applyVisualEffects(effects) })
+            }
+            // zoneConfigurationChanged : branché en Phase 2 (onglet Zone).
         }
     }
 
@@ -2170,6 +2211,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2184,6 +2226,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2198,6 +2241,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2222,6 +2266,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2236,6 +2281,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2249,6 +2295,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2262,6 +2309,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2275,6 +2323,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2289,6 +2338,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
+        anchors.rightMargin: root._inspectorWidth
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
@@ -2317,7 +2367,7 @@ Base_Board {
                 if (!els || els.length === 0) { pendingOpKind = ""; return }
 
                 if (pendingOpKind === "display") {
-                    const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
+                    const effects = root._activeEffectsPanel().getCurrentEffects()
                     const fields = {
                         "effectBrightness":        effects.brightness,
                         "effectContrast":          effects.contrast,

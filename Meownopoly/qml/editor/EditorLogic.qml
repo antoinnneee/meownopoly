@@ -28,6 +28,9 @@ Base_logic {
 
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
     property var editorSidePanel: null
+    // Inspecteur contextuel (nouvelle UI). Null en UI classique → les
+    // notifications de sélection (MouseLogic_Base.notifyInspector) sont no-op.
+    property var inspectorPanel: null
 
     // D3d — état « sélection de pose » (asset/case armé), détenu par logic.
     // Consommé par AssetPreviewCursor, TileLogic, MouseLogic_Pose, EditorController.
