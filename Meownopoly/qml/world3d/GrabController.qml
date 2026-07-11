@@ -209,7 +209,8 @@ Item {
         }
     }
 
-    function _release(actorId, crateUuid) {
+    function _release(actorId, crateUuid, reason) {
+        console.log("[GrabController] release", actorId, crateUuid, "reason=", reason || "toggle")
         delete _heldBy[actorId]
         grabRevision++
         crateReleased(actorId, crateUuid)
@@ -258,7 +259,7 @@ Item {
             const bodyId = bodyIdFor(uuid)
             const ps = physicsWorld.bodyState(actorId)
             const cs = physicsWorld.bodyState(bodyId)
-            if (!ps.id || !cs.id) { _release(actorId, uuid); continue }
+            if (!ps.id || !cs.id) { _release(actorId, uuid, "body introuvable ps.id=" + ps.id + " cs.id=" + cs.id); continue }
 
             // Rayon de la caisse tenue : le point de maintien et la distance
             // d'auto-relâche doivent rester au-delà de son propre rayon de
@@ -271,7 +272,7 @@ Item {
             const dx = cs.position.x - ps.position.x
             const dy = cs.position.y - ps.position.y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist > effectiveRelease) { _release(actorId, uuid); continue }
+            if (dist > effectiveRelease) { _release(actorId, uuid, "dist " + dist + " > effectiveRelease " + effectiveRelease); continue }
 
             // Point de maintien : à effectiveHold du joueur, dans la
             // direction actuelle de la caisse (elle "traîne" autour de lui).
@@ -290,6 +291,8 @@ Item {
             const n = Math.sqrt(ix * ix + iy * iy)
             const maxImpulse = maxImpulsePerMass * mass
             if (n > maxImpulse) { ix = ix / n * maxImpulse; iy = iy / n * maxImpulse }
+            console.log("[GrabController] holdTick", uuid, "dist=", dist, "effectiveHold=", effectiveHold,
+                        "target=", tx, ty, "impulse=", ix, iy, "mass=", mass, "maxImpulse=", maxImpulse)
             physicsWorld.applyImpulse(bodyId, Qt.vector2d(ix, iy))
         }
     }

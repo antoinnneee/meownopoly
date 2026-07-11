@@ -1,0 +1,10 @@
+[mcp_servers.meownopoly-automation]
+command = "node"
+args = ["automation_mcp/index.js"]
+
+[mcp_servers.meownopoly-automation.env]
+MEOW_AUTOMATION_PORT = "7700"
+
+[mcp_servers.meowtrack]
+url = "http://pattounecorp.ovh:7702/mcp"
+bearer_token_env_var = "MEOWTRACK_TOKEN"
