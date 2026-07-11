@@ -18,6 +18,14 @@ Deux lectures possibles, non exclusives :
   **produits par les IA/joueurs**, sauvegardables et échangeables entre parties et
   entre joueurs (capitalisation du contenu custom).
 
+> **Le but affiné de la V3 (doc 00 §2) rend ces deux lectures porteuses**, sans
+> pour autant lever le report (D4). (a) « Composer les briques préexistantes
+> plutôt que générer de zéro » place les **primitives** au cœur du mécanisme : ce
+> sont le vocabulaire graphique/gameplay que l'IA assemble. (b) « Le jeu se
+> construit au fur et à mesure grâce aux utilisateurs » est exactement la
+> **capitalisation des créations partagées**. Le cadrage reste différé, mais ces
+> deux facettes ne sont plus « optionnelles » : elles servent directement le but.
+
 ## 2. Ancrages avec le reste du cadrage
 
 - **Primitives ↔ sandbox (doc 04)** : plus la bibliothèque de primitives est

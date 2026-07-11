@@ -23,8 +23,12 @@
 │   │   │ Canal IA     │──▶│ Bac à sable QML   │──▶│ Scène QML / Éditeur │  │ │
 │   │   │ (serveur WS) │   │ (sandbox, doc 04) │   │ (Editor.qml, World3D)│ │ │
 │   │   └──────┬───────┘   └───────────────────┘   └─────────┬──────────┘  │ │
-│   │          │  actions de haut niveau                     │             │ │
-│   │          ▼                                              ▼             │ │
+│   │          │  propositions de haut niveau                │             │ │
+│   │          ▼                                              │             │ │
+│   │   ┌────────────────────────┐  (hôte uniquement)         │             │ │
+│   │   │ IA ARBITRE / MJ        │  viabilité →               │             │ │
+│   │   │ accepte/amende/rejette │  doc 06 / D6               │             │ │
+│   │   └──────┬─────────────────┘                            ▼             │ │
 │   │   ┌────────────────────────────────────────────────────────────────┐ │ │
 │   │   │ Pipeline de mutation existant :                                │ │ │
 │   │   │  Game.updateMap → EditDelta → EditorOpBus/EditorSession        │ │ │
@@ -68,7 +72,20 @@ personnaliser un élément (données custom : « loyer ×2 », état, paramètre
 comportement généré). Transporté **gratuitement** par le pipeline `EditDelta`/
 `ApplyState` existant → persistance, undo/redo et sync collab sans nouveau canal.
 
-### 2.5 Moteur de règles (doc 06) & Bibliothèque (doc 07)
+### 2.5 L'IA arbitre / MJ (hôte uniquement, **obligatoire**) — cf. doc 00 §4, D6
+Second rôle d'IA, **présent seulement chez l'hôte** et **requis** : comme du code
+JS entre dans la partie, héberger le mode IA **exige** un arbitre branché (pas de
+« host sans arbitre » ; à défaut, repli jeu classique). Il s'interpose entre les
+propositions (locales à l'hôte **et** venues des clients par le réseau) et leur
+introduction dans la partie : il **juge la viabilité** (cohérence de règles,
+équilibre, faisabilité, abus) et **accepte / amende / rejette**. C'est la couche
+de jugement *contextuel* au-dessus des garde-fous *mécaniques* du sandbox
+(doc 04) et du contrat de règles (doc 06). Point d'ancrage réseau : le même que
+l'autorité d'édition — `EditorSession` host-authoritative (l'hôte valide déjà les
+ops clientes avant rebroadcast ; l'arbitre s'y greffe). **À cadrer (D6)** : sa
+nature (LLM / déterministe / hybride), son grain et le format de son verdict.
+
+### 2.6 Moteur de règles (doc 06) & Bibliothèque (doc 07)
 Différés. Placés dans l'architecture pour réserver leur emplacement : le moteur de
 règles consommera l'espace mémoire + le QML génératif ; la bibliothèque
 capitalisera les créations et/ou fournira des primitives réutilisables.
@@ -82,21 +99,30 @@ capitalisera les créations et/ou fournira des primitives réutilisables.
 | Skill client | MCP + tools + `AUTOMATION_API.md` | `automation_mcp/`, `doc/architecture/AUTOMATION_API.md` |
 | Espace mémoire | `ItemSnapable` + `toJSON`/`applyJson` | `cpp/game/item_snapable/ItemSnapable.{h,cpp}` |
 | Sync du blob | `EditDelta` + op `ApplyState` + `Game.updateMap` | `cpp/game/map/editdelta.h`, `cpp/game/game_loader.cpp`, `cpp/editor/ops/editor_op_bus.{h,cpp}` |
+| Briques graphiques (vocabulaire IA) | Éléments posables, composants UI | `cpp/game/item_snapable/`, `qml/ui_item/`, `qml/meowComponent/` |
+| Briques gameplay (vocabulaire IA) | Modules activables (vie, inventaire, monnaie, stats/XP) | `GameplayModuleManager` |
+| Partage des actions | Collab host-authoritative (traitement + broadcast) | `EditorOpBus`/`EditorSession` |
 | Runtime piloté | `PhysicsSession`, `World3D`, `InputController` | `cpp/game/physics/`, `qml/world3d/` |
 | Réseau/collab | Catway, `EditorSession` host-authoritative | `cpp/communication/`, `cpp/editor/network/` |
+| Point d'arbitrage (D6) | `EditorSession` (l'hôte valide déjà les ops avant rebroadcast) | `cpp/editor/network/` |
 
 ## 4. Flux type — « l'IA ajoute un élément avec comportement custom »
 
-1. Le joueur décrit l'intention à son IA.
-2. L'IA appelle des commandes de haut niveau sur le **canal WS** (doc 02) :
+1. Le joueur décrit l'intention à son **IA cliente**.
+2. L'IA cliente appelle des commandes de haut niveau sur le **canal WS** (doc 02) :
    `place*`, puis écrit l'**espace mémoire** de la tuile (doc 05).
 3. Pour un comportement non couvert par une primitive, l'IA envoie un **artefact
    QML** ; le **sandbox** (doc 04) le valide et l'instancie, rattaché à la tuile.
-4. Les mutations passent par `Game.updateMap` → `EditDelta` → `EditorOpBus` :
-   persistées, undoables, **broadcastées aux autres joueurs** (avec la réserve
-   « réplication du QML génératif » à trancher, cf. doc 04 §sécurité et doc 08).
-5. L'IA **observe** le résultat (lecture d'état / screenshot via le canal) et
-   itère.
+4. Toute proposition (celle d'un client comme celle de l'hôte) passe par l'**IA
+   arbitre** de l'hôte (§2.5, **obligatoire**) : jugement de viabilité →
+   accepte / amende / rejette. Un rejet remonte au proposant comme **erreur
+   actionnable** (doc 02 §5) pour qu'il itère.
+5. Les mutations validées passent par `Game.updateMap` → `EditDelta` →
+   `EditorOpBus` : persistées, undoables, **broadcastées aux autres joueurs**
+   (avec la réserve « réplication du QML génératif » à trancher, cf. doc 04
+   §sécurité et doc 08).
+6. L'IA cliente **observe** le résultat (lecture d'état / screenshot via le canal)
+   et itère.
 
 ## 5. Frontières & responsabilités
 
@@ -107,6 +133,10 @@ capitalisera les créations et/ou fournira des primitives réutilisables.
 - **Le sandbox ne fait pas confiance** : tout artefact QML est hostile par défaut.
 - **L'espace mémoire n'a pas de schéma imposé côté cœur** : c'est un blob libre ;
   le sens des clés est une convention IA/règles (doc 05/06), pas du C++.
+- **L'arbitre juge, il n'exécute pas.** Il rend un verdict (accepte/amende/rejette)
+  sur une proposition ; l'application reste le pipeline de mutation existant. Et il
+  ne porte **aucune** garantie de sécurité dure : celles-ci restent au sandbox
+  (doc 04) et au contrat de règles (doc 06). Voir doc 00 §8.
 
 ## 6. Chantiers dérivés (aperçu, non planifiés ici)
 

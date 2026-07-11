@@ -15,9 +15,17 @@ d'instanciation dynamique :
 
 C'est ce qui rend crédible le cœur de la vision : l'IA peut **produire un
 comportement ou un élément qui n'existe pas encore** et le jeu l'exécute dans la
-session courante, sans recompiler ni redéployer. C'est l'échappatoire quand une
-primitive manque : là où V2 exigeait un nouveau `TileType` C++ + recompilation,
-V3 laisse l'IA écrire du QML.
+session courante, sans recompiler ni redéployer. Là où V2 exigeait un nouveau
+`TileType` C++ + recompilation, V3 laisse l'IA écrire du code.
+
+**Forme concrète visée : du JS embarqué dans les éléments, adossé aux briques
+préexistantes.** Le but V3 (doc 00 §2) est de **créer du gameplay**, pas seulement
+du décor. Le mécanisme courant n'est donc pas « générer une scène entière de
+zéro » mais **composer les briques graphiques et gameplay déjà fournies** (éléments
+posables, modules activables) **et y injecter du code JS** qui porte le
+comportement nouveau (réactions, événements, règles locales). Le JS embarqué est
+un premier-classe du pivot — c'est *le* levier d'écriture de gameplay — d'où
+l'importance du sandbox ci-dessous.
 
 ## 2. Le risque : exécuter du code non fait-maison
 
@@ -105,11 +113,26 @@ Deux registres complémentaires :
   Passe par le sandbox ; réplication à trancher (§4).
 
 Beaucoup de personnalisations visées par le joueur (« loyer doublé », « bonus »)
-sont **de la donnée** et ne demandent **pas** de QML génératif — elles vivent dans
-l'espace mémoire + le futur moteur de règles (doc 06). Le QML génératif est
-l'outil du **dernier recours**, quand la donnée ne suffit pas à exprimer un
-comportement nouveau. Ce cadrage limite volontairement la fréquence
-d'utilisation du chemin le plus risqué.
+sont **de la donnée** et ne demandent **pas** de code : elles vivent dans l'espace
+mémoire + le futur moteur de règles (doc 06). On garde donc la règle « donnée
+d'abord » : si l'effet s'exprime en données, pas de JS.
+
+Mais **créer du gameplay nouveau passe, lui, par du code JS** (doc 00 §2) : ce
+chemin n'est **pas** marginal, c'est le levier central du pivot. La stratégie de
+réduction de risque n'est donc **pas** « éviter le code » mais **composer sur des
+briques pré-validées** plutôt que générer du QML libre de zéro :
+
+- le comportement s'écrit en **JS embarqué dans un élément** qui réutilise les
+  briques graphiques/gameplay existantes (surface réduite au JS de glue, pas à une
+  scène entière) ;
+- une **bibliothèque de primitives pré-validées** (doc 07) fournit les blocs que
+  l'IA assemble, réduisant d'autant ce que le sandbox doit valider à la volée ;
+- l'IA **arbitre** (doc 00 §4, obligatoire) juge la viabilité contextuelle par
+  dessus le sandbox.
+
+Le QML totalement libre (scène de zéro) reste possible mais devient le cas
+**extrême**, pas le cas courant — ce qui concentre le risque sur une fraction des
+usages.
 
 ## 6. Questions ouvertes (→ doc 08)
 

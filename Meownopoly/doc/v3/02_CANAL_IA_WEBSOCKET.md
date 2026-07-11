@@ -141,3 +141,7 @@ IA** (message clair, code stable), pas juste `ok:false`.
   prototypage, quitte à la retirer en prod ?
 - Politique multi-joueurs : les commandes IA d'un client sont-elles locales, ou
   passent-elles par le host-authoritative comme les ops d'édition humaines ?
+- **Point d'insertion de l'IA arbitre** (doc 00 §4, D6) : une proposition cliente
+  arrivant à l'hôte doit être soumise à l'arbitre avant rebroadcast. Le canal
+  transporte-t-il un verdict d'arbitrage (accepté/amendé/rejeté) en retour, et
+  sous quelle forme d'événement poussé ?

@@ -24,6 +24,13 @@ Deux facettes possibles, non exclusives :
   custom ne peuvent jamais franchir (intégrité de partie, anti-triche, limites de
   ressources, sécurité). Miroir « règles » du sandbox QML (doc 04).
 
+> **Lien avec l'IA arbitre / MJ (doc 00 §4, D6).** L'arbitre de l'hôte juge la
+> *viabilité contextuelle* d'une proposition ; ce moteur de règles définit le
+> *cadre* sur lequel ce jugement s'appuie. Question ouverte à trancher ici :
+> l'arbitre **est-il** ce moteur de règles, en est-il un **consommateur**, ou une
+> **couche LLM distincte** au-dessus d'un socle déterministe ? (cf. doc 08 §2
+> « IA arbitre »).
+
 ## 3. Ancrages avec le reste du cadrage
 
 - **Consomme l'espace mémoire** (doc 05) : les règles lisent le blob des tuiles

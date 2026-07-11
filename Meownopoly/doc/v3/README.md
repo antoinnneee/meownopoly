@@ -10,13 +10,18 @@
 
 ## Le pivot en une phrase
 
-Meownopoly V3 transforme le jeu en un **substrat pilotable par des IA
-clientes** : chaque joueur dispose de « son IA » (un modèle fourni côté client)
-à qui il décrit en langage naturel les éléments et les règles qu'il veut voir
-apparaître dans la partie ; l'IA les matérialise en direct dans le jeu — en
-priorité dans l'**éditeur** — via un canal WebSocket local dédié, en
-s'appuyant sur le fait que **le QML est interprété** pour injecter des éléments
-« à la volée ».
+Meownopoly V3 transforme le jeu en un **substrat de gameplay créé par des IA
+clientes** : chaque joueur dispose de « son IA » (un modèle fourni côté client) à
+qui il décrit en langage naturel les éléments **et le gameplay** qu'il veut voir
+apparaître ; cette **IA cliente** les matérialise en direct — en priorité dans
+l'**éditeur** — via un canal WebSocket local dédié, en **composant les briques
+graphiques et gameplay préexistantes** de l'éditeur **et en y embarquant du code
+JS** pour le comportement nouveau (le QML/JS étant interprété au runtime). Le jeu
+n'est pas figé : il **se construit au fur et à mesure grâce aux utilisateurs**.
+Comme du code entre dans la partie, l'hôte fait **obligatoirement** tourner une
+seconde IA — l'**arbitre / MJ** — qui vérifie la viabilité de chaque proposition
+avant qu'elle n'entre dans la partie partagée (2 modèles côté hôte, 1 côté client ;
+cf. doc 00 §4).
 
 ## Ordre de lecture
 
@@ -46,6 +51,12 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02).
 - **D3 — Moteur de règles : cadrage différé** (doc 06, stub).
 - **D4 — Bibliothèque : cadrage différé** (doc 07, stub).
+- **D6 — Deux rôles d'IA : cliente (proposante) partout + arbitre (MJ) chez
+  l'hôte, obligatoire.** L'hôte fait tourner 2 modèles (proposant + arbitre de
+  viabilité), le client 1 (proposant). Comme du code JS entre dans la partie,
+  l'arbitre est **requis** (pas de host sans arbitre). Il se greffe sur le
+  host-authoritative existant ; sa nature/grain/verdict restent à cadrer (doc 00
+  §4, doc 08).
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 
