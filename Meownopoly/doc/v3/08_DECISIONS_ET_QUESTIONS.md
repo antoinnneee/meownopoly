@@ -45,10 +45,12 @@
   indésirable) ; **exposer l'automation à l'IA** (surface de test dangereuse comme
   contrat d'IA) ; décider plus tard (le pivot a besoin du canal tôt).
 
-### D3 — Moteur de règles : **cadrage différé**
-- **Décision.** Reporter le cadrage (doc 06 = stub). Réserver l'emplacement.
-- **Pourquoi.** Le format des règles dépend des docs 04 (sandbox) et 05 (espace
-  mémoire), à stabiliser d'abord.
+### D3 — Moteur de règles : **cadrage différé** (partiellement levé par D8)
+- **Décision.** Reporter le cadrage des **détails** (doc 06). L'**ownership** est,
+  lui, tranché par **D8** : les règles sont **gérées par l'arbitre** — pas de moteur
+  déterministe séparé.
+- **Pourquoi.** Le format d'une règle proposée / sa mémorisation / sa réplication
+  dépend encore des docs 04 (sandbox) et 05 (espace mémoire), à stabiliser d'abord.
 
 ### D4 — Bibliothèque : **cadrage différé**
 - **Décision.** Reporter le cadrage (doc 07 = stub). Réserver l'emplacement.
@@ -102,6 +104,26 @@
   (thèse initiale de doc 05) : simple mais **inadapté à la fréquence runtime** et
   polluerait l'undo d'édition. Conservé uniquement pour la persistance/snapshot.
 
+### D8 — Les règles sont gérées par l'arbitre (pas de moteur séparé)
+- **Décision.** Les **règles de partie sont gérées par l'IA arbitre** (doc 06,
+  doc 00 §4) : c'est lui qui **valide ou non les actions des IA clientes**. Pas de
+  moteur de règles déterministe distinct comme pièce première ; le règlement
+  **vit dans le mandat de l'arbitre**. **Aucune notion de tour imposée** — elle
+  s'**introduit** (a) par le **prompt** donné à l'arbitre, ou (b) par une
+  **modification proposée par une IA cliente que l'arbitre accepte** (règlement
+  négociable/évolutif en cours de partie).
+- **Pourquoi.** Cohérent avec « une partie selon ses propres règles » et avec le
+  rôle de l'arbitre (D6). Évite de figer un DSL de règles côté cœur ; laisse la
+  liberté maximale, l'autorité restant unique (hôte).
+- **Conséquence.** Répond à la question ouverte « l'arbitre EST-il le moteur de
+  règles ? » → **oui, il en est l'autorité**. Les **invariants durs** (sécurité,
+  intégrité) restent au **sandbox** (doc 04), pas à l'arbitre (jugement souple).
+  Détails différés (format d'une règle proposée, mémorisation du règlement,
+  réplication) — doc 06 §4.
+- **Alternatives écartées.** Moteur de règles déclaratif figé côté C++ (rigide,
+  contraire à la liberté du pivot) ; règles hardcodées type « système de tour V2 »
+  (**inexistant** de toute façon, cf. §Capacités).
+
 ### D5 — Dossier de cadrage
 - **Décision.** Regrouper le cadrage V3 dans `Meownopoly/doc/v3/`, docs numérotés,
   en français, avec bandeaux de statut. Commit/push sur la branche **V3**.
@@ -145,8 +167,10 @@
   **erreur actionnable** (doc 02 §5) pour que le proposant itère.
 - **Auto-arbitrage de l'hôte** : les propositions de l'IA cliente de l'hôte
   passent-elles par le même arbitre (reco : oui, pas d'auto-exemption) ?
-- **Frontière avec le contrat de règles (doc 06)** : l'arbitre EST-il le moteur de
-  règles, en est-il un consommateur, ou une couche distincte au-dessus ?
+- ~~Frontière avec le contrat de règles : l'arbitre EST-il le moteur de règles ?~~
+  **Tranché (D8)** : oui, l'arbitre **gère** les règles (il en est l'autorité) ;
+  pas de moteur séparé. Reste ouvert : format d'une règle proposée, mémorisation du
+  règlement, réplication (doc 06 §4).
 - ~~Panne / absence d'arbitre~~ **Tranché (D6)** : l'arbitre est **obligatoire**.
   Pas d'hôte sans arbitre ; à défaut, le mode IA est indisponible (repli jeu
   classique). Reste à définir l'**UX du prérequis** : comment le jeu détecte/exige

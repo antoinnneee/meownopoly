@@ -1,35 +1,47 @@
-# 06 — Moteur de règles de partie
+# 06 — Règles de partie (gérées par l'arbitre)
 
-> **Statut : STUB — cadrage différé (décision D3).** Ce document réserve
-> l'emplacement de la brique et fixe le périmètre pressenti + les questions à
-> instruire. **Il ne tranche rien.** À reprendre après stabilisation des docs
-> 02/04/05.
+> **Statut : partiellement tranché.** **D8 décide l'ownership** : les règles sont
+> **gérées par l'IA arbitre** (pas de moteur déterministe séparé) ; il n'y a pas de
+> tour imposé, il s'introduit par prompt ou proposition acceptée. Les **détails**
+> (format d'une règle, mémorisation, réplication) restent différés — à reprendre
+> après stabilisation des docs 02/04/05.
 
-## 1. Intention (telle qu'exprimée)
+## 1. Intention & décision cadre (D8)
 
-Le point de départ : *« la définition de règles de base définissant… »* (phrase
-laissée volontairement incomplète dans le brief). L'ambition associée est que
-chaque joueur, via son IA, puisse **construire une partie selon ses propres
-règles** — donc au minimum un socle de règles par défaut que l'IA peut
-**composer, étendre ou surcharger**.
+Chaque joueur, via son IA, doit pouvoir **construire une partie selon ses propres
+règles**. **Décision (D8) : les règles sont gérées par l'IA arbitre** (doc 00 §4,
+D6) — c'est l'arbitre qui **valide ou non les actions des IA clientes**. Il n'y a
+donc **pas** de moteur de règles déterministe séparé comme pièce première : les
+règles **vivent dans le mandat de l'arbitre**.
 
-## 2. Périmètre pressenti (à confirmer)
+Conséquences directes :
 
-Deux facettes possibles, non exclusives :
+- **Pas de notion de tour imposée.** Aucune règle de tour n'est câblée par défaut
+  (V2 n'en a **pas** — cf. §3).
+- **Les règles (dont le tour) sont introduites de deux façons :**
+  1. par le **prompt donné à l'arbitre** (le joueur hôte configure son MJ : « joue
+     au tour par tour », « loyer doublé au bord de l'eau »…) ;
+  2. par une **modification proposée par une IA cliente**, **si l'arbitre
+     l'accepte** — le règlement est donc **négociable et évolutif en cours de
+     partie**, sous l'autorité de l'arbitre.
+- **Les invariants durs restent hors de l'arbitre** : intégrité/sécurité sont
+  tenues par le **sandbox** (doc 04), pas par le jugement souple du MJ (doc 00 §8).
 
-- **Socle de règles de partie** : cadre déclaratif (déclencheurs → effets, phases
-  de tour, conditions de victoire, économie/loyers) définissant ce qu'est « une
-  partie » par défaut, que les IA peuvent modifier.
-- **Contrat / garde-fous** : les invariants **non-négociables** que les règles
-  custom ne peuvent jamais franchir (intégrité de partie, anti-triche, limites de
-  ressources, sécurité). Miroir « règles » du sandbox QML (doc 04).
+## 2. Périmètre (recadré par D8)
 
-> **Lien avec l'IA arbitre / MJ (doc 00 §4, D6).** L'arbitre de l'hôte juge la
-> *viabilité contextuelle* d'une proposition ; ce moteur de règles définit le
-> *cadre* sur lequel ce jugement s'appuie. Question ouverte à trancher ici :
-> l'arbitre **est-il** ce moteur de règles, en est-il un **consommateur**, ou une
-> **couche LLM distincte** au-dessus d'un socle déterministe ? (cf. doc 08 §2
-> « IA arbitre »).
+- **Règlement souple = politique de l'arbitre.** L'ensemble des règles de partie
+  (déclencheurs → effets, phases/tour éventuels, conditions de victoire,
+  économie/loyers) n'est **pas** un DSL figé côté cœur : c'est ce que l'arbitre
+  **connaît** (par son prompt) et **fait respecter** en validant les actions ; il
+  peut **évoluer en cours de partie** via des propositions acceptées.
+- **Invariants durs = sandbox + garde-fous** (doc 04) : intégrité de partie,
+  anti-triche, limites de ressources, sécurité — **non-négociables**, hors du
+  jugement de l'arbitre. L'arbitre affine ; il ne peut jamais lever ces invariants.
+
+> **Question tranchée (D8).** « L'arbitre est-il le moteur de règles, un
+> consommateur, ou une couche distincte ? » → **l'arbitre gère les règles** : il en
+> est l'autorité. Ce qui reste à instruire, ce sont les **détails** (format d'une
+> règle proposée, mémorisation du règlement en cours, réplication) — voir §4.
 
 ## 3. Ancrages avec le reste du cadrage
 
@@ -44,24 +56,33 @@ Deux facettes possibles, non exclusives :
   données.
 - **Doit rester compatible host-authoritative** : les règles s'appliquent-elles
   chez le host, chez chaque pair, avec quelle autorité ? (lien avec le
-  déterminisme réseau du système de tour V2).
-- Existant V2 à cartographier avant de concevoir : système de tour 4 phases,
-  loyers/copropriété, enchères anonymes, `GameplayModuleManager` (modules
-  activables : vie, inventaire, monnaie, stats/XP).
+  déterminisme réseau host-authoritative existant : `EditorSession` /
+  `PhysicsSession`).
+- Existant V2 à cartographier avant de concevoir : `GameplayModuleManager`
+  (modules activables : vie, inventaire, monnaie, stats/XP) et les mécaniques de
+  plateau présentes. **⚠️ Il n'existe pas de système de tour en V2** : le socle de
+  règles devra donc l'**introduire** (déclencheurs, phases, conditions de
+  victoire), pas seulement surcharger un existant.
 
 ## 4. Questions à instruire (avant de sortir du stub)
 
-- « Règles de base » = **moteur de règles**, **contrat de garde-fous**, ou **les
-  deux** ? (question posée, réponse différée).
-- Format des règles : DSL déclaratif ? données + QML génératif ? table
-  d'événements ?
-- Autorité et réplication des règles en multi-joueurs.
-- Rapport avec `GameplayModuleManager` existant : les règles custom sont-elles des
-  modules, ou une couche au-dessus ?
-- Comment l'IA **négocie** un changement de règles accepté par les autres joueurs ?
+- **Mémorisation du règlement en cours** : où vit l'état des règles que l'arbitre
+  fait respecter — dans son seul contexte (prompt + historique), ou aussi
+  matérialisé (espace mémoire d'une entité « partie », doc 05) pour survivre à un
+  redémarrage / une migration d'hôte ?
+- **Format d'une règle proposée** par une IA cliente : texte libre pour l'arbitre,
+  données structurées, ou artefact QML/JS (doc 04) ? Comment l'arbitre l'« accepte »
+  concrètement (verdict D6) et la rend effective.
+- **Réplication** : après acceptation, comment le nouveau règlement se propage aux
+  autres joueurs (host-authoritative) et à leurs IA clientes ?
+- **Rapport avec `GameplayModuleManager` existant** : les règles s'appuient-elles
+  sur les modules activables (vie, inventaire, monnaie, stats/XP), ou sont-elles une
+  couche au-dessus ?
+- **Bootstrap du tour** : si le hôte veut un tour par tour, l'arbitre l'orchestre
+  seul (séquençage des IA clientes) ou s'appuie-t-il sur une primitive côté jeu ?
 
 ## 5. Prochaine action
 
 Rouvrir ce document une fois les docs 04 (sandbox) et 05 (espace mémoire) stables,
-et après une cartographie dédiée du gameplay/tour V2. Poser à ce moment une
+et après une cartographie dédiée du gameplay V2 existant. Poser à ce moment une
 décision **D-règles** dans le doc 08.

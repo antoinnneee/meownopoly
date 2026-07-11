@@ -62,6 +62,10 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   `PhysicsSession`** (snapshot ~30 Hz), pas par l'op d'édition undoable → lossy et
   non-undoable au grain de l'écriture. L'undo de session est préservé par un
   **snapshot de toute la mémoire avant chaque ajout d'item QML** (doc 05, doc 08).
+- **D8 — Les règles sont gérées par l'arbitre** (pas de moteur séparé). L'arbitre
+  valide/refuse les actions des IA clientes. **Aucun tour imposé** : il s'introduit
+  par le **prompt à l'arbitre** ou par une **proposition d'IA cliente acceptée**
+  (règlement négociable/évolutif). Invariants durs = sandbox (doc 06, doc 08).
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 

@@ -95,15 +95,20 @@ bac à sable** (doc 04) : il s'interpose entre les propositions (locales à l'h�
 source QML, et **accepte / amende / rejette** — *avant* toute instanciation. Le
 sandbox reste la barrière suivante (sécurité dure) pour les artefacts QML acceptés.
 C'est la couche de jugement *contextuel* au-dessus des garde-fous *mécaniques* du
-sandbox (doc 04) et du contrat de règles (doc 06). Point d'ancrage réseau : le même que
-l'autorité d'édition — `EditorSession` host-authoritative (l'hôte valide déjà les
-ops clientes avant rebroadcast ; l'arbitre s'y greffe). **À cadrer (D6)** : sa
-nature (LLM / déterministe / hybride), son grain et le format de son verdict.
+sandbox (doc 04) et du contrat de règles (doc 06). C'est aussi **lui qui gère les
+règles** (D8) : le règlement est ce que l'arbitre connaît (prompt) et fait
+respecter, pas un moteur séparé ; il évolue via des propositions acceptées.
+Point d'ancrage réseau : le même que l'autorité d'édition — `EditorSession`
+host-authoritative (l'hôte valide déjà les ops clientes avant rebroadcast ;
+l'arbitre s'y greffe). **À cadrer (D6)** : sa nature (LLM / déterministe / hybride),
+son grain et le format de son verdict.
 
-### 2.6 Moteur de règles (doc 06) & Bibliothèque (doc 07)
-Différés. Placés dans l'architecture pour réserver leur emplacement : le moteur de
-règles consommera l'espace mémoire + le QML génératif ; la bibliothèque
-capitalisera les créations et/ou fournira des primitives réutilisables.
+### 2.6 Règles (doc 06, gérées par l'arbitre) & Bibliothèque (doc 07)
+Les **règles sont gérées par l'arbitre** (D8, §2.5) — pas de moteur séparé ; il n'y
+a **pas de tour imposé** (il s'introduit par prompt ou proposition acceptée). Les
+**détails** (format d'une règle, mémorisation, réplication) sont différés. La
+**bibliothèque** (doc 07, différée) capitalisera les créations et/ou fournira des
+primitives réutilisables.
 
 ## 3. Réutilisation du socle V2 (points d'ancrage réels)
 

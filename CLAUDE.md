@@ -93,8 +93,8 @@ No automated test runner is configured. Manual testing via the executable.
 ### Game Logic
 - `Case` hierarchy: `CasePerks`, `CaseRestArea`, `CaseCatDoor`, `CaseJail`, `CaseCardBoardBox`
 - `CaseFactory` creates instances by type
-- 4-phase turn system: action pre-move, move, action post-move, wait
-- Coproperty system (shared ownership), anonymous auctions (blind bidding)
+- **Pas de système de tour** en V2 (contrairement à une ancienne note erronée qui décrivait un « 4-phase turn system »). En V3, les règles — dont un éventuel tour — sont **gérées par l'IA arbitre** (cf. `doc/v3/06_MOTEUR_REGLES.md`, décision D8).
+- Coproperty system (shared ownership), anonymous auctions (blind bidding) — **à vérifier** dans le code avant de présenter comme acquis
 - Maps stored as JSON
 - **Roster joueurs** (`MapInfo` + `PlayerProfile`, cf. `doc/architecture/PLAYER_CONFIG_PANEL_PLAN.md`) : la map embarque `minPlayers`/`maxPlayers` (indicatifs, pas de check bloquant) + une liste de `PlayerProfile` configurables dans l'éditeur (5e onglet "Joueurs" du `AssetSelectionPanel`). Chaque profil porte `name`, `modelName`, `pickMode` (`Unique`/`Shared`/`Mandatory`) + `minOccurrences`, et tous les paramètres physiques (radius, mass, accel, maxSpeed, dampings, frictions, bounce). `playerConfigVersion` versionne le schéma (courant : 1) ; `version > current` → roster wipé + Princess réinjecté avec warning. **Fallback Princess** : tout `MapInfo` (default ctor ou JSON sans/avec roster vide) reçoit automatiquement un profil "Princess" via `ensureFallbackProfile()` — couvre les anciennes maps pré-Phase 1.
 

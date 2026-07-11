@@ -99,6 +99,11 @@ rôles**, répartis selon la topologie host-authoritative existante :
   absence d'abus. Elle **accepte, amende ou rejette**. C'est le pendant
   « intelligent » du host-authoritative : l'hôte n'est pas un simple relais qui
   rebroadcaste, il **arbitre** le contenu, au sens d'un maître du jeu.
+  C'est aussi **elle qui porte les règles de la partie** (décision **D8**, doc 06) :
+  le règlement n'est pas un moteur séparé, c'est ce que l'arbitre **connaît** (par
+  son prompt) et **fait respecter** en validant les actions des IA clientes. **Aucun
+  tour n'est imposé** — il s'introduit par le prompt à l'arbitre ou par une
+  proposition d'IA cliente **acceptée** par l'arbitre (règlement évolutif).
 
 ### Topologie : 2 modèles chez l'hôte, 1 chez le client
 
@@ -183,7 +188,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 | Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |
 | Point d'entrée IA | Automation (debug/dev) | **Canal WS dédié** IA-joueur (doc 02) |
-| Règles de partie | Codées en dur (système de tour, loyers…) | Socle + couche custom pilotée par IA (doc 06, différé) |
+| Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gérées par l'arbitre** (prompt + propositions acceptées), tour optionnel (doc 06, D8) |
 | Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations (doc 07, différé) |
 | Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) |
 | Réseau P2P / collab | Catway / EditorSession | Inchangé, socle réutilisé |
