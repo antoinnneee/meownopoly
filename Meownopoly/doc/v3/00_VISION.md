@@ -178,7 +178,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 |---------|----|----|
 | Producteur de contenu | Humain via UI éditeur | Humain **+ son IA cliente** via canal WS |
 | Validation du contenu | Règles C++ figées + host relais | + **IA arbitre / MJ** chez l'hôte (viabilité contextuelle) |
-| Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Espace mémoire libre** (données) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
+| Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |
 | Point d'entrée IA | Automation (debug/dev) | **Canal WS dédié** IA-joueur (doc 02) |
 | Règles de partie | Codées en dur (système de tour, loyers…) | Socle + couche custom pilotée par IA (doc 06, différé) |

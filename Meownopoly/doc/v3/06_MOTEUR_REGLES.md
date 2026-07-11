@@ -33,9 +33,13 @@ Deux facettes possibles, non exclusives :
 
 ## 3. Ancrages avec le reste du cadrage
 
-- **Consomme l'espace mémoire** (doc 05) : les règles lisent le blob des tuiles
-  (`data`, `tags`) pour décider des effets (« si `tags` contient `water-adjacent`,
-  loyer ×`data.rentMultiplier` »).
+- **Consomme l'espace mémoire** (doc 05) : les règles lisent **et écrivent** les
+  variables typées des tuiles (`data`, `tags`) pour décider des effets (« si `tags`
+  contient `water-adjacent`, loyer ×`data.rentMultiplier` »). Surtout, elles
+  **réagissent** aux changements via le signal `userMemoryChanged` (doc 05 §1
+  usage 3) — un changement de variable, local ou reçu par broadcast, réveille la
+  règle. L'espace mémoire est donc le **bus de variables** du moteur de règles, pas
+  un simple stockage passif.
 - **Peut déléguer au QML génératif** (doc 04) pour les effets non exprimables en
   données.
 - **Doit rester compatible host-authoritative** : les règles s'appliquent-elles

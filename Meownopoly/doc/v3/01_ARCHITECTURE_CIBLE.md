@@ -67,10 +67,14 @@ ressources). Point de passage obligatoire de tout code génératif avant qu'il
 touche la scène.
 
 ### 2.4 L'espace mémoire par `snapableElement` (doc 05)
-Chaque `ItemSnapable` gagne un **blob JSON libre** que l'IA écrit pour
-personnaliser un élément (données custom : « loyer ×2 », état, paramètres d'un
-comportement généré). Transporté **gratuitement** par le pipeline `EditDelta`/
-`ApplyState` existant → persistance, undo/redo et sync collab sans nouveau canal.
+Chaque `ItemSnapable` gagne un **set de variables typées** (`int`/`string`/`bool`/
+`real`, sans schéma de clés imposé) que l'IA lit/écrit pour personnaliser un
+élément (« loyer ×2 », état, compteur, réf. d'un comportement généré). Transporté
+**gratuitement** par le pipeline `EditDelta`/`ApplyState` existant → persistance,
+undo/redo et sync collab sans nouveau canal. **Réactif** : une écriture (locale ou
+reçue par broadcast) émet un signal QML (`userMemoryChanged`) auquel les règles
+custom / comportements générés s'abonnent — c'est le **bus de variables** entre la
+donnée synchronisée et le JS embarqué. Support privilégié : les **zones**.
 
 ### 2.5 L'IA arbitre / MJ (hôte uniquement, **obligatoire**) — cf. doc 00 §4, D6
 Second rôle d'IA, **présent seulement chez l'hôte** et **requis** : comme du code

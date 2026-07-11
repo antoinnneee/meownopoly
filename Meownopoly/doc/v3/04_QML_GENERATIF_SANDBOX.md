@@ -67,9 +67,12 @@ canal (doc 02) et la scène.
 
 ### 3.3 Une « API de jeu » exposée à l'artefact (façade)
 Définir le **vocabulaire minimal** qu'un comportement généré a le droit
-d'utiliser : lire l'espace mémoire de sa tuile (doc 05), demander une animation,
-émettre un événement de jeu, réagir à un trigger physique. Cette façade est
-l'équivalent, pour le QML génératif, de l'allow-list de commandes du canal.
+d'utiliser : **lire et écrire les variables de l'espace mémoire** de sa tuile et
+**s'abonner à leur signal de changement** (`userMemoryChanged`, doc 05) — c'est le
+canal de communication normal entre le JS embarqué et l'état synchronisé —,
+demander une animation, émettre un événement de jeu, réagir à un trigger physique.
+Cette façade est l'équivalent, pour le QML génératif, de l'allow-list de commandes
+du canal.
 
 ### 3.4 Budget de ressources
 - Timeouts/quotas CPU, plafond mémoire, limite du nombre d'objets instanciés,
