@@ -1,13 +1,14 @@
 # 07 — Bibliothèque
 
-> **Statut : STUB — cadrage différé (décision D4).** Réserve l'emplacement de la
-> brique et fixe le périmètre pressenti + les questions à instruire. **Ne tranche
-> rien.**
+> **Statut : intention produit actée, architecture différée (décision D4).** Les
+> primitives et la capitalisation de créations servent la vision ; une
+> bibliothèque d'assets 3D est prévue. Formats, distribution et confiance restent
+> à instruire.
 
 ## 1. Intention (telle qu'exprimée)
 
 Le brief mentionne *« l'ajout d'une bibliothèque »* sans en préciser le contenu.
-Deux lectures possibles, non exclusives :
+Trois facettes complémentaires sont envisagées :
 
 - **Bibliothèque de primitives** : un catalogue de briques fournies par le jeu
   (composants QML de base, actions, templates de comportement/règles) dans lequel
@@ -53,10 +54,10 @@ Deux lectures possibles, non exclusives :
 - **Sécurité** : toute création téléchargée depuis un dépôt est **non fiable** →
   re-validation obligatoire par le sandbox (doc 04) avant exécution.
 
-## 3. Questions à instruire (avant de sortir du stub)
+## 3. Questions à instruire (questionnaire exhaustif doc 09)
 
-- Bibliothèque = **primitives**, **créations partagées**, ou **les deux** ?
-  (question posée, réponse différée).
+- Quel périmètre livre-t-on par étape : **primitives**, **assets 3D**, puis
+  **créations partagées**, ou un autre ordre ?
 - Local (par installation) vs partagé (serveur communautaire) ?
 - Modèle de confiance : signature des primitives officielles, modération des
   créations, re-validation systématique ?

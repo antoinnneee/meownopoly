@@ -79,8 +79,9 @@ régénère, pas de dérive manuelle.
 > existent (`placeNPC`, `placeEnemy`, `placeCrate`, `setZoneTrigger`,
 > `setNpcDialogue`, stats, `saveMap`) **sans tool MCP dédié**. Comme le manifeste
 > du canal se construit en **portant** un sous-ensemble depuis ces deux surfaces,
-> il faut **réconcilier** hooks et tools (ajouter les tools manquants ou un
-> invocateur générique documenté) pour un manifeste — donc une skill — complet.
+> il faut les inventorier pour décider lesquels sont portés. Cela ne rend pas le
+> MCP source de vérité et n'impose pas un invocateur générique, qui recréerait la
+> surface permissive rejetée par D2. Le manifeste curé reste explicite.
 
 ## 5. Cycle de vie
 
@@ -93,7 +94,7 @@ régénère, pas de dérive manuelle.
 - **Découvrabilité** : la skill doit être auto-suffisante — l'IA ne doit pas avoir
   besoin de lire le code du jeu pour l'utiliser.
 
-## 6. Questions ouvertes (→ doc 08)
+## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
 - Quel(s) agent(s) client cible-t-on en premier (Claude Code / autre) et donc quel
   format de skill natif ?

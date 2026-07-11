@@ -47,8 +47,8 @@
 
 ### D3 — Moteur de règles : **cadrage différé** (partiellement levé par D8)
 - **Décision.** Reporter le cadrage des **détails** (doc 06). L'**ownership** est,
-  lui, tranché par **D8** : les règles sont **gérées par l'arbitre** — pas de moteur
-  déterministe séparé.
+  lui, tranché par **D8** : les règles sont **gouvernées par l'arbitre** et leur
+  forme acceptée est exécutée par le jeu ; pas de moteur générique séparé acté.
 - **Pourquoi.** Le format d'une règle proposée / sa mémorisation / sa réplication
   dépend encore des docs 04 (sandbox) et 05 (espace mémoire), à stabiliser d'abord.
 
@@ -73,60 +73,66 @@
   Cf. doc 00 §4.
 - **Pourquoi.** Séparer une posture *créative/permissive* (proposer) d'une posture
   *conservatrice/responsable* (arbitrer) ; ajouter un jugement **contextuel**
-  au-dessus des garde-fous **mécaniques** (sandbox doc 04, contrat de règles
-  doc 06) ; garder un **point d'autorité unique** aligné sur le host-authoritative
+  au-dessus des garde-fous **mécaniques** (sandbox doc 04, validateurs de
+  capacités) ; garder un **point d'autorité unique** aligné sur le host-authoritative
   (`EditorSession`) pour éviter le split-brain.
-- **Arbitre obligatoire.** Le mécanisme central fait entrer du **code JS** dans
-  une partie partagée : l'arbitrage n'est **pas** optionnel. Héberger une partie
+- **Arbitre obligatoire.** Le mécanisme central ouvre la construction d'une
+  partie partagée à plusieurs proposants : l'arbitrage de gouvernance n'est
+  **pas** optionnel. Héberger une partie
   pilotée par IA **exige** un modèle arbitre branché ; sans lui, le mode IA est
-  indisponible (repli sur le jeu classique). Pas de « host sans arbitre ».
-- **Conséquence.** L'arbitre se greffe sur l'autorité d'édition existante (l'hôte
-  valide déjà les ops clientes avant rebroadcast). Il **ne porte pas** de garantie
-  de sécurité dure : le sandbox reste seul responsable de l'exécution sûre du QML.
+  indisponible (repli sur le jeu classique). Pas de « host sans arbitre ». Cette
+  obligation ne fournit aucune garantie de sécurité mécanique.
+- **Conséquence.** L'arbitre se greffe sur le domaine d'autorité de l'édition.
+  `EditorSession` fournit aujourd'hui rate-limit, séquencement et rebroadcast,
+  mais pas une validation sémantique générique : la passerelle de proposition et
+  ses validateurs sont une responsabilité V3 nouvelle. L'arbitre **ne porte pas**
+  de garantie de sécurité dure.
 - **Différé (sous-cadrage).** La **nature** de l'arbitre (LLM / règles
   déterministes / hybride), son **grain** (par action / par lot / par artefact
   QML), le **format de verdict** rendu au proposant, et son **articulation** avec
-  le moteur de règles (doc 06) restent à instruire — voir §2 « IA arbitre ».
+  l'exécution des règles (doc 06) restent à instruire — voir §2 « IA arbitre ».
 - **Alternatives écartées.** IA unique par joueur mêlant proposition et validation
   (dilue la garantie d'intégrité) ; validation purement mécanique sans arbitre
   (perd le jugement contextuel « cohérence/équilibre »).
 
-### D7 — Espace mémoire : stream façon physique (non-undoable) + snapshot d'undo
-- **Décision.** Le sync **live** de l'espace mémoire (doc 05) passe par un **stream
-  host-authoritative façon physique** (`PhysicsSession`, snapshot ~30 Hz), **pas**
-  par l'op d'édition undoable `ApplyState`/`EditDelta`. Le stream est donc **lossy
-  et non-undoable** au grain de l'écriture. Pour préserver l'undo **sur une session
-  de gameplay**, on capture un **snapshot de toute la mémoire avant chaque ajout
-  d'un item QML** (changement structurel) ; défaire l'ajout restaure ce snapshot.
-- **Pourquoi.** La mémoire mute à la **fréquence du runtime** (comme les corps
-  physiques) ; la faire transiter par les piles undo/le canal d'ops les
-  **saturerait**. Le profil (état de partie, autoritatif hôte, lossy) est
-  exactement celui de `PhysicsSession`.
-- **Conséquence.** `toJSON`/`applyJson` restent nécessaires (persistance disque +
-  snapshot d'undo), mais **pas** pour le live. Deux transports distincts : stream
-  physique (live) et `toJSON` (persistance/snapshot).
-- **À trancher (§2).** Message `MemorySnapshot` dédié vs extension du snapshot
-  physique ; delta par-clé vs snapshot complet ; snapshot d'undo global vs ciblé.
-- **Alternatives écartées.** « Voyage gratuit via `EditDelta`/`ApplyState` »
+### D7 — Espace mémoire : configuration durable distincte de l'état runtime
+- **Décision corrigée.** La **configuration durable** suit le pipeline
+  `ApplyState`/`EditDelta` et peut participer à l'undo/persistance. L'**état
+  runtime** suit une autorité hôte inspirée de `PhysicsSession` et n'est pas
+  undoable au grain de l'écriture. Une écriture cliente est une intention.
+- **Pourquoi.** Confondre les deux ferait soit saturer les piles undo, soit
+  persister/annuler des états éphémères sans rapport. Un snapshot mémoire global
+  lors d'un undo est dangereux en collaboration car il écrase des mutations
+  concurrentes postérieures.
+- **Conséquence.** `toJSON`/`applyJson` portent la configuration durable et,
+  seulement si le produit le décide, un état de reprise distinct. L'undo d'un
+  artefact repose sur son write-set durable ciblé, pas sur toute la mémoire.
+- **À trancher (§2).** Noms/schéma des deux espaces ; protocole runtime dédié ou
+  extension physique ; delta/snapshot, coalescence, fiabilité, cadence ; conflits
+  d'undo/redo ciblé.
+- **Alternative écartée pour le runtime.** « Voyage gratuit via `EditDelta`/`ApplyState` »
   (thèse initiale de doc 05) : simple mais **inadapté à la fréquence runtime** et
-  polluerait l'undo d'édition. Conservé uniquement pour la persistance/snapshot.
+  polluerait l'undo d'édition. Conservé pour la configuration durable et sa
+  persistance/transaction d'undo.
 
-### D8 — Les règles sont gérées par l'arbitre (pas de moteur séparé)
-- **Décision.** Les **règles de partie sont gérées par l'IA arbitre** (doc 06,
-  doc 00 §4) : c'est lui qui **valide ou non les actions des IA clientes**. Pas de
-  moteur de règles déterministe distinct comme pièce première ; le règlement
-  **vit dans le mandat de l'arbitre**. **Aucune notion de tour imposée** — elle
+### D8 — L'arbitre gouverne les règles ; le jeu exécute leur forme acceptée
+- **Décision.** L'IA arbitre est l'**autorité de politique** : elle valide ou non
+  les propositions et maintient le règlement courant. Aucun moteur de règles
+  générique séparé n'est acté. Une règle acceptée doit néanmoins être matérialisée
+  sous une forme exécutable par les capacités du jeu (configuration, module,
+  primitive ou QML/JS validé). **Aucune notion de tour imposée** — elle
   s'**introduit** (a) par le **prompt** donné à l'arbitre, ou (b) par une
   **modification proposée par une IA cliente que l'arbitre accepte** (règlement
   négociable/évolutif en cours de partie).
 - **Pourquoi.** Cohérent avec « une partie selon ses propres règles » et avec le
   rôle de l'arbitre (D6). Évite de figer un DSL de règles côté cœur ; laisse la
   liberté maximale, l'autorité restant unique (hôte).
-- **Conséquence.** Répond à la question ouverte « l'arbitre EST-il le moteur de
-  règles ? » → **oui, il en est l'autorité**. Les **invariants durs** (sécurité,
+- **Conséquence.** Répond à la question d'autorité : l'arbitre gouverne, mais ne
+  devient pas implicitement une boucle d'exécution temps réel. Les **invariants
+  durs** (sécurité,
   intégrité) restent au **sandbox** (doc 04), pas à l'arbitre (jugement souple).
-  Détails différés (format d'une règle proposée, mémorisation du règlement,
-  réplication) — doc 06 §4.
+  Détails différés (format proposé/accepté, exécution, mémorisation, réplication)
+  — doc 06 §4.
 - **Alternatives écartées.** Moteur de règles déclaratif figé côté C++ (rigide,
   contraire à la liberté du pivot) ; règles hardcodées type « système de tour V2 »
   (**inexistant** de toute façon, cf. §Capacités).
@@ -137,16 +143,25 @@
 
 ## 2. Questions ouvertes (par thème)
 
+Cette section reste le registre synthétique proche des décisions. Le questionnaire
+remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
+
 ### Sécurité (bloquant pour D1)
 - Jusqu'où peut-on **verrouiller** un `QQmlContext` et l'allow-list d'imports dans
   Qt ? (prototype requis — risque technique n°1).
-- **Réplication du QML génératif** en multi-joueurs : local-only / répliqué+
-  re-validé / host-validé+signé ? (doc 04 §4). Reco de départ : **local-only**.
+- **Réplication/exécution du QML génératif** en multi-joueurs : exécution locale
+  après arbitrage hôte / répliqué+re-validé / host-validé+signé ? La source d'un
+  client doit au minimum atteindre l'hôte pour arbitrage. Reco de départ :
+  **exécution locale, sans broadcast aux pairs**.
+- Isolation QML : contexte/moteur in-process, processus auxiliaire, ou repli
+  DSL/capacités si l'arrêt préemptif d'un JS bloquant est impossible ?
 - Authentification du canal local : simple loopback (comme l'automation) ou token
   de session ? Reco : **token**, car le canal exécute à terme du QML.
 
 ### Canal WS (doc 02)
 - Un canal multiplexé vs plusieurs canaux (éditeur / runtime / règles) ?
+- Comment distinguer et authentifier les deux clients locaux de l'hôte
+  (proposant vs arbitre), avec quelles capacités pour chacun ?
 - Sur quel bus interne brancher les **événements poussés** (signaux `Game`,
   `EditorOpBus.remoteOpReceived`, `ItemSnapableEvents`) ?
 - **Quel sous-ensemble de l'automation porter** dans le catalogue curé du canal
@@ -172,23 +187,25 @@
 - **Format du verdict** : accepte / amende / rejette — l'« amende » modifie-t-il
   la proposition (et qui applique la modification) ? Le rejet doit être une
   **erreur actionnable** (doc 02 §5) pour que le proposant itère.
-- **Auto-arbitrage de l'hôte** : les propositions de l'IA cliente de l'hôte
-  passent-elles par le même arbitre (reco : oui, pas d'auto-exemption) ?
+- ~~Auto-arbitrage de l'hôte~~ **Tranché (D6)** : les propositions de l'IA cliente
+  de l'hôte passent par le même arbitre ; pas d'auto-exemption.
 - ~~Frontière avec le contrat de règles : l'arbitre EST-il le moteur de règles ?~~
-  **Tranché (D8)** : oui, l'arbitre **gère** les règles (il en est l'autorité) ;
-  pas de moteur séparé. Reste ouvert : format d'une règle proposée, mémorisation du
-  règlement, réplication (doc 06 §4).
+  **Tranché (D8) sur l'autorité** : l'arbitre gouverne les règles. L'exécution
+  appartient à une forme matérialisée acceptée par le jeu. Restent ouverts :
+  format proposé/accepté, exécution, mémorisation et réplication (doc 06 §4).
 - ~~Panne / absence d'arbitre~~ **Tranché (D6)** : l'arbitre est **obligatoire**.
   Pas d'hôte sans arbitre ; à défaut, le mode IA est indisponible (repli jeu
   classique). Reste à définir l'**UX du prérequis** : comment le jeu détecte/exige
   qu'un arbitre soit branché avant d'autoriser l'hébergement d'une partie IA.
 
-### Espace mémoire (doc 05, sync tranché par D7)
+### Espace mémoire (doc 05, sémantiques tranchées par D7)
 - Blob **global à la tuile** vs **par sous-paramètre** ? Reco : global.
-- **Transport du stream** (D7) : message `MemorySnapshot` dédié vs extension du
-  snapshot physique ; **delta par-clé** vs snapshot complet par tuile ; débit/plafond.
-- **Snapshot d'undo** (D7) : **global** (toute la carte) vs **ciblé** (éléments
-  impactés) ; coût taille/mémoire ; articulation avec l'undo d'édition classique.
+- Schéma/noms de la **configuration durable** et de l'**état runtime** ; l'état
+  doit-il être sauvegardable séparément pour reprendre une partie ?
+- **Transport runtime** (D7) : protocole dédié vs extension physique ; delta vs
+  snapshot, coalescence, reliable/raw, cadence et plafond.
+- **Undo ciblé** (D7) : write-set durable, conflit si une clé a changé depuis,
+  comportement du redo. Le snapshot global n'est plus recommandé.
 - Traiter proprement la **sérialisation string-manuelle** de `ItemSnapable::toJSON`
   (piège n°1).
 - Plafond de taille du blob.
@@ -202,22 +219,24 @@
 
 | # | Risque | Impact | Atténuation |
 |---|--------|--------|-------------|
-| R1 | Sandbox QML infaisable/insuffisant dans Qt | Bloque D1 | Prototyper tôt ; repli « palette + mémoire » ; démarrer local-only |
+| R1 | Sandbox QML infaisable/insuffisant dans Qt | Bloque D1 | Prototyper tôt ; repli « palette + mémoire » ; démarrer en exécution locale arbitrée par l'hôte |
 | R2 | RCE inter-joueurs via QML répliqué | Critique | Local-only d'abord ; re-validation + host-authoritative ensuite |
 | R3 | Canal local détourné par un autre process | Élevé | Token de session + loopback strict |
 | R4 | Sérialisation cassée du blob mémoire | Moyen | Passer `toJSON` du blob par `QJsonDocument` (doc 05 §3) |
-| R5 | Dérive skill ↔ capacités réelles | Moyen | Générer la skill depuis le MCP (source unique) après réconciliation hooks/MCP |
+| R5 | Dérive skill ↔ capacités réelles | Moyen | Générer la skill depuis le manifeste versionné du canal (source unique) ; MCP = patron uniquement |
 | R6 | Complexité multi-joueurs des règles custom | Moyen | Différé (D3) ; concevoir avec host-authoritative en tête |
 | R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox (doc 04) + contrat (doc 06) ; l'arbitre n'affine que le contextuel (doc 00 §8) |
 | R8 | Arbitrage LLM par action : latence/coût dégradant l'UX collab | Moyen | Grain à cadrer (D6) : arbitrer par lot / seulement le QML génératif ; fallback mécanique |
-| R9 | Stream mémoire à 30 Hz saturant la bande passante (gros blobs/tick) | Moyen | Delta par-clé + plafond (D7) ; réutiliser le profil `PhysicsSession` éprouvé |
-| R10 | Undo cassé en session (stream non-undoable) | Moyen | Snapshot mémoire global avant chaque ajout d'item QML (D7, doc 05 §3 Étape C) |
+| R9 | Flux mémoire saturant la bande passante ou rejouant des états obsolètes | Moyen | Delta/coalescence + plafond ; mesurer cadence et reliable/raw (D7) |
+| R10 | Undo d'un artefact écrasant un état concurrent | Élevé | Séparer config/runtime ; inverse ciblé par write-set, jamais snapshot global |
+| R11 | Boucle JS bloquant le GUI malgré `destroy()` | Critique | Prototype d'isolation préemptive ; processus séparé ou repli DSL/capacités |
+| R12 | Règles acceptées mais non exécutables/rejouables | Élevé | Matérialiser chaque règle acceptée dans une forme versionnée et validée |
 
 ## 4. Séquencement suggéré (non engageant)
 
 1. **Prototype sandbox QML** (R1) — dé-risque D1 avant tout le reste.
-2. **Espace mémoire** (doc 05) : Étape A (modèle + `toJSON`) d'abord, puis **B
-   (stream physique) + C (snapshot d'undo) ensemble** — B sans C casse l'undo (D7).
+2. **Espace mémoire** (doc 05) : Étape A (modèle + séparation config/runtime),
+   puis prototypes distincts B (transport runtime) et C (undo ciblé concurrent).
 3. **Canal WS minimal** (doc 02) : introspection d'état + `setMemory` + pose,
    réutilisant les hooks existants.
 4. **Réconciliation hooks/MCP + génération de skill** (docs 03).

@@ -1,29 +1,32 @@
 # 05 — Espace mémoire par `snapableElement`
 
 > **Statut : cadrage (draft).** Repose sur une cartographie du pipeline
-> `ItemSnapable` / `EditDelta` / `EditorOpBus` (persistance + snapshot) **et** de
+> `ItemSnapable` / `EditDelta` / `EditorOpBus` (persistance + undo) **et** de
 > `PhysicsSession` (stream live). **Vérifier les numéros de ligne contre le code
 > avant d'implémenter** (ils dérivent).
 
 ## 1. Objectif
 
 Donner à **chaque élément posable** (`ItemSnapable`) un **espace mémoire** : un
-**set de paramètres typés** (`int`, `string`, `bool`, `real`, …) — des
-**variables** attachées à l'élément, sans schéma de clés imposé côté cœur, que
+**set de valeurs sérialisables** (`int`, `string`, `bool`, `real`, listes/objets)
+attachées à l'élément, sans schéma de clés métier imposé côté cœur, que
 l'IA du joueur lit et écrit pour **personnaliser** l'élément (« loyer ×2 », état,
 compteur, paramètres d'un comportement, référence à un artefact QML de la doc 04).
 
-Ces variables ont **trois usages liés** :
+Le cadrage distingue deux classes de données qui ne doivent plus être confondues :
 
-1. **Stream host-authoritative, comme les états de physique.** Ces variables
-   changent à la **fréquence du runtime de gameplay** (une variable peut muter à
-   chaque tick), pas à celle d'une édition. On les **streame donc comme les
-   snapshots physiques** (`PhysicsSession`, host-authoritative : l'hôte applique
-   puis rebroadcaste), **pas** via l'op d'édition undoable `ApplyState`/`EditDelta`
-   (§2). Conséquence assumée : le stream mémoire est **lossy et non-undoable au
-   grain de l'écriture** — c'est de l'**état de partie**, pas une édition. Ce sont,
-   de fait, les **variables de partie synchronisées** que les scripts QML/JS
-   (doc 04) lisent et écrivent pour construire le jeu.
+- **configuration durable** : paramètres issus d'un geste d'édition ou d'une
+  proposition acceptée, persistés dans la map et undoables avec cette transaction ;
+- **état runtime** : compteurs, cooldowns et état vivant d'une partie, autoritatifs
+  chez l'hôte, répliqués avec une sémantique « dernier état » et non undoables au
+  grain de chaque écriture.
+
+Ces valeurs ont **trois usages liés** :
+
+1. **Deux chemins selon la sémantique.** La configuration durable emprunte
+   `ApplyState`/`EditDelta`. Seul l'état runtime emprunte un flux
+   host-authoritative inspiré de `PhysicsSession`. Une écriture cliente est une
+   intention ; l'hôte valide/applique puis publie le nouvel état.
 2. **Support des règles custom, notamment sur les zones.** Une zone (d'exclusion /
    d'effet) ou toute tuile porte des variables que la logique de partie exploite :
    la mémoire d'une zone devient l'**état lisible/modifiable d'une règle** (ex.
@@ -34,16 +37,16 @@ Ces variables ont **trois usages liés** :
    synchronisée et le JS embarqué : une règle réagit à un changement de variable,
    qu'il vienne d'une écriture locale **ou** d'un snapshot distant (§4).
 
-**Undo au grain « structurel », pas au grain « variable ».** Puisque le stream
-mémoire n'est pas undoable, l'undo est préservé à une granularité plus grossière :
-**avant chaque ajout d'un item QML**, on capture un **snapshot de la mémoire de
-tous les éléments**. Défaire l'ajout = retirer l'item **et** restaurer ce snapshot.
-L'undo reste ainsi fonctionnel **sur une session de gameplay**, sans historiser
-chaque écriture de variable (§3, Étape C).
+**Undo au grain de la transaction d'auteur, jamais au grain du tick.** L'ajout
+d'un artefact et ses changements de configuration durable forment une transaction
+undoable. L'état runtime concurrent n'est pas restauré : un snapshot global ferait
+revenir en arrière des événements sans rapport et créerait des divergences en
+collaboration. La compensation ciblée exacte reste à cadrer (§3, Étape C).
 
-La **base** de l'élément reste identique. Deux transports **distincts** portent la
-mémoire : le **stream physique** (sync live, §2.3) et le **`toJSON()`** (persistance
-disque + snapshot d'undo, §2.2) — pas l'op d'édition undoable pour le live.
+La **base** de l'élément reste identique. Trois chemins sont distingués : op
+d'édition (configuration durable et undo), `toJSON()` (persistance), et flux
+runtime host-authoritative (état vivant). Leur représentation physique peut être
+commune, mais leur sémantique ne l'est pas.
 
 ## 2. État des lieux du pipeline (socle réutilisé)
 
@@ -66,23 +69,23 @@ jamais `uniqueId`).
   en op **`ApplyState` (=11)** pour le réseau. En réception,
   `Game::applyRemoteDelta` ré-applique **sans** re-historiser.
 
-**Point clé (persistance & snapshot d'undo, PAS le live) :** `EditDelta.before/
+**Point clé (persistance & undo de configuration, PAS le runtime) :** `EditDelta.before/
 after` étant déjà le `toJSON()` **complet** de la tuile, tout champ ajouté à
 `toJSON()`/`applyJson()` **voyage gratuitement** par la **persistance disque** et
-sert de base au **snapshot d'undo** (Étape C). En revanche, on **ne fait pas**
-transiter le *stream temps réel* de la mémoire par `ApplyState` : à la fréquence du
-gameplay, cela **saturerait les piles undo et le canal d'ops**. Le live passe par
-le mécanisme **physique** (ci-dessous).
+peut servir d'inverse à une transaction de configuration (Étape C). En revanche,
+on **ne fait pas** transiter l'état runtime haute fréquence par `ApplyState` :
+cela saturerait les piles undo et le canal d'ops.
 
-### 2.3 Le stream physique (`PhysicsSession`) — socle du sync mémoire live
+### 2.3 Le stream physique (`PhysicsSession`) — inspiration, pas contrat copié
 `cpp/game/physics/physics_session.{h,cpp}` : host-authoritative, broadcast de
 **snapshots à 30 Hz** (reliable, plage `physics_message_type.h` 0x40+), les clients
-routant leurs inputs vers l'hôte qui simule pour tous. C'est **exactement** le
-profil du sync mémoire : état de partie à fréquence runtime, autoritatif hôte,
-lossy, non-undoable. Le sync de l'espace mémoire **réutilise ce modèle** — nouveau
-message `MemorySnapshot` dédié **ou** extension du snapshot physique (à trancher,
-doc 08). Un script client qui écrit une variable **route l'intention vers l'hôte**
-(comme un input physique) ; l'hôte applique et **rebroadcaste**.
+routant leurs inputs vers l'hôte qui simule pour tous. La mémoire partage avec
+la physique l'autorité hôte et le routage des intentions, mais pas nécessairement
+sa cadence ni son transport. « Reliable » décrit la livraison ; « dernier état »
+signifie que les versions intermédiaires peuvent être coalescées/supplantées. Il
+faut éviter une file fiable qui rejouerait des états devenus obsolètes. Nouveau
+message dédié, extension du protocole physique, delta ou snapshot restent à
+trancher et à budgéter (doc 09).
 
 ## 3. Stratégie d'intégration (recommandée)
 
@@ -106,71 +109,63 @@ réactive**.
   chaînes**, pas du `QJsonDocument`. Pour des valeurs arbitraires (guillemets,
   `\n`, Unicode), il **faut** sérialiser via
   `QJsonDocument(QJsonObject::fromVariantMap(m_userMemory)).toJson(Compact)` et
-  l'injecter proprement — sinon échappement cassé. C'est le seul vrai risque
-  technique de cette brique.
+  l'injecter proprement — sinon échappement cassé. C'est un risque de
+  sérialisation important, aux côtés des risques de concurrence et de transport.
 - **ctor JSON** : `m_userMemory = json["memory"].toObject().toVariantMap()` (aucun
   schéma de clés imposé).
 - **`applyJson()`** : `if (json.contains("memory")) setUserMemory(json["memory"].
-  toObject().toVariantMap())`. Sert au **chargement disque** et à la **restauration
-  d'un snapshot d'undo** (Étape C). Comme `setUserMemory` émet `userMemoryChanged`,
-  la restauration réveille aussi les règles (§4). *(L'application d'un snapshot de
-  stream live emprunte un chemin analogue — `setUserMemory` sur la tuile ciblée —
-  mais pas via `applyDelta`, cf. Étape B.)*
+  toObject().toVariantMap())`. Sert au **chargement disque** et à l'application
+  d'un inverse de configuration (Étape C). Comme `setUserMemory` émet
+  `userMemoryChanged`, la restauration réveille aussi les comportements (§4).
 - **`operator==`** : inclure le blob si l'on veut que les no-op (before==after)
   soient détectés correctement.
 
-### Étape B — Sync live via stream host-authoritative (comme la physique)
-Le sync live de la mémoire **ne passe pas** par `ApplyState`/`EditDelta`. Il
-réutilise le modèle `PhysicsSession` (§2.3) :
+### Étape B — Sync de l'état runtime via autorité hôte
+Le sync de l'**état runtime** ne passe pas par `ApplyState`/`EditDelta`. Il
+s'inspire du modèle `PhysicsSession` (§2.3) :
 - l'hôte est **autoritatif** sur les valeurs ; un script client qui écrit une
   variable **route l'intention vers l'hôte** (comme un input physique), l'hôte
-  applique et **rebroadcaste un snapshot mémoire** (~30 Hz, reliable).
+  applique et publie une mise à jour mémoire coalesçable ;
 - réception : `setUserMemory` sur la tuile ciblée → émet `userMemoryChanged` →
   réveille scripts/règles (usage 3, §1). **Pas** de passage par `applyDelta` (donc
   pas d'historisation).
-- **lossy & non-undoable** assumés : c'est de l'état, pas une édition.
+- **non-undoable** au grain de l'écriture : c'est de l'état, pas une édition.
+  Le choix reliable/raw et la cadence ne sont pas encore décidés.
 
 À trancher (doc 08) : message `MemorySnapshot` **dédié** vs **extension** du snapshot
 physique ; **delta par-clé** vs snapshot complet par tuile ; débit et plafond.
 
-### Étape C — Undo par snapshot avant ajout d'un item QML
-Pour garder l'undo **fonctionnel sur une session de gameplay** malgré le stream
-non-undoable :
-- **avant** chaque **ajout d'un item QML** (changement structurel), capturer un
-  **snapshot de la mémoire de tous les éléments** (les `toJSON()` des blobs) et le
-  pousser sur la pile d'undo, **attaché à l'op d'ajout** ;
-- **undo** de l'ajout = retirer l'item **et** restaurer le snapshot mémoire (via
-  `applyJson` sur chaque tuile) ; **redo** = ré-ajouter + ré-appliquer l'état
-  post-ajout ;
-- granularité = **le geste structurel**, pas l'écriture de variable — suffisant pour
-  « annuler l'ajout d'un élément de gameplay » sans historiser chaque tick.
+### Étape C — Transaction structurelle et compensation ciblée
+Une proposition acceptée doit déclarer son **write-set durable** : artefacts créés,
+tuiles modifiées et clés de configuration touchées. Ce write-set alimente l'inverse
+undoable existant. L'undo retire l'artefact et restaure uniquement la configuration
+durable appartenant à la transaction. Il ne restaure pas l'état runtime global.
 
-À trancher (doc 08) : snapshot **global** (toute la carte) vs **ciblé** (éléments
-impactés) ; coût mémoire/taille ; articulation avec l'undo d'édition classique
-(hors session de gameplay).
+Restent à trancher : conflits si une clé a été remodifiée depuis, comportement du
+redo, et politique en cours de partie collaborative. Un snapshot global de toute
+la mémoire n'est plus recommandé.
 
-**Recommandation :** Étape A d'abord (modèle + persistance/`toJSON`), puis **B et C
-ensemble** — livrer B sans C **casse l'undo** en session de gameplay.
+**Recommandation :** Étape A d'abord (modèle + persistance), puis prototyper
+séparément B (runtime) et C (transaction durable) avec des tests de concurrence.
 
 ## 4. Contraintes & pièges
 
-- **Taille en stream** : à ~30 Hz, un gros blob **par tick** est coûteux.
+- **Taille du flux** : un gros blob envoyé périodiquement est coûteux.
   Privilégier un **delta par-clé** (n'émettre que les variables changées) plutôt
   qu'un snapshot complet par tuile, et **plafonner** la taille (cf. sandbox
-  doc 04 §3.4). Le snapshot d'undo (Étape C), lui, est ponctuel (par ajout d'item),
-  pas par tick.
-- **Pas de schéma côté cœur** : le C++ traite le blob comme opaque. Le **sens** des
-  clés est une **convention IA / moteur de règles** (doc 06), pas du code C++. Ça
+  doc 04 §3.4), coalescer et ne publier qu'en cas de changement.
+- **Pas de schéma métier côté cœur** : le C++ traite les valeurs comme opaques. Le
+  **sens** des clés est une **convention IA / comportements** (doc 06), pas du C++.
   préserve la liberté (point central du pivot) tout en gardant le cœur stable.
-- **Undo** : le stream mémoire n'est **pas** undoable (Étape B) ; l'undo repose sur
-  le **snapshot avant ajout d'item QML** (Étape C). Ne **pas** router les écritures
-  de variables par `submitOpWithUndo`/`ApplyState` — cela saturerait la pile et le
-  canal d'ops.
+- **Undo** : ne pas router les écritures d'état runtime par
+  `submitOpWithUndo`/`ApplyState`. Les écritures de **configuration durable**, elles,
+  doivent appartenir à la transaction d'édition correspondante.
 - **Réactivité vs boucle** : `setUserMemory`/`applyJson` émettent
   `userMemoryChanged` ; une règle custom qui, **en réaction**, ré-écrit la mémoire
-  peut boucler (écriture → signal → écriture). Réutiliser le garde
-  `beginApplyRemote/endApplyRemote` déjà en place pour les ops distantes dans
-  `Editor.qml`, et/ou ne ré-émettre que sur changement réel de valeur.
+  peut boucler (écriture → signal → écriture). Le garde
+  `beginApplyRemote/endApplyRemote` des ops n'est pas suffisant pour ce nouveau
+  bus : prévoir version d'écriture, garde de réentrance, budget de cascade et
+  absence d'émission si la valeur n'a pas réellement changé.
 - **Types supportés** : borner aux **primitives sérialisables** (`int`, `real`,
   `string`, `bool`, listes/objets imbriqués de ces types). Pas de `QObject`, de
   fonction ni de handle vivant dans le map — non sérialisable, ne passe pas le
@@ -182,32 +177,33 @@ ensemble** — livrer B sans C **casse l'undo** en session de gameplay.
 
 ## 5. Conventions d'usage (proposition, non normatif côté cœur)
 
-Pour que l'IA et le futur moteur de règles se comprennent, recommander (sans
+Pour que l'IA et les comportements de règles se comprennent, recommander (sans
 l'imposer en C++) une structure :
 
 ```jsonc
 "memory": {
   "schema": 1,                       // versionnage de la convention
-  "data": { "rentMultiplier": 2 },   // les VARIABLES typées (le gros du besoin)
+  "config": { "rentMultiplier": 2 }, // configuration durable/undoable
+  "state": { "passages": 0 },         // état runtime, persistance à décider
   "behavior": { "qmlRef": "…", "params": {…} }, // réf. artefact QML (doc 04)
   "tags": ["water-adjacent"]         // libellés pour les règles
 }
 ```
 
-Le cœur ne connaît que `memory` (un `QVariantMap` de valeurs typées) ; le sens de
-`schema`/`data`/`behavior`/`tags` est une convention de la couche IA/règles. Les
-**variables de partie** (usage 1/2 du §1) vivent sous `data` ; c'est ce que les
-règles custom lisent et écrivent, et sur quoi elles s'abonnent via
-`userMemoryChanged`.
+Le cœur ne connaît que `memory` ; le sens métier reste une convention. En revanche,
+la distinction de sémantique `config`/`state` doit être comprise par la couche de
+transport afin de ne pas envoyer chaque tick dans l'undo ni de persister un état
+éphémère par accident. Le nom final de ces namespaces reste à valider.
 
-## 6. Questions ouvertes (→ doc 08)
+## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
 - Blob **global à la tuile** (proposé) ou **par sous-paramètre** (un `memory` dans
   chaque `*Parameter`) ? Le global est plus simple et suffit a priori.
-- **Transport du stream** (Étape B) : message `MemorySnapshot` dédié vs extension du
-  snapshot physique ; **delta par-clé** vs snapshot complet ; débit/plafond.
-- **Snapshot d'undo** (Étape C) : **global** (toute la carte) vs **ciblé** ; coût
-  taille/mémoire ; articulation avec l'undo d'édition classique.
+- Frontière exacte **configuration durable / état runtime** et persistance de
+  l'état lors d'une sauvegarde/reprise de partie.
+- **Transport du runtime** (Étape B) : protocole dédié vs extension physique ;
+  delta/snapshot, coalescence, fiabilité, cadence et plafond.
+- **Transaction d'undo** (Étape C) : déclaration du write-set, conflits et redo.
 - Faut-il exposer l'espace mémoire aussi sur les entités **non-tuiles**
   (`PlayerProfile`, `MapInfo`) ?
 - Plafond de taille du blob et politique en cas de dépassement.

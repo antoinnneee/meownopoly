@@ -60,8 +60,11 @@ canal (doc 02) et la scène.
 
 ### 3.2 Contexte d'exécution restreint
 - Instancier dans un **`QQmlContext` dédié** qui n'expose **que** l'API de jeu
-  autorisée — **pas** les singletons globaux directement. L'artefact voit une
-  façade, pas `Game`/`Catway`/`EditorOpBus` en direct.
+  autorisée — **pas** les singletons globaux directement. Attention : un contexte
+  enfant ne constitue pas, à lui seul, une frontière de sécurité. Les singletons
+  QML enregistrés et les fonctions globales/imports accessibles doivent être
+  testés explicitement ; l'isolation forte peut exiger un moteur ou un **processus
+  séparé**.
 - **Parent maîtrisé** : rattaché à un porteur (la tuile / un conteneur de
   quarantaine), jamais à la racine de la scène sans contrôle.
 
@@ -77,8 +80,11 @@ du canal.
 ### 3.4 Budget de ressources
 - Timeouts/quotas CPU, plafond mémoire, limite du nombre d'objets instanciés,
   taille max de l'artefact (cf. seuils réseau existants 20–30 KB).
-- Kill-switch : pouvoir **détruire** un artefact qui dérape (`destroy()` + retrait
-  du contexte).
+- Kill-switch : pouvoir **détruire** un artefact qui dérape. Limite fondamentale :
+  `destroy()` ne peut pas interrompre une boucle JS qui bloque déjà le thread GUI.
+  Un timeout préemptif crédible suppose de l'isolation hors du thread/processus
+  principal, ou un langage/DSL borné. Le prototype R1 doit mesurer ce point avant
+  de promettre un « sandbox » in-process.
 
 ### 3.5 Cycle de vie
 - **Instanciation** : canal → validation → contexte restreint → rattachement.
@@ -91,17 +97,17 @@ du canal.
 
 C'est **la** question de sécurité à trancher (doc 08). Trois postures :
 
-1. **Local-only** : le QML généré ne quitte jamais la machine. Les autres joueurs
-   voient l'**effet** (via l'état synchronisé : espace mémoire, tuiles) mais
-   n'exécutent pas le code. Le plus sûr ; limite les comportements « visibles
-   partout ».
+1. **Exécution locale, arbitrage hôte** : la source est envoyée à l'hôte dans
+   l'enveloppe de proposition pour que l'arbitre puisse la juger, mais elle n'est
+   ni broadcastée ni exécutée chez les autres pairs. Les autres joueurs ne voient
+   que les effets autoritatifs répliqués. C'est la posture initiale recommandée.
 2. **Répliqué + re-validé** : l'artefact transite (via le pipeline collab) et est
    **re-passé au sandbox chez chaque pair**. Nécessite un sandbox de confiance
    égale partout ; RCE inter-joueurs si le sandbox a une faille.
 3. **Répliqué + host-validé + signé** : seul le host instancie/valide, ou un
    registre signé de comportements approuvés circule. Plus lourd.
 
-**Recommandation de cadrage : démarrer en local-only (posture 1)** pour dé-risquer,
+**Recommandation de cadrage : démarrer en exécution locale (posture 1)** pour dé-risquer,
 et n'ouvrir la réplication qu'une fois le sandbox éprouvé. Le modèle
 host-authoritative existant (`EditorSession`, `PhysicsSession`) donne le point
 d'insertion naturel pour une future validation centralisée.
@@ -117,7 +123,7 @@ Deux registres complémentaires :
 
 Beaucoup de personnalisations visées par le joueur (« loyer doublé », « bonus »)
 sont **de la donnée** et ne demandent **pas** de code : elles vivent dans l'espace
-mémoire + le futur moteur de règles (doc 06). On garde donc la règle « donnée
+mémoire + les capacités d'exécution des règles (doc 06). On garde donc la règle « donnée
 d'abord » : si l'effet s'exprime en données, pas de JS.
 
 Mais **créer du gameplay nouveau passe, lui, par du code JS** (doc 00 §2) : ce
@@ -137,12 +143,14 @@ Le QML totalement libre (scène de zéro) reste possible mais devient le cas
 **extrême**, pas le cas courant — ce qui concentre le risque sur une fraction des
 usages.
 
-## 6. Questions ouvertes (→ doc 08)
+## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
 - Périmètre exact de l'**API de jeu** exposée à l'artefact (la façade §3.3).
 - Faisabilité réelle du **sandboxing QML/JS dans Qt** : jusqu'où peut-on
   verrouiller le `QQmlContext` et les imports ? (à prototyper — c'est le risque
   technique n°1 du pivot).
+- Frontière d'isolation : même moteur QML, moteur séparé dans le même processus,
+  processus auxiliaire, ou repli vers un DSL/capacités déclaratives ?
 - Réplication : quelle posture (§4) et à quelle échéance ?
 - Validation : parser maison, `qmllint`, ou analyse d'AST ? Que fait-on des faux
   négatifs ?

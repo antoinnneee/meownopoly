@@ -145,8 +145,11 @@ IA** (message clair, code stable), pas juste `ok:false`.
   activé ; jamais de bind `0.0.0.0`.
 - **Allow-list de commandes** : pas d'introspection/`set` arbitraire façon
   automation. Le canal n'expose que le catalogue gameplay.
-- **Le QML génératif ne transite pas « en clair » vers la scène** : il passe
-  obligatoirement par le sandbox (doc 04). Le canal ne fait que le convoyer.
+- **Le QML génératif ne transite pas directement vers la scène** : il est placé
+  dans une enveloppe de proposition, soumis à l'autorité de l'hôte puis aux
+  contrôles mécaniques (doc 04). En multi-joueurs, la source d'un client doit au
+  minimum atteindre l'hôte pour que l'arbitre puisse la juger ; « local-only »
+  signifie qu'elle n'est pas exécutée/broadcastée chez les autres pairs.
 - **Authentification locale** : même en loopback, plusieurs process locaux
   peuvent tenter de se connecter. À décider (doc 08) : token de session écrit par
   le jeu dans un fichier lisible uniquement par l'utilisateur, présenté au
@@ -155,16 +158,20 @@ IA** (message clair, code stable), pas juste `ok:false`.
 - **Budget / quotas** : limiter le débit de commandes et la taille des artefacts
   QML (cf. seuils réseau existants : batch 30 KB, chunking 20 KB dans
   `editor_session`).
+- **Deux identités locales distinctes chez l'hôte** : la cliente proposante et
+  l'arbitre ne doivent pas partager les mêmes capacités. Le handshake doit porter
+  un rôle et une autorisation ; le détail reste à trancher (doc 09).
 
-## 7. Questions ouvertes (→ doc 08)
+## 7. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
 - Un seul canal multiplexé (éditeur + runtime + règles) ou plusieurs ?
 - Événements poussés : sur quel bus interne se brancher (signaux `Game`,
   `EditorOpBus.remoteOpReceived`, `ItemSnapableEvents`) ?
 - Faut-il exposer une capacité `automation.raw` (échappatoire bas niveau) pour le
   prototypage, quitte à la retirer en prod ?
-- Politique multi-joueurs : les commandes IA d'un client sont-elles locales, ou
-  passent-elles par le host-authoritative comme les ops d'édition humaines ?
+- Politique multi-joueurs : quelles commandes restent purement locales et quelles
+  propositions passent obligatoirement par l'autorité de l'hôte ? Toute mutation
+  de l'état partagé doit passer par l'hôte ; la frontière exacte reste à lister.
 - **Point d'insertion de l'IA arbitre** (doc 00 §4, D6) : une proposition cliente
   arrivant à l'hôte doit être soumise à l'arbitre avant rebroadcast. Le canal
   transporte-t-il un verdict d'arbitrage (accepté/amendé/rejeté) en retour, et

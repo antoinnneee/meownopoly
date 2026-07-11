@@ -34,9 +34,10 @@ cf. doc 00 §4).
 | 03 | [`03_SKILL_CLIENT_IA.md`](./03_SKILL_CLIENT_IA.md) | Le fichier de skill livré au joueur à l'installation | draft |
 | 04 | [`04_QML_GENERATIF_SANDBOX.md`](./04_QML_GENERATIF_SANDBOX.md) | Modèle d'exécution « QML à la volée » + sandbox de sécurité | draft |
 | 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | Espace mémoire par `snapableElement` + intégration delta | draft |
-| 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Moteur de règles de partie | **stub — à cadrer** |
-| 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **stub — à cadrer** |
+| 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
+| 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questionnaire exhaustif des arbitrages à rendre | **à remplir** |
 
 ## Décisions structurantes déjà prises
 
@@ -49,25 +50,30 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
 - **D2 — Canal d'interaction : nouveau WebSocket dédié.** On ne surcharge pas
   l'`AutomationServer` existant (`cpp/automation/`, port 7700) : il reste réservé
   au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02).
-- **D3 — Moteur de règles : cadrage différé** (doc 06, stub).
-- **D4 — Bibliothèque : cadrage différé** (doc 07, stub). Première intention de
+- **D3 — Règles : détails de représentation/exécution différés** (doc 06).
+  L'autorité de politique est tranchée par D8, mais son exécution runtime ne
+  repose pas implicitement sur le LLM : elle doit être matérialisée par les
+  primitives/modules/QML acceptés.
+- **D4 — Bibliothèque : architecture différée** (doc 07). Première intention de
   contenu actée : une **bibliothèque d'assets 3D** (versant primitives graphiques,
   doc 07 §1).
 - **D6 — Deux rôles d'IA : cliente (proposante) partout + arbitre (MJ) chez
   l'hôte, obligatoire.** L'hôte fait tourner 2 modèles (proposant + arbitre de
-  viabilité), le client 1 (proposant). Comme du code JS entre dans la partie,
-  l'arbitre est **requis** (pas de host sans arbitre). Il se place **en amont du
-  sandbox** (Canal → Arbitre → Sandbox → Scène). Nature/grain/verdict à cadrer
+  viabilité), le client 1 (proposant). L'arbitre est **requis** pour gouverner la
+  partie partagée (pas de host sans arbitre), mais ne remplace aucune barrière de
+  sécurité. Il se place dans le flux d'acceptation **avant l'application** et
+  avant l'exécution finale (préfiltre mécanique possible avant le LLM).
+  Nature/grain/verdict à cadrer
   (doc 00 §4, doc 08).
-- **D7 — Espace mémoire : stream façon physique, non-undoable, + snapshot d'undo.**
-  Le sync live de la mémoire passe par un **stream host-authoritative type
-  `PhysicsSession`** (snapshot ~30 Hz), pas par l'op d'édition undoable → lossy et
-  non-undoable au grain de l'écriture. L'undo de session est préservé par un
-  **snapshot de toute la mémoire avant chaque ajout d'item QML** (doc 05, doc 08).
-- **D8 — Les règles sont gérées par l'arbitre** (pas de moteur séparé). L'arbitre
-  valide/refuse les actions des IA clientes. **Aucun tour imposé** : il s'introduit
-  par le **prompt à l'arbitre** ou par une **proposition d'IA cliente acceptée**
-  (règlement négociable/évolutif). Invariants durs = sandbox (doc 06, doc 08).
+- **D7 — Espace mémoire : deux sémantiques, deux chemins.** La configuration
+  durable suit le pipeline d'édition/persistance et peut être undoable ; l'état
+  runtime suit un flux host-authoritative à sémantique « dernier état » et n'est
+  pas undoable au grain de l'écriture. La cadence, le transport et la stratégie
+  d'undo structurel restent à trancher (doc 05, doc 08).
+- **D8 — L'arbitre gouverne les règles ; le jeu exécute leur forme acceptée.**
+  Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
+  par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
+  capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 
@@ -76,8 +82,9 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   patron de code** (protocole, loopback, dispatch) et comme **implémentation** des
   capacités portées dans le canal. ⚠️ **L'automation reste test-only : l'IA
   cliente n'y a aucun accès** — le canal ré-expose un sous-ensemble curé (D2, doc 02).
-- **MCP `automation_mcp/`** : **patron d'outillage** pour générer le manifeste du
-  canal et la skill (doc 03) — pas exposé à l'IA.
+- **MCP `automation_mcp/`** : **patron d'outillage** et source de schémas à porter.
+  La source de vérité livrée est le **manifeste du canal IA**, jamais le MCP
+  d'automation lui-même (doc 03).
 - **`ItemSnapable` + `EditDelta` + `EditorOpBus`/`EditorSession`** : le pipeline
   de mutation/sérialisation/sync collaboratif dans lequel s'insère l'espace
   mémoire (doc 05).

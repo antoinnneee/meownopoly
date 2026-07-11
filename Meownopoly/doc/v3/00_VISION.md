@@ -65,9 +65,11 @@ Quatre idées portent le pivot :
 4. **Deux rôles d'IA : cliente (proposante) et arbitre (MJ) — l'arbitre est
    obligatoire.** L'IA n'est pas un acteur unique. Une IA **cliente** propose du
    contenu (éléments + JS) ; une IA **arbitre / MJ**, chez l'hôte, en vérifie la
-   viabilité avant qu'il n'entre dans la partie. Comme du **code** entre dans le
-   jeu, cet arbitrage n'est **pas optionnel** : **sans arbitre branché chez l'hôte,
-   le mode piloté par IA ne fonctionne pas**. Détail en §4.
+   viabilité avant qu'il n'entre dans la partie. Cet arbitrage de la partie
+   partagée n'est **pas optionnel** : **sans arbitre branché chez l'hôte, le mode
+   piloté par IA ne fonctionne pas**. Ce caractère obligatoire relève de la
+   gouvernance produit ; la sécurité du code reste entièrement à la charge des
+   contrôles mécaniques. Détail en §4.
 
 ## 3. Boucle d'usage cible
 
@@ -105,10 +107,11 @@ rôles**, répartis selon la topologie host-authoritative existante :
   « intelligent » du host-authoritative : l'hôte n'est pas un simple relais qui
   rebroadcaste, il **arbitre** le contenu, au sens d'un maître du jeu.
   C'est aussi **elle qui porte les règles de la partie** (décision **D8**, doc 06) :
-  le règlement n'est pas un moteur séparé, c'est ce que l'arbitre **connaît** (par
-  son prompt) et **fait respecter** en validant les actions des IA clientes. **Aucun
-  tour n'est imposé** — il s'introduit par le prompt à l'arbitre ou par une
-  proposition d'IA cliente **acceptée** par l'arbitre (règlement évolutif).
+  l'arbitre est l'autorité qui accepte l'évolution du règlement. Une règle
+  acceptée est ensuite matérialisée dans une forme que le jeu sait exécuter
+  (configuration, module, primitive ou QML/JS validé) : le prompt seul n'est pas
+  un moteur runtime. **Aucun tour n'est imposé** — il s'introduit par le prompt à
+  l'arbitre ou par une proposition d'IA cliente acceptée (règlement évolutif).
 
 ### Topologie : 2 modèles chez l'hôte, 1 chez le client
 
@@ -135,26 +138,26 @@ La proposition d'un client **comme** celle de l'hôte lui-même passent par le
 L'arbitre est, lui aussi, un modèle **fourni par le joueur** (celui qui héberge) —
 le jeu n'héberge toujours aucune IA (cf. §7).
 
-**L'arbitre est obligatoire.** Le mécanisme central du pivot fait entrer du **code
-JS** dans une partie potentiellement partagée : il n'y a donc **pas** de mode « IA
-sans arbitre ». Héberger une partie pilotée par IA **exige** de brancher un modèle
+**L'arbitre est obligatoire.** Le mécanisme central permet à plusieurs joueurs de
+proposer du contenu et des règles dans un état partagé : il n'y a donc **pas** de
+mode partagé « IA sans arbitre ». Héberger une partie pilotée par IA **exige** un modèle
 arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 §7). C'est une condition de fonctionnement, pas un réglage de confort (décision
-**D6**).
+**D6**). Cette obligation ne constitue pas une mesure de sécurité du code.
 
 ### Pourquoi séparer proposer et arbitrer
 
 - **Deux postures inconciliables dans un seul agent.** Le rôle proposant est
   créatif et permissif ; le rôle arbitre est conservateur, garant de l'intégrité
   de la partie. Les fondre dilue la garantie.
-- **Complément « souple » des garde-fous « durs ».** Le sandbox (doc 04) et le
-  futur contrat de règles (doc 06) posent des invariants **mécaniques** et
+- **Complément « souple » des garde-fous « durs ».** Le sandbox (doc 04) et les
+  validateurs de capacités posent des invariants **mécaniques** et
   non-négociables. L'arbitre ajoute au-dessus un jugement **contextuel** (« ce
   pont est-il cohérent avec le thème et l'équilibre de cette partie ? ») que des
   règles statiques n'expriment pas. Il ne remplace pas le sandbox : une
-  proposition doit passer **et** l'arbitre **et** le sandbox. **Ordre : l'arbitre
-  juge en amont, le sandbox instancie ensuite** (schéma doc 01) — inutile de
-  sandboxer un artefact que le MJ rejettera.
+  proposition doit passer **et** l'arbitre **et** les contrôles mécaniques. Un
+  préfiltre statique peu coûteux peut précéder l'appel LLM ; la validation complète
+  et l'isolation précèdent toujours l'exécution (schéma doc 01).
 - **Un point d'autorité unique.** Concentrer l'arbitrage chez l'hôte évite le
   split-brain (deux pairs validant différemment) et réutilise le modèle réseau
   existant (`EditorSession`/`PhysicsSession` host-authoritative).
@@ -162,16 +165,17 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 > **À cadrer (décision D6, doc 08).** Nature de l'arbitre (LLM vs règles
 > déterministes vs hybride), grain d'arbitrage (par action / par lot / par
 > artefact QML), forme du verdict rendu au proposant (actionnable pour itérer),
-> et articulation exacte avec le sandbox (doc 04) et le moteur de règles (doc 06).
+> et articulation exacte avec le sandbox (doc 04) et l'exécution des règles (doc 06).
 
 ## 5. Principes directeurs
 
 - **Le jeu expose des capacités, pas des écrans.** L'IA agit via un contrat de
   capacités stable (canal WS + skill), pas en simulant des clics fragiles.
-- **Le chemin UI reste la source de vérité.** Comme les hooks d'automation
-  actuels, les actions IA passent par les mêmes pipelines que l'humain
-  (`Game.updateMap`, `EditorOpBus`) → gratuitement compatibles undo, collab,
-  persistance.
+- **Les pipelines métier restent la source de vérité.** Comme les hooks
+  d'automation actuels, les mutations structurelles de l'IA passent par les
+  mêmes pipelines que l'humain (`Game.updateMap`, `EditorOpBus`) et conservent
+  leurs propriétés d'undo/collab/persistance. L'état runtime haute fréquence
+  emprunte, lui, un flux distinct et non undoable (doc 05).
 - **Liberté bornée par des garde-fous non-négociables.** « Grande liberté » ne
   veut pas dire « exécution arbitraire non contrôlée ». Le JS embarqué / QML
   génératif impose un **sandbox** (doc 04) ; l'arbitre (obligatoire, §4) juge la
@@ -193,7 +197,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 | Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |
 | Point d'entrée IA | Automation (debug/dev) | **Canal WS dédié** IA-joueur (doc 02) |
-| Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gérées par l'arbitre** (prompt + propositions acceptées), tour optionnel (doc 06, D8) |
+| Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gouvernées par l'arbitre**, matérialisées/exécutées par les capacités du jeu ; tour optionnel (doc 06, D8) |
 | Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations (doc 07, différé) |
 | Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** (doc 07) |
 | Réseau P2P / collab | Catway / EditorSession | Inchangé, socle réutilisé |
@@ -211,8 +215,8 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   des briques de gameplay avec logique** ; le harnais d'automation
   (`AutomationServer`, `automation_mcp/`) reste **test-only**. Certaines features
   de l'automation sont **portées** dans le canal, jamais exposées telles quelles.
-- Le cadrage du **moteur de règles** (doc 06) et de la **bibliothèque** (doc 07)
-  est explicitement reporté.
+- Les **détails de représentation et d'exécution des règles** (doc 06) et
+  l'**architecture de la bibliothèque** (doc 07) sont explicitement reportés.
 
 ## 8. Risque central assumé
 
