@@ -142,7 +142,9 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   non-négociables. L'arbitre ajoute au-dessus un jugement **contextuel** (« ce
   pont est-il cohérent avec le thème et l'équilibre de cette partie ? ») que des
   règles statiques n'expriment pas. Il ne remplace pas le sandbox : une
-  proposition doit passer **et** le sandbox **et** l'arbitre.
+  proposition doit passer **et** l'arbitre **et** le sandbox. **Ordre : l'arbitre
+  juge en amont, le sandbox instancie ensuite** (schéma doc 01) — inutile de
+  sandboxer un artefact que le MJ rejettera.
 - **Un point d'autorité unique.** Concentrer l'arbitrage chez l'hôte évite le
   split-brain (deux pairs validant différemment) et réutilise le modèle réseau
   existant (`EditorSession`/`PhysicsSession` host-authoritative).
@@ -194,6 +196,11 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   **fournis par le joueur** ; l'hôte fait simplement tourner l'arbitre en plus de
   sa propre IA cliente.
 - Pas d'exposition réseau du canal hors de la machine locale à ce stade.
+- **Pas d'accès de l'IA à l'automation de test.** L'IA cliente dialogue uniquement
+  avec le **canal curé** (doc 02, appels d'API locaux) dont le but est de **créer
+  des briques de gameplay avec logique** ; le harnais d'automation
+  (`AutomationServer`, `automation_mcp/`) reste **test-only**. Certaines features
+  de l'automation sont **portées** dans le canal, jamais exposées telles quelles.
 - Le cadrage du **moteur de règles** (doc 06) et de la **bibliothèque** (doc 07)
   est explicitement reporté.
 

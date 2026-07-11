@@ -7,8 +7,14 @@
 À l'installation, le joueur reçoit un **fichier de skill** : le mode d'emploi que
 son IA lit pour savoir **comment interagir avec le jeu**. Le joueur n'a pas à
 documenter le protocole ni à écrire des tools : la skill rend son IA
-opérationnelle immédiatement. Elle est **construite à partir du MCP meow
-automation** (`automation_mcp/`), qui décrit déjà des capacités du jeu.
+opérationnelle immédiatement.
+
+**La skill décrit le canal IA (doc 02), pas l'automation de test.** L'IA cliente
+n'a **aucun accès** au harnais d'automation (`automation_mcp/`, `AutomationServer`)
+— voir la frontière doc 02 §1. La skill est le **contrat du canal** : un catalogue
+**curé, orienté création de briques de gameplay**. Le MCP d'automation sert de
+**patron d'outillage** pour bâtir ce canal, et **certaines** de ses capacités y
+sont **portées** (§4), mais la skill n'expose jamais la surface de test.
 
 ## 2. Ce qu'une skill « client-IA » doit contenir
 
@@ -45,29 +51,36 @@ Deux couches, à décider (doc 08) :
   skill reste synchrone avec le canal réel.
 
 `doc/architecture/AUTOMATION_API.md` est aujourd'hui le document le plus proche
-d'un contrat client : il servira de base rédactionnelle.
+d'un contrat client : il servira de **base rédactionnelle** — en gardant qu'il
+documente l'**automation de test** ; le contrat du canal en est un **dérivé curé**,
+pas une copie.
 
-## 4. Génération à partir du MCP
+## 4. Génération : le manifeste du canal comme source de vérité
 
-Le MCP `automation_mcp/index.js` déclare déjà des **tools** (nom, description,
-schéma d'entrée) mappés sur les commandes. La skill client peut être **dérivée
-mécaniquement** de cette source :
+La **source de vérité** de la skill est le **manifeste de capacités du canal IA**
+(son catalogue curé, doc 02 §4) — **pas** le MCP d'automation. La skill en est
+**dérivée mécaniquement** :
 
 ```
-automation_mcp/ (tools + schémas)  ──build──▶  skill client (SKILL.md + contrat)
-        │                                              │
-        └── source de vérité des capacités             └── livrée à l'installation
+  automation_mcp/ (tools + schémas)      ← patron d'outillage (déclaration de tools)
+        │  porte un SOUS-ENSEMBLE curé
+        ▼
+  Manifeste du canal IA (catalogue gameplay)  ──build──▶  skill client (SKILL.md + contrat)
+        └── SOURCE DE VÉRITÉ de la skill                        └── livrée à l'installation
 ```
 
-Bénéfice : **une seule source de vérité**. Quand une capacité est ajoutée au
-canal/MCP, la skill se régénère — pas de dérive manuelle.
+Le MCP d'automation fournit le **format de déclaration** des tools (nom,
+description, schéma) et **certaines** commandes qu'on **porte** dans le manifeste
+du canal ; il n'est pas, lui, exposé à l'IA. Bénéfice : **une seule source de
+vérité** — le manifeste du canal. Quand une capacité y est ajoutée, la skill se
+régénère, pas de dérive manuelle.
 
 > **À combler (chantier) :** divergence actuelle **hooks ↔ tools MCP**. Des hooks
 > existent (`placeNPC`, `placeEnemy`, `placeCrate`, `setZoneTrigger`,
-> `setNpcDialogue`, stats, `saveMap`) **sans tool MCP dédié**. Si le MCP est la
-> source de génération de la skill, il faut d'abord **réconcilier** MCP et hooks
-> (ajouter les tools manquants ou un `editor_hook_invoke` générique documenté),
-> sinon la skill générée sera incomplète.
+> `setNpcDialogue`, stats, `saveMap`) **sans tool MCP dédié**. Comme le manifeste
+> du canal se construit en **portant** un sous-ensemble depuis ces deux surfaces,
+> il faut **réconcilier** hooks et tools (ajouter les tools manquants ou un
+> invocateur générique documenté) pour un manifeste — donc une skill — complet.
 
 ## 5. Cycle de vie
 

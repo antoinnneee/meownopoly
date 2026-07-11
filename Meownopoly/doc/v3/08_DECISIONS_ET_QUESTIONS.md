@@ -36,8 +36,14 @@
   harnais de dev.
 - **Conséquence.** Réutiliser les **fondations** de l'automation (loopback strict,
   JSON corrélé, GUI thread) mais **pas** son catalogue permissif. Doc 02.
+- **Frontière d'accès (non-négociable).** L'IA cliente n'a **aucun accès** au
+  harnais d'automation (`AutomationServer` port 7700, `automation_mcp/`), réservé
+  au test/debug. Le canal ré-expose un **sous-ensemble curé** (certaines features
+  **portées** + durcies), orienté **création de briques de gameplay** — pas
+  l'introspection/injection bas niveau. Réutilisation = **de code**, pas d'accès.
 - **Alternatives écartées.** Étendre l'`AutomationServer` (couplage debug/prod
-  indésirable) ; décider plus tard (le pivot a besoin du canal tôt).
+  indésirable) ; **exposer l'automation à l'IA** (surface de test dangereuse comme
+  contrat d'IA) ; décider plus tard (le pivot a besoin du canal tôt).
 
 ### D3 — Moteur de règles : **cadrage différé**
 - **Décision.** Reporter le cadrage (doc 06 = stub). Réserver l'emplacement.
@@ -76,6 +82,26 @@
   (dilue la garantie d'intégrité) ; validation purement mécanique sans arbitre
   (perd le jugement contextuel « cohérence/équilibre »).
 
+### D7 — Espace mémoire : stream façon physique (non-undoable) + snapshot d'undo
+- **Décision.** Le sync **live** de l'espace mémoire (doc 05) passe par un **stream
+  host-authoritative façon physique** (`PhysicsSession`, snapshot ~30 Hz), **pas**
+  par l'op d'édition undoable `ApplyState`/`EditDelta`. Le stream est donc **lossy
+  et non-undoable** au grain de l'écriture. Pour préserver l'undo **sur une session
+  de gameplay**, on capture un **snapshot de toute la mémoire avant chaque ajout
+  d'un item QML** (changement structurel) ; défaire l'ajout restaure ce snapshot.
+- **Pourquoi.** La mémoire mute à la **fréquence du runtime** (comme les corps
+  physiques) ; la faire transiter par les piles undo/le canal d'ops les
+  **saturerait**. Le profil (état de partie, autoritatif hôte, lossy) est
+  exactement celui de `PhysicsSession`.
+- **Conséquence.** `toJSON`/`applyJson` restent nécessaires (persistance disque +
+  snapshot d'undo), mais **pas** pour le live. Deux transports distincts : stream
+  physique (live) et `toJSON` (persistance/snapshot).
+- **À trancher (§2).** Message `MemorySnapshot` dédié vs extension du snapshot
+  physique ; delta par-clé vs snapshot complet ; snapshot d'undo global vs ciblé.
+- **Alternatives écartées.** « Voyage gratuit via `EditDelta`/`ApplyState` »
+  (thèse initiale de doc 05) : simple mais **inadapté à la fréquence runtime** et
+  polluerait l'undo d'édition. Conservé uniquement pour la persistance/snapshot.
+
 ### D5 — Dossier de cadrage
 - **Décision.** Regrouper le cadrage V3 dans `Meownopoly/doc/v3/`, docs numérotés,
   en français, avec bandeaux de statut. Commit/push sur la branche **V3**.
@@ -94,7 +120,10 @@
 - Un canal multiplexé vs plusieurs canaux (éditeur / runtime / règles) ?
 - Sur quel bus interne brancher les **événements poussés** (signaux `Game`,
   `EditorOpBus.remoteOpReceived`, `ItemSnapableEvents`) ?
-- Exposer une échappatoire `automation.raw` pour le prototypage ?
+- **Quel sous-ensemble de l'automation porter** dans le catalogue curé du canal
+  (pose, caméra, introspection d'état…) et lesquelles **rester** test-only ?
+- Exposer une échappatoire `automation.raw` pour le prototypage ? (**tension** avec
+  la frontière D2 : à n'envisager qu'en build de dev, jamais dans la skill livrée).
 
 ### Capacités manquantes (chantiers identifiés)
 - Réconcilier **hooks ↔ tools MCP** (des hooks existent sans tool MCP) — prérequis
@@ -123,11 +152,14 @@
   classique). Reste à définir l'**UX du prérequis** : comment le jeu détecte/exige
   qu'un arbitre soit branché avant d'autoriser l'hébergement d'une partie IA.
 
-### Espace mémoire (doc 05)
+### Espace mémoire (doc 05, sync tranché par D7)
 - Blob **global à la tuile** vs **par sous-paramètre** ? Reco : global.
-- Op fine `SetItemMemory` : merge partiel vs remplacement ?
+- **Transport du stream** (D7) : message `MemorySnapshot` dédié vs extension du
+  snapshot physique ; **delta par-clé** vs snapshot complet par tuile ; débit/plafond.
+- **Snapshot d'undo** (D7) : **global** (toute la carte) vs **ciblé** (éléments
+  impactés) ; coût taille/mémoire ; articulation avec l'undo d'édition classique.
 - Traiter proprement la **sérialisation string-manuelle** de `ItemSnapable::toJSON`
-  (piège n°1). 
+  (piège n°1).
 - Plafond de taille du blob.
 
 ### Skill client (doc 03)
@@ -147,11 +179,14 @@
 | R6 | Complexité multi-joueurs des règles custom | Moyen | Différé (D3) ; concevoir avec host-authoritative en tête |
 | R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox (doc 04) + contrat (doc 06) ; l'arbitre n'affine que le contextuel (doc 00 §8) |
 | R8 | Arbitrage LLM par action : latence/coût dégradant l'UX collab | Moyen | Grain à cadrer (D6) : arbitrer par lot / seulement le QML génératif ; fallback mécanique |
+| R9 | Stream mémoire à 30 Hz saturant la bande passante (gros blobs/tick) | Moyen | Delta par-clé + plafond (D7) ; réutiliser le profil `PhysicsSession` éprouvé |
+| R10 | Undo cassé en session (stream non-undoable) | Moyen | Snapshot mémoire global avant chaque ajout d'item QML (D7, doc 05 §3 Étape C) |
 
 ## 4. Séquencement suggéré (non engageant)
 
 1. **Prototype sandbox QML** (R1) — dé-risque D1 avant tout le reste.
-2. **Espace mémoire, étapes A+B** (doc 05) — valeur immédiate, risque minimal.
+2. **Espace mémoire** (doc 05) : Étape A (modèle + `toJSON`) d'abord, puis **B
+   (stream physique) + C (snapshot d'undo) ensemble** — B sans C casse l'undo (D7).
 3. **Canal WS minimal** (doc 02) : introspection d'état + `setMemory` + pose,
    réutilisant les hooks existants.
 4. **Réconciliation hooks/MCP + génération de skill** (docs 03).

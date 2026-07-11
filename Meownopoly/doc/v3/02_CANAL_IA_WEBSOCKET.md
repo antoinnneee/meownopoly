@@ -5,11 +5,26 @@
 
 ## 1. Rôle & périmètre
 
-Le canal est **l'unique point de contact** entre « l'IA du joueur » et le jeu. Il
-ne sert **qu'à ça** : ce n'est pas un service exposé, pas un canal réseau P2P,
-pas de la logique de gameplay. Il traduit des **commandes de haut niveau** émises
-par l'IA vers les **pipelines internes existants** (`editorAutomationHooks` →
-`Game.updateMap` → `EditorOpBus`), et renvoie de l'**état observable**.
+Le canal est **l'unique point de contact** entre « l'IA du joueur » et le jeu, via
+des **appels d'API locaux** (loopback). Il ne sert **qu'à ça** : ce n'est pas un
+service exposé, pas un canal réseau P2P, pas de la logique de gameplay. Il traduit
+des **commandes de haut niveau** émises par l'IA vers les **pipelines internes
+existants** (`editorAutomationHooks` → `Game.updateMap` → `EditorOpBus`), et
+renvoie de l'**état observable**.
+
+**But du canal = créer des briques de gameplay avec logique.** L'IA cliente
+n'est pas là pour *tester* le jeu : elle est là pour **produire des éléments
+porteurs de logique** (fichiers QML + script, écriture de l'espace mémoire) qui
+**influencent et font le gameplay**. Le catalogue du canal est pensé pour ça — pas
+pour l'introspection/injection bas niveau de l'automation.
+
+> **Frontière d'accès (non-négociable).** L'IA cliente n'a **aucun accès** au
+> harnais d'**automation** (`AutomationServer` port 7700, MCP `automation_mcp/`),
+> qui reste **strictement réservé au test/debug interne**. Le canal IA est une
+> **surface distincte et curée** : **certaines** capacités de l'automation y sont
+> **ré-exposées** (portées et durcies, cf. §4), mais l'IA ne parle **jamais** à
+> l'automation directement. Deux serveurs, deux publics : automation = dev ;
+> canal = IA-joueur.
 
 ## 2. Pourquoi un canal séparé de l'automation (D2)
 
@@ -63,8 +78,17 @@ Ajouts propres au canal IA (à spécifier au chantier) :
 
 ## 4. Catalogue de capacités (état des lieux V2 → cible V3)
 
+Ce catalogue est le **sous-ensemble curé** que le canal ré-expose à l'IA. Il
+**réutilise l'implémentation** des hooks/commandes existants (chemin UI exact,
+compatible collab/undo), mais **pas** la surface totale de l'automation : les
+commandes bas niveau réservées au test (introspection d'arbre QML, `get`/`set` de
+propriété arbitraire, synthèse souris/clavier) **n'y entrent pas**. Autrement dit :
+certaines features de l'automation **se retrouvent** ici (portées + durcies), la
+majorité **reste** côté test.
+
 ### 4.1 Déjà exposé côté hooks (`editorAutomationHooks`, `Editor.qml`)
-Réutilisable tel quel via le canal (chemin UI exact, compatible collab/undo) :
+Implémentation réutilisable derrière le canal (chemin UI exact, compatible
+collab/undo) — à ré-exposer via le catalogue curé, pas en accès direct :
 
 - **Pose** : `placeAsset`, `placeCase`, `placeZone`, `placeNPC`, `placeEnemy`,
   `placeCrate`.

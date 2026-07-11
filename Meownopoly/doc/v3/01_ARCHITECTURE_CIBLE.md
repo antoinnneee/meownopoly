@@ -6,39 +6,45 @@
 ## 1. Schéma d'ensemble
 
 ```
-┌───────────────────────────────────────────────────────────────────────────┐
-│  MACHINE DU JOUEUR                                                          │
-│                                                                             │
-│   ┌───────────────┐        skill (installée)        ┌───────────────────┐  │
-│   │   Son IA      │◀───────────────────────────────▶│  Fichier de skill │  │
-│   │ (modèle       │   décrit les capacités du jeu    │  (doc 03)         │  │
-│   │  client)      │                                  └───────────────────┘  │
-│   └──────┬────────┘                                                         │
-│          │  WebSocket LOCAL dédié IA↔jeu (loopback)  ── doc 02              │
-│          ▼                                                                   │
-│   ┌──────────────────────────────────────────────────────────────────────┐ │
-│   │  MEOWNOPOLY (process Qt)                                              │ │
-│   │                                                                       │ │
-│   │   ┌──────────────┐   ┌───────────────────┐   ┌────────────────────┐  │ │
-│   │   │ Canal IA     │──▶│ Bac à sable QML   │──▶│ Scène QML / Éditeur │  │ │
-│   │   │ (serveur WS) │   │ (sandbox, doc 04) │   │ (Editor.qml, World3D)│ │ │
-│   │   └──────┬───────┘   └───────────────────┘   └─────────┬──────────┘  │ │
-│   │          │  propositions de haut niveau                │             │ │
-│   │          ▼                                              │             │ │
-│   │   ┌────────────────────────┐  (hôte uniquement)         │             │ │
-│   │   │ IA ARBITRE / MJ        │  viabilité →               │             │ │
-│   │   │ accepte/amende/rejette │  doc 06 / D6               │             │ │
-│   │   └──────┬─────────────────┘                            ▼             │ │
-│   │   ┌────────────────────────────────────────────────────────────────┐ │ │
-│   │   │ Pipeline de mutation existant :                                │ │ │
-│   │   │  Game.updateMap → EditDelta → EditorOpBus/EditorSession        │ │ │
-│   │   │  ItemSnapable (+ espace mémoire, doc 05) → persistance JSON     │ │ │
-│   │   └────────────────────────────────────────────────────────────────┘ │ │
-│   │                              │ collab / réseau                        │ │
-│   └──────────────────────────────┼───────────────────────────────────────┘ │
-└──────────────────────────────────┼─────────────────────────────────────────┘
-                                    ▼  Catway (P2P UDP) vers les autres joueurs
+MACHINE DU JOUEUR — process Qt « Meownopoly »
+
+  Son IA (modèle client)  ◀── skill installée (doc 03) ──▶  Fichier de skill
+        │
+        │  WebSocket LOCAL dédié IA↔jeu (loopback) ── doc 02
+        ▼
+  ┌──────────────┐
+  │  Canal IA    │  reçoit les propositions (fichiers QML + script, data ops)
+  │ (serveur WS) │
+  └──────┬───────┘
+         ▼
+  ┌─────────────────────────┐  ◀── HÔTE uniquement, OBLIGATOIRE (D6, doc 00 §4)
+  │  IA ARBITRE / MJ        │      juge la viabilité AVANT le sandbox
+  │  accepte/amende/rejette │      rejet → erreur actionnable au proposant
+  └──────┬──────────────────┘
+         ▼  proposition validée   (data ops : sautent le sandbox → pipeline)
+  ┌───────────────────┐
+  │  Bac à sable QML  │  valide + instancie l'artefact QML en
+  │  (sandbox, doc 04)│  contexte restreint (allow-list, budget)
+  └─────────┬─────────┘
+            ▼
+  ┌───────────────────────┐
+  │  Scène QML / Éditeur  │  (Editor.qml, World3D)
+  └─────────┬─────────────┘
+            ▼
+  Pipeline de mutation existant :
+    Game.updateMap → EditDelta → EditorOpBus/EditorSession
+    → ItemSnapable (+ espace mémoire, doc 05) → persistance JSON
+            │
+            ▼  collab / réseau
+  Catway (P2P UDP) → autres joueurs
 ```
+
+**Ordre clé : Canal → Arbitre → Bac à sable → Scène.** L'arbitre est **en amont**
+du bac à sable : il juge la proposition (données **et** source QML) *avant* toute
+instanciation — inutile de sandboxer un artefact que le MJ rejettera. Le sandbox
+reste la **dernière** barrière (sécurité dure) juste avant la scène. Les
+propositions **sans** QML (pose, écriture mémoire) sautent le sandbox et vont de
+l'arbitre directement au pipeline.
 
 L'`AutomationServer` V2 (port 7700) **subsiste en parallèle**, réservé au
 test/debug interne (décision D2). Il sert de **modèle de référence** au canal IA
@@ -69,22 +75,27 @@ touche la scène.
 ### 2.4 L'espace mémoire par `snapableElement` (doc 05)
 Chaque `ItemSnapable` gagne un **set de variables typées** (`int`/`string`/`bool`/
 `real`, sans schéma de clés imposé) que l'IA lit/écrit pour personnaliser un
-élément (« loyer ×2 », état, compteur, réf. d'un comportement généré). Transporté
-**gratuitement** par le pipeline `EditDelta`/`ApplyState` existant → persistance,
-undo/redo et sync collab sans nouveau canal. **Réactif** : une écriture (locale ou
-reçue par broadcast) émet un signal QML (`userMemoryChanged`) auquel les règles
-custom / comportements générés s'abonnent — c'est le **bus de variables** entre la
-donnée synchronisée et le JS embarqué. Support privilégié : les **zones**.
+élément (« loyer ×2 », état, compteur, réf. d'un comportement généré). Sync **live
+host-authoritative façon physique** (`PhysicsSession`, snapshot ~30 Hz), **pas** via
+l'op d'édition undoable : le stream est **lossy et non-undoable** au grain de
+l'écriture. L'undo est préservé par un **snapshot de toute la mémoire avant chaque
+ajout d'item QML** (doc 05 §3). Persistance dans le JSON de map via `toJSON`.
+**Réactif** : une écriture (locale ou reçue par snapshot) émet un signal QML
+(`userMemoryChanged`) auquel les règles custom / comportements générés s'abonnent —
+c'est le **bus de variables** entre la donnée synchronisée et le JS embarqué.
+Support privilégié : les **zones**.
 
 ### 2.5 L'IA arbitre / MJ (hôte uniquement, **obligatoire**) — cf. doc 00 §4, D6
 Second rôle d'IA, **présent seulement chez l'hôte** et **requis** : comme du code
 JS entre dans la partie, héberger le mode IA **exige** un arbitre branché (pas de
-« host sans arbitre » ; à défaut, repli jeu classique). Il s'interpose entre les
-propositions (locales à l'hôte **et** venues des clients par le réseau) et leur
-introduction dans la partie : il **juge la viabilité** (cohérence de règles,
-équilibre, faisabilité, abus) et **accepte / amende / rejette**. C'est la couche
-de jugement *contextuel* au-dessus des garde-fous *mécaniques* du sandbox
-(doc 04) et du contrat de règles (doc 06). Point d'ancrage réseau : le même que
+« host sans arbitre » ; à défaut, repli jeu classique). Il se place **en amont du
+bac à sable** (doc 04) : il s'interpose entre les propositions (locales à l'hôte
+**et** venues des clients par le réseau) et leur traitement, **juge la viabilité**
+(cohérence de règles, équilibre, faisabilité, abus) sur les données **et** la
+source QML, et **accepte / amende / rejette** — *avant* toute instanciation. Le
+sandbox reste la barrière suivante (sécurité dure) pour les artefacts QML acceptés.
+C'est la couche de jugement *contextuel* au-dessus des garde-fous *mécaniques* du
+sandbox (doc 04) et du contrat de règles (doc 06). Point d'ancrage réseau : le même que
 l'autorité d'édition — `EditorSession` host-authoritative (l'hôte valide déjà les
 ops clientes avant rebroadcast ; l'arbitre s'y greffe). **À cadrer (D6)** : sa
 nature (LLM / déterministe / hybride), son grain et le format de son verdict.
@@ -110,23 +121,32 @@ capitalisera les créations et/ou fournira des primitives réutilisables.
 | Réseau/collab | Catway, `EditorSession` host-authoritative | `cpp/communication/`, `cpp/editor/network/` |
 | Point d'arbitrage (D6) | `EditorSession` (l'hôte valide déjà les ops avant rebroadcast) | `cpp/editor/network/` |
 
-## 4. Flux type — « l'IA ajoute un élément avec comportement custom »
+## 4. Flux type — « l'IA crée un élément de gameplay »
 
 1. Le joueur décrit l'intention à son **IA cliente**.
-2. L'IA cliente appelle des commandes de haut niveau sur le **canal WS** (doc 02) :
-   `place*`, puis écrit l'**espace mémoire** de la tuile (doc 05).
-3. Pour un comportement non couvert par une primitive, l'IA envoie un **artefact
-   QML** ; le **sandbox** (doc 04) le valide et l'instancie, rattaché à la tuile.
-4. Toute proposition (celle d'un client comme celle de l'hôte) passe par l'**IA
-   arbitre** de l'hôte (§2.5, **obligatoire**) : jugement de viabilité →
-   accepte / amende / rejette. Un rejet remonte au proposant comme **erreur
-   actionnable** (doc 02 §5) pour qu'il itère.
-5. Les mutations validées passent par `Game.updateMap` → `EditDelta` →
-   `EditorOpBus` : persistées, undoables, **broadcastées aux autres joueurs**
-   (avec la réserve « réplication du QML génératif » à trancher, cf. doc 04
-   §sécurité et doc 08).
-6. L'IA cliente **observe** le résultat (lecture d'état / screenshot via le canal)
-   et itère.
+2. L'IA cliente **génère un fichier QML** — l'élément et/ou son comportement — qui
+   peut embarquer du **script QML/JS**. Ce script est écrit pour **lire et écrire
+   l'espace mémoire** (doc 05) des tuiles : c'est par là qu'il crée le gameplay
+   (variables, état, effets). L'IA émet ce fichier sur le **canal WS** (doc 02),
+   éventuellement avec des commandes de pose (`place*`).
+3. **D'abord l'arbitre.** Toute proposition (client ou hôte) passe par l'**IA
+   arbitre** de l'hôte (§2.5, **obligatoire**, en amont du sandbox) : jugement de
+   viabilité sur les données **et** la source QML/JS → accepte / amende / rejette.
+   Un rejet remonte au proposant comme **erreur actionnable** (doc 02 §5) pour
+   itérer.
+4. **Ensuite le sandbox.** Le fichier QML accepté passe par le **sandbox**
+   (doc 04) qui le valide et l'instancie dans un contexte restreint, rattaché à la
+   tuile ; son script n'accède qu'à la façade autorisée (dont l'espace mémoire).
+   Une proposition sans QML (pose, écriture mémoire directe) saute cette étape.
+5. **Le script fait le gameplay via l'espace mémoire.** À l'exécution, il lit/écrit
+   les variables ; **elles sont streamées host-authoritative comme les états de
+   physique** (`PhysicsSession` : l'hôte applique puis rebroadcaste un snapshot
+   ~30 Hz) → répliquées aux autres joueurs, qui réagissent via `userMemoryChanged`
+   (doc 05). Ce stream est **lossy et non-undoable** ; l'undo d'une session est
+   préservé par un **snapshot de toute la mémoire pris avant chaque ajout d'item
+   QML** (doc 05 §3). La réplication de la *source* QML, elle, reste à trancher
+   (doc 04 §sécurité, doc 08).
+6. L'IA cliente **observe** le résultat (état / screenshot via le canal) et itère.
 
 ## 5. Frontières & responsabilités
 
@@ -134,6 +154,12 @@ capitalisera les créations et/ou fournira des primitives réutilisables.
   Le raisonnement (traduire l'intention → séquence d'actions) est côté IA client.
 - **Le canal ne fait pas de gameplay** : il traduit des commandes vers les
   pipelines existants. Pas de règle métier dans le transport.
+- **Le canal IA n'est pas l'automation.** L'IA cliente n'a **aucun accès** au
+  harnais d'automation (`AutomationServer`, `automation_mcp/`), réservé au
+  test/debug. Le canal ré-expose un **sous-ensemble curé** (certaines features
+  portées + durcies) orienté création de briques de gameplay. Le tableau §3
+  documente une réutilisation **de code** (patrons du serveur d'automation pour
+  bâtir le canal), **pas** un accès de l'IA à l'automation (doc 02 §1, doc 03).
 - **Le sandbox ne fait pas confiance** : tout artefact QML est hostile par défaut.
 - **L'espace mémoire n'a pas de schéma imposé côté cœur** : c'est un blob libre ;
   le sens des clés est une convention IA/règles (doc 05/06), pas du C++.
