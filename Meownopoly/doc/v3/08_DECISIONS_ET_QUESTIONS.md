@@ -56,6 +56,13 @@
 - **Décision.** Reporter le cadrage (doc 07 = stub). Réserver l'emplacement.
 - **Pourquoi.** Le format d'une entrée de bibliothèque dépend de la représentation
   d'un comportement/donnée (docs 04/05).
+- **Précision du contenu (2026-07-12).** Une première brique de contenu est actée
+  au niveau **intention** : une **bibliothèque d'assets 3D**, prévue au
+  développement, pour **élargir le vocabulaire graphique** composable par l'IA
+  (« large éventail de possibilités », doc 00 §2, doc 07 §1). Cela **précise** la
+  lecture « primitives » (son versant graphique) **sans lever** le report : format
+  d'entrée, pipeline d'import 3D, distribution et modèle de confiance restent à
+  cadrer (doc 07 §3).
 
 ### D6 — Deux rôles d'IA : cliente (proposante) + arbitre (MJ) chez l'hôte
 - **Décision (niveau vision).** Le modèle d'acteurs distingue **deux rôles** :

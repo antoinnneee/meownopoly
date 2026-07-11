@@ -35,7 +35,7 @@ cf. doc 00 §4).
 | 04 | [`04_QML_GENERATIF_SANDBOX.md`](./04_QML_GENERATIF_SANDBOX.md) | Modèle d'exécution « QML à la volée » + sandbox de sécurité | draft |
 | 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | Espace mémoire par `snapableElement` + intégration delta | draft |
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Moteur de règles de partie | **stub — à cadrer** |
-| 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives et/ou créations partagées) | **stub — à cadrer** |
+| 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **stub — à cadrer** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
 
 ## Décisions structurantes déjà prises
@@ -50,7 +50,9 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   l'`AutomationServer` existant (`cpp/automation/`, port 7700) : il reste réservé
   au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02).
 - **D3 — Moteur de règles : cadrage différé** (doc 06, stub).
-- **D4 — Bibliothèque : cadrage différé** (doc 07, stub).
+- **D4 — Bibliothèque : cadrage différé** (doc 07, stub). Première intention de
+  contenu actée : une **bibliothèque d'assets 3D** (versant primitives graphiques,
+  doc 07 §1).
 - **D6 — Deux rôles d'IA : cliente (proposante) partout + arbitre (MJ) chez
   l'hôte, obligatoire.** L'hôte fait tourner 2 modèles (proposant + arbitre de
   viabilité), le client 1 (proposant). Comme du code JS entre dans la partie,

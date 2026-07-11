@@ -108,7 +108,9 @@ Les **règles sont gérées par l'arbitre** (D8, §2.5) — pas de moteur sépar
 a **pas de tour imposé** (il s'introduit par prompt ou proposition acceptée). Les
 **détails** (format d'une règle, mémorisation, réplication) sont différés. La
 **bibliothèque** (doc 07, différée) capitalisera les créations et/ou fournira des
-primitives réutilisables.
+primitives réutilisables — dont une **bibliothèque d'assets 3D** (prévue au
+développement) qui **élargit le vocabulaire graphique** composable par l'IA,
+adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 
 ## 3. Réutilisation du socle V2 (points d'ancrage réels)
 

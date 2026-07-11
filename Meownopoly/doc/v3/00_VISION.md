@@ -48,7 +48,12 @@ Quatre idées portent le pivot :
    modules de jeu activables) **et y injecte du code JS** pour le comportement
    nouveau. Elle produit du vrai code chargé en direct (décision **D1**, cf.
    doc 04), mais adossé à un vocabulaire de briques validées plutôt que généré
-   intégralement de zéro (cf. bibliothèque, doc 07).
+   intégralement de zéro (cf. bibliothèque, doc 07). Ce vocabulaire graphique a
+   vocation à s'**élargir massivement** : une **bibliothèque d'assets 3D** est
+   **prévue au développement** pour offrir aux IA un **large éventail de
+   possibilités** de matérialisation — modèles et objets 3D piochables et
+   composables — sans que chaque forme visuelle ait à être générée de zéro
+   (cf. doc 07 §1).
 
 3. **Liberté par joueur, partie co-construite.** L'objectif final est que chaque
    joueur, à travers son IA, puisse **construire une partie selon ses propres
@@ -190,7 +195,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 | Point d'entrée IA | Automation (debug/dev) | **Canal WS dédié** IA-joueur (doc 02) |
 | Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gérées par l'arbitre** (prompt + propositions acceptées), tour optionnel (doc 06, D8) |
 | Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations (doc 07, différé) |
-| Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) |
+| Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** (doc 07) |
 | Réseau P2P / collab | Catway / EditorSession | Inchangé, socle réutilisé |
 
 ## 7. Non-buts (à ce stade du cadrage)

@@ -17,6 +17,13 @@ Deux lectures possibles, non exclusives :
 - **Bibliothèque de créations partagées** : un dépôt d'éléments/comportements
   **produits par les IA/joueurs**, sauvegardables et échangeables entre parties et
   entre joueurs (capitalisation du contenu custom).
+- **Bibliothèque d'assets 3D** (précision 2026-07-12) : catalogue d'**objets et
+  modèles 3D** fournis, piochables et composables par l'IA pour matérialiser des
+  éléments visuels. C'est une **sous-catégorie concrète des primitives** — le
+  versant **graphique** du vocabulaire — dont le but explicite est d'offrir un
+  **large éventail de possibilités** de construction sans générer chaque forme de
+  zéro. **Prévue au développement.** S'appuie sur le rendu 3D existant (World3D /
+  Pattounx v2, doc 01) et, pour la distribution, sur l'`asset_server/` (§2).
 
 > **Le but affiné de la V3 (doc 00 §2) rend ces deux lectures porteuses**, sans
 > pour autant lever le report (D4). (a) « Composer les briques préexistantes
@@ -25,6 +32,8 @@ Deux lectures possibles, non exclusives :
 > construit au fur et à mesure grâce aux utilisateurs » est exactement la
 > **capitalisation des créations partagées**. Le cadrage reste différé, mais ces
 > deux facettes ne sont plus « optionnelles » : elles servent directement le but.
+> La **bibliothèque d'assets 3D** (ci-dessus) en est la **première concrétisation
+> prévue**, côté primitives graphiques.
 
 ## 2. Ancrages avec le reste du cadrage
 
@@ -34,6 +43,10 @@ Deux lectures possibles, non exclusives :
 - **Créations partagées ↔ espace mémoire (doc 05)** : une « création » = un blob
   mémoire (données + réf. comportement) + éventuellement un artefact QML. Le format
   d'échange s'appuie sur la sérialisation existante (`toJSON`, map JSON).
+- **Assets 3D ↔ rendu (World3D / Pattounx v2)** : la bibliothèque d'assets 3D
+  alimente directement le rendu 3D existant (doc 01 §3, `qml/world3d/`). Une
+  entrée « asset 3D » = un modèle importable + ses métadonnées (pose, échelle,
+  point d'ancrage) ; format et pipeline d'import **à instruire** (§3).
 - **Distribution** : le projet a déjà un `asset_server/` (serveur HTTP de
   distribution d'assets, launcher avec queue/retry/checksum). C'est un **candidat
   naturel** de support pour une bibliothèque partagée — à évaluer.
@@ -49,6 +62,10 @@ Deux lectures possibles, non exclusives :
   créations, re-validation systématique ?
 - Réutilisation d'`asset_server/` + launcher, ou nouvelle infra ?
 - Format de packaging d'une « entrée » de bibliothèque.
+- **Assets 3D** : quels **formats** de modèles (glTF / OBJ / …) et quel **pipeline
+  d'import** vers World3D ? Assets « officiels » fournis vs importés par le joueur ?
+  Comment l'IA **référence** un asset dans une proposition (id d'asset dans le
+  QML/les données) ?
 
 ## 4. Prochaine action
 
@@ -56,3 +73,7 @@ Rouvrir après les docs 04 (sandbox) et 05 (espace mémoire) : le format d'une
 entrée de bibliothèque dépend directement de la façon dont un comportement/donnée
 est représenté et validé. Poser alors une décision **D-bibliothèque** dans le
 doc 08.
+
+Cas particulier : le **versant assets 3D** (purement graphique) dépend surtout du
+rendu (World3D) et de la distribution, **moins du sandbox** — il peut être
+**instruit plus tôt**, en parallèle des docs 04/05.
