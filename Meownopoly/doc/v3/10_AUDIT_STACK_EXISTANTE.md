@@ -200,3 +200,430 @@ Les réponses suivantes ne peuvent pas être closes par « stack existante » :
 - **J03** : détection/réparation de divergence.
 
 Elles restent ouvertes ou deviennent des chantiers explicites dans le doc 09.
+
+## 9. Modifications à effectuer sur les stacks existantes
+
+Cette section traduit les décisions D9→D19 en modifications concrètes du socle
+V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
+frontières sont, elles, normatives pour le cadrage.
+
+### M1 — Créer la passerelle WebSocket IA
+
+**Socle repris :** `AutomationServer` pour le bind loopback, le cycle WebSocket,
+le JSON corrélé et le dispatch sur le thread GUI.
+
+**Modifications :**
+
+- créer un serveur distinct, par exemple `AiGatewayServer`, sans réutiliser le
+  catalogue permissif de l'automation ;
+- ajouter un handshake `{protocolVersion, role, token, capabilities}` ;
+- gérer les rôles `proposer` et `arbiter` sur un même WS multiplexé ;
+- générer un token éphémère par lancement, le stocker dans un fichier runtime à
+  permissions utilisateur et le faire tourner à chaque redémarrage ;
+- introduire les namespaces `editor.*`, `state.*`, `artifact.*`, `rules.*` et
+  `runtime.*` ;
+- ajouter quotas par connexion, taille maximale, rate-limit et erreurs structurées
+  `{code, message, details, retryable}` ;
+- conserver `AutomationServer` inchangé et test-only.
+
+**Points d'ancrage :**
+
+- modèle : `cpp/automation/automation_server.{h,cpp}` ;
+- instanciation opt-in : `cpp/main.cpp` ;
+- capacités éditeur : `editorAutomationHooks` dans `qml/editor/Editor.qml`.
+
+**Critères d'acceptation :**
+
+- une connexion non-loopback, sans token ou avec un rôle invalide est rejetée ;
+- un proposant ne peut pas appeler une capacité réservée à l'arbitre ;
+- aucune commande `tree/get/set/invoke/click/keys` de l'automation n'est exposée
+  dans un build de production ;
+- version incompatible et quota dépassé produisent des erreurs actionnables.
+
+### M2 — Ajouter la supervision des processus IA
+
+**Socle repris :** `LauncherManager` pour le cycle d'opérations longues, les
+statuts, les erreurs et l'intégration QML du launcher.
+
+**Modifications :**
+
+- créer un `AiProcessSupervisor` basé sur `QProcess` ;
+- définir des adaptateurs séparés pour `claude -p` et le mode non interactif
+  retenu pour Codex, sans coder leurs arguments en dur dans l'UI ;
+- gérer démarrage, arrêt gracieux, kill, timeout, crash, redémarrage et capture
+  bornée de stdout/stderr ;
+- injecter port/token/rôle par variables d'environnement ou fichier runtime,
+  jamais dans une ligne de commande journalisée ;
+- lancer deux processus ou sessions isolées chez l'hôte ;
+- exposer à QML un état explicite `Stopped/Starting/Ready/Failed/Restarting` ;
+- implémenter un health-check applicatif avant d'autoriser le lancement d'une
+  partie IA.
+
+**Points d'ancrage :**
+
+- intégration launcher : `cpp/launcher/launcher_manager.{h,cpp}` ;
+- UI : `qml/launcher/Launcher.qml`, `LauncherLogic.qml` ;
+- nouveau composant conseillé : `cpp/ai/ai_process_supervisor.*`.
+
+**Critères d'acceptation :**
+
+- la fermeture du jeu ne laisse aucun processus enfant orphelin ;
+- un crash arbitre bloque les nouvelles propositions et déclenche le flow de
+  migration sans corrompre la partie ;
+- secrets et prompts privés ne sont pas écrits dans les logs par défaut.
+
+### M3 — Construire une vraie fiabilité applicative au-dessus de Catway
+
+**Socle repris :** Catway, les endpoints `reliable.io`, le chunking
+`EditorSession` et les métriques réseau.
+
+**Modifications :**
+
+- réserver une plage de messages V3 sans chevauchement avec Game/Editor/Physics ;
+- créer une enveloppe commune `{messageId, sessionId, senderId, kind, seq,
+  correlationId, payloadHash}` ;
+- pour propositions, verdicts et commits : conserver les messages en attente,
+  envoyer un ACK applicatif, retransmettre sur timeout et dédupliquer à réception ;
+- pour l'état supersédable : utiliser séquence monotone, ignorer l'ancien et
+  réparer par snapshot/checkpoint ;
+- ajouter un identifiant de transfert aux chunks, bitmap des chunks reçus,
+  demande des chunks manquants, timeout et checksum final ;
+- plafonner files d'attente et nombre de retries ; exposer un échec définitif au
+  protocole métier ;
+- ne pas modifier le comportement historique des messages V2 avant migration
+  explicite de chaque consommateur.
+
+**Points d'ancrage :**
+
+- transport : `cpp/communication/catway*.{h,cpp}` ;
+- endpoint : `cpp/communication/player_network.*` ;
+- exemple de chunking : `cpp/editor/network/editor_session.cpp` ;
+- limites réelles : `cpp/reliable/README.md`.
+
+**Critères d'acceptation :**
+
+- tests avec perte, duplication, réordonnancement et corruption simulés ;
+- une proposition/transaction n'est appliquée qu'une fois malgré les retries ;
+- la perte d'un chunk est détectée et réparée ;
+- une panne réseau bornée retourne un échec explicite, jamais un succès silencieux.
+
+### M4 — Faire évoluer les transactions groupées vers un commit atomique
+
+**Socle repris :** `Game::beginTransaction/commitTransaction`, `EditDelta`,
+`groupId`, piles undo/redo et `EditorOpBus::flushGroup()`.
+
+**Modifications :**
+
+- séparer `prepare`, `commit` et `rollback` ;
+- prévalider toutes les opérations, permissions, UUID, versions de clés et
+  budgets avant la première mutation ;
+- appliquer sur un état de staging ou conserver des inverses complets tant que le
+  commit n'est pas confirmé ;
+- envoyer le lot comme une unité versionnée et renvoyer un résultat global ;
+- en cas d'échec d'une opération, restaurer l'état local et ne pas broadcaster de
+  commit partiel ;
+- vérifier le write-set au commit pour détecter les modifications concurrentes ;
+- conserver le groupement undo/redo existant comme implémentation de l'inverse,
+  après adaptation aux conflits.
+
+**Points d'ancrage :**
+
+- `cpp/game/game_loader.cpp` ;
+- `cpp/game/map/editdelta.h`, `map.cpp` ;
+- `cpp/editor/ops/editor_op_bus.{h,cpp}`.
+
+**Critères d'acceptation :**
+
+- injection d'une opération invalide au milieu d'un lot : aucune mutation finale ;
+- undo/redo du lot en une action ;
+- aucun pair ne voit un préfixe partiel du lot ;
+- conflit de version retourné sans écrasement silencieux.
+
+### M5 — Introduire un journal d'événements métier unifié
+
+**Socle repris :** signaux `Game`, `EditorOpBus`, `ItemSnapableEvents`, événements
+de `PhysicsSession` et logger existant.
+
+**Modifications :**
+
+- définir un `GameplayEventBus` avec événements typés, ID, auteur, source,
+  timestamp logique, causalité et version ;
+- adapter les signaux existants vers ce bus sans déplacer leur logique métier ;
+- distinguer événements durables/auditables des événements visuels éphémères ;
+- fournir abonnements filtrés à la passerelle IA et aux artefacts ;
+- ajouter file transactionnelle, profondeur maximale, budget de cascade et
+  détection de cycles/write-set ;
+- conserver un noyau d'audit obligatoire et rendre verbosité/rétention configurables.
+
+**Points d'ancrage :**
+
+- `cpp/game/game.*` ;
+- `cpp/editor/ops/editor_op_bus.*` ;
+- `cpp/game/physics/item_snapable_events.*` ;
+- `cpp/tools/logger.*`.
+
+**Critères d'acceptation :**
+
+- ordre causal stable pour les événements d'une transaction ;
+- une boucle événement → écriture → même événement est stoppée par budget/cycle ;
+- un client IA peut reprendre à partir d'un curseur ou demander un snapshot si le
+  journal n'est plus disponible.
+
+### M6 — Créer le bus d'état générique `memory.state`
+
+**Socle repris :** modèle autoritatif de `PhysicsSession`, deltas éditeur et
+`ItemSnapable::toJSON/applyJson`.
+
+**Modifications :**
+
+- ajouter `memory.config` et `memory.state` dans un même conteneur versionné ;
+- exposer API globale et API ciblée par namespace/clé ;
+- porter la mémoire sur tuiles, session et état joueur ;
+- router toute intention cliente vers l'hôte, qui séquence et applique LWW ;
+- publier des deltas par clé avec version, coalescés ;
+- envoyer un snapshot complet périodique ou à la demande pour réparation ;
+- utiliser le mécanisme M3 : intentions fiables applicativement, états
+  supersédables séquencés ;
+- émettre `userMemoryChanged()` et
+  `memoryValueChanged(namespace,key,value,version)` ;
+- imposer limites de profondeur JSON, taille par valeur/entité/session et débit.
+
+**Points d'ancrage :**
+
+- `cpp/game/item_snapable/ItemSnapable.{h,cpp}` ;
+- `cpp/game/physics/physics_session.*` comme modèle, sans y fusionner le nouveau
+  bus ;
+- `cpp/game/map/editdelta.h` pour `memory.config` seulement.
+
+**Critères d'acceptation :**
+
+- `config` est persisté et undoable, `state` n'entre pas dans l'undo de map ;
+- une écriture obsolète est ordonnée/rejetée sans divergence ;
+- perte d'un delta réparée par snapshot ;
+- aucun signal n'est émis si la valeur sérialisée ne change pas.
+
+### M7 — Ajouter une sauvegarde de partie distincte de la map
+
+**Socle repris :** sérialisation JSON, écritures atomiques `.tmp + rename` de
+`MapFileManager` et snapshots de full-sync.
+
+**Modifications :**
+
+- créer un type `GameSave`/`SessionCheckpoint` distinct de `MapTypes` ;
+- référencer la map par ID/version/hash au lieu de la recopier implicitement ;
+- sérialiser règlement versionné, `memory.state`, joueurs, artefacts/hashes,
+  horloges/séquences et état nécessaire à la migration ;
+- ne pas écrire l'état runtime dans `<mapName>_map.json` ;
+- versionner le schéma, prévoir migrations et rejet explicite des versions futures ;
+- chiffrer ou exclure prompts, tokens et secrets fournisseur ;
+- permettre un checkpoint autoritatif avant migration d'hôte.
+
+**Points d'ancrage :**
+
+- `cpp/game/game_loader.cpp` ;
+- `cpp/game/map/mapfilemanager.*` comme modèle d'I/O atomique ;
+- nouveau dossier conseillé : `cpp/game/save/`.
+
+**Critères d'acceptation :**
+
+- sauvegarder/reprendre une partie sans modifier le fichier map source ;
+- reprise avec mêmes versions de règlement, artefacts et état joueur ;
+- sauvegarde interrompue n'endommage pas la dernière version valide.
+
+### M8 — Créer un registre et un store d'artefacts
+
+**Socle repris :** `QUuid` des tuiles, `AssetManager`, manifestes modèles et
+stockage `AppDataLocation`.
+
+**Modifications :**
+
+- conserver un UUID mutable pour l'**instance** attachée à une tuile ;
+- identifier le **contenu** par SHA-256 et version de manifeste ;
+- créer un manifeste avec type, version de schéma, auteur, dépendances, politique
+  d'exécution, capacités requises, signature et budgets ;
+- stocker une seule copie par hash sous `AppDataLocation/artifacts/` ;
+- référencer les artefacts par `{instanceId, contentHash, manifestVersion}` dans
+  la map/sauvegarde ;
+- gérer comptage de références, garbage collection, mise à jour et migration ;
+- si absent : désactiver l'élément avec diagnostic, puis tenter un téléchargement
+  autorisé depuis la bibliothèque.
+
+**Points d'ancrage :**
+
+- identité tuile : `cpp/game/item_snapable/ItemSnapable.*` ;
+- catalogue : `cpp/assetManager/asset_manager.*` ;
+- manifestes : `cpp/launcher/launcher_manager.*`.
+
+**Critères d'acceptation :**
+
+- deux tuiles peuvent partager le même contenu sans dupliquer la source ;
+- une source modifiée produit un nouveau hash sans muter l'ancienne version ;
+- un hash incorrect ou une dépendance manquante empêche l'exécution.
+
+### M9 — Implémenter le sandbox QML/JS et son repli
+
+**Socle repris :** moteur QML actuel uniquement comme environnement d'intégration ;
+aucune garantie de sécurité V2 n'est réutilisable telle quelle.
+
+**Modifications :**
+
+- construire un parseur/validateur d'imports, types et JS interdits ;
+- fournir un module d'API de jeu minimal au lieu des singletons globaux ;
+- instrumenter le JS ou définir un sous-ensemble borné pour budgets et arrêt ;
+- isoler parentage, cycle de vie et quotas d'objets ;
+- mesurer l'accessibilité réelle des singletons enregistrés depuis un contexte
+  enfant ;
+- si l'arrêt préemptif ou l'isolation échoue, basculer automatiquement vers un
+  moteur/processus séparé ou refuser le QML libre ;
+- revalider au chargement avec cache indexé par hash de source + version du
+  validateur ;
+- appliquer la politique d'exécution du manifeste : hôte seulement ou pairs
+  après revalidation.
+
+**Points d'ancrage :**
+
+- enregistrement actuel : `cpp/qmlapp.cpp` et `registerQml()` des singletons ;
+- nouveau dossier conseillé : `cpp/ai/sandbox/` ;
+- façade mémoire/événements : M5/M6.
+
+**Critères d'acceptation bloquants R1 :**
+
+- blocage des imports/singletons/fichier/réseau/process interdits ;
+- arrêt mesuré d'une boucle infinie sans geler le GUI ;
+- respect des plafonds mémoire/objets ;
+- destruction/rechargement sans fuite ;
+- échec fermé : aucun artefact n'est instancié si un contrôle est indécidable.
+
+### M10 — Étendre la migration d'hôte à l'autorité V3
+
+**Socle repris :** roster, `HostLeaving`, élection lexicographique,
+`promoteToHost()`, transfert du host chat et full-sync éditeur.
+
+**Modifications :**
+
+- inclure dans le checkpoint M7 : règlement, version d'arbitre, journal/cursor,
+  `memory.state`, séquences et hashes d'artefacts ;
+- suspendre propositions et commits pendant l'élection ;
+- démarrer/valider le nouvel arbitre avant la reprise ;
+- transférer le checkpoint au nouvel hôte et vérifier son hash ;
+- resynchroniser les pairs depuis la nouvelle autorité ;
+- définir le comportement si aucun pair ne peut lancer d'arbitre.
+
+**Points d'ancrage :**
+
+- `cpp/editor/network/editor_session.*` ;
+- `qml/editor/Editor.qml` ;
+- `qml/main.qml` ;
+- `cpp/chat/chat_client.*`.
+
+**Critères d'acceptation :**
+
+- migration volontaire et sur timeout ;
+- aucune proposition acceptée par deux hôtes concurrents ;
+- reprise avec même règlement, état et versions d'artefacts ;
+- nouvel arbitre non prêt = reprise bloquée avec diagnostic.
+
+### M11 — Étendre la distribution d'assets en bibliothèque signée
+
+**Socle repris :** `asset_server`, `LauncherManager`, SHA-256, queue/retry/reprise,
+manifestes et pipeline GLB.
+
+**Modifications :**
+
+- définir un package commun pour primitives, GLB, métadonnées et artefacts ;
+- signer le manifeste avec une clé éditeur asymétrique ;
+- embarquer les clés publiques de confiance et prévoir rotation/révocation ;
+- vérifier signature **puis** hashes de chaque fichier avant installation ;
+- ajouter dépendances/version/hash aux références `(category,type,id)` et
+  `modelName` ;
+- installer de façon atomique dans un dossier de version, puis commuter le
+  manifeste actif ;
+- interdire l'import utilisateur au premier jalon D18.
+
+**Points d'ancrage :**
+
+- `asset_server/server.js` ;
+- `cpp/launcher/launcher_manager.*` ;
+- `cpp/assetManager/asset_manager.*` ;
+- `qml/world3d/KuraModel.qml`, `SkinnedModel.qml`.
+
+**Critères d'acceptation :**
+
+- package altéré, manifeste non signé ou clé révoquée refusés ;
+- interruption d'installation laisse l'ancienne version utilisable ;
+- GLB chargé avec la version/hash demandés, sans résolution ambiguë.
+
+### M12 — Générer et installer les skills Codex/Claude
+
+**Socle repris :** déclarations de tools de `automation_mcp/` comme patron, pas
+comme source de vérité.
+
+**Modifications :**
+
+- créer un manifeste versionné du canal IA ;
+- générer au build un contrat machine et les variantes de `SKILL.md` nécessaires ;
+- générer exemples, erreurs et limites depuis la même source ;
+- ajouter validation de dérive en CI ;
+- installer dans les emplacements spécifiques à Codex/Claude, détectés par un
+  adaptateur, avec consentement utilisateur ;
+- proposer mise à jour et compatibilité lors du handshake.
+
+**Points d'ancrage :**
+
+- patron : `automation_mcp/` ;
+- nouveau générateur conseillé : `scripts/generate_ai_skill.*` ;
+- packaging : `Meownopoly/CMakeLists.txt` et installeur.
+
+**Critères d'acceptation :**
+
+- toute commande du manifeste apparaît dans le contrat et la skill ;
+- aucune commande hors allow-list n'est documentée ;
+- une modification de schéma non régénérée fait échouer le build/CI.
+
+### M13 — Qualifier officiellement Linux
+
+**Socle repris :** cœur CMake/Qt multiplateforme.
+
+**Modifications :**
+
+- ajouter preset/toolchain Linux Qt 6.11+ et procédure de build reproductible ;
+- créer packaging Linux et déploiement des plugins QML/Quick3D/CanvasPainter ;
+- porter `dual_test_p2p` sans `cmd /c start` ;
+- exécuter tests Pattounx et scénarios automation sur Windows + Linux en CI ;
+- tester lancement/supervision des deux agents, permissions du fichier token,
+  chemins `AppDataLocation`, GLB et sandbox sur les deux OS.
+
+**Points d'ancrage :**
+
+- `CMakeLists.txt` ;
+- presets/scripts de build ;
+- `automation_mcp/` et serveur d'automation pour les tests E2E.
+
+**Critères d'acceptation :**
+
+- build et package propres sur Windows et Linux ;
+- mêmes scénarios réseau/éditeur/sandbox passants ;
+- aucun chemin ou outil Windows requis hors bloc conditionnel.
+
+## 10. Dépendances et ordre recommandé
+
+| Ordre | Chantier | Dépend de | Débloque |
+|---:|---|---|---|
+| 1 | M9 — prototype sandbox R1 | — | D1, exécution d'artefacts |
+| 2 | M3 — fiabilité applicative | Catway existant | propositions, commits, migration |
+| 3 | M4 — transactions atomiques | M3 | application sûre des propositions |
+| 4 | M1 — passerelle WS | automation comme patron | connexion agents |
+| 5 | M2 — supervision agents | M1 | proposant + arbitre opérationnels |
+| 6 | M5 — événements métier | signaux V2 | règles, observation IA |
+| 7 | M6 — bus d'état mémoire | M3, M5 | runtime custom synchronisé |
+| 8 | M8 — store d'artefacts | M9 | persistance/réplication du code |
+| 9 | M7 — sauvegarde runtime | M6, M8 | reprise et checkpoint |
+| 10 | M10 — migration V3 | M2, M3, M7 | continuité après perte d'hôte |
+| 11 | M11 — bibliothèque signée | M8 | distribution officielle |
+| 12 | M12 — skills générées | M1 stabilisé | clients Codex/Claude |
+| transversal | M13 — Linux | chaque chantier | support Windows/Linux réel |
+
+Le premier vertical slice ne doit pas attendre M10/M11/M13 complets, mais il ne
+doit pas contourner M9, M3 et M4 : sandbox, livraison applicative et atomicité
+sont les trois fondations qui empêchent le prototype de figer de mauvaises
+garanties dans le protocole public.

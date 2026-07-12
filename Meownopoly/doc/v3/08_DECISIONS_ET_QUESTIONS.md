@@ -349,6 +349,9 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
 
 ## 4. Séquencement suggéré (non engageant)
 
+Le découpage technique détaillé, les fichiers d'ancrage et critères d'acceptation
+sont définis dans le doc 10, chantiers **M1→M13**.
+
 1. **Prototype sandbox QML** (R1) — dé-risque D1 avant tout le reste.
 2. **Couche réseau V3** : ACK applicatif/retry/déduplication et transaction
    prepare/commit/rollback, avant de lui confier propositions et verdicts.
