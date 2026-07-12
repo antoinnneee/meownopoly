@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Répartition des chantiers Meownopoly V3 par type et ensemble de responsabilités.">
+  <title>V3 — Répartition des chantiers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="topbar"><div class="shell topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🐾</span><span>Meownopoly V3<small>Répartition des chantiers</small></span></a>
+    <nav class="nav" aria-label="Schémas V3"><a href="index.html">Accueil</a><a href="01-interaction-ia-arbitre.html">Interaction IA</a><a href="02-technologies-overview.html">Technologies</a><a href="03-stack-et-evolutions.html">Stack & évolutions</a><a aria-current="page" href="04-repartition-des-chantiers.html">Chantiers</a></nav>
+  </div></header>
+
+  <main id="contenu" class="shell">
+    <section class="hero">
+      <div><p class="eyebrow">Organisation · M1→M13 · questions ouvertes</p><h1>Six ensembles de travail, une seule chaîne de valeur.</h1><p class="lead">Le regroupement par métier évite de traiter les 13 chantiers comme une simple liste. Chaque ensemble porte un résultat démontrable et des interfaces claires avec les autres.</p></div>
+      <aside class="hero-note"><strong>Responsabilité encore ouverte</strong>Le cadrage demande de nommer un responsable Antoine/Valou par famille, avec l’autre en relecture. La matrice ci-dessous prépare cette attribution sans l’inventer.</aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Groupements</p><h2>La carte des travaux</h2></div>
+      <div class="task-board">
+        <article class="card task-group" data-tone="security"><span class="icon">🛡️</span><h3>Sécurité & exécution</h3><p>Faire entrer du code sans faire entrer le risque.</p><ul class="task-list"><li><b>M9</b> banc d’essai + confinement</li><li><b>R1</b> corpus et critères go/no-go</li><li><b>D34</b> imports, façade, budgets</li><li><b>R2</b> politique d’exécution des pairs</li></ul></article>
+        <article class="card task-group" data-tone="foundation"><span class="icon">🏗️</span><h3>Protocoles & autorité</h3><p>Garantir qu’une proposition s’applique une fois, entièrement et au bon endroit.</p><ul class="task-list"><li><b>M3</b> ACK, retry, dédup, chunk repair</li><li><b>M4</b> prepare / commit / rollback</li><li><b>M5</b> journal et événements métier</li><li><b>M10</b> migration d’hôte V3</li></ul></article>
+        <article class="card task-group" data-tone="experience"><span class="icon">💬</span><h3>Expérience IA</h3><p>Rendre l’agent utile depuis le jeu, sans exposer l’automation.</p><ul class="task-list"><li><b>M1</b> passerelle MCP locale</li><li><b>M2</b> supervision Claude / Codex</li><li><b>M12</b> manifeste + skill pré-promptée</li><li><b>UX</b> tchat et état de l’arbitre</li></ul></article>
+        <article class="card task-group" data-tone="runtime"><span class="icon">🎮</span><h3>Gameplay vivant</h3><p>Relier règles, mémoire, physique et comportements.</p><ul class="task-list"><li><b>M6</b> bus <code>memory.state</code></li><li><b>M7</b> sauvegarde de partie</li><li><b>D12</b> formes de règles hiérarchiques</li><li><b>D33</b> ordre déterministe des événements</li></ul></article>
+        <article class="card task-group" data-tone="delivery"><span class="icon">📦</span><h3>Contenu & distribution</h3><p>Versionner et livrer les artefacts et les briques officielles.</p><ul class="task-list"><li><b>M8</b> store par hash + refcount</li><li><b>M11</b> packages bibliothèque</li><li><b>D38</b> manifeste étendu et budgets GLB</li><li><b>M13</b> qualification Windows / Linux</li></ul></article>
+        <article class="card task-group" data-tone="governance"><span class="icon">⚖️</span><h3>Produit & gouvernance</h3><p>Mesurer, décider et garder la chaîne auditable.</p><ul class="task-list"><li><b>E06</b> résumé d’événements</li><li><b>E08</b> manifeste des 10 tools MVP</li><li><b>J02</b> données privées et rétention</li><li><b>J04</b> qualité de l’arbitrage</li><li><b>J08</b> responsables par famille</li></ul></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Découpage de livraison</p><h2>Trois incréments produit</h2></div>
+      <div class="grid grid-3">
+        <article class="card"><span class="badge blue">1 · Solo assisté</span><h3>Dé-risquer la boucle neuve</h3><p>Canal MCP, agents, arbitre, enveloppe, banc, mémoire config et rejet actionnable. Preuve : vertical slice “plaque piégée”.</p></article>
+        <article class="card"><span class="badge orange">2 · Collaboratif</span><h3>Ajouter l’autorité distribuée</h3><p>Propositions distantes, commits fiables, transactions atomiques, journal répliqué, full-sync et migration.</p></article>
+        <article class="card"><span class="badge green">3 · Runtime co-construit</span><h3>Faire vivre les règles</h3><p>Bus <code>state</code>, événements autoritatifs, sauvegarde de partie, capacités joueur/NPC et réplication des effets.</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <div class="section-head"><p class="eyebrow">Contrat de responsabilité</p><h2>Qui décide quoi ?</h2></div>
+        <table class="matrix">
+          <thead><tr><th>Domaine</th><th>Décisionnaire</th><th>Responsabilité</th><th>Ne doit pas faire</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Intention créative</strong></td><td>Joueur + IA cliente</td><td>Proposer opérations, données et comportement</td><td>Appliquer directement au partagé</td></tr>
+            <tr><td><strong>Cohérence de partie</strong></td><td>IA arbitre</td><td>Accepter, amender ou rejeter</td><td>Lever un invariant mécanique</td></tr>
+            <tr><td><strong>Sécurité & budgets</strong></td><td>Jeu + banc</td><td>Valider, mesurer, échouer fermé</td><td>Faire confiance au LLM</td></tr>
+            <tr><td><strong>Ordre & état partagé</strong></td><td>Hôte</td><td>Séquencer, commit, publier, réparer</td><td>Accepter une autorité client locale</td></tr>
+            <tr><td><strong>Architecture</strong></td><td>Développeurs</td><td>Trancher les questions B0/B1 et budgets</td><td>Confondre prototype et garantie</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Questions à fermer</p><h2>Le cadrage restant avant exécution complète</h2></div>
+      <div class="grid grid-2">
+        <article class="card"><span class="badge red">B0</span><h3>Faisabilité D1</h3><p>Le prototype R1 doit prouver le masquage réel des singletons et la stabilité du confinement. Sinon : repli palette + mémoire + DSL.</p></article>
+        <article class="card"><span class="badge orange">B1</span><h3>Contrat public MVP</h3><p>Valider les 10 tools, le curseur d’événements, la politique de données privées et les propriétaires de décisions.</p></article>
+        <article class="card"><span class="badge orange">B1</span><h3>Responsables de famille</h3><p>Attribuer Produit, Sécurité, Réseau, Gameplay/règles et Bibliothèque/assets à Antoine ou Valou, avec relecture croisée.</p></article>
+        <article class="card"><span class="badge violet">B2</span><h3>Mesure de l’arbitrage</h3><p>Suivre latence p50/p95, taux de verdict, rollback post-acceptation et coût en tokens par proposition.</p></article>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="shell footer-inner"><span>Références : docs 08, 09 et 10 · ordre de livraison D23.</span><a href="index.html">← Retour à l’atlas</a></div></footer>
+</body>
+</html>

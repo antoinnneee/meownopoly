@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stack Meownopoly V2 réutilisée et évolutions nécessaires pour V3.">
+  <title>V3 — Stack existante et évolutions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="topbar"><div class="shell topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🐾</span><span>Meownopoly V3<small>Trajectoire de stack</small></span></a>
+    <nav class="nav" aria-label="Schémas V3"><a href="index.html">Accueil</a><a href="01-interaction-ia-arbitre.html">Interaction IA</a><a href="02-technologies-overview.html">Technologies</a><a aria-current="page" href="03-stack-et-evolutions.html">Stack & évolutions</a><a href="04-repartition-des-chantiers.html">Chantiers</a></nav>
+  </div></header>
+
+  <main id="contenu" class="shell">
+    <section class="hero">
+      <div><p class="eyebrow">Audit V2 → cible V3 · M1 à M13</p><h1>Réutiliser le socle, ajouter les garanties manquantes.</h1><p class="lead">La V2 possède déjà l’éditeur, le P2P, la physique et la distribution. La V3 ne les remplace pas : elle ajoute une couche d’autorité, d’isolation, d’observabilité et de contrat public.</p></div>
+      <aside class="hero-note"><strong>Point d’attention</strong><code>reliable.io</code> acquitte et fragmente, mais ne retransmet pas automatiquement. La fiabilité forte doit être construite au niveau applicatif V3.</aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Lecture par état</p><h2>Réutilisé · modifié · nouveau</h2></div>
+      <div class="grid grid-3">
+        <article class="card"><span class="badge green">● Réutilisé</span><h3>Fondations éprouvées</h3><ul><li>Qt/QML/C++ et CMake</li><li>ItemSnapable + sérialisation</li><li>EditorOpBus / EditorSession</li><li>Catway / STUN / P2P</li><li>Pattounx / PhysicsSession / World3D</li><li>AssetManager / asset_server / GLB</li></ul></article>
+        <article class="card"><span class="badge orange">● À étendre</span><h3>Contrats insuffisants</h3><ul><li>Transactions groupées → atomiques</li><li>ACK transport → retry applicatif</li><li>Map save → sauvegarde de partie</li><li>Full-sync → hash + resync</li><li>Launcher → supervision d’agents</li><li>Assets → version/hash/package</li></ul></article>
+        <article class="card"><span class="badge red">● Nouveau</span><h3>Briques propres à V3</h3><ul><li>Passerelle MCP streamable HTTP</li><li>Enveloppe de proposition</li><li>IA arbitre et handshake</li><li>Banc d’essai hors-process</li><li>Confinement QML/JS runtime</li><li>Bus d’événements et d’état générique</li><li>Store d’artefacts par hash</li></ul></article>
+      </div>
+      <div class="legend"><span class="reuse">réutilisation directe</span><span class="change">extension du contrat</span><span class="new">nouvelle responsabilité</span></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Carte de transformation</p><h2>Du composant V2 à la capacité V3</h2></div>
+      <div class="panel">
+        <table class="matrix">
+          <thead><tr><th>Socle actuel</th><th>Ce qu’il apporte</th><th>Modification V3</th><th>Chantier</th></tr></thead>
+          <tbody>
+            <tr><td><strong>AutomationServer</strong></td><td>Loopback, dispatch GUI</td><td>Passerelle MCP distincte, tokens, rôles, tools curés</td><td><span class="badge blue">M1</span></td></tr>
+            <tr><td><strong>LauncherManager</strong></td><td>Opérations longues, statuts</td><td><code>QProcess</code>, adaptateurs Claude/Codex, health-check</td><td><span class="badge blue">M2</span></td></tr>
+            <tr><td><strong>Catway</strong></td><td>P2P, ACK, chunking</td><td>Retry, dédup, checksum final, messages V3</td><td><span class="badge orange">M3</span></td></tr>
+            <tr><td><strong>EditDelta / groupId</strong></td><td>Undo groupé, batch collab</td><td>Prepare, staging, commit, rollback</td><td><span class="badge orange">M4</span></td></tr>
+            <tr><td><strong>Signaux Game/Physics</strong></td><td>Événements locaux</td><td>Journal métier typé, causalité, curseur</td><td><span class="badge red">M5</span></td></tr>
+            <tr><td><strong>ItemSnapable</strong></td><td>Identité et JSON</td><td><code>memory.config/state</code>, signaux réactifs, quotas</td><td><span class="badge orange">M6</span></td></tr>
+            <tr><td><strong>MapFileManager</strong></td><td>I/O atomique de map</td><td>GameSave séparé, checkpoint et migrations</td><td><span class="badge red">M7</span></td></tr>
+            <tr><td><strong>AssetManager</strong></td><td>Catalogues et stockage local</td><td>Store d’artefacts SHA-256, refcount et GC</td><td><span class="badge red">M8</span></td></tr>
+            <tr><td><strong>QQmlEngine</strong></td><td>QML runtime</td><td>Préfiltre, banc, façade et confinement</td><td><span class="badge red">M9</span></td></tr>
+            <tr><td><strong>Host migration</strong></td><td>Élection et full-sync</td><td>Checkpoint règles, artefacts, state et arbitre</td><td><span class="badge orange">M10</span></td></tr>
+            <tr><td><strong>asset_server / GLB</strong></td><td>Distribution, hash, reprise</td><td>Package V3 et, plus tard, signature éditeur</td><td><span class="badge orange">M11</span></td></tr>
+            <tr><td><strong>automation_mcp</strong></td><td>Patron de schémas tools</td><td>Manifeste IA source de vérité + skill générée/injectée</td><td><span class="badge orange">M12</span></td></tr>
+            <tr><td><strong>Cœur multiplateforme</strong></td><td>Qt/CMake portable</td><td>Packaging, CI et qualification Linux</td><td><span class="badge red">M13</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Dépendances</p><h2>Ordre recommandé des modifications</h2><p>Le premier slice peut rester solo, mais il ne doit pas contourner la preuve de sandbox, le contrat transactionnel ni les erreurs actionnables.</p></div>
+      <div class="panel roadmap" aria-label="Roadmap des chantiers M1 à M13">
+        <div class="phase-label">Dé-risquer</div><div class="track"><span class="now">M9</span><span class="now">M3</span><span class="now">M4</span><span>M1</span><span>M2</span><span>M5</span><span>M6</span><span>M8</span><span>M7</span><span>M10</span><span>M11</span><span>M12</span><span>M13</span></div>
+        <div class="phase-label">Connecter</div><div class="track"><span>M9</span><span>M3</span><span>M4</span><span class="next">M1</span><span class="next">M2</span><span class="next">M5</span><span>M6</span><span>M8</span><span>M7</span><span>M10</span><span>M11</span><span class="next">M12</span><span>M13</span></div>
+        <div class="phase-label">Faire vivre</div><div class="track"><span>M9</span><span>M3</span><span>M4</span><span>M1</span><span>M2</span><span>M5</span><span class="later">M6</span><span class="later">M8</span><span class="later">M7</span><span>M10</span><span>M11</span><span>M12</span><span>M13</span></div>
+        <div class="phase-label">Distribuer</div><div class="track"><span>M9</span><span>M3</span><span>M4</span><span>M1</span><span>M2</span><span>M5</span><span>M6</span><span>M8</span><span>M7</span><span class="later">M10</span><span class="later">M11</span><span>M12</span><span class="later">M13</span></div>
+      </div>
+    </section>
+
+    <section class="section"><div class="callout"><strong>Premier objectif tangible :</strong> le vertical slice solo “plaque piégée” prouve S1 création, S2 arbitrage + validation et S3 rejet actionnable. Le collaboratif et le runtime viennent ensuite, dans cet ordre.</div></section>
+  </main>
+  <footer class="footer"><div class="shell footer-inner"><span>Référence principale : audit stack V2, doc 10 · décisions D23, D30, D35.</span><a href="index.html">← Retour à l’atlas</a></div></footer>
+</body>
+</html>
+

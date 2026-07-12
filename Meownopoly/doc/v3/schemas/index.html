@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Atlas visuel du cadrage Meownopoly V3.">
+  <title>Meownopoly V3 — Atlas visuel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">🐾</span><span>Meownopoly V3<small>Atlas d’architecture</small></span></a>
+      <nav class="nav" aria-label="Schémas V3">
+        <a aria-current="page" href="index.html">Accueil</a>
+        <a href="01-interaction-ia-arbitre.html">Interaction IA</a>
+        <a href="02-technologies-overview.html">Technologies</a>
+        <a href="03-stack-et-evolutions.html">Stack & évolutions</a>
+        <a href="04-repartition-des-chantiers.html">Chantiers</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu" class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Cadrage consolidé · 12 juillet 2026</p>
+        <h1>Un jeu qui devient un langage de création.</h1>
+        <p class="lead">V3 transforme Meownopoly en substrat de gameplay co-construit : les joueurs formulent une intention, leurs IA la matérialisent, l’arbitre gouverne et le jeu applique une forme validée.</p>
+      </div>
+      <aside class="hero-note">
+        <strong>La thèse en une ligne</strong>
+        La liberté vient du QML/JS génératif ; la viabilité vient de l’autorité hôte, du banc d’essai hors-process et de l’audit.
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <p class="eyebrow">4 angles complémentaires</p>
+        <h2>Choisir la bonne vue</h2>
+        <p>Chaque page répond à une question différente. Elles partagent le même vocabulaire visuel afin de pouvoir être présentées ensemble.</p>
+      </div>
+      <div class="grid grid-2">
+        <article class="card">
+          <span class="icon">💬</span><span class="badge blue">Flux end-to-end</span>
+          <h3>Interaction IA cliente ↔ jeu ↔ arbitre</h3>
+          <p>Le parcours d’une demande, depuis le tchat ingame jusqu’à l’application autoritative, y compris amendement, rejet et itération.</p>
+          <p><a href="01-interaction-ia-arbitre.html">Ouvrir le déroulement →</a></p>
+        </article>
+        <article class="card">
+          <span class="icon">🧰</span><span class="badge green">Panorama</span>
+          <h3>Technologies et rôle de chaque brique</h3>
+          <p>Qt/QML, C++20, Pattounx, Catway, MCP, agents, SQLite, Node et GLB replacés dans une carte d’ensemble.</p>
+          <p><a href="02-technologies-overview.html">Ouvrir le panorama →</a></p>
+        </article>
+        <article class="card">
+          <span class="icon">🧭</span><span class="badge orange">Écart V2 → V3</span>
+          <h3>Stack existante et évolutions nécessaires</h3>
+          <p>Ce qui est réutilisé, étendu ou créé, avec les dépendances et l’ordre recommandé des chantiers M1→M13.</p>
+          <p><a href="03-stack-et-evolutions.html">Ouvrir la trajectoire →</a></p>
+        </article>
+        <article class="card">
+          <span class="icon">🗂️</span><span class="badge violet">Organisation</span>
+          <h3>Répartition des tâches par ensembles</h3>
+          <p>Les travaux regroupés par nature : sécurité, fondations, expérience IA, runtime, distribution et gouvernance.</p>
+          <p><a href="04-repartition-des-chantiers.html">Ouvrir la répartition →</a></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <div class="section-head">
+          <p class="eyebrow">Boussole produit</p>
+          <h2>Ce qui ne doit pas se mélanger</h2>
+        </div>
+        <div class="grid grid-3">
+          <article class="card"><span class="icon">🎨</span><h3>IA cliente</h3><p>Créative et proposante. Elle traduit l’intention en opérations et artefacts, mais n’applique jamais directement une mutation partagée.</p></article>
+          <article class="card"><span class="icon">⚖️</span><h3>IA arbitre</h3><p>Contextuelle et faillible. Elle gouverne la cohérence et l’équilibre ; elle n’est jamais une barrière de sécurité.</p></article>
+          <article class="card"><span class="icon">🛡️</span><h3>Contrôles mécaniques</h3><p>Déterministes et non négociables : schémas, quotas, sandbox, banc d’essai, autorité hôte et protocoles fiables.</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="shell footer-inner"><span>Sources : documentation V3, décisions D1→D39, audit M1→M13.</span><span>Pages autonomes · impression A4 compatible</span></div></footer>
+</body>
+</html>
+

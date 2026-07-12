@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Déroulement d’une interaction IA cliente, jeu et arbitre dans Meownopoly V3.">
+  <title>V3 — Interaction IA, jeu et arbitre</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="topbar"><div class="shell topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🐾</span><span>Meownopoly V3<small>Flux d’interaction</small></span></a>
+    <nav class="nav" aria-label="Schémas V3"><a href="index.html">Accueil</a><a aria-current="page" href="01-interaction-ia-arbitre.html">Interaction IA</a><a href="02-technologies-overview.html">Technologies</a><a href="03-stack-et-evolutions.html">Stack & évolutions</a><a href="04-repartition-des-chantiers.html">Chantiers</a></nav>
+  </div></header>
+
+  <main id="contenu" class="shell">
+    <section class="hero">
+      <div><p class="eyebrow">Interaction type · D6 · D11 · D26 · D32</p><h1>De l’intention au gameplay, sans court-circuit.</h1><p class="lead">Une demande traverse deux intelligences aux responsabilités distinctes et trois barrières mécaniques avant de modifier la partie.</p></div>
+      <aside class="hero-note"><strong>Exemple fil rouge</strong>« Ajoute une plaque piégée : elle projette le chat et retire 5 points, sauf au propriétaire. »</aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Topologie</p><h2>2 modèles chez l’hôte, 1 chez chaque client</h2></div>
+      <div class="panel lane-diagram" role="img" aria-label="Topologie des rôles IA entre client, hôte et partie partagée">
+        <div class="lane" data-tone="client"><div class="lane-title">👤 Client joueur</div><div class="node">💬 Tchat ingame<small>Intention en langage naturel</small></div><div class="arrow">↓</div><div class="node">🎨 IA cliente<small>Rôle proposer · token local</small></div><div class="arrow">↓ MCP</div><div class="node">🚪 Passerelle locale<small>Tools curés, jamais l’automation</small></div></div>
+        <div class="lane" data-tone="host"><div class="lane-title">🏠 Hôte autoritatif</div><div class="node">🎨 IA cliente hôte<small>Même chemin que les autres</small></div><div class="arrow">↘</div><div class="node">⚖️ IA arbitre / MJ<small>Obligatoire · accepte, amende, rejette</small></div><div class="arrow">↓</div><div class="node">🧪 Banc d’essai<small>Process distinct · verdict mécanique</small></div></div>
+        <div class="lane" data-tone="shared"><div class="lane-title">🌍 Partie partagée</div><div class="node">🧱 Application autoritative<small>Transaction tout-ou-rien côté hôte</small></div><div class="arrow">↓</div><div class="node">📡 Réplication des effets<small>Ops, état, journal et versions</small></div><div class="arrow">↓</div><div class="node">👀 Observation & itération<small>État, événements, screenshot</small></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Parcours nominal</p><h2>Les 9 étapes d’une proposition</h2><p>L’enveloppe de proposition est l’unité auditée qui relie tout le parcours.</p></div>
+      <div class="panel flow">
+        <div class="flow-step"><div class="flow-index">01</div><div class="flow-body"><h3>Le joueur formule son intention</h3><p>Le tchat ingame invoque l’agent ; aucun CLI n’est manipulé directement par le joueur.</p></div></div>
+        <div class="flow-step"><div class="flow-index">02</div><div class="flow-body"><h3>L’application prépare l’IA cliente</h3><p>Spawn supervisé, token <code>proposer</code>, configuration MCP et skill injectée en pré-prompt.</p></div></div>
+        <div class="flow-step"><div class="flow-index">03</div><div class="flow-body"><h3>L’IA observe puis compose</h3><p><code>state_query</code>, screenshot si utile, puis primitives existantes + mémoire + JS embarqué.</p></div></div>
+        <div class="flow-step"><div class="flow-index">04</div><div class="flow-body"><h3>La passerelle construit l’enveloppe</h3><p>Auteur, intention, opérations, artefacts, versions et write-set. Le <code>requestType</code> est recalculé mécaniquement.</p></div></div>
+        <div class="flow-step"><div class="flow-index">05</div><div class="flow-body"><h3>Le préfiltre P0 ferme les portes évidentes</h3><p>Schéma, quotas, source ≤ 20 KB, imports et fonctions interdits. Un échec est immédiatement actionnable.</p></div></div>
+        <div class="flow-step"><div class="flow-index">06</div><div class="flow-body"><h3>L’arbitre juge la viabilité</h3><p>Le code et les règles passent toujours ici. Verdict : <strong>accepter</strong>, <strong>amender</strong> ou <strong>rejeter</strong>. Les raisons ciblent le joueur et l’IA.</p></div></div>
+        <div class="flow-step"><div class="flow-index">07</div><div class="flow-body"><h3>Le banc d’essai valide le comportement</h3><p>Snapshot de carte, moteur QML distinct, phases P1→P5. Boucle infinie ou crash : le process de test meurt, jamais le jeu.</p></div></div>
+        <div class="flow-step"><div class="flow-index">08</div><div class="flow-body"><h3>L’hôte applique atomiquement</h3><p>Staging, validation du write-set, commit autoritatif puis journalisation. Toute l’enveloppe passe ou rien ne passe.</p></div></div>
+        <div class="flow-step"><div class="flow-index">09</div><div class="flow-body"><h3>Les pairs observent un résultat validé</h3><p>Effets répliqués, état mis à jour, verdict injecté au prochain tour. L’IA cliente relit et itère si nécessaire.</p></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Branches de décision</p><h2>Accepter, amender ou rejeter</h2></div>
+      <div class="grid grid-3">
+        <article class="card"><span class="badge green">✓ Acceptée</span><h3>Application directe après le banc</h3><p>La version validée devient autoritative, avec versions résultantes et métriques inscrites au journal.</p></article>
+        <article class="card"><span class="badge orange">✎ Amendée</span><h3>Jamais de passe-droit</h3><p>Si l’arbitre modifie le code, la version amendée repasse obligatoirement au banc. L’original reste dans l’audit.</p></article>
+        <article class="card"><span class="badge red">× Rejetée</span><h3>Une erreur qui permet d’avancer</h3><p>Code stable, message clair, détails et indicateur <code>retryable</code>. L’IA corrige et re-propose.</p></article>
+      </div>
+    </section>
+
+    <section class="section"><div class="callout warning"><strong>Frontière essentielle :</strong> l’arbitre juge la cohérence, l’équilibre et l’abus potentiel. Le sandbox, les quotas, le protocole et l’autorité hôte garantissent la sécurité et l’intégrité. Les deux fonctions ne sont jamais interchangeables.</div></section>
+  </main>
+  <footer class="footer"><div class="shell footer-inner"><span>Références : docs 01, 11, 12 et 13 · décisions D6, D11, D24–D26, D31–D34.</span><a href="index.html">← Retour à l’atlas</a></div></footer>
+</body>
+</html>
+

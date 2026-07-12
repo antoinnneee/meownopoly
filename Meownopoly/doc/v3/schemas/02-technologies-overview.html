@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panorama des technologies de Meownopoly V3.">
+  <title>V3 — Technologies overview</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="topbar"><div class="shell topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🐾</span><span>Meownopoly V3<small>Panorama technologique</small></span></a>
+    <nav class="nav" aria-label="Schémas V3"><a href="index.html">Accueil</a><a href="01-interaction-ia-arbitre.html">Interaction IA</a><a aria-current="page" href="02-technologies-overview.html">Technologies</a><a href="03-stack-et-evolutions.html">Stack & évolutions</a><a href="04-repartition-des-chantiers.html">Chantiers</a></nav>
+  </div></header>
+
+  <main id="contenu" class="shell">
+    <section class="hero">
+      <div><p class="eyebrow">Overview · socle V2 + cible V3</p><h1>Une stack de jeu native, ouverte par un langage vivant.</h1><p class="lead">Le cœur reste C++/Qt et host-authoritative. V3 ajoute une surface MCP, des agents supervisés et un pipeline d’exécution QML/JS gouverné.</p></div>
+      <aside class="hero-note"><strong>Choix structurant</strong>Le QML n’est plus seulement l’interface du jeu : il devient, avec le JS embarqué, un support de gameplay créé au runtime.</aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Carte d’ensemble</p><h2>Les couches qui coopèrent</h2></div>
+      <div class="panel tech-map" role="img" aria-label="Carte des couches technologiques autour du cœur Meownopoly">
+        <div class="tech-column">
+          <div class="card"><span class="icon">🧠</span><h3>Agents externes</h3><p>Claude Code et Codex, invoqués en mode non interactif et supervisés avec <code>QProcess</code>.</p></div>
+          <div class="card"><span class="icon">🔌</span><h3>MCP local</h3><p>JSON-RPC 2.0 sur streamable HTTP loopback, bearer tokens distincts par rôle.</p></div>
+          <div class="card"><span class="icon">🧪</span><h3>Testbench Qt</h3><p>Exécutable headless hors-process pour valider les artefacts sans risquer le GUI.</p></div>
+        </div>
+        <div class="tech-core"><strong>🐈 Meownopoly<br>Qt 6.11 + C++20</strong><span>Application native, QML/Quick/Quick3D, autorité hôte et pipelines d’édition</span></div>
+        <div class="tech-column">
+          <div class="card"><span class="icon">🎛️</span><h3>QML / JavaScript</h3><p>UI, composition de primitives et comportements interprétés à la volée.</p></div>
+          <div class="card"><span class="icon">⚙️</span><h3>Pattounx v2</h3><p>Moteur physique C++ maison, thread dédié, snapshots et présentation World3D.</p></div>
+          <div class="card"><span class="icon">📡</span><h3>Catway + P2P</h3><p>UDP, STUN, hole punching et autorité hôte. V3 ajoute sa fiabilité applicative.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><p class="eyebrow">Fiches technos</p><h2>À quoi sert chaque famille</h2></div>
+      <div class="grid grid-3">
+        <article class="card"><span class="badge blue">Application</span><h3>Qt 6.11 / C++20</h3><p>Le socle multiplateforme : Core, Quick, QML, Network, WebSockets, SQL, Quick3D, Concurrent et CanvasPainter. V3 requiert aussi <strong>QtHttpServer</strong>.</p></article>
+        <article class="card"><span class="badge violet">Expérience</span><h3>QML / Qt Quick / JS</h3><p>L’UI et la scène sont déclaratives. Le caractère interprété permet aux artefacts validés d’ajouter comportement et présentation sans recompilation.</p></article>
+        <article class="card"><span class="badge green">3D & physique</span><h3>Quick3D + Pattounx</h3><p>Quick3D charge les GLB et présente les acteurs ; Pattounx simule collisions, zones et corps dans un thread physique dédié.</p></article>
+        <article class="card"><span class="badge orange">Réseau</span><h3>Catway / UDP / STUN</h3><p>Le P2P traverse les NAT et transporte les domaines Game, Editor et Physics. Les commits V3 ajoutent ACK, retry et déduplication applicatifs.</p></article>
+        <article class="card"><span class="badge blue">IA locale</span><h3>MCP + HTTP + JSON-RPC</h3><p>Une surface de tools curée relie les agents au jeu. Le canal reste strictement loopback et distinct de l’automation de test.</p></article>
+        <article class="card"><span class="badge red">Isolation</span><h3>QProcess + QQmlEngine</h3><p>Le banc démarre un moteur QML séparé et jetable ; l’exécution en jeu utilise un contexte restreint et la façade <code>Meow.GameApi</code>.</p></article>
+        <article class="card"><span class="badge violet">Services</span><h3>Node.js / WebSocket / SQLite</h3><p>Le chat conserve son serveur Node et sa base SQLite, avec relais chiffré de bout en bout. Ce n’est pas le canal IA.</p></article>
+        <article class="card"><span class="badge green">Contenu</span><h3>GLB / AssetManager</h3><p>Les assets officiels utilisent le pipeline existant, enrichi par version, hash, dépendances et manifeste de package V3.</p></article>
+        <article class="card"><span class="badge orange">Build</span><h3>CMake / Ninja</h3><p>Build multi-config, Qt 6.11 et MinGW 13.1 sous Windows. La qualification et le packaging Linux restent un chantier transversal.</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <div class="section-head"><p class="eyebrow">Trois flux de données</p><h2>Donnée, code et réseau ne suivent pas le même chemin</h2></div>
+        <table class="matrix">
+          <thead><tr><th>Nature</th><th>Support</th><th>Garantie</th><th>Exemple</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Configuration durable</strong></td><td><code>memory.config</code>, EditDelta, map JSON</td><td>Persistée, undoable, commit fiable</td><td>Dégâts = 5</td></tr>
+            <tr><td><strong>État vivant</strong></td><td><code>memory.state</code>, bus host-authoritative</td><td>Delta 30 Hz max, séquence + snapshots</td><td>Cooldown restant</td></tr>
+            <tr><td><strong>Comportement</strong></td><td>Artefact QML/JS par hash</td><td>Arbitrage + banc + confinement</td><td>Réagir à une entrée de zone</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="shell footer-inner"><span>Références : docs 01, 02, 04, 05, 07 et audit 10.</span><a href="index.html">← Retour à l’atlas</a></div></footer>
+</body>
+</html>
+
