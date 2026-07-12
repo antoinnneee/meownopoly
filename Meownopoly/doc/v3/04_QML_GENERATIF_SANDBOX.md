@@ -55,8 +55,9 @@ canal (doc 02) et la scène.
    distinct**. Elle **réinstancie la carte depuis un snapshot** et y instancie
    l'artefact candidat pour détecter avant introduction : non-chargement,
    **boucle infinie** (→ le process de test est tué, le jeu ne gèle jamais),
-   crash, dépassement de budget. À spécifier : format du snapshot injecté,
-   critères de verdict, coût de spawn d'un process Qt headless (pool ?).
+   crash, dépassement de budget. **Spécifié dans
+   [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md)** (job/verdict JSON, phases
+   P0→P5, corpus de test, pool, cache de verdicts, critères de sortie R1).
 2. **Exécution en partie = confinement in-process (D13, conditionnel R1
    recentré).** Le code **déjà validé** tourne dans le moteur du jeu avec
    contexte restreint, façade API et budgets runtime. La machine locale est
@@ -66,9 +67,13 @@ canal (doc 02) et la scène.
    (doc 10).
 
 ### 3.1 Validation avant instanciation
-- **Allow-list d'imports** : seuls des modules explicitement autorisés
-  (`QtQuick` de base, un module « API de jeu » restreint — cf. §3.3). Rejet de
-  tout import hors liste.
+- **Allow-list d'imports** (arrêtée par **D34**) : `QtQuick`, `QtQuick.Shapes`,
+  `QtQuick.Layouts`, `QtQuick.Controls`, les **modules QML custom existants du
+  jeu énumérés dans le manifeste** (pour surcharger p. ex. des
+  `SnapableElement` — jamais les modules réseau/chat/éditeur réseau), et
+  `Meow.GameApi` (la façade §3.3). Rejet de tout import hors liste
+  (`QtQuick.Dialogs`, `Qt.labs.*`, `QtMultimedia`, `QtQuick.LocalStorage`,
+  `QtWebEngine`/`QtWebSockets`…).
 - **Interdits statiques** : pas d'accès fichier/réseau/process (`XMLHttpRequest`,
   `Qt.openUrlExternally`, composants `FileDialog`, `Process`…), pas de
   `Qt.createQmlObject` imbriqué non contrôlé, pas d'`import "…js"` arbitraire.
@@ -92,7 +97,10 @@ d'utiliser : **lire et écrire les variables de l'espace mémoire** de sa tuile 
 canal de communication normal entre le JS embarqué et l'état synchronisé —,
 demander une animation, émettre un événement de jeu, réagir à un trigger physique.
 Cette façade est l'équivalent, pour le QML génératif, de l'allow-list de commandes
-du canal.
+du canal. **Liste MVP arrêtée par D34** : `memory.get/set/onChanged`,
+`session.get`, `events.on/emit`, `player.position()`, `zone.playersInside()`,
+`stats.addModifier`, `dialogue.show`, `anim.play`, `fx.spawn`, `sound.play` —
+budgets associés dans D34 et doc 12 §9.
 
 ### 3.4 Budget de ressources
 - Timeouts/quotas CPU, plafond mémoire, limite du nombre d'objets instanciés,
@@ -165,7 +173,8 @@ usages.
 
 ## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
-- Périmètre exact de l'**API de jeu** exposée à l'artefact (la façade §3.3).
+- ~~Périmètre exact de l'API de jeu (façade §3.3)~~ **tranché D34** (liste MVP
+  + budgets).
 - Faisabilité réelle du **sandboxing QML/JS dans Qt** : jusqu'où peut-on
   verrouiller le `QQmlContext` et les imports ? (à prototyper — c'est le risque
   technique n°1 du pivot).

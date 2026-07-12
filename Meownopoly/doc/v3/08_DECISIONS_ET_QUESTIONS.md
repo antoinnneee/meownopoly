@@ -444,11 +444,71 @@
   migration d'hôte/arbitre, chargement de sauvegarde avec artefacts,
   bibliothèque GLB.
 
+### D31 — UX du prérequis arbitre (ferme Q-B04)
+- **Décision (2026-07-12).** Proposition validée telle quelle :
+  - indicateur d'état à 4 valeurs dans le lobby IA : `Absent` → `Test en
+    cours` → `Prêt` → `Erreur` (avec raison actionnable) ;
+  - « Héberger une partie IA » **grisé tant que l'état ≠ Prêt**, motif affiché
+    à côté (pas de dialogue bloquant) ;
+  - bouton « Tester l'arbitre » (relance manuelle) + test automatique à
+    l'ouverture du lobby ;
+  - en cours de partie, arbitre mort ⇒ bandeau persistant « Arbitre
+    indisponible — propositions suspendues », propositions **mises en file**,
+    pas perdues.
+
+### D32 — Sélection des formes exécutables ; l'amendement repasse par le banc (ferme Q-C06)
+- **Décision (2026-07-12).** Proposition validée : **sélection mécanique
+  d'abord** (le validateur matérialise dans la forme la moins libre qui couvre
+  le besoin : pas de code → config de modules ; séquentiel simple → DSL ;
+  sinon QML/JS), l'**arbitre confirme ou rétrograde** (jamais vers plus
+  libre). Validation par niveau : schéma / interpréteur DSL borné / banc
+  d'essai D26 + budgets D13.
+- **Amendement (précision utilisateur).** L'arbitre peut aussi **modifier
+  l'élément** (amendement, déjà permis par D11) — dans ce cas l'élément
+  amendé **repasse par la sandbox de validation (banc d'essai D26)** avant
+  application. Aucun code ne contourne le banc, pas même celui touché par
+  l'arbitre.
+
+### D33 — Événements : autorité par source, ordre déterministe (ferme Q-C08)
+- **Décision (2026-07-12).** **Autorité par source** : physique (collisions,
+  zones) = hôte (Pattounx host-authoritative) ; mémoire `state` = hôte (bus
+  D15) ; `config` = pipeline d'édition ; actions joueur = émises client,
+  **validées/ordonnées par l'hôte** ; tick = hôte. Règle : **aucun événement
+  n'est autoritatif tant qu'il n'est pas passé par l'hôte** — un client ne
+  déclenche jamais une règle localement.
+- **Ordre.** File transactionnelle (D12), ordre par pas de simulation :
+  physique → mémoire → actions joueur → tick, puis séquence d'arrivée hôte.
+  Champ `priority` par règle possible plus tard, pas au MVP.
+
+### D34 — Contenu du sandbox au MVP : allow-list, façade, budgets (ferme Q-D04/D05/D06)
+- **Décision (2026-07-12).** Les trois propositions du doc 09 sont validées,
+  avec un **élargissement de l'allow-list** demandé par l'utilisateur.
+- **Imports autorisés** : `QtQuick`, `QtQuick.Shapes`, `QtQuick.Layouts`,
+  **`QtQuick.Controls`** (ajout), **les modules QML custom déjà existants du
+  jeu** (ajout) — pour permettre p. ex. de **surcharger des
+  `SnapableElement`** — et `Meow.GameApi` (façade). Interdits inchangés :
+  `QtQuick.Dialogs`, `Qt.labs.*`, `QtMultimedia`, `QtQuick.LocalStorage`,
+  `QtWebEngine`/`QtWebSockets`.
+- **Garde-fou sur les modules custom.** « Modules custom » ≠ wildcard : la
+  liste des modules internes exposables est **énumérée dans le manifeste du
+  canal** (les composants qui touchent réseau/fichiers/singletons — ex.
+  modules Catway, chat, éditeur réseau — n'y entrent pas). Un composant
+  custom importé reste soumis au masquage de contexte : ses accès aux données
+  passent par la façade.
+- **Façade `Meow.GameApi`** (validée) : `memory.get/set/onChanged`,
+  `session.get`, `events.on/emit`, `player.position()`,
+  `zone.playersInside()`, `stats.addModifier`, `dialogue.show`, `anim.play`,
+  `fx.spawn`, `sound.play`. Pas au MVP : téléportation, spawn/destroy de
+  tuiles, accès réseau, écriture sur d'autres tuiles.
+- **Budgets** (validés, chacun derrière un `#define`) : source ≤ 20 KB ;
+  CPU ≤ 2 ms/événement, ≤ 0,5 ms/tick ; mémoire ≤ 8 Mo ; ≤ 200 objets ;
+  ≤ 30 émissions/s ; `Timer` ≥ 100 ms ; chargement au banc ≤ 5 s.
+
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
 remplissable des **questions encore ouvertes** (épuré le 2026-07-12, arbitrages
-reportés en D9→D30) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
+reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
 
 ### Sécurité (bloquant pour D1)
 - Jusqu'où peut-on **verrouiller** un `QQmlContext` et l'allow-list d'imports dans

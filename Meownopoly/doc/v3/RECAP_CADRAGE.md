@@ -32,8 +32,9 @@ chez l'hôte, 1 chez le client).
 | 09 Questionnaire de cadrage | Questions ouvertes, chacune avec proposition | détaillé 2026-07-12 |
 | 10 Audit stack existante | Audit V2 + chantiers M1→M13 | vérifié 2026-07-12 |
 | 11 Vertical slice | Slice solo S1/S2/S3, fil rouge, critères | défini 2026-07-12 |
+| 12 Banc d'essai R1 | Spec du banc hors-process (D26) : phases, corpus, sortie R1 | spécifié 2026-07-12 |
 
-## 3. Décisions prises (D1→D30)
+## 3. Décisions prises (D1→D34)
 
 ### Fondations
 - **D1 — QML génératif complet.** L'IA produit du vrai QML chargé au runtime.
@@ -77,12 +78,20 @@ chez l'hôte, 1 chez le client).
   immédiatement**, avec journal de l'original et des raisons.
 - **D19 — Journal configurable** avec noyau d'audit obligatoire (proposition,
   auteur, verdict, raisons, amendement, version) tant que l'action est rejouable.
-- **D24 — Arbitre prouvé avant lancement** : handshake de rôle sur le canal +
-  challenge de capacité, exécutés par l'app avant d'ouvrir le mode IA.
-  UX du prérequis (états lobby, blocage) : proposition au doc 09.
+- **D24/D31 — Arbitre prouvé avant lancement, UX validée** : handshake de rôle
+  + challenge de capacité avant d'ouvrir le mode IA ; lobby à 4 états
+  (`Absent`/`Test en cours`/`Prêt`/`Erreur`), bouton d'hébergement grisé hors
+  `Prêt`, re-test manuel/auto, bandeau + file de propositions si l'arbitre
+  meurt en partie.
 - **D25 — Grain d'arbitrage configurable par UI** : les joueurs choisissent
   quels types de requêtes passent par l'arbitre. Plancher proposé non
   désactivable sur le code/les règles ; défaut hybride (atténue R8).
+- **D32 — Formes exécutables : sélection mécanique, arbitre confirme ou
+  rétrograde ; un élément amendé par l'arbitre repasse par le banc D26** —
+  aucun code ne contourne la validation, pas même celui de l'arbitre.
+- **D33 — Événements en autorité par source** : tout événement passe par
+  l'hôte avant de déclencher une règle ; ordre déterministe physique →
+  mémoire → actions joueur → tick (file D12).
 
 ### Règles & exécution
 - **D3 — Détails du moteur de règles différés** (autorité tranchée par D8).
@@ -93,9 +102,17 @@ chez l'hôte, 1 chez le client).
 - **D13/D26 — Sandbox à deux étages.** **Validation = banc d'essai
   hors-process** (D26) : moteur/process distincts, la carte est réinstanciée
   depuis un snapshot pour tester l'artefact candidat (non-chargement, boucle
-  infinie → process tué, le jeu ne gèle jamais). **Exécution en partie =
-  confinement in-process** (D13, conditionnel R1 recentré) : contexte
-  restreint, façade API, budgets runtime pour le code déjà validé.
+  infinie → process tué, le jeu ne gèle jamais). **Spécifié dans le doc 12**
+  (job/verdict JSON, phases P0→P5, corpus de test, pool, cache de verdicts,
+  critères de sortie R1). **Exécution en partie = confinement in-process**
+  (D13, conditionnel R1 recentré) : contexte restreint, façade API, budgets
+  runtime pour le code déjà validé.
+- **D34 — Contenu du sandbox arrêté** : allow-list d'imports (élargie à
+  `QtQuick.Controls` + modules QML custom existants énumérés dans le
+  manifeste, ex. `SnapableElement` surchargés), façade `Meow.GameApi`
+  (mémoire, événements, gameplay, présentation) et budgets chiffrés
+  (20 KB source, 2 ms/handler, 0,5 ms/tick, 8 Mo, 200 objets…), chacun
+  derrière un `#define`.
 
 ### Canal, mémoire, artefacts
 - **D14 — Un seul canal multiplexé et versionné** (rôles + namespaces),
@@ -144,18 +161,17 @@ chez l'hôte, 1 chez le client).
 Les principales :
 
 - **Confinement runtime (D13, recentré par D26)** : verrouillage réel d'un
-  `QQmlContext`, allow-list d'imports (proposition Q-D04), façade `Meow.GameApi`
-  (Q-D05), budgets (Q-D06) → **prototype R1 requis** (la préemption des boucles
-  est, elle, couverte par le banc d'essai D26).
+  `QQmlContext` et masquage des singletons → **prototype R1 requis** — le
+  contenu (allow-list, façade, budgets) est arrêté par **D34**, le protocole
+  de mesure par le **doc 12** (corpus + critères de sortie) ; la préemption
+  des boucles est couverte par le banc d'essai D26.
 - **Canal** : manifeste des 10 tools MVP proposé (Q-E08), schéma du résumé
   d'événements + curseur proposé (Q-E06) ; garanties applicatives P2P
   au-dessus de `reliable.io` (Q-F06, modèle hybride à confirmer).
 - **Mémoire/réseau** : delta 30 Hz + snapshot de réparation proposés (Q-F05),
   plafonds du bus (Q-F07), sérialisation string-manuelle de
-  `ItemSnapable::toJSON` à assainir.
-- **Arbitre** : UX du prérequis dans le lobby (Q-B04, états proposés),
-  sélection/validation des formes exécutables (Q-C06), autorité/ordre des
-  événements déclencheurs (Q-C08).
+  `ItemSnapable::toJSON` à assainir (bloquant pour le snapshot du banc,
+  doc 12 §10).
 - **Artefacts/migration** : cycle de vie multi-tuiles par refcount (Q-G06),
   checkpoint de migration en 4 volets (Q-G07).
 - **Bibliothèque** : champs du manifeste étendu (Q-I04), modèle de confiance
@@ -163,8 +179,8 @@ Les principales :
   (Q-I09).
 - **Sortie de cadrage** : données privées (Q-J02), détection de divergence
   (Q-J03, reco hash + resync), indicateurs d'arbitrage (Q-J04), critères de
-  repli D1 (Q-J06), prochain doc = spec du banc d'essai R1/D26 (Q-J07),
-  responsables par famille (Q-J08).
+  repli D1 (Q-J06), prochain doc = **schéma de l'enveloppe de proposition**
+  (Q-J07 — spec R1 ✓ doc 12, slice ✓ doc 11), responsables par famille (Q-J08).
 
 ## 5. Risques majeurs (top)
 

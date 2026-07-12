@@ -65,9 +65,9 @@ il est sauvegardé/rechargé avec la map (re-validation au chargement, doc 04
    par l'app avec le contexte de la proposition.
 3. Verdict de l'arbitre (via `arbiter_verdict`) : accepté (éventuellement
    amendé, journalisé D19).
-4. **Banc d'essai hors-process** (D26) : la carte est réinstanciée depuis un
-   snapshot dans un process de test, l'artefact instancié, budgets vérifiés
-   (chargement, boucle, CPU/mémoire — Q-D06).
+4. **Banc d'essai hors-process** (D26, spécifié doc 12) : la carte est
+   réinstanciée depuis un snapshot dans un process de test, l'artefact
+   instancié, budgets vérifiés (chargement, boucle, CPU/mémoire — D34).
 5. Application dans la partie ; le journal contient proposition, verdict,
    raisons, version.
 
@@ -100,8 +100,8 @@ le joueur voit dans le tchat une explication compréhensible du refus.
 | Skill générée du manifeste, injectée en pré-prompt | M-skill | D17 |
 | Handshake + challenge arbitre | M-adaptateur | D24 |
 | Enveloppe de proposition + journal noyau d'audit | M-proposition | D11/D19 |
-| Banc d'essai hors-process (snapshot → test → verdict) | M-sandbox | D26 |
-| Confinement runtime minimal (contexte restreint + façade `Meow.GameApi` réduite aux besoins du fil rouge) | M-sandbox | D13, Q-D04/D05 |
+| Banc d'essai hors-process (snapshot → test → verdict) | M-sandbox | D26, spec doc 12 |
+| Confinement runtime minimal (contexte restreint + façade `Meow.GameApi` réduite aux besoins du fil rouge) | M-sandbox | D13, D34 |
 | Mémoire `config` sur tuile (persistance + undo structurel) | M-mémoire | D7/D15 |
 
 **Non requis par le slice** (différés sans risque) : bus d'état runtime

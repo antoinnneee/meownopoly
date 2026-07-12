@@ -38,9 +38,10 @@ cf. doc 00 §4).
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes**, chacune avec une proposition prête à valider (arbitrages D9→D30 reportés au doc 08) | **détaillé 2026-07-12** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes**, chacune avec une proposition prête à valider (arbitrages D9→D34 reportés au doc 08) | **détaillé 2026-07-12** |
 | 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Audit V2 + plan M1→M13 des modifications de stack | **vérifié 2026-07-12** |
 | 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | Vertical slice solo S1/S2/S3 (D30) : fil rouge, briques traversées, critères | **défini 2026-07-12** |
+| 12 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | Spec du banc d'essai hors-process (D26/R1) : job/verdict, phases P0→P5, corpus, critères de sortie | **spécifié 2026-07-12** |
 
 ## Décisions structurantes déjà prises
 
@@ -82,7 +83,7 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
   capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
-- **D9→D30 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
+- **D9→D34 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
   trois modes V3 **livrés solo → collab → runtime** (D23), agents Codex/Claude
   supervisés **invoqués in-app via tchat ingame**, arbitre prouvé par
   **handshake + challenge** (D24) avec grain d'arbitrage **configurable par UI**
@@ -94,7 +95,12 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   qui restaure malgré tout** (D28), artefacts sous autorité hôte, skill générée
   au build **injectée en pré-prompt**, bibliothèque locale officielle GLB au
   **format asset manager étendu** (D29), et **vertical slice solo défini**
-  (D30, doc 11). Détail et réserves techniques dans les docs 08→11.
+  (D30, doc 11). Suites du 2026-07-12 : **UX du prérequis arbitre validée**
+  (D31), **un amendement d'arbitre repasse par le banc** (D32), **événements
+  en autorité par source** (D33), **allow-list/façade/budgets du sandbox
+  arrêtés** (D34, allow-list élargie à `QtQuick.Controls` + modules custom
+  énumérés), **banc d'essai spécifié** (doc 12). Détail et réserves techniques
+  dans les docs 08→12.
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 

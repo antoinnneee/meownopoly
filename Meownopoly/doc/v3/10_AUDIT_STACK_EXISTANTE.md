@@ -203,7 +203,7 @@ Elles restent ouvertes ou deviennent des chantiers explicites dans le doc 09.
 
 ## 9. Modifications à effectuer sur les stacks existantes
 
-Cette section traduit les décisions D9→D30 en modifications concrètes du socle
+Cette section traduit les décisions D9→D34 en modifications concrètes du socle
 V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
 frontières sont, elles, normatives pour le cadrage.
 
