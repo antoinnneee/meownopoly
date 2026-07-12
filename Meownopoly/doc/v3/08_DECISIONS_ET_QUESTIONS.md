@@ -64,6 +64,10 @@
   d'entrée, pipeline d'import 3D, distribution et modèle de confiance restent à
   cadrer (doc 07 §3).
 
+### D5 — Dossier de cadrage
+- **Décision.** Regrouper le cadrage V3 dans `Meownopoly/doc/v3/`, docs numérotés,
+  en français, avec bandeaux de statut. Commit/push sur la branche **V3**.
+
 ### D6 — Deux rôles d'IA : cliente (proposante) + arbitre (MJ) chez l'hôte
 - **Décision (niveau vision).** Le modèle d'acteurs distingue **deux rôles** :
   une **IA cliente** proposante présente chez chaque joueur (hôte compris), et une
@@ -137,9 +141,115 @@
   contraire à la liberté du pivot) ; règles hardcodées type « système de tour V2 »
   (**inexistant** de toute façon, cf. §Capacités).
 
-### D5 — Dossier de cadrage
-- **Décision.** Regrouper le cadrage V3 dans `Meownopoly/doc/v3/`, docs numérotés,
-  en français, avec bandeaux de statut. Commit/push sur la branche **V3**.
+### D9 — Périmètre produit V3 et extinction du mode classique
+- **Décision.** La cible V3 couvre les trois contextes : éditeur solo assisté,
+  éditeur collaboratif et partie runtime co-construite. Tous exigent les deux
+  rôles IA, y compris le solo. Une création validée entre automatiquement dans
+  la partie, sans revue humaine obligatoire, et peut modifier une partie déjà
+  commencée. Le mode classique est conservé pendant la transition mais n'est pas
+  une cible maintenue à terme.
+- **Plateformes.** Windows et Linux sont visés. L'audit confirme un cœur largement
+  portable mais aucun packaging/CI/test Linux actuel (doc 10).
+- **Encore ouvert.** Les trois modes ont été cochés comme « premier mode » : leur
+  ordre réel de livraison reste à décider.
+
+### D10 — Agents externes isolés et supervisés par l'application
+- **Décision.** Les rôles proposant/arbitre utilisent des processus ou contextes
+  réellement isolés ; un même fournisseur reste permis si les sessions sont
+  séparées. Les premières cibles sont `claude -p` et un mode non interactif
+  équivalent de Codex. Le launcher/jeu démarre et supervise ces agents via un
+  adaptateur. L'hôte configure un budget et les joueurs configurent ensemble le
+  prompt/personnalité initiale de l'arbitre. L'arbitre décide quelles règles il
+  affiche et cette visibilité peut évoluer en cours de partie.
+- **Migration.** Un changement d'arbitre avec transfert d'état/version est requis.
+- **Gap V2.** `LauncherManager` ne lance actuellement aucun processus ; la
+  supervision et le transfert de contexte sont de nouveaux chantiers (doc 10).
+
+### D11 — Proposition auditable, amendement immédiat et application automatique
+- **Décision.** Une proposition porte auteur, intention, opérations, artefacts,
+  write-set et version. Le flux est préfiltre mécanique → arbitre → validation
+  complète → exécution. L'arbitre peut amender et appliquer immédiatement ; le
+  journal conserve proposition originale, raisons, verdict et version appliquée.
+- **Conséquence.** L'amendement ne repasse pas obligatoirement par le proposant,
+  mais ne peut être silencieux dans l'audit. L'application partagée reste
+  autoritative côté hôte.
+- **Encore ouvert.** L'unité déclenchant un appel arbitre (commande, proposition
+  complète, code seulement ou politique hybride) doit être choisie dans Q-C01.
+
+### D12 — Représentation hiérarchique des règles
+- **Décision d'orientation.** Une règle acceptée peut se matérialiser par plan de
+  capacités, configuration de modules, DSL/machine à états ou QML/JS sandboxé ;
+  la sélection est hiérarchique selon le besoin. Le règlement autoritatif vit
+  dans un document structuré versionné. Les modules existants sont des primitives
+  privilégiées sous une couche de règles.
+- **Tour par tour.** S'il est demandé, il est généré comme artefact et/ou
+  orchestré par l'arbitre ; aucune primitive native de tour n'est exigée.
+- **Protection.** Profondeur maximale, file transactionnelle et détection de
+  cycles/write-set sont toutes requises.
+
+### D13 — Cible de sandbox in-process, conditionnée par R1
+- **Intention validée.** Le chemin préféré est le même moteur QML avec contexte
+  restreint et JS borné/instrumenté, sans accès disque/réseau/process et avec
+  limites préemptives. Aucune revue humaine n'est requise ; la machine locale est
+  considérée de confiance et les pairs réseau hostiles.
+- **Condition bloquante.** La stack actuelle n'offre aucune de ces garanties et
+  expose de nombreux singletons au moteur QML. D13 reste **conditionnelle** à la
+  réussite de R1, notamment l'arrêt réel d'une boucle infinie. En cas d'échec,
+  l'isolation en processus séparé redevient nécessaire.
+- **Signature.** Les artefacts officiels pourront faire confiance à une signature,
+  mais la stack ne possède aujourd'hui qu'un checksum SHA-256 non signé (doc 10).
+
+### D14 — Un canal WS multiplexé et versionné
+- **Décision.** Un seul WebSocket local multiplexe rôles et namespaces, avec une
+  version globale du protocole. Les événements passent par un adaptateur unifié
+  alimenté par les signaux internes et un nouveau journal métier. Les lots visent
+  une sémantique tout-ou-rien. `automation.raw` n'existe qu'en build de dev et
+  reste absent du manifeste livré.
+- **Gaps.** Authentification, découverte du secret et garanties de livraison ne
+  sont pas couvertes par la stack. Les transactions V2 sont groupées, pas
+  rollback-atomiques ; `reliable.io` n'assure pas la retransmission (doc 10).
+
+### D15 — Modèle mémoire V3
+- **Décision.** Un même objet `memory` contient deux namespaces `config` et
+  `state`. La mémoire existe sur tuiles, session et joueurs. Le transport cible
+  est un bus d'état générique partagé, avec séquencement hôte/LWW, write-set par
+  tuile + clé + ressource/capacité, et signaux global et ciblé.
+- **Gaps.** Ce bus n'existe pas en V2. Format de sauvegarde runtime, stratégie
+  delta/snapshot, garanties de transport et conflit d'undo restent ouverts.
+
+### D16 — Artefacts : autorité hôte et politique d'exécution déclarée
+- **Décision.** La source voyage de l'auteur vers l'hôte arbitre, sans broadcast
+  systématique. L'hôte est autoritatif ; selon une propriété de l'artefact, le
+  comportement s'exécute chez l'hôte seulement ou chez chaque pair après
+  revalidation. Les sources/références vivent dans la map **et** dans un store
+  séparé. Un artefact manquant désactive l'élément avec diagnostic et peut être
+  téléchargé automatiquement.
+- **Correction stack.** Le `QUuid` existant reste l'identité d'instance. Une
+  identité d'artefact immuable exige en plus hash de contenu + version de
+  manifeste ; aucun store par hash n'existe encore (doc 10).
+
+### D17 — Skill Codex + Claude générée au build
+- **Décision.** Codex et Claude Code sont les deux premières cibles. Le manifeste
+  versionné du canal reste la source de vérité ; la skill est générée au build.
+  Une version obsolète utilise si possible un mode compatibilité et propose une
+  mise à jour automatique. Seul le catalogue curé est porté depuis les hooks/MCP.
+- **Encore ouvert.** Forme du client WS/CLI et emplacements d'installation.
+
+### D18 — Bibliothèque locale officielle unifiée
+- **Décision.** Le premier jalon est une bibliothèque locale officielle unifiée,
+  alimentée uniquement par les développeurs. `asset_server/` et le launcher sont
+  réutilisés après audit ; GLB est le premier format 3D.
+- **Validation stack.** Distribution, retry, checksum, manifestes et chargement
+  GLB existent. Signature d'éditeur, adressage par hash et package V3 restent à
+  créer. Les références existantes `(category,type,id)`/`modelName` seront
+  étendues avec version/hash (doc 10).
+
+### D19 — Journal configurable avec noyau d'audit obligatoire
+- **Décision.** Le niveau de verbosité, la durée et l'export du journal sont
+  configurables. Le noyau exigé par D11 — proposition originale, auteur, verdict,
+  raisons, amendement et version appliquée — ne peut pas être désactivé tant que
+  l'action reste undoable/rejouable. Sa rétention et sa politique de confidentialité
+  restent à définir.
 
 ## 2. Questions ouvertes (par thème)
 
@@ -159,15 +269,16 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
   de session ? Reco : **token**, car le canal exécute à terme du QML.
 
 ### Canal WS (doc 02)
-- Un canal multiplexé vs plusieurs canaux (éditeur / runtime / règles) ?
+- ~~Un canal multiplexé vs plusieurs ?~~ **Tranché D14 : un WS multiplexé.**
 - Comment distinguer et authentifier les deux clients locaux de l'hôte
   (proposant vs arbitre), avec quelles capacités pour chacun ?
-- Sur quel bus interne brancher les **événements poussés** (signaux `Game`,
-  `EditorOpBus.remoteOpReceived`, `ItemSnapableEvents`) ?
+- Schéma du nouvel adaptateur/journal d'**événements poussés** au-dessus de
+  `Game`, `EditorOpBus` et `ItemSnapableEvents` (D14).
 - **Quel sous-ensemble de l'automation porter** dans le catalogue curé du canal
   (pose, caméra, introspection d'état…) et lesquelles **rester** test-only ?
-- Exposer une échappatoire `automation.raw` pour le prototypage ? (**tension** avec
-  la frontière D2 : à n'envisager qu'en build de dev, jamais dans la skill livrée).
+- ~~Échappatoire `automation.raw` ?~~ **Tranché D14 : build dev uniquement.**
+- Garanties applicatives de livraison/retry/déduplication au-dessus du composant
+  d'ACK `reliable.io` (doc 10).
 
 ### Capacités manquantes (chantiers identifiés)
 - Réconcilier **hooks ↔ tools MCP** (des hooks existent sans tool MCP) — prérequis
@@ -179,14 +290,13 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
 - Ajouter les capacités **runtime** (piloter joueur/NPC en jeu, lire les bodies) —
   absentes en V2, requises pour « modules NPC/joueur ».
 
-### IA arbitre / MJ (doc 00 §4, D6)
-- **Nature de l'arbitre** : LLM (jugement souple, faillible), moteur de règles
-  déterministe (fiable, rigide), ou hybride (règles dures + LLM pour le contextuel) ?
+### IA arbitre / MJ (doc 00 §4, D6/D10/D11)
+- ~~Nature de l'arbitre ?~~ **Tranché : LLM externe** (`claude -p`/équivalent
+  Codex) pour le contextuel, entouré de validateurs mécaniques.
 - **Grain d'arbitrage** : chaque action, un lot d'actions, ou seulement les
   artefacts QML génératifs ? Coût/latence d'un arbitrage LLM par action.
-- **Format du verdict** : accepte / amende / rejette — l'« amende » modifie-t-il
-  la proposition (et qui applique la modification) ? Le rejet doit être une
-  **erreur actionnable** (doc 02 §5) pour que le proposant itère.
+- ~~Amendement direct ?~~ **Tranché D11 : oui, application immédiate**, avec
+  journal de l'original, des raisons et de la version appliquée.
 - ~~Auto-arbitrage de l'hôte~~ **Tranché (D6)** : les propositions de l'IA cliente
   de l'hôte passent par le même arbitre ; pas d'auto-exemption.
 - ~~Frontière avec le contrat de règles : l'arbitre EST-il le moteur de règles ?~~
@@ -199,11 +309,12 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
   qu'un arbitre soit branché avant d'autoriser l'hébergement d'une partie IA.
 
 ### Espace mémoire (doc 05, sémantiques tranchées par D7)
-- Blob **global à la tuile** vs **par sous-paramètre** ? Reco : global.
+- ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : `memory` global avec
+  `config`/`state`, également porté par session et joueurs.**
 - Schéma/noms de la **configuration durable** et de l'**état runtime** ; l'état
   doit-il être sauvegardable séparément pour reprendre une partie ?
-- **Transport runtime** (D7) : protocole dédié vs extension physique ; delta vs
-  snapshot, coalescence, reliable/raw, cadence et plafond.
+- **Transport runtime** : D15 demande un bus générique nouveau ; delta/snapshot
+  de réparation, retry/séquence, cadence et plafond restent ouverts.
 - **Undo ciblé** (D7) : write-set durable, conflit si une clé a changé depuis,
   comportement du redo. Le snapshot global n'est plus recommandé.
 - Traiter proprement la **sérialisation string-manuelle** de `ItemSnapable::toJSON`
@@ -211,34 +322,39 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
 - Plafond de taille du blob.
 
 ### Skill client (doc 03)
-- Quel agent client cible-t-on d'abord (format de skill natif) ?
+- ~~Agents initiaux ?~~ **Tranché D17 : Codex + Claude Code.**
 - Emplacement d'installation standardisé multi-plateforme.
-- Génération : script de build dédié ou étape d'installeur ?
+- ~~Génération ?~~ **Tranché D17 : au build depuis le manifeste.**
 
 ## 3. Risques majeurs
 
 | # | Risque | Impact | Atténuation |
 |---|--------|--------|-------------|
 | R1 | Sandbox QML infaisable/insuffisant dans Qt | Bloque D1 | Prototyper tôt ; repli « palette + mémoire » ; démarrer en exécution locale arbitrée par l'hôte |
-| R2 | RCE inter-joueurs via QML répliqué | Critique | Local-only d'abord ; re-validation + host-authoritative ensuite |
+| R2 | RCE inter-joueurs via QML répliqué | Critique | Exécution hôte par défaut ; activation pair par artefact après R1 + revalidation |
 | R3 | Canal local détourné par un autre process | Élevé | Token de session + loopback strict |
 | R4 | Sérialisation cassée du blob mémoire | Moyen | Passer `toJSON` du blob par `QJsonDocument` (doc 05 §3) |
 | R5 | Dérive skill ↔ capacités réelles | Moyen | Générer la skill depuis le manifeste versionné du canal (source unique) ; MCP = patron uniquement |
 | R6 | Complexité multi-joueurs des règles custom | Moyen | Différé (D3) ; concevoir avec host-authoritative en tête |
-| R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox (doc 04) + contrat (doc 06) ; l'arbitre n'affine que le contextuel (doc 00 §8) |
+| R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox + validateurs ; l'arbitre n'affine que le contextuel (doc 00 §9) |
 | R8 | Arbitrage LLM par action : latence/coût dégradant l'UX collab | Moyen | Grain à cadrer (D6) : arbitrer par lot / seulement le QML génératif ; fallback mécanique |
 | R9 | Flux mémoire saturant la bande passante ou rejouant des états obsolètes | Moyen | Delta/coalescence + plafond ; mesurer cadence et reliable/raw (D7) |
 | R10 | Undo d'un artefact écrasant un état concurrent | Élevé | Séparer config/runtime ; inverse ciblé par write-set, jamais snapshot global |
 | R11 | Boucle JS bloquant le GUI malgré `destroy()` | Critique | Prototype d'isolation préemptive ; processus séparé ou repli DSL/capacités |
 | R12 | Règles acceptées mais non exécutables/rejouables | Élevé | Matérialiser chaque règle acceptée dans une forme versionnée et validée |
+| R13 | Faux sentiment de fiabilité lié au nom `reliable.io` | Critique | ACK/retry/déduplication applicatifs pour commits ; séquence + resync pour état |
+| R14 | Transaction V2 groupée prise pour un commit atomique | Élevé | Prévalidation, staging, commit/rollback V3 et ACK de résultat |
+| R15 | Migration d'hôte sans contexte d'arbitre/règles/runtime | Élevé | Checkpoint versionné transférable avant reprise des propositions |
+| R16 | Checksum SHA-256 pris pour une signature officielle | Élevé | Signature asymétrique, clé éditeur embarquée et rotation/révocation |
 
 ## 4. Séquencement suggéré (non engageant)
 
 1. **Prototype sandbox QML** (R1) — dé-risque D1 avant tout le reste.
-2. **Espace mémoire** (doc 05) : Étape A (modèle + séparation config/runtime),
-   puis prototypes distincts B (transport runtime) et C (undo ciblé concurrent).
-3. **Canal WS minimal** (doc 02) : introspection d'état + `setMemory` + pose,
-   réutilisant les hooks existants.
-4. **Réconciliation hooks/MCP + génération de skill** (docs 03).
-5. **Capacités runtime** (piloter joueur/NPC).
-6. Rouvrir **règles** (D3) et **bibliothèque** (D4).
+2. **Couche réseau V3** : ACK applicatif/retry/déduplication et transaction
+   prepare/commit/rollback, avant de lui confier propositions et verdicts.
+3. **Canal WS multiplexé minimal** : rôles, auth, version, introspection, pose et
+   enveloppe de proposition auditée.
+4. **Espace mémoire** : modèle `config/state`, puis bus runtime et undo ciblé.
+5. **Adaptateur agents** : supervision `claude -p`/Codex + skill générée au build.
+6. **Vertical slice règles/runtime** avec modules, artefact et arbitrage.
+7. **Bibliothèque officielle GLB** sur le launcher/asset_server audité.

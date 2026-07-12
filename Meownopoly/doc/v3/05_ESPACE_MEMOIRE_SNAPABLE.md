@@ -13,13 +13,16 @@ attachées à l'élément, sans schéma de clés métier imposé côté cœur, q
 l'IA du joueur lit et écrit pour **personnaliser** l'élément (« loyer ×2 », état,
 compteur, paramètres d'un comportement, référence à un artefact QML de la doc 04).
 
-Le cadrage distingue deux classes de données qui ne doivent plus être confondues :
+Le cadrage D15 distingue deux namespaces dans un même objet `memory` :
 
 - **configuration durable** : paramètres issus d'un geste d'édition ou d'une
   proposition acceptée, persistés dans la map et undoables avec cette transaction ;
 - **état runtime** : compteurs, cooldowns et état vivant d'une partie, autoritatifs
   chez l'hôte, répliqués avec une sémantique « dernier état » et non undoables au
   grain de chaque écriture.
+
+Le même contrat mémoire doit aussi pouvoir être porté par la **session** et les
+**joueurs** (`PlayerProfile` ou état joueur associé), pas seulement les tuiles.
 
 Ces valeurs ont **trois usages liés** :
 
@@ -78,14 +81,21 @@ cela saturerait les piles undo et le canal d'ops.
 
 ### 2.3 Le stream physique (`PhysicsSession`) — inspiration, pas contrat copié
 `cpp/game/physics/physics_session.{h,cpp}` : host-authoritative, broadcast de
-**snapshots à 30 Hz** (reliable, plage `physics_message_type.h` 0x40+), les clients
+**snapshots à 30 Hz** (chemin nommé `reliable`, plage
+`physics_message_type.h` 0x40+), les clients
 routant leurs inputs vers l'hôte qui simule pour tous. La mémoire partage avec
 la physique l'autorité hôte et le routage des intentions, mais pas nécessairement
-sa cadence ni son transport. « Reliable » décrit la livraison ; « dernier état »
-signifie que les versions intermédiaires peuvent être coalescées/supplantées. Il
-faut éviter une file fiable qui rejouerait des états devenus obsolètes. Nouveau
-message dédié, extension du protocole physique, delta ou snapshot restent à
-trancher et à budgéter (doc 09).
+sa cadence ni son transport. Ce chemin apporte ACK/fragmentation mais pas de retry
+automatique. « Dernier état » signifie que les versions intermédiaires peuvent
+être coalescées/supplantées ; il faut éviter de rejouer des états obsolètes. Le
+choix « message dédié ou extension physique » ne définit pas à lui seul
+l'architecture : D15 demande un **bus d'état générique partagé**, nouvelle brique
+inspirée des deux protocoles. Delta,
+snapshot de réparation et budgets restent à trancher (doc 09/10).
+
+> **Correction stack.** Le composant tiers nommé `reliable` ne retransmet pas
+> automatiquement. Les intentions/commits exigent retry applicatif ; les états
+> supersédables exigent séquence + réparation (doc 10).
 
 ## 3. Stratégie d'intégration (recommandée)
 
@@ -102,8 +112,8 @@ réactive**.
   est essentiel** — c'est le support de l'**usage 3** (§1) : règles custom et
   comportements générés s'y abonnent. Prévoir aussi un setter fin `Q_INVOKABLE
   setMemoryValue(const QString &key, const QVariant &value)` qui émet le signal
-  (idéalement un `memoryValueChanged(key)` en plus, pour un réveil **ciblé** par
-  clé sans re-scanner tout le map).
+  et un `memoryValueChanged(namespace, key, value, version)` pour un réveil
+  **ciblé** sans re-scanner toute la map. D15 retient les **deux** signaux.
 - **`toJSON()`** : insérer une clé `"memory": <blob>`. ⚠️ **Piège n°1 :**
   `ItemSnapable::toJSON()` est aujourd'hui de la **concaténation manuelle de
   chaînes**, pas du `QJsonDocument`. Pour des valeurs arbitraires (guillemets,
@@ -122,7 +132,7 @@ réactive**.
 
 ### Étape B — Sync de l'état runtime via autorité hôte
 Le sync de l'**état runtime** ne passe pas par `ApplyState`/`EditDelta`. Il
-s'inspire du modèle `PhysicsSession` (§2.3) :
+s'appuie sur le futur bus d'état générique (§2.3) :
 - l'hôte est **autoritatif** sur les valeurs ; un script client qui écrit une
   variable **route l'intention vers l'hôte** (comme un input physique), l'hôte
   applique et publie une mise à jour mémoire coalesçable ;
@@ -131,6 +141,8 @@ s'inspire du modèle `PhysicsSession` (§2.3) :
   pas d'historisation).
 - **non-undoable** au grain de l'écriture : c'est de l'état, pas une édition.
   Le choix reliable/raw et la cadence ne sont pas encore décidés.
+- l'hôte séquence les écritures acceptées ; la résolution initiale est LWW selon
+  cet ordre autoritatif.
 
 À trancher (doc 08) : message `MemorySnapshot` **dédié** vs **extension** du snapshot
 physique ; **delta par-clé** vs snapshot complet par tuile ; débit et plafond.
@@ -182,7 +194,7 @@ l'imposer en C++) une structure :
 
 ```jsonc
 "memory": {
-  "schema": 1,                       // versionnage de la convention
+  "schema": 1,                        // versionnage de la convention
   "config": { "rentMultiplier": 2 }, // configuration durable/undoable
   "state": { "passages": 0 },         // état runtime, persistance à décider
   "behavior": { "qmlRef": "…", "params": {…} }, // réf. artefact QML (doc 04)
@@ -197,13 +209,13 @@ transport afin de ne pas envoyer chaque tick dans l'undo ni de persister un éta
 
 ## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
-- Blob **global à la tuile** (proposé) ou **par sous-paramètre** (un `memory` dans
-  chaque `*Parameter`) ? Le global est plus simple et suffit a priori.
+- ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : un `memory` global avec
+  namespaces `config`/`state`.**
 - Frontière exacte **configuration durable / état runtime** et persistance de
   l'état lors d'une sauvegarde/reprise de partie.
 - **Transport du runtime** (Étape B) : protocole dédié vs extension physique ;
   delta/snapshot, coalescence, fiabilité, cadence et plafond.
 - **Transaction d'undo** (Étape C) : déclaration du write-set, conflits et redo.
-- Faut-il exposer l'espace mémoire aussi sur les entités **non-tuiles**
-  (`PlayerProfile`, `MapInfo`) ?
+- ~~Mémoire sur les entités non-tuiles ?~~ **Tranché D15 : tuiles + session +
+  joueurs.** L'objet C++ exact pour la session/joueur reste à concevoir.
 - Plafond de taille du blob et politique en cas de dépassement.

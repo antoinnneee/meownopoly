@@ -48,6 +48,12 @@ n'est pas une option de confort, c'est la condition de viabilité de D1.
 Le sandbox est le **point de passage obligatoire** de tout QML génératif entre le
 canal (doc 02) et la scène.
 
+**Orientation D13, conditionnelle à R1 :** même moteur QML, contexte restreint et
+JS borné/instrumenté. La machine locale est considérée de confiance et les pairs
+réseau hostiles. Cette préférence ne devient viable que si le prototype sait
+réellement interrompre une boucle, borner CPU/mémoire et masquer les singletons
+globaux ; la stack V2 ne le fait pas (doc 10).
+
 ### 3.1 Validation avant instanciation
 - **Allow-list d'imports** : seuls des modules explicitement autorisés
   (`QtQuick` de base, un module « API de jeu » restreint — cf. §3.3). Rejet de
@@ -107,17 +113,19 @@ C'est **la** question de sécurité à trancher (doc 08). Trois postures :
 3. **Répliqué + host-validé + signé** : seul le host instancie/valide, ou un
    registre signé de comportements approuvés circule. Plus lourd.
 
-**Recommandation de cadrage : démarrer en exécution locale (posture 1)** pour dé-risquer,
-et n'ouvrir la réplication qu'une fois le sandbox éprouvé. Le modèle
-host-authoritative existant (`EditorSession`, `PhysicsSession`) donne le point
-d'insertion naturel pour une future validation centralisée.
+**Décision D16 : la politique est portée par l'artefact.** La source atteint
+toujours l'hôte arbitre, sans broadcast systématique. L'artefact accepté déclare
+ensuite soit « exécution hôte uniquement + réplication des effets », soit
+« exécution chez chaque pair après revalidation ». La seconde politique ne peut
+être activée qu'après réussite complète de R1.
 
 ## 5. Articulation avec l'espace mémoire (doc 05)
 
 Deux registres complémentaires :
 
-- **Espace mémoire = données** (blob JSON) : « cette case rapporte ×2 », état,
-  paramètres. Se réplique sans danger par `ApplyState` (c'est de la donnée).
+- **Espace mémoire = données** : `config` suit les ops d'édition/persistance ;
+  `state` suit le futur bus autoritatif runtime (doc 05). Une donnée reste soumise
+  à schéma, autorisation et quotas même si elle ne passe pas par le sandbox QML.
 - **Artefact QML = comportement** (code) : la logique qui *utilise* ces données.
   Passe par le sandbox ; réplication à trancher (§4).
 
@@ -151,8 +159,9 @@ usages.
   technique n°1 du pivot).
 - Frontière d'isolation : même moteur QML, moteur séparé dans le même processus,
   processus auxiliaire, ou repli vers un DSL/capacités déclaratives ?
-- Réplication : quelle posture (§4) et à quelle échéance ?
+- Réplication : critères autorisant la propriété « exécution chez chaque pair ».
 - Validation : parser maison, `qmllint`, ou analyse d'AST ? Que fait-on des faux
   négatifs ?
-- Faut-il un **mode revue** (le joueur/host approuve un artefact avant exécution)
-  au moins pour les comportements répliqués ?
+- ~~Faut-il un mode revue humaine ?~~ **Tranché D9/D13 : non.**
+- Signature officielle : définir clés, rotation et révocation. Le SHA-256 actuel
+  du launcher vérifie l'intégrité, pas l'identité de l'éditeur (doc 10).

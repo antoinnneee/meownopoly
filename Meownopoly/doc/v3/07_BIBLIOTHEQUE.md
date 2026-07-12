@@ -5,6 +5,10 @@
 > bibliothèque d'assets 3D est prévue. Formats, distribution et confiance restent
 > à instruire.
 
+> **Arbitrage D18.** Le premier jalon est une bibliothèque **locale, officielle
+> et unifiée**, alimentée par les développeurs. Le partage communautaire n'entre
+> pas dans ce jalon.
+
 ## 1. Intention (telle qu'exprimée)
 
 Le brief mentionne *« l'ajout d'une bibliothèque »* sans en préciser le contenu.
@@ -49,24 +53,24 @@ Trois facettes complémentaires sont envisagées :
   entrée « asset 3D » = un modèle importable + ses métadonnées (pose, échelle,
   point d'ancrage) ; format et pipeline d'import **à instruire** (§3).
 - **Distribution** : le projet a déjà un `asset_server/` (serveur HTTP de
-  distribution d'assets, launcher avec queue/retry/checksum). C'est un **candidat
-  naturel** de support pour une bibliothèque partagée — à évaluer.
+  distribution d'assets, launcher avec queue/retry/checksum). D18 décide de le
+  **réutiliser après audit**. L'audit confirme file, reprise, retry, SHA-256 et
+  manifestes, mais pas de signature d'éditeur ni adressage par hash (doc 10).
 - **Sécurité** : toute création téléchargée depuis un dépôt est **non fiable** →
   re-validation obligatoire par le sandbox (doc 04) avant exécution.
 
 ## 3. Questions à instruire (questionnaire exhaustif doc 09)
 
-- Quel périmètre livre-t-on par étape : **primitives**, **assets 3D**, puis
-  **créations partagées**, ou un autre ordre ?
-- Local (par installation) vs partagé (serveur communautaire) ?
+- ~~Local ou communautaire au premier jalon ?~~ **Tranché D18 : local officiel.**
+- Périmètre exact de la bibliothèque unifiée : primitives gameplay livrées avec
+  le premier pack, en plus des assets 3D.
 - Modèle de confiance : signature des primitives officielles, modération des
   créations, re-validation systématique ?
-- Réutilisation d'`asset_server/` + launcher, ou nouvelle infra ?
+- ~~Réutilisation d'`asset_server/` + launcher ?~~ **Tranché D18 : oui, après audit.**
 - Format de packaging d'une « entrée » de bibliothèque.
-- **Assets 3D** : quels **formats** de modèles (glTF / OBJ / …) et quel **pipeline
-  d'import** vers World3D ? Assets « officiels » fournis vs importés par le joueur ?
-  Comment l'IA **référence** un asset dans une proposition (id d'asset dans le
-  QML/les données) ?
+- **Assets 3D** : **GLB est retenu** et déjà supporté par `RuntimeLoader` ; imports
+  réservés aux développeurs au premier jalon. La référence IA étend les clés
+  existantes `(category,type,id)`/`modelName` avec version et hash.
 
 ## 4. Prochaine action
 

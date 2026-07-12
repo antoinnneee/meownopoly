@@ -28,7 +28,7 @@ Conséquences directes :
      l'accepte** — le règlement est donc **négociable et évolutif en cours de
      partie**, sous l'autorité de l'arbitre.
 - **Les invariants durs restent hors de l'arbitre** : intégrité/sécurité sont
-  tenues par le **sandbox** (doc 04), pas par le jugement souple du MJ (doc 00 §8).
+  tenues par le **sandbox** (doc 04), pas par le jugement souple du MJ (doc 00 §9).
 
 ## 2. Périmètre (recadré par D8)
 
@@ -38,9 +38,16 @@ Conséquences directes :
   **connaît** et fait évoluer via des propositions acceptées. Le prompt seul ne
   suffit toutefois ni à la reprise, ni à la migration d'hôte, ni à l'exécution
   déterministe : le règlement accepté doit avoir un état matérialisé à définir.
+  L'arbitre choisit la vue du règlement exposée aux joueurs et peut la modifier
+  en cours de partie ; l'état autoritatif complet reste néanmoins versionné pour
+  migration et audit.
 - **Exécution = capacités du jeu.** Les effets runtime sont appliqués par des
   primitives/modules existants ou par du QML/JS validé. L'arbitre juge et produit
   un plan/verdict ; il ne devient pas implicitement une boucle temps réel.
+- **Représentation hiérarchique (D12).** Le jeu choisit la forme la moins libre
+  suffisante : plan de capacités, configuration de module, DSL/machine à états,
+  puis QML/JS sandboxé. Le règlement autoritatif est un document structuré
+  versionné ; le prompt n'en est qu'une vue/configuration.
 - **Invariants durs = sandbox + garde-fous** (doc 04) : intégrité de partie,
   anti-triche, limites de ressources, sécurité — **non-négociables**, hors du
   jugement de l'arbitre. L'arbitre affine ; il ne peut jamais lever ces invariants.
@@ -89,10 +96,13 @@ Conséquences directes :
 - **Réplication** : après acceptation, comment le nouveau règlement se propage aux
   autres joueurs (host-authoritative) et à leurs IA clientes ?
 - **Rapport avec `GameplayModuleManager` existant** : les règles s'appuient-elles
-  sur les modules activables (vie, inventaire, monnaie, stats/XP), ou sont-elles une
-  couche au-dessus ?
-- **Bootstrap du tour** : si le hôte veut un tour par tour, l'arbitre l'orchestre
-  seul (séquençage des IA clientes) ou s'appuie-t-il sur une primitive côté jeu ?
+  sur les modules activables ou sont-elles au-dessus ? **Tranché D12 : les deux** ;
+  les modules sont des primitives sous la couche de règles.
+- **Bootstrap du tour** : **tranché D12** — artefact généré et/ou orchestration
+  directe de l'arbitre, sans primitive native exigée.
+- **Amendement** : D11 autorise l'arbitre à modifier et appliquer immédiatement
+  une proposition. La proposition originale et la forme appliquée doivent toutes
+  deux être persistées.
 
 ## 5. Prochaine action
 

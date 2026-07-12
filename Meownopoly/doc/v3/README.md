@@ -33,11 +33,12 @@ cf. doc 00 §4).
 | 02 | [`02_CANAL_IA_WEBSOCKET.md`](./02_CANAL_IA_WEBSOCKET.md) | Le canal WS dédié IA↔jeu (distinct de l'automation) | draft |
 | 03 | [`03_SKILL_CLIENT_IA.md`](./03_SKILL_CLIENT_IA.md) | Le fichier de skill livré au joueur à l'installation | draft |
 | 04 | [`04_QML_GENERATIF_SANDBOX.md`](./04_QML_GENERATIF_SANDBOX.md) | Modèle d'exécution « QML à la volée » + sandbox de sécurité | draft |
-| 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | Espace mémoire par `snapableElement` + intégration delta | draft |
+| 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | Mémoire `config/state`, persistance, bus runtime et undo | partiellement cadré |
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questionnaire exhaustif des arbitrages à rendre | **à remplir** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questionnaire exhaustif des arbitrages à rendre | **partiellement rempli** |
+| 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Vérification des réponses « stack existante » contre le code V2 | **vérifié 2026-07-12** |
 
 ## Décisions structurantes déjà prises
 
@@ -74,6 +75,12 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
   capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
+- **D9→D18 — Arbitrages issus du questionnaire.** Périmètre des trois modes V3,
+  agents Codex/Claude supervisés, proposition auditable avec amendement immédiat,
+  règles hiérarchiques, sandbox in-process conditionnel à R1, WS multiplexé,
+  mémoire `config/state`, artefacts sous autorité hôte, skill générée au build et
+  bibliothèque locale officielle GLB. Détail et réserves techniques dans les
+  docs 08→10.
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 

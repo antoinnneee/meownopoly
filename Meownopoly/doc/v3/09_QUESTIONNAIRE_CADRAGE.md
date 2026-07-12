@@ -1,6 +1,6 @@
 # 09 — Questionnaire de cadrage V3
 
-> **Statut : à remplir.** Ce questionnaire consolide toutes les interrogations
+> **Statut : partiellement rempli, dépouillé le 2026-07-12.** Ce questionnaire consolide toutes les interrogations
 > ouvertes relevées dans les docs 00→08 et lors de leur audit de cohérence du
 > 2026-07-12. Une réponse peut être courte ; les champs « Pourquoi / contraintes »
 > servent à conserver l'intention derrière la décision.
@@ -11,10 +11,12 @@
 - **B1** : nécessaire avant un premier vertical slice multi-joueurs.
 - **B2** : peut être différé après le prototype, mais doit rester tracé.
 - Cocher une option, la remplacer, ou écrire « à prototyper » avec un critère de
-décision. Une question sans réponse reste explicitement ouverte.
+  décision. Une question sans réponse reste explicitement ouverte.
 - Après remplissage, reporter chaque arbitrage stable dans le doc 08 sous un ID
-de décision. Ne pas transformer une recommandation de ce fichier en décision
-tant qu'elle n'a pas été validée.
+  de décision. Ne pas transformer une recommandation de ce fichier en décision
+  tant qu'elle n'a pas été validée.
+- Les mentions **Vérification stack** renvoient à
+  [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md).
 
 ---
 
@@ -24,7 +26,7 @@ tant qu'elle n'a pas été validée.
 
 
 
-### Q-A01 — Quel est le premier mode livré ? — **B0**
+### Q-A01 — Quels modes appartiennent à la V3 initiale, et dans quel ordre ? — **B0**
 
 - [x] Éditeur solo assisté par IA
 - [x] Éditeur collaboratif assisté par IA
@@ -32,6 +34,9 @@ tant qu'elle n'a pas été validée.
 - [ ] Vertical slice couvrant éditeur puis runtime
 
 - **Recommandation actuelle :** éditeur solo, puis collaboration, puis runtime.
+- **Lecture de la réponse :** les trois modes sont dans le périmètre V3. Leur
+  ordre de livraison n'est pas encore tranché puisque plusieurs « premiers modes »
+  ont été cochés.
 - **Réponse :**
 - **Pourquoi / contraintes :**
 
@@ -107,6 +112,9 @@ tant qu'elle n'a pas été validée.
 - [ ] Windows + Linux + macOS
 
 - **Réponse :**
+- **Vérification stack :** cible Linux plausible côté CMake/C++/QML, mais aucun
+  packaging, CI ni test Linux n'existe encore. La réponse crée un chantier de
+  qualification Linux ; elle ne décrit pas un support déjà acquis.
 
 ---
 
@@ -145,6 +153,9 @@ tant qu'elle n'a pas été validée.
 - [x] Le jeu via un adaptateur/processus enfant
 
 - **Réponse :**
+- **Vérification stack :** `LauncherManager` ne lance aujourd'hui aucun processus.
+  La supervision de `claude -p` et de l'équivalent Codex exige un adaptateur basé
+  sur `QProcess`, avec cycle de vie, logs, timeout et secrets.
 
 
 
@@ -155,6 +166,9 @@ tant qu'elle n'a pas été validée.
 - [ ] Test de santé et verdict sur proposition factice
 
 - **Réponse : Les joueur configure ensemble l'arbitre avec des prompt avant de lancer la partie**
+- **Point restant :** cette réponse décrit la configuration collective, pas la
+  preuve technique de disponibilité. Le handshake de rôle et un health-check
+  restent à choisir avant de pouvoir bloquer/débloquer le lancement.
 
 
 
@@ -166,6 +180,8 @@ tant qu'elle n'a pas été validée.
 - [ ] Repli humain temporaire
 
 - **Réponse :**
+- **Vérification stack :** l'élection/promotion d'hôte éditeur existe. Elle ne
+  transfère ni contexte d'arbitre, ni règlement V3, ni état runtime générique.
 
 
 
@@ -205,15 +221,15 @@ tant qu'elle n'a pas été validée.
 
 
 
-### Q-C01 — Quelle est l'unité d'arbitrage ? — **B0**
+### Q-C01 — Qu'est-ce qui déclenche un appel à l'arbitre ? — **B0**
 
-- [ ] Chaque commande
-- [ ] Transaction/lot atomique
-- [ ] Artefacts code uniquement
-- [ ] Politique hybride selon le niveau de risque
+- [ ] **Chaque commande** : poser une tuile et modifier une clé provoquent deux appels
+- [ ] **Une proposition complète** : « créer une rivière » forme un seul lot atomique
+- [ ] **Le code uniquement** : les opérations de données passent par validation mécanique
+- [ ] **Politique hybride** : données sûres groupées, code/règles toujours arbitrés
 
 - **Recommandation actuelle :** transaction typée, avec chemin rapide mécanique.
-- **Réponse : reformule moi ce point**
+- **Réponse :**
 
 
 
@@ -235,6 +251,9 @@ tant qu'elle n'a pas été validée.
 
 - **Recommandation actuelle :** pas de mutation silencieuse ; retour vers le proposant.
 - **Réponse : l'arbitre dispose d'une personalité définie avec les regles de début de partie**
+- **Décision lue :** l'amendement direct et immédiat est autorisé. La personnalité
+  explique *comment* il amende, mais il reste nécessaire de journaliser exactement
+  la version amendée appliquée pour rendre l'action auditée et rejouable.
 
 
 
@@ -311,6 +330,8 @@ tant qu'elle n'a pas été validée.
 
 - **Recommandation actuelle :** primitive déterministe configurable.
 - **Réponse :**
+- **Décision lue :** le tour, s'il existe, est généré/orchestré par l'IA et
+  l'arbitre ; aucune primitive de tour native n'est exigée à ce stade.
 
 
 
@@ -359,6 +380,10 @@ tant qu'elle n'a pas été validée.
 
 - **Critère de choix après prototype R1 :**
 - **Réponse :**
+- **Vérification stack :** aucun sandbox n'existe. Le moteur courant enregistre de
+  nombreux singletons globaux. Le choix « même moteur » est **conditionnel** : il
+  doit réussir D10, notamment l'arrêt préemptif d'une boucle infinie, avant d'être
+  considéré faisable.
 
 
 
@@ -429,6 +454,10 @@ A affiner en test
 - [x] Signature officielle suffisante
 
 - **Réponse :**
+- **Vérification stack :** le launcher vérifie un SHA-256 transmis par le serveur,
+  mais aucune signature cryptographique d'éditeur n'existe. « Signature officielle
+  suffisante » nécessite donc une nouvelle chaîne de signature et ne couvre pas
+  les artefacts générés/non officiels.
 
 
 
@@ -467,6 +496,9 @@ A affiner en test
 - [ ] IPC natif plutôt que WS
 
 - **Réponse : stack reseau existante**
+- **Vérification stack :** l'automation accepte `--automation-port` ou
+  `MEOW_AUTOMATION_PORT`; aucun secret n'est découvert. Réutilisable pour le port,
+  insuffisant pour le secret du canal IA.
 
 
 
@@ -479,6 +511,8 @@ A affiner en test
 
 - **Recommandation actuelle :** token éphémère + rôle + rotation.
 - **Réponse : stack reseau existante**
+- **Vérification stack :** **réponse non close**. La stack n'offre que le loopback,
+  sans token, rôle ni challenge. L'une des trois premières options reste à choisir.
 
 
 
@@ -509,6 +543,9 @@ A affiner en test
 - [ ] Relecture depuis un curseur/journal
 
 - **Réponse : stack reseau existante**
+- **Vérification stack :** **réponse non close**. `reliable.io` acquitte et
+  fragmente mais ne retransmet pas automatiquement. Les garanties V3 exigent ACK
+  applicatif/retry/déduplication ou snapshot de réparation.
 
 
 
@@ -519,6 +556,9 @@ A affiner en test
 - [ ] Prévalidation puis commit explicite
 
 - **Réponse :** 
+- **Vérification stack :** `groupId` groupe déjà undo/save/broadcast, mais les
+  mutations sont appliquées avant commit et aucun rollback automatique n'existe.
+  « Tout ou rien » est une nouvelle garantie V3.
 
 
 
@@ -579,6 +619,10 @@ a affiner
 
 - **Recommandation actuelle :** sauvegarde de partie distincte.
 - **Réponse : Voir système de sauvegarde existant. A affiner, snaphot système /= runtime**    
+- **Vérification stack :** la sauvegarde actuelle ne contient que `mapInfo` et
+  `snapableTiles`; il n'existe aucun format de sauvegarde runtime séparé. Les deux
+  options cochées restent donc contradictoires. **À trancher :** état runtime dans
+  un fichier de partie séparé (recommandé) ou mélange dans la map.
 
 
 
@@ -599,6 +643,9 @@ a affiner
 - [x] Bus d'état générique partagé
 
 - **Réponse :**
+- **Vérification stack :** le bus générique choisi n'existe pas. La V2 possède
+  deux protocoles spécialisés (`EditorSession`, `PhysicsSession`) pouvant servir
+  de modèles, pas de bus commun réutilisable directement.
 
 
 
@@ -610,6 +657,10 @@ a affiner
 
 - **Recommandation actuelle :** delta coalescé + snapshot de réparation.
 - **Réponse : stack existante; delta sur modification courante du runtime, snapshot sur ajout de nouvelle item . A affiner**
+- **Vérification stack :** l'éditeur utilise des deltas puis un `FullSync` à la
+  connexion/changement de carte ; la physique utilise des snapshots périodiques.
+  Aucun snapshot automatique « sur ajout d'item » ne répare actuellement un delta
+  perdu. La stratégie V3 delta + snapshot de réparation reste à spécifier.
 
 
 
@@ -621,6 +672,10 @@ a affiner
 
 - **Recommandation actuelle :** hybride.
 - **Réponse : stack reseau existante**
+- **Vérification stack :** **réponse non close**. Le chemin nommé `reliable` ne
+  retransmet pas les paquets non acquittés. Pour le bus V3, le modèle cohérent avec
+  les réponses est : intentions/commits avec retry fiable applicatif ; état
+  supersédable avec séquence et snapshot de réparation.
 
 
 
@@ -688,6 +743,9 @@ A affiner en test
 
 - **Recommandation actuelle :** auteur → hôte, sans broadcast aux pairs.
 - **Réponse : stack reseau existante**
+- **Vérification stack :** Catway/EditorSession savent transporter et chunker du
+  JSON, mais aucun message proposition/artefact/arbitre n'existe. La topologie est
+  décidée ; son protocole est à créer.
 
 
 
@@ -709,6 +767,10 @@ A affiner en test
 - [ ] Nom logique + version sémantique
 
 - **Réponse : stack existante**
+- **Vérification stack :** **réponse à corriger.** Le `QUuid` existant identifie
+  une instance de tuile, pas le contenu/version d'un artefact partagé. Conserver
+  un UUID d'instance est utile, mais l'artefact requiert aussi un hash de contenu
+  et une version de manifeste.
 
 
 
@@ -720,6 +782,9 @@ A affiner en test
 
 - **Recommandation actuelle :** store séparé par hash.
 - **Réponse : stack existante a compléter** 
+- **Vérification stack :** la map JSON et le stockage d'assets sous
+  `AppDataLocation` existent ; aucun store adressé par hash n'existe. La réponse
+  implique un nouveau store séparé, référencé depuis la map.
 
 
 
@@ -747,6 +812,9 @@ A affiner en test
 - **Artefacts/hashes transférés :**
 - **État runtime/checkpoint transféré :**
 - **Nouvel arbitre requis avant reprise :**
+- **Vérification stack :** l'élection et la promotion éditeur existent, avec
+  préservation de la carte locale puis full-sync. Tous les quatre champs ci-dessus
+  sont nouveaux pour la V3 et restent à remplir.
 
 ---
 
@@ -863,6 +931,9 @@ A affiner en test
 
 - **Critères d'audit :**
 - **Réponse :**
+- **Vérification stack :** audit favorable pour la distribution : file, reprise,
+  retry, SHA-256 et manifestes existent. Il faut ajouter signature d'éditeur,
+  dépendances par hash et type de package artefact V3.
 
 
 
@@ -894,6 +965,8 @@ A affiner en test
 - [ ] Formats convertis au build/import vers un format interne
 
 - **Réponse :**
+- **Vérification stack :** GLB est déjà importé par `createModelFromGlb` et chargé
+  par `RuntimeLoader` avec `model_manifest.json`. Choix directement supporté.
 
 
 
@@ -915,6 +988,9 @@ A affiner en test
 - [ ] ID + hash résolu par manifeste
 
 - **Réponse : stack  existante**
+- **Vérification stack :** la référence existante est `(category, type, id)` pour
+  les assets 2D et `modelName` + manifeste pour les modèles. La V3 doit y ajouter
+  version/hash ; aucune des options proposées n'est donc entièrement cochée.
 
 
 
@@ -953,7 +1029,10 @@ A affiner en test
 
 - **Politique de stockage/effacement :**
 
-n/a
+**Correction :** non applicable uniquement tant que ces données ne sont pas
+stockées. Dès que le canal/journal existe, prompts, captures, sources générées et
+identifiants fournisseur peuvent tous contenir des données privées. La politique
+de stockage/effacement reste à définir.
 
 ### Q-J03 — Comment diagnostiquer une divergence entre pairs ? — **B1**
 
@@ -962,6 +1041,10 @@ n/a
 - [ ] Snapshot autoritatif à la demande
 
 - **Réponse : stack reseau existante**
+- **Vérification stack :** full-sync éditeur et snapshots physiques savent
+  réparer certains états, mais ne **détectent** pas génériquement une divergence.
+  Il manque au minimum hash/version d'état et demande explicite de resync ; la
+  question reste ouverte.
 
 
 
@@ -1022,15 +1105,25 @@ a affiner
 
 ## Synthèse à remplir en dernier
 
-- **Premier mode livré :**
-- **Politique d'arbitre solo / multi :**
-- **Forme d'exécution des règles :**
-- **Niveau d'isolation QML retenu :**
-- **Politique de réplication des artefacts :**
-- **Modèle mémoire config/runtime :**
-- **Transport runtime retenu :**
-- **Agent client initial :**
-- **Périmètre initial de bibliothèque :**
-- **Critères de réussite du vertical slice :**
-- **Décisions encore bloquées par un prototype :**
-
+- **Premier mode livré :** les trois modes sont dans le périmètre ; ordre encore ouvert.
+- **Politique d'arbitre solo / multi :** obligatoire partout, rôles isolés,
+  configuration collective et migration avec état/version.
+- **Forme d'exécution des règles :** hiérarchie capacités → modules → DSL →
+  QML/JS ; document de règlement structuré versionné.
+- **Niveau d'isolation QML retenu :** même moteur + contexte restreint + JS
+  borné, **conditionnel à la réussite de R1**.
+- **Politique de réplication des artefacts :** auteur → hôte ; exécution hôte ou
+  pairs après revalidation selon une propriété de l'artefact.
+- **Modèle mémoire config/runtime :** un `memory` avec namespaces `config` et
+  `state`, porté par tuiles, session et joueurs.
+- **Transport runtime retenu :** bus d'état générique nouveau ; garanties exactes
+  encore ouvertes, la stack `reliable.io` étant insuffisante seule.
+- **Agent client initial :** Codex + Claude Code, supervisés par launcher/jeu.
+- **Périmètre initial de bibliothèque :** locale officielle unifiée, développeurs
+  uniquement, GLB, réutilisation du launcher/asset_server.
+- **Critères de réussite du vertical slice :** création d'un item modifiant le
+  gameplay, la physique, d'autres éléments et les interactions joueur ; scénarios
+  E2E exacts encore à sélectionner en J05.
+- **Décisions encore bloquées par un prototype :** unité d'arbitrage C01,
+  sandbox R1, auth/découverte canal, garanties réseau, atomicité transactionnelle,
+  sauvegarde runtime, undo concurrent, migration complète et signature officielle.

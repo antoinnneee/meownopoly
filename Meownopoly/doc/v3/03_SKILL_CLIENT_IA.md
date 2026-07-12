@@ -41,7 +41,7 @@ Contenu cible :
 
 ## 3. Format
 
-Deux couches, à décider (doc 08) :
+Deux couches sont retenues pour servir **Codex et Claude Code** en première cible :
 
 - **Couche lisible par un agent générique** : un `SKILL.md` (front-matter YAML
   `name`/`description` + corps procédural), cohérent avec le format déjà en place
@@ -88,17 +88,17 @@ régénère, pas de dérive manuelle.
 - **Installation** : la skill est déposée dans un emplacement connu de l'IA du
   joueur (à définir selon l'agent : `.agents/skills/`, dossier de config de
   l'agent client, etc.).
-- **Mise à jour** : versionner la skill avec le `protocolVersion` du canal. Au
-  handshake, si l'IA annonce une version obsolète, le jeu peut signaler qu'une
-  skill à jour est disponible.
+- **Génération** : la skill est produite au **build** depuis le manifeste du canal.
+- **Mise à jour** : versionner la skill avec le `protocolVersion` global. Une
+  version obsolète utilise si possible un mode compatibilité négocié et reçoit une
+  proposition de mise à jour automatique.
 - **Découvrabilité** : la skill doit être auto-suffisante — l'IA ne doit pas avoir
   besoin de lire le code du jeu pour l'utiliser.
 
 ## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
-- Quel(s) agent(s) client cible-t-on en premier (Claude Code / autre) et donc quel
-  format de skill natif ?
+- ~~Quels agents cibler en premier ?~~ **Tranché D17 : Codex + Claude Code.**
 - La skill embarque-t-elle un tool de connexion au WS, ou suppose-t-on que l'agent
   client sait parler WebSocket brut ?
 - Emplacement d'installation standardisé, multi-plateforme.
-- Génération : script de build dédié, ou étape du packaging de l'installeur ?
+- ~~Génération au build ou au packaging ?~~ **Tranché D17 : au build.**

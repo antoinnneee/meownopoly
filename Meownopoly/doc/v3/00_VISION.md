@@ -81,6 +81,9 @@ Joueur ──(langage naturel)──▶ Son IA ──(WebSocket local dédié)�
 
 Cette boucle est vue côté **proposant**. En multi-joueurs, une proposition n'est
 introduite dans la partie qu'après passage par l'**arbitre** de l'hôte (§4).
+Après préfiltre, acceptation/amendement de l'arbitre et validation mécanique, elle
+est appliquée automatiquement : aucune revue humaine n'est requise. Les créations
+peuvent faire évoluer une partie déjà commencée.
 
 Exemple concret visé (éditeur) :
 > « Mets une rivière qui traverse la carte du nord au sud, avec un pont au
@@ -113,7 +116,7 @@ rôles**, répartis selon la topologie host-authoritative existante :
   un moteur runtime. **Aucun tour n'est imposé** — il s'introduit par le prompt à
   l'arbitre ou par une proposition d'IA cliente acceptée (règlement évolutif).
 
-### Topologie : 2 modèles chez l'hôte, 1 chez le client
+### Topologie : 2 rôles isolés chez l'hôte, 1 chez le client
 
 ```
         HÔTE                                CLIENT (× N)
@@ -135,7 +138,10 @@ rôles**, répartis selon la topologie host-authoritative existante :
 
 La proposition d'un client **comme** celle de l'hôte lui-même passent par le
 **même** arbitre avant d'être introduites : l'hôte ne s'auto-exempte pas.
-L'arbitre est, lui aussi, un modèle **fourni par le joueur** (celui qui héberge) —
+Les deux rôles de l'hôte utilisent des processus ou contextes isolés. Ils peuvent
+employer deux fournisseurs distincts ou un même fournisseur avec deux sessions
+séparées ; une session unique changeant de rôle est exclue. L'arbitre est, lui
+aussi, un modèle **fourni par le joueur** (celui qui héberge) —
 le jeu n'héberge toujours aucune IA (cf. §7).
 
 **L'arbitre est obligatoire.** Le mécanisme central permet à plusieurs joueurs de
@@ -202,10 +208,11 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 | Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** (doc 07) |
 | Réseau P2P / collab | Catway / EditorSession | Inchangé, socle réutilisé |
 
-## 7. Non-buts (à ce stade du cadrage)
+## 7. Transition et non-buts
 
-- Pas de suppression du jeu « classique » : le mode piloté par IA s'ajoute, il ne
-  remplace pas immédiatement le gameplay existant.
+- Le jeu « classique » reste disponible pendant la transition, mais la cible
+  produit à terme est une migration complète vers V3, pas le maintien indéfini de
+  deux produits de premier rang.
 - Pas d'IA hébergée par le jeu : **les deux** modèles (cliente et arbitre) sont
   **fournis par le joueur** ; l'hôte fait simplement tourner l'arbitre en plus de
   sa propre IA cliente.
@@ -218,7 +225,18 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 - Les **détails de représentation et d'exécution des règles** (doc 06) et
   l'**architecture de la bibliothèque** (doc 07) sont explicitement reportés.
 
-## 8. Risque central assumé
+## 8. Périmètre produit validé
+
+- Les trois usages appartiennent à la cible V3 : **éditeur solo assisté**,
+  **éditeur collaboratif assisté** et **runtime co-construit en direct**.
+- L'arbitre reste obligatoire dans les trois, y compris en solo/offline.
+- Le niveau de liberté cible couvre composition de primitives, JS borné et QML/JS
+  libre si R1 rend son isolation viable.
+- Public initial : groupe mixte, du joueur non technique au moddeur.
+- Plateformes visées : **Windows et Linux**. Linux demande encore packaging, CI
+  et qualification (doc 10).
+
+## 9. Risque central assumé
 
 Le choix **D1 (QML génératif complet)** offre la liberté maximale mais ouvre la
 **plus grande surface de sécurité du projet** : du code non fait-maison est

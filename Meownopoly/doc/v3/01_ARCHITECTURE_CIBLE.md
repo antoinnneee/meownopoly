@@ -56,7 +56,8 @@ sur l'automation : `{id, cmd, params}` / `{id, ok, result|error}`) mais avec un
 **catalogue de commandes de haut niveau orienté gameplay** et une boucle
 **perception → action** (l'IA lit l'état, agit, observe). Distinct de
 l'automation pour isoler les responsabilités et pouvoir durcir la sécurité
-indépendamment.
+indépendamment. **D14 retient un seul WS multiplexé**, avec rôles/namespaces et
+une version globale du protocole.
 
 ### 2.2 Le fichier de skill client (doc 03)
 Livré à l'installation, généré à partir du **manifeste versionné du canal IA**.
@@ -70,6 +71,8 @@ Reçoit le QML généré par l'IA (D1), le **valide** et tente de le charger dan
 frontière restreinte (pas d'accès disque/réseau/process, API allow-list, budget).
 La robustesse de cette frontière in-process n'est pas acquise : R1 doit décider
 si un moteur/processus séparé ou un repli déclaratif est nécessaire (doc 04).
+La préférence produit est le **même moteur QML avec JS borné/instrumenté**, mais
+elle reste conditionnelle à l'arrêt préemptif réel d'un script bloquant.
 
 ### 2.4 L'espace mémoire par `snapableElement` (doc 05)
 Chaque `ItemSnapable` gagne un **set de variables sérialisables**. Le cadrage
@@ -91,7 +94,9 @@ une partie partagée co-construite : héberger le mode IA **exige** un arbitre (
 bac à sable** (doc 04) : il s'interpose entre les propositions (locales à l'hôte
 **et** venues des clients par le réseau) et leur traitement, **juge la viabilité**
 (cohérence de règles, équilibre, faisabilité, abus) sur les données **et** la
-source QML, et **accepte / amende / rejette** — *avant* toute instanciation. Le
+source QML, et **accepte / amende / rejette** — *avant* toute instanciation. Un
+amendement peut être appliqué immédiatement, mais proposition originale, raisons
+et version amendée doivent être journalisées. Le
 sandbox reste la barrière suivante (sécurité dure) pour les artefacts QML acceptés.
 C'est la couche de jugement *contextuel* au-dessus des garde-fous *mécaniques* du
 sandbox (doc 04). C'est aussi **lui qui gouverne les règles** (D8) : il accepte
@@ -133,7 +138,9 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 
 ## 4. Flux type — « l'IA crée un élément de gameplay »
 
-1. Le joueur décrit l'intention à son **IA cliente**.
+1. Le joueur décrit l'intention à son **IA cliente**. Les premières intégrations
+   ciblent `claude -p` et un mode non interactif équivalent de Codex, démarrés et
+   supervisés par un adaptateur du launcher/jeu (nouvelle brique, doc 10).
 2. L'IA cliente **génère un fichier QML** — l'élément et/ou son comportement — qui
    peut embarquer du **script QML/JS**. Ce script est écrit pour **lire et écrire
    l'espace mémoire** (doc 05) des tuiles : c'est par là qu'il crée le gameplay
@@ -142,8 +149,8 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 3. **D'abord l'arbitre.** Toute proposition (client ou hôte) passe par l'**IA
    arbitre** de l'hôte (§2.5, **obligatoire**, en amont du sandbox) : jugement de
    viabilité sur les données **et** la source QML/JS → accepte / amende / rejette.
-   Un rejet remonte au proposant comme **erreur actionnable** (doc 02 §5) pour
-   itérer.
+   Un rejet remonte au proposant comme **erreur actionnable** ; un amendement peut
+   être appliqué directement et revient dans le journal comme version effective.
 4. **Ensuite le sandbox.** Le fichier QML accepté passe par le **sandbox**
    (doc 04) qui le valide et l'instancie dans un contexte restreint, rattaché à la
    tuile ; son script n'accède qu'à la façade autorisée (dont l'espace mémoire).
@@ -153,9 +160,10 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
    runtime deviennent des intentions adressées à l'hôte, puis des mises à jour à
    sémantique « dernier état » vers les pairs. Elles ne sont pas undoables au
    grain de l'écriture. La cadence, la fiabilité et le format sont à trancher.
-   En posture « exécution locale », la source cliente transite tout de même vers
-   l'hôte pour arbitrage, mais elle n'est ni broadcastée ni exécutée chez les
-   autres pairs (doc 04).
+   La source cliente transite vers l'hôte pour arbitrage sans broadcast
+   systématique. Une propriété de l'artefact choisit ensuite : exécution hôte
+   seulement avec réplication des effets, ou exécution chez chaque pair après
+   revalidation (doc 04/08 D16).
 6. L'IA cliente **observe** le résultat (état / screenshot via le canal) et itère.
 
 ## 5. Frontières & responsabilités
@@ -176,7 +184,7 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 - **L'arbitre juge, il n'exécute pas.** Il rend un verdict (accepte/amende/rejette)
   sur une proposition ; l'application reste le pipeline de mutation existant. Et il
   ne porte **aucune** garantie de sécurité dure : celles-ci restent au sandbox
-  (doc 04) et aux validateurs de capacités. Voir doc 00 §8.
+  (doc 04) et aux validateurs de capacités. Voir doc 00 §9.
 
 ## 6. Chantiers dérivés (aperçu, non planifiés ici)
 

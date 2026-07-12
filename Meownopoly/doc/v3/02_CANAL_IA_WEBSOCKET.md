@@ -66,15 +66,21 @@ Même ossature que l'automation (familiarité, réutilisation du code de dispatc
 { "id": 42, "ok": false, "error": "editor not open" }
 ```
 
-Ajouts propres au canal IA (à spécifier au chantier) :
+Ajouts propres au canal IA :
 
 - **Espaces de noms de commandes** (`editor.*`, `state.*`, `qml.*`, `rules.*`
   plus tard) plutôt qu'un plat de `cmd`.
+- **Un seul canal multiplexé** : rôles proposant/arbitre et namespaces
+  éditeur/runtime/règles partagent un WS local (D14).
 - **Événements poussés** (server→IA) en plus du req/rep : notifier l'IA d'un
   changement d'état (une tuile posée par un autre joueur, une phase de jeu qui
-  change) pour alimenter sa boucle perception→action sans polling.
-- **Contrat versionné** (`protocolVersion`) : la skill (doc 03) déclare la version
-  qu'elle connaît ; le serveur peut négocier/refuser.
+  change) pour alimenter sa boucle perception→action sans polling. Ils passent
+  par un adaptateur unifié branché aux signaux internes et alimentent un journal
+  métier configurable.
+- **Contrat versionné globalement** (`protocolVersion`) : la skill (doc 03)
+  déclare la version qu'elle connaît ; le serveur peut négocier/refuser.
+- **Lots transactionnels** : la cible est tout-ou-rien. Le `groupId` V2 est un
+  point de départ, mais il faut ajouter staging/rollback/ACK de commit (doc 10).
 
 ## 4. Catalogue de capacités (état des lieux V2 → cible V3)
 
@@ -161,14 +167,18 @@ IA** (message clair, code stable), pas juste `ok:false`.
 - **Deux identités locales distinctes chez l'hôte** : la cliente proposante et
   l'arbitre ne doivent pas partager les mêmes capacités. Le handshake doit porter
   un rôle et une autorisation ; le détail reste à trancher (doc 09).
+- **Garanties applicatives explicites** : le transport Catway nommé `reliable`
+  fournit ACK et fragmentation, mais aucune retransmission automatique. Toute
+  proposition/commit/verdict doit donc porter ID, ACK applicatif, retry et
+  déduplication. Les états supersédables utilisent séquence + resync (doc 10).
 
 ## 7. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
 
-- Un seul canal multiplexé (éditeur + runtime + règles) ou plusieurs ?
-- Événements poussés : sur quel bus interne se brancher (signaux `Game`,
-  `EditorOpBus.remoteOpReceived`, `ItemSnapableEvents`) ?
-- Faut-il exposer une capacité `automation.raw` (échappatoire bas niveau) pour le
-  prototypage, quitte à la retirer en prod ?
+- ~~Un seul canal multiplexé ou plusieurs ?~~ **Tranché D14 : un seul WS.**
+- Événements poussés : schéma du nouvel adaptateur/journal au-dessus des signaux
+  `Game`, `EditorOpBus` et `ItemSnapableEvents`.
+- ~~Capacité `automation.raw` ?~~ **Tranché D14 : build dev uniquement, absente
+  du manifeste livré.**
 - Politique multi-joueurs : quelles commandes restent purement locales et quelles
   propositions passent obligatoirement par l'autorité de l'hôte ? Toute mutation
   de l'état partagé doit passer par l'hôte ; la frontière exacte reste à lister.
