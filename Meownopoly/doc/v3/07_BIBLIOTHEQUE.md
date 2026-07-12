@@ -1,9 +1,10 @@
 # 07 — Bibliothèque
 
-> **Statut : intention produit actée, architecture différée (décision D4).** Les
+> **Statut : intention produit actée, format de package tranché (D29/D38).** Les
 > primitives et la capitalisation de créations servent la vision ; une
-> bibliothèque d'assets 3D est prévue. Formats, distribution et confiance restent
-> à instruire.
+> bibliothèque d'assets 3D est prévue. Le format du manifeste et les budgets de
+> départ sont fixés (D38) ; la **sécurisation (confiance/signature) est
+> explicitement différée** (D38, R16 assumé au MVP).
 
 > **Arbitrage D18.** Le premier jalon est une bibliothèque **locale, officielle
 > et unifiée**, alimentée par les développeurs. Le partage communautaire n'entre
@@ -64,10 +65,22 @@ Trois facettes complémentaires sont envisagées :
 - ~~Local ou communautaire au premier jalon ?~~ **Tranché D18 : local officiel.**
 - Périmètre exact de la bibliothèque unifiée : primitives gameplay livrées avec
   le premier pack, en plus des assets 3D.
-- Modèle de confiance : signature des primitives officielles, modération des
-  créations, re-validation systématique ?
+- ~~Modèle de confiance ?~~ **Différé explicitement (D38)** : « on verra plus
+  tard la sécurisation de la bibliothèque ». Les champs `signature`/
+  `publisherKeyId` sont **réservés** dans le manifeste dès la v1 ; R16 reste
+  ouvert et doit être réglé **avant** toute ouverture au contenu communautaire.
 - ~~Réutilisation d'`asset_server/` + launcher ?~~ **Tranché D18 : oui, après audit.**
-- Format de packaging d'une « entrée » de bibliothèque.
+- ~~Format de packaging d'une « entrée » de bibliothèque ?~~ **Tranché
+  D29/D38** : même format que l'`AssetManager`/asset_server, **étendu** —
+  identité (`id`, `version` semver, `contentHash` SHA-256 par fichier + hash
+  racine, `kind` = `asset3d|primitive|module|skin`), métadonnées (`name`,
+  `description`, `author`, `tags`, `preview`), contenu (GLB/QML/JSON +
+  `entryPoint` pour les primitives), dépendances `{id, versionRange}`,
+  champs de confiance réservés, compat (`minGameVersion`, `channelVersion`).
+- **Budgets assets (D38, provisoires)** : ≤ 50 k triangles/asset (≤ 10 k
+  recommandé posable en nombre), textures ≤ 2048² et ≤ 4/matériau PBR,
+  ≤ 20 Mo/package, animations squelettales OK, pas de shader custom au MVP —
+  **à confirmer à l'implémentation avec un premier package d'asset de test**.
 - **Assets 3D** : **GLB est retenu** et déjà supporté par `RuntimeLoader` ; imports
   réservés aux développeurs au premier jalon. La référence IA étend les clés
   existantes `(category,type,id)`/`modelName` avec version et hash.

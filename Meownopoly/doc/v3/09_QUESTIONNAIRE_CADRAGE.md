@@ -2,7 +2,7 @@
 
 > **Statut : épuré le 2026-07-12, questions restantes détaillées le 2026-07-12.**
 > Le questionnaire initial a été dépouillé et ses arbitrages reportés dans le
-> doc 08 (**D9→D34**). Ce fichier ne contient plus que les **questions encore
+> doc 08 (**D9→D39**). Ce fichier ne contient plus que les **questions encore
 > ouvertes**, chacune détaillée avec son contexte, ses options et une
 > **proposition** prête à être validée ou amendée. Les questions tranchées ou
 > devenues caduques sont retirées ; la table §0 en garde la trace.
@@ -54,10 +54,19 @@ de décision, puis retirer la question d'ici.
 | **F10 (undo sur valeur modifiée depuis)**                                                                                                       | **tranchée** : **restaure malgré tout** (LWW assumé, R10 accepté, trace au journal)                                                                                                                                                 | **D28** (2026-07-12)                               |
 | **I04 — principe (format de package)**                                                                                                          | **tranchée dans son principe** : même format que l'`AssetManager`/asset_server, étendu ; **les champs exacts restent ci-dessous**                                                                                                   | **D29** (2026-07-12)                               |
 | **J05 (scénarios du vertical slice)**                                                                                                           | **tranchée** : slice solo S1/S2/S3, défini dans `[11_VERTICAL_SLICE.md](./11_VERTICAL_SLICE.md)`                                                                                                                                    | **D30** (2026-07-12)                               |
-| **B04 — reste (UX du prérequis arbitre)** | **tranchée** : proposition validée telle quelle (indicateur 4 états, bouton grisé hors `Prêt`, test manuel + auto, bandeau + file si l'arbitre meurt) | **D31** (2026-07-12) |
-| **C06 (qui choisit/valide la forme exécutable)** | **tranchée** : sélection mécanique d'abord, arbitre confirme/rétrograde ; **un élément amendé par l'arbitre repasse par la sandbox de validation (banc D26)** | **D32** (2026-07-12) |
-| **C08 — restes (autorité/ordre des événements)** | **tranchée** : **autorité par source** (tout passe par l'hôte), ordre déterministe physique → mémoire → actions → tick via la file D12 | **D33** (2026-07-12) |
-| **D04, D05, D06 (allow-list, façade `Meow.GameApi`, budgets)** | **tranchées** : propositions validées, allow-list **élargie à `QtQuick.Controls` + modules QML custom existants** (ex. `SnapableElement` surchargés, liste énumérée dans le manifeste) | **D34** (2026-07-12) |
+| **B04 — reste (UX du prérequis arbitre)**                                                                                                       | **tranchée** : proposition validée telle quelle (indicateur 4 états, bouton grisé hors `Prêt`, test manuel + auto, bandeau + file si l'arbitre meurt)                                                                               | **D31** (2026-07-12)                               |
+| **C06 (qui choisit/valide la forme exécutable)**                                                                                                | **tranchée** : sélection mécanique d'abord, arbitre confirme/rétrograde ; **un élément amendé par l'arbitre repasse par la sandbox de validation (banc D26)**                                                                       | **D32** (2026-07-12)                               |
+| **C08 — restes (autorité/ordre des événements)**                                                                                                | **tranchée** : **autorité par source** (tout passe par l'hôte), ordre déterministe physique → mémoire → actions → tick via la file D12                                                                                              | **D33** (2026-07-12)                               |
+| **D04, D05, D06 (allow-list, façade** `Meow.GameApi`**, budgets)**                                                                              | **tranchées** : propositions validées, allow-list **élargie à** `QtQuick.Controls` **+ modules QML custom existants** (ex. `SnapableElement` surchargés, liste énumérée dans le manifeste)                                          | **D34** (2026-07-12)                               |
+| **F05, F06, F07 (delta/snapshot, garanties réseau, plafonds du bus)**                                                                           | **tranchées** : delta 30 Hz + snapshot de réparation + snapshot structurel + resync à la demande ; hybride commits ACK/retry/dédup vs état supersedable séquencé ; plafonds chiffrés, rejet `quota_exceeded`                        | **D35** (2026-07-12)                               |
+| **G06 (artefact attaché à plusieurs tuiles)**                                                                                                   | **tranchée** : store par hash + références `{hash, version}`, refcount, GC au save, migration référence par référence                                                                                                               | **D36** (2026-07-12)                               |
+| **G07 (transfert au changement d'hôte)**                                                                                                        | **tranchée** : checkpoint règlement + hashes artefacts + snapshot `state` (bloquants) + contexte arbitre (best-effort) ; propositions suspendues jusqu'au handshake D24 + ACK du checkpoint                                          | **D37** (2026-07-12)                               |
+| **I04 — reste (champs du manifeste de package)**                                                                                                | **tranchée** : champs étendus validés (identité/métadonnées/contenu/dépendances/confiance/compat)                                                                                                                                   | **D38** (2026-07-12)                               |
+| **I05 (modèle de confiance de la bibliothèque)**                                                                                                | **différée explicitement** : « on verra plus tard la sécurisation de la bibliothèque » ; champs `signature`/`publisherKeyId` réservés, R16 à régler avant tout contenu communautaire                                                | **D38** (2026-07-12)                               |
+| **I09 (budgets assets)**                                                                                                                        | **tranchée provisoirement** : valeurs de départ acceptées, à confirmer à l'implémentation avec un premier package d'asset de test                                                                                                   | **D38** (2026-07-12)                               |
+| **J03 (diagnostic de divergence entre pairs)**                                                                                                  | **tranchée** : hash périodique du `state` diffusé avec le snapshot de réparation + `RequestStateSnapshot` en cas de divergence                                                                                                      | **D39** (2026-07-12)                               |
+
+
 
 
 ---
@@ -121,174 +130,6 @@ vertical slice.
 
 
 
-## F. Mémoire et réseau runtime
-
-
-
-### Q-F05 — Spécifier la stratégie delta/snapshot — **B0**
-
-Orientation donnée : delta sur modification courante, snapshot sur ajout
-d'item ; aucun snapshot de **réparation** n'existe (un delta perdu n'est
-jamais rattrapé).
-
-**Proposition.**
-
-- **Delta** : écritures `state` coalescées par (tuile, clé) à **30 Hz** max
-(cadence alignée sur `PhysicsSession`), LWW hôte.
-- **Snapshot de réparation** : snapshot **périodique** du namespace `state`
-(ex. toutes les **5 s** ou tous les 128 deltas) diffusé avec le numéro de
-séquence ; un pair qui détecte un trou de séquence applique le prochain
-snapshot au lieu de demander la retransmission.
-- **Snapshot structurel** : à chaque ajout/suppression d'item (déjà décidé,
-D7) et à l'entrée d'un nouveau pair (full-sync existant étendu à la mémoire).
-- **Resync à la demande** : `RequestStateSnapshot` explicite (utilisé aussi
-par Q-J03).
-- **Réponse :**
-
-
-
-### Q-F06 — Confirmer le modèle hybride reliable/supersedable — **B0**
-
-Le chemin nommé `reliable` ne retransmet pas (R13).
-
-**Proposition à confirmer** (cohérente D15) :
-
-- **Intentions/commits** (propositions, verdicts, ops d'édition, écritures
-`config`) : **ACK applicatif + retry + déduplication par ID** — nouvelle
-couche V3 au-dessus de Catway.
-- **État supersedable** (`state`, positions) : **séquence + snapshot de
-réparation** (Q-F05) — une valeur perdue est remplacée par la suivante,
-jamais retransmise.
-- Chaque message porte son type de garantie dans l'en-tête ; aucun flux ne
-repose sur la « fiabilité » implicite de `reliable.io`.
-- **Réponse :**
-
-
-
-### Q-F07 — Cadence et plafonds du bus d'état ? — **B1** *(valeurs de départ à affiner en test)*
-
-**Proposition de valeurs initiales** :
-
-- **Cadence maximale** : 30 Hz par tuile (coalescence en deçà).
-- **Taille max** : 1 KB par valeur, 8 KB par tuile, 256 KB par session.
-- **Budget bande passante** : ~64 KB/s par pair pour le bus d'état (à comparer
-aux snapshots physiques 30 Hz existants).
-- **Politique de dépassement** : l'écriture est **rejetée à la source** avec
-erreur structurée `{code: "quota_exceeded", retryable: false}` (remontée
-telle quelle à l'IA via le canal) — jamais de troncature silencieuse.
-- **Réponse :**
-
----
-
-
-
-## G. Artefacts : cycle de vie et migration
-
-
-
-### Q-G06 — Cycle de vie d'un artefact attaché à plusieurs tuiles ? — **B1**
-
-**Proposition** (s'appuie sur D16 : store séparé + références dans la map) :
-
-- **Ownership** : l'artefact vit dans le **store par hash** ; les tuiles ne
-portent que des **références** `{hash, version}`. Pas de copie par tuile.
-- **Suppression** : compteur de références ; la suppression de la dernière
-tuile référençante marque l'artefact « orphelin », purgé au **save** (GC),
-pas immédiatement (permet l'undo de la suppression).
-- **Mise à jour/migration** : une nouvelle version = nouveau hash ; les tuiles
-migrent référence par référence (proposition arbitrée si le comportement
-change), l'ancienne version reste dans le store tant qu'elle est référencée.
-- **Réponse :**
-
-
-
-### Q-G07 — Que transfère-t-on lors d'un changement d'hôte ? — **B0**
-
-L'élection/promotion éditeur (Phase 8) ne transfère ni règlement, ni
-artefacts, ni état runtime, ni contexte d'arbitre (R15).
-
-**Proposition** — le checkpoint de migration contient, dans l'ordre de
-priorité :
-
-1. **Règlement versionné** (document structuré D12) — bloquant ;
-2. **Hashes des artefacts actifs** (le nouvel hôte télécharge les sources
-  manquantes auprès des pairs, mécanique D16 « artefact manquant ») —
-   bloquant ;
-3. **Snapshot** `state` le plus récent + séquence — bloquant ;
-4. **Contexte d'arbitre** : le résumé de session de l'ancien arbitre
-  (journal D19 depuis le début de partie + verdicts) injecté en pré-prompt du
-   nouvel arbitre — best-effort si l'ancien hôte est parti brutalement (le
-   journal répliqué chez les pairs sert de source).
-
-- **Reprise** : les propositions restent **suspendues** tant que le nouvel
-arbitre n'a pas passé le handshake D24 **et** accusé réception du checkpoint.
-- **Réponse :**
-
----
-
-
-
-## I. Bibliothèque : format et confiance
-
-
-
-### Q-I04 (reste) — Champs exacts du manifeste de package — **B1**
-
-Le principe est tranché (D29 : même format que l'`AssetManager`, étendu).
-
-**Proposition de champs étendus** (en plus de l'existant asset_server) :
-
-- **Identité** : `id`, `version` (semver), `contentHash` (SHA-256 par fichier
-  - hash racine), `kind` (`asset3d` | `primitive` | `module` | `skin`).
-- **Métadonnées** : `name`, `description`, `author`, `tags`, `preview`.
-- **Contenu** : fichiers GLB/QML/JSON ; `entryPoint` pour les primitives.
-- **Dépendances** : liste de `{id, versionRange}` (assets référencés).
-- **Confiance** : `signature` (asymétrique, R16), `publisherKeyId`.
-- **Compat** : `minGameVersion`, `channelVersion` (version du manifeste du
-canal pour les primitives exposant des capacités).
-- **Réponse :**
-
-
-
-### Q-I05 — Quel modèle de confiance ? — **B0**
-
-Au premier jalon la bibliothèque est locale/officielle (D18), mais la chaîne
-de signature n'existe pas (R16 : le SHA-256 du launcher vérifie l'intégrité,
-pas l'identité de l'éditeur).
-
-- [ ] **Officiel signé + communautaire revalidé** *(recommandation : les
-  ```
-  packages officiels signés sont dispensés du banc d'essai ; tout contenu
-  non signé — communautaire futur — repasse par la validation complète
-  D26 chez celui qui le charge)*
-  ```
-- [ ] Tout revalider, signature informative
-- [ ] Modération serveur avant publication
-- [ ] Combinaison :
-
-- **Réponse :**
-
-
-
-### Q-I09 — Quels budgets pour les assets ? — **B1**
-
-**Proposition de valeurs initiales** (à confronter aux assets existants et à
-la cible perf du plateau 3D) :
-
-- **Triangles/mesh** : ≤ 50 k par asset (≤ 10 k recommandé pour les items
-posables en nombre).
-- **Textures** : ≤ 2048×2048, formats compressés ; ≤ 4 textures par matériau
-(PBR base/normal/metal-rough/émission).
-- **Taille disque/réseau** : ≤ 20 Mo par package.
-- **Animations/materials** : animations squelettales autorisées (le pipeline
-GLB les supporte), matériaux PBR standard uniquement (pas de shader custom
-au MVP).
-- **Réponse :**
-
----
-
-
-
 ## J. Observabilité et sortie du cadrage
 
 
@@ -312,27 +153,6 @@ Prompts du tchat hors noyau d'audit : purgés à la fin de session.
 logs ni le journal ; ils restent dans la config de l'agent du joueur.
 - **Export** : un bouton d'export du journal (D19) pour debug/partage,
 action explicite du joueur uniquement.
-- **Réponse :**
-
-
-
-### Q-J03 — Comment diagnostiquer une divergence entre pairs ? — **B1**
-
-**Vérification stack effectuée** (réponse au « vérifier la stack
-host-authoritative existante ») : le full-sync éditeur et les snapshots
-physiques **réparent** mais ne **détectent** pas — aucun hash/version d'état,
-aucune demande explicite de resync n'existe en V2 (doc 10). Un choix reste
-donc nécessaire.
-
-- [ ] **Hash périodique d'état + resync** *(recommandation : hash du `state`
-  ```
-  calculé côté hôte et diffusé avec le snapshot de réparation Q-F05 ; un
-  pair dont le hash local diverge demande `RequestStateSnapshot` — coût
-  quasi nul, réutilise la mécanique F05)*
-  ```
-- [ ] Journal d'événements rejouable
-- [ ] Snapshot autoritatif à la demande
-
 - **Réponse :**
 
 
@@ -376,14 +196,23 @@ briques + espace mémoire + règles en config/DSL, sans QML génératif.
 ### Q-J07 — Quel est le prochain document à produire ? — **B1**
 
 - [x] Spécification du prototype sandbox R1 — **fait** :
-      [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) (banc d'essai
-      hors-process D26 : job/verdict JSON, phases P0→P5, corpus de test,
-      critères de sortie R1, pool, cache de verdicts)
+  ```
+  `[12_BANC_ESSAI_R1.md](./12_BANC_ESSAI_R1.md)` (banc d'essai
+  hors-process D26 : job/verdict JSON, préfiltre P0 in-game + phases
+  P1→P5 au banc, corpus de test,
+  critères de sortie R1, pool, cache de verdicts)
+  ```
 - [x] Plan du vertical slice — **fait** : `[11_VERTICAL_SLICE.md](./11_VERTICAL_SLICE.md)`
-- [ ] Schéma du protocole/enveloppe de proposition *(prochain : requis par S2)*
+- [x] Schéma du protocole/enveloppe de proposition — **fait** :
+  ```
+  `[13_ENVELOPPE_PROPOSITION.md](./13_ENVELOPPE_PROPOSITION.md)`
+  (enveloppe, cycle de vie, verdict à deux audiences, transport, journal)
+  ```
 - [ ] ADR consolidés supplémentaires
 
-- **Ordre retenu :** spec R1 ✓ → slice ✓ → **enveloppe de proposition** → ADR.
+- **Ordre retenu :** spec R1 ✓ → slice ✓ → enveloppe ✓ → les trois documents
+de sortie de cadrage sont produits ; la suite est l'**implémentation**
+(prototype R1 doc 12, puis chantiers M1/M-adaptateur du slice).
 
 
 
@@ -404,7 +233,7 @@ responsable par famille, l'autre relisant :
 
 ## Synthèse (état au 2026-07-12)
 
-- **Arbitré (D9→D34)** : périmètre trois modes **livrés solo → collab →
+- **Arbitré (D9→D39)** : périmètre trois modes **livrés solo → collab →
 runtime**, arbitre obligatoire partout avec **handshake + challenge** et
 **UX de prérequis validée** (4 états, blocage, file de propositions),
 grain d'arbitrage **configurable par UI**, **un amendement d'arbitre repasse
@@ -412,20 +241,22 @@ par le banc de validation**, événements en **autorité par source** (tout
 passe par l'hôte, ordre déterministe), agents `claude -p`/Codex supervisés
 et **invoqués in-app via tchat ingame**, sandbox de validation = **banc
 d'essai hors-process** (spécifié doc 12) avec **allow-list élargie**
-(`QtQuick.Controls` + modules custom énumérés), **façade `Meow.GameApi` et
+(`QtQuick.Controls` + modules custom énumérés), **façade** `Meow.GameApi` **et
 budgets validés**, canal = serveur MCP local en **streamable HTTP intégré au
 jeu**, screenshots plafonnés/éphémères/annoncés, mémoire `config`/`state`
-avec **sauvegarde de partie distincte** et **undo qui restaure malgré tout**,
-artefacts sous autorité hôte, skill générée au build et injectée en
-pré-prompt, bibliothèque locale officielle GLB au **format asset manager
-étendu**, journal configurable à noyau d'audit obligatoire, **vertical slice
-solo S1/S2/S3 défini (doc 11)**.
+avec **sauvegarde de partie distincte**, **undo qui restaure malgré tout** et
+**bus d'état complet** (delta 30 Hz + snapshots de réparation/structurel +
+resync, garanties hybrides commits/supersedable, plafonds chiffrés, D35),
+**divergence détectée par hash périodique + resync** (D39), artefacts sous
+autorité hôte avec **cycle de vie multi-tuiles** (store par hash, refcount,
+GC au save, D36) et **checkpoint de migration d'hôte** (D37), skill générée
+au build et injectée en pré-prompt, bibliothèque locale officielle GLB au
+**format asset manager étendu** avec **manifeste de package validé** (D38 ;
+sécurisation différée, budgets assets provisoires), journal configurable à
+noyau d'audit obligatoire, **vertical slice solo S1/S2/S3 défini (doc 11)**,
+**enveloppe de proposition spécifiée (doc 13)**.
 - **Encore ouvert — chaque question ci-dessus porte une proposition prête à
 valider** : résumé/curseur d'événements (E06), manifeste des tools MVP (E08),
-delta/snapshot (F05), garanties réseau (F06), plafonds du bus (F07), cycle
-de vie des artefacts (G06), checkpoint de migration (G07), champs du package
-(I04), modèle de confiance (I05), budgets assets (I09), données privées
-(J02), détection de divergence (J03), indicateurs d'arbitrage (J04),
-critères de repli D1 (J06), prochains docs (J07 — enveloppe de proposition),
-responsables par famille (J08).
+données privées (J02), indicateurs d'arbitrage (J04), critères de repli D1
+(J06), responsables par famille (J08).
 

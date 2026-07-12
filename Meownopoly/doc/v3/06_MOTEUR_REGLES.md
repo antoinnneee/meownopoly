@@ -87,12 +87,18 @@ Conséquences directes :
   matérialisé (espace mémoire d'une entité « partie », doc 05) pour survivre à un
   redémarrage / une migration d'hôte ?
 - **Format d'une règle proposée** par une IA cliente : texte libre pour l'arbitre,
-  données structurées, ou artefact QML/JS (doc 04) ? Comment l'arbitre l'« accepte »
-  concrètement (verdict D6) et la rend effective.
-- **Forme exécutable d'une règle acceptée** : plan de capacités, configuration de
-  module, machine à états/DSL borné, ou QML/JS ? Qui compile/valide cette forme ?
-- **Déclenchement runtime** : quels événements sont autoritatifs, comment une
-  règle s'y abonne-t-elle et comment empêche-t-on boucles/réentrance ?
+  données structurées, ou artefact QML/JS (doc 04) ? Le mécanisme d'acceptation
+  est, lui, spécifié : verdict D11 (deux audiences, doc 13) et application via
+  l'enveloppe de proposition.
+- ~~**Forme exécutable d'une règle acceptée** : qui compile/valide cette
+  forme ?~~ **Tranché D32** : sélection **mécanique** d'abord (l'échelle D12
+  choisit la forme la plus basse suffisante), l'arbitre confirme ou rétrograde ;
+  un élément amendé repasse par le banc D26. Reste le détail des formes
+  intermédiaires (DSL borné vs config de module) au cas par cas.
+- ~~**Déclenchement runtime** : quels événements sont autoritatifs ?~~
+  **Tranché D33** : autorité **par source** (rien n'est autoritatif sans passer
+  par l'hôte), ordre déterministe physique → mémoire → actions → tick via la
+  file D12 (qui couvre aussi boucles/réentrance : profondeur max, cycles).
 - **Réplication** : après acceptation, comment le nouveau règlement se propage aux
   autres joueurs (host-authoritative) et à leurs IA clientes ?
 - **Rapport avec `GameplayModuleManager` existant** : les règles s'appuient-elles
@@ -106,6 +112,9 @@ Conséquences directes :
 
 ## 5. Prochaine action
 
-Rouvrir ce document une fois les docs 04 (sandbox) et 05 (espace mémoire) stables,
-et après une cartographie dédiée du gameplay V2 existant. Poser à ce moment une
-décision **D-règles** dans le doc 08.
+Une partie du sous-cadrage est depuis posée dans le doc 08 : représentation
+hiérarchique (D12), sélection des formes exécutables (D32), autorité/ordre des
+événements (D33). Rouvrir ce document pour le reste (mémorisation du règlement,
+réplication, format d'une règle proposée) une fois les docs 04 (sandbox) et 05
+(espace mémoire) stables, et après une cartographie dédiée du gameplay V2
+existant.

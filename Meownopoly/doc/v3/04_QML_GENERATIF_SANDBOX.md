@@ -56,8 +56,9 @@ canal (doc 02) et la scène.
    l'artefact candidat pour détecter avant introduction : non-chargement,
    **boucle infinie** (→ le process de test est tué, le jeu ne gèle jamais),
    crash, dépassement de budget. **Spécifié dans
-   [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md)** (job/verdict JSON, phases
-   P0→P5, corpus de test, pool, cache de verdicts, critères de sortie R1).
+   [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md)** (job/verdict JSON,
+   préfiltre P0 in-game + phases P1→P5 au banc, corpus de test, pool, cache
+   de verdicts, critères de sortie R1).
 2. **Exécution en partie = confinement in-process (D13, conditionnel R1
    recentré).** Le code **déjà validé** tourne dans le moteur du jeu avec
    contexte restreint, façade API et budgets runtime. La machine locale est

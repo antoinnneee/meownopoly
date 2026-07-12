@@ -90,12 +90,22 @@ automatique. « Dernier état » signifie que les versions intermédiaires peuve
 être coalescées/supplantées ; il faut éviter de rejouer des états obsolètes. Le
 choix « message dédié ou extension physique » ne définit pas à lui seul
 l'architecture : D15 demande un **bus d'état générique partagé**, nouvelle brique
-inspirée des deux protocoles. Delta,
-snapshot de réparation et budgets restent à trancher (doc 09/10).
+inspirée des deux protocoles. Delta, snapshot de réparation et budgets sont
+tranchés par **D35** : delta coalescé par (tuile, clé) à 30 Hz max, **snapshot
+de réparation** périodique (~5 s ou 128 deltas, avec numéro de séquence — un
+trou de séquence attend le prochain snapshot), **snapshot structurel** à chaque
+ajout/suppression d'item et à l'entrée d'un pair, **resync à la demande**
+(`RequestStateSnapshot`). Plafonds (valeurs de départ) : 1 KB/valeur,
+8 KB/tuile, 256 KB/session, ~64 KB/s/pair ; dépassement = rejet à la source
+`{code: "quota_exceeded", retryable: false}`, jamais de troncature silencieuse.
 
 > **Correction stack.** Le composant tiers nommé `reliable` ne retransmet pas
-> automatiquement. Les intentions/commits exigent retry applicatif ; les états
-> supersédables exigent séquence + réparation (doc 10).
+> automatiquement. **Tranché D35** : les intentions/commits passent par un
+> ACK applicatif + retry + déduplication par ID (nouvelle couche V3) ; les
+> états supersédables par séquence + snapshot de réparation. Chaque message
+> porte son type de garantie dans l'en-tête. La divergence entre pairs est
+> détectée par un **hash du `state` diffusé avec le snapshot de réparation**
+> (D39) ; un pair divergent demande `RequestStateSnapshot`.
 
 ## 3. Stratégie d'intégration (recommandée)
 
@@ -140,12 +150,14 @@ s'appuie sur le futur bus d'état générique (§2.3) :
   réveille scripts/règles (usage 3, §1). **Pas** de passage par `applyDelta` (donc
   pas d'historisation).
 - **non-undoable** au grain de l'écriture : c'est de l'état, pas une édition.
-  Le choix reliable/raw et la cadence ne sont pas encore décidés.
+  Garanties et cadence tranchées par D35 (supersedable : séquence + snapshot
+  de réparation, 30 Hz max par tuile).
 - l'hôte séquence les écritures acceptées ; la résolution initiale est LWW selon
   cet ordre autoritatif.
 
-À trancher (doc 08) : message `MemorySnapshot` **dédié** vs **extension** du snapshot
-physique ; **delta par-clé** vs snapshot complet par tuile ; débit et plafond.
+Reste à trancher (doc 08) : message `MemorySnapshot` **dédié** vs **extension**
+du snapshot physique (détail d'implémentation). Le **delta par-clé**, le débit
+et les plafonds sont tranchés par **D35**.
 
 ### Étape C — Transaction structurelle et compensation ciblée
 Une proposition acceptée doit déclarer son **write-set durable** : artefacts créés,
@@ -213,9 +225,14 @@ transport afin de ne pas envoyer chaque tick dans l'undo ni de persister un éta
   namespaces `config`/`state`.**
 - Frontière exacte **configuration durable / état runtime** et persistance de
   l'état lors d'une sauvegarde/reprise de partie.
-- **Transport du runtime** (Étape B) : protocole dédié vs extension physique ;
-  delta/snapshot, coalescence, fiabilité, cadence et plafond.
+- ~~**Transport du runtime** (Étape B) : delta/snapshot, coalescence,
+  fiabilité, cadence et plafond ?~~ **Tranché D35** (delta 30 Hz + snapshots
+  de réparation/structurel + resync ; hybride commits/supersedable ; plafonds
+  chiffrés). Reste le détail : message `MemorySnapshot` dédié vs extension du
+  snapshot physique.
 - **Transaction d'undo** (Étape C) : déclaration du write-set, conflits et redo.
+  (Conflit tranché D28 : restaure malgré tout ; le redo reste à préciser.)
 - ~~Mémoire sur les entités non-tuiles ?~~ **Tranché D15 : tuiles + session +
   joueurs.** L'objet C++ exact pour la session/joueur reste à concevoir.
-- Plafond de taille du blob et politique en cas de dépassement.
+- ~~Plafond de taille du blob et politique en cas de dépassement ?~~ **Tranché
+  D35** : 1 KB/valeur, 8 KB/tuile, 256 KB/session, rejet `quota_exceeded`.

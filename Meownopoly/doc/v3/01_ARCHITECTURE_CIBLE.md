@@ -110,8 +110,9 @@ Point d'ancrage réseau pressenti : le même domaine d'autorité que
 `EditorSession`. Le code V2 fournit déjà rate-limit, séquencement et rebroadcast,
 mais **pas une validation sémantique générique** des ops : la passerelle
 d'arbitrage et ses validateurs sont donc une nouvelle responsabilité, pas un
-simple branchement sur un validateur existant. **À cadrer (D6)** : sa nature,
-son grain et le format de son verdict.
+simple branchement sur un validateur existant. Sous-cadrage D6 depuis levé :
+nature tranchée (LLM externe, D10), grain configurable par UI (D25), verdict
+à deux audiences (D11, doc 13).
 
 ### 2.6 Règles (doc 06, gouvernées par l'arbitre) & Bibliothèque (doc 07)
 Les **règles sont gouvernées par l'arbitre** (D8, §2.5) — pas de moteur générique

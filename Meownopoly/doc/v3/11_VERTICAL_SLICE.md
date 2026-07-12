@@ -95,7 +95,7 @@ le joueur voit dans le tchat une explication compréhensible du refus.
 | Brique (traversée a minima) | Chantier doc 10 | Décisions |
 |-----------------------------|-----------------|-----------|
 | Passerelle MCP streamable HTTP + tokens par rôle | M1 | D20/D21 |
-| Tools MVP : `state_query`, `editor_place`, `editor_edit`, `memory_set`, `artifact_submit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-E08 |
+| Tools (sous-ensemble du manifeste MVP à 10 tools traversé par le slice — `help` et `roster_edit` non requis) : `state_query`, `editor_place`, `editor_edit`, `memory_set`, `artifact_submit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-E08 |
 | Adaptateur agents (spawn `claude -p`, supervision, pré-prompt) + tchat ingame minimal | M-adaptateur | D10/D17 |
 | Skill générée du manifeste, injectée en pré-prompt | M-skill | D17 |
 | Handshake + challenge arbitre | M-adaptateur | D24 |

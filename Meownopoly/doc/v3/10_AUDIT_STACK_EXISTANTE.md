@@ -191,19 +191,22 @@ est donc une cible produit validée, avec un chantier de qualification à créer
 
 Les réponses suivantes ne peuvent pas être closes par « stack existante » :
 
-- **E03** : authentification du canal ;
-- **E06/F06** : livraison, retry, ordre et déduplication ;
-- **F02** : format de sauvegarde runtime ;
-- **F04** : bus d'état générique ;
+- **E03** : authentification du canal — depuis tranchée (D20, token au spawn) ;
+- **E06/F06** : livraison, retry, ordre et déduplication — F06 depuis tranchée
+  (D35, hybride commits/supersedable) ;
+- **F02** : format de sauvegarde runtime — depuis tranchée (D27) ;
+- **F04** : bus d'état générique — cadence/plafonds depuis tranchés (D35) ;
 - **G03** : identité/version d'artefact ;
-- **G04** : store d'artefacts ;
-- **J03** : détection/réparation de divergence.
+- **G04** : store d'artefacts — cycle de vie multi-tuiles depuis tranché (D36) ;
+- **J03** : détection/réparation de divergence — depuis tranchée (D39, hash
+  périodique + `RequestStateSnapshot`).
 
-Elles restent ouvertes ou deviennent des chantiers explicites dans le doc 09.
+Celles non tranchées restent ouvertes ou deviennent des chantiers explicites
+dans le doc 09.
 
 ## 9. Modifications à effectuer sur les stacks existantes
 
-Cette section traduit les décisions D9→D34 en modifications concrètes du socle
+Cette section traduit les décisions D9→D39 en modifications concrètes du socle
 V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
 frontières sont, elles, normatives pour le cadrage.
 

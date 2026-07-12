@@ -94,10 +94,11 @@
   mais pas une validation sémantique générique : la passerelle de proposition et
   ses validateurs sont une responsabilité V3 nouvelle. L'arbitre **ne porte pas**
   de garantie de sécurité dure.
-- **Différé (sous-cadrage).** La **nature** de l'arbitre (LLM / règles
-  déterministes / hybride), son **grain** (par action / par lot / par artefact
-  QML), le **format de verdict** rendu au proposant, et son **articulation** avec
-  l'exécution des règles (doc 06) restent à instruire — voir §2 « IA arbitre ».
+- **Sous-cadrage (depuis levé).** La **nature** de l'arbitre est tranchée
+  (LLM externe supervisé, D10) ; le **grain** par **D25** (configurable par
+  UI, plancher sur code/règles) ; le **format de verdict** par **D11** et le
+  doc 13 (verdict à deux audiences). Reste son **articulation** avec
+  l'exécution des règles (doc 06 §4 : mémorisation, réplication).
 - **Alternatives écartées.** IA unique par joueur mêlant proposition et validation
   (dilue la garantie d'intégrité) ; validation purement mécanique sans arbitre
   (perd le jugement contextuel « cohérence/équilibre »).
@@ -180,6 +181,9 @@
   write-set et version. Le flux est préfiltre mécanique → arbitre → validation
   complète → exécution. L'arbitre peut amender et appliquer immédiatement ; le
   journal conserve proposition originale, raisons, verdict et version appliquée.
+- **Schéma spécifié (2026-07-12)** :
+  [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) — enveloppe,
+  cycle de vie, verdict à deux audiences, transport, journal.
 - **Conséquence.** L'amendement ne repasse pas obligatoirement par le proposant,
   mais ne peut être silencieux dans l'audit. L'application partagée reste
   autoritative côté hôte.
@@ -364,9 +368,9 @@
   rôle) + **challenge de capacité** (vérification qu'il accède bien aux tools de
   verdict et connaît la version du protocole). L'app invoquant elle-même les
   modèles (D10), ce test est fait **avant** d'ouvrir la session IA.
-- **Reste ouvert (Q-B04).** L'**UX du prérequis** : comment le lobby affiche
-  l'état de l'arbitre (absent / test en cours / prêt / en erreur) et bloque le
-  lancement — détaillé dans le doc 09.
+- **UX du prérequis : tranchée depuis par D31** (indicateur 4 états dans le
+  lobby, bouton grisé hors `Prêt`, re-test manuel + auto, bandeau + file si
+  l'arbitre meurt).
 
 ### D25 — Grain d'arbitrage : **configurable par UI** (ferme Q-C01)
 - **Décision (2026-07-12).** Une **UI de configuration** définit quels **types
@@ -428,7 +432,8 @@
   fichiers, distribution HTTP, checksum), étendu pour les besoins V3 :
   version, hash de contenu, signature d'éditeur (R16), et types d'entrées
   au-delà des assets (primitives, modules).
-- **Reste ouvert (Q-I04).** La liste exacte des champs du manifeste étendu.
+- **Champs du manifeste : tranchés depuis par D38** (identité/métadonnées/
+  contenu/dépendances/confiance réservée/compat).
 
 ### D30 — Vertical slice défini (ferme Q-J05)
 - **Décision (2026-07-12).** Le vertical slice est défini dans
@@ -504,11 +509,83 @@
   CPU ≤ 2 ms/événement, ≤ 0,5 ms/tick ; mémoire ≤ 8 Mo ; ≤ 200 objets ;
   ≤ 30 émissions/s ; `Timer` ≥ 100 ms ; chargement au banc ≤ 5 s.
 
+### D35 — Bus d'état runtime : delta/snapshot, garanties hybrides, plafonds (ferme Q-F05/Q-F06/Q-F07)
+- **Décision (2026-07-12).** Les trois propositions du doc 09 sont validées.
+- **Stratégie delta/snapshot (F05).** Le flux de base reste le delta coalescé
+  par (tuile, clé) à 30 Hz max, LWW hôte (D7). Trois mécanismes de rattrapage
+  retenus explicitement : **snapshot de réparation** périodique du namespace
+  `state` (~5 s ou 128 deltas, diffusé avec numéro de séquence — un trou de
+  séquence attend le prochain snapshot, jamais de retransmission),
+  **snapshot structurel** à chaque ajout/suppression d'item et à l'entrée
+  d'un pair (full-sync étendu à la mémoire), et **resync à la demande**
+  (`RequestStateSnapshot`, réutilisé par D39).
+- **Garanties hybrides (F06).** Deux classes de messages, le type de garantie
+  porté dans l'en-tête : **intentions/commits** (propositions, verdicts, ops
+  d'édition, écritures `config`) = ACK applicatif + retry + déduplication par
+  ID (nouvelle couche V3 au-dessus de Catway) ; **état supersedable**
+  (`state`, positions) = séquence + snapshot de réparation. Aucun flux ne
+  repose sur la fiabilité implicite de `reliable.io` (répond à R13).
+- **Plafonds (F07)** — valeurs de départ à affiner en test : 30 Hz/tuile,
+  1 KB/valeur, 8 KB/tuile, 256 KB/session, ~64 KB/s/pair ; dépassement =
+  rejet à la source avec `{code: "quota_exceeded", retryable: false}` remonté
+  tel quel à l'IA, jamais de troncature silencieuse.
+
+### D36 — Artefact multi-tuiles : store par hash, refcount, GC au save (ferme Q-G06)
+- **Décision (2026-07-12).** Proposition validée. L'artefact vit dans le
+  **store par hash** (D16) ; les tuiles ne portent que des références
+  `{hash, version}`, pas de copie par tuile.
+- **Suppression** : compteur de références ; dernière référence retirée →
+  artefact « orphelin », **purgé au save** (GC), pas immédiatement (préserve
+  l'undo de la suppression).
+- **Mise à jour** : nouvelle version = nouveau hash ; migration référence par
+  référence (proposition arbitrée si le comportement change), l'ancienne
+  version reste au store tant qu'elle est référencée.
+
+### D37 — Checkpoint de migration d'hôte (ferme Q-G07)
+- **Décision (2026-07-12).** Proposition validée (répond à R15). Le checkpoint
+  contient, par priorité : **1)** règlement versionné (D12) — bloquant ;
+  **2)** hashes des artefacts actifs (le nouvel hôte télécharge les sources
+  manquantes auprès des pairs, mécanique D16) — bloquant ; **3)** snapshot
+  `state` le plus récent + séquence — bloquant ; **4)** contexte d'arbitre
+  (journal D19 + verdicts injectés en pré-prompt du nouvel arbitre) —
+  best-effort si l'ancien hôte est parti brutalement (le journal répliqué
+  chez les pairs sert de source).
+- **Reprise** : les propositions restent suspendues tant que le nouvel arbitre
+  n'a pas passé le handshake D24 **et** accusé réception du checkpoint.
+
+### D38 — Package bibliothèque : manifeste validé, confiance différée, budgets provisoires (ferme Q-I04/Q-I09, diffère Q-I05)
+- **Décision (2026-07-12).**
+- **Champs du manifeste (I04, validés)** — en plus de l'existant asset_server :
+  identité (`id`, `version` semver, `contentHash` SHA-256 par fichier + hash
+  racine, `kind` = `asset3d|primitive|module|skin`), métadonnées (`name`,
+  `description`, `author`, `tags`, `preview`), contenu (GLB/QML/JSON,
+  `entryPoint` pour les primitives), dépendances `{id, versionRange}`,
+  confiance (`signature`, `publisherKeyId` — champs réservés, cf. ci-dessous),
+  compat (`minGameVersion`, `channelVersion`).
+- **Modèle de confiance (I05) : différé** — « on verra plus tard la
+  sécurisation de la bibliothèque ». Les champs `signature`/`publisherKeyId`
+  sont réservés dans le manifeste dès la v1 pour ne pas casser le format,
+  mais la chaîne de signature n'est pas un chantier du MVP. R16 reste ouvert
+  et devra être réglé **avant** toute ouverture au contenu communautaire.
+- **Budgets assets (I09) : valeurs de départ acceptées provisoirement**, à
+  confirmer à l'implémentation avec un **premier package d'asset de test** :
+  ≤ 50 k triangles/asset (≤ 10 k recommandé posable en nombre), textures
+  ≤ 2048², ≤ 4/matériau PBR, ≤ 20 Mo/package, animations squelettales OK,
+  pas de shader custom au MVP.
+
+### D39 — Divergence entre pairs : hash périodique d'état + resync (ferme Q-J03)
+- **Décision (2026-07-12).** Vérification stack faite (doc 10) : le full-sync
+  éditeur et les snapshots physiques **réparent** mais ne **détectent** pas
+  (aucun hash/version d'état en V2). Choix : **hash du `state` calculé côté
+  hôte et diffusé avec le snapshot de réparation D35** ; un pair dont le hash
+  local diverge demande `RequestStateSnapshot`. Coût quasi nul, réutilise la
+  mécanique F05/D35.
+
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
 remplissable des **questions encore ouvertes** (épuré le 2026-07-12, arbitrages
-reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
+reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
 
 ### Sécurité (bloquant pour D1)
 - Jusqu'où peut-on **verrouiller** un `QQmlContext` et l'allow-list d'imports dans
@@ -539,8 +616,9 @@ reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   (pose, caméra, introspection d'état…) et lesquelles **rester** test-only ?
   Granularité du **groupement de tools** à mesurer (économie de tokens, D20).
 - ~~Échappatoire `automation.raw` ?~~ **Tranché D14 : build dev uniquement.**
-- Garanties applicatives de livraison/retry/déduplication au-dessus du composant
-  d'ACK `reliable.io` (doc 10) — concerne le P2P entre pairs, pas le canal local.
+- ~~Garanties applicatives de livraison/retry/déduplication au-dessus du composant
+  d'ACK `reliable.io` ?~~ **Tranché D35** : ACK/retry/dédup pour les commits,
+  séquence + snapshot de réparation pour l'état supersedable.
 
 ### Capacités manquantes (chantiers identifiés)
 - Réconcilier **hooks ↔ tools MCP** (des hooks existent sans tool MCP) — prérequis
@@ -568,8 +646,8 @@ reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   format proposé/accepté, exécution, mémorisation et réplication (doc 06 §4).
 - ~~Panne / absence d'arbitre~~ **Tranché (D6)** : l'arbitre est **obligatoire**.
   Pas d'hôte sans arbitre ; à défaut, le mode IA est indisponible (repli jeu
-  classique). Reste à définir l'**UX du prérequis** : comment le jeu détecte/exige
-  qu'un arbitre soit branché avant d'autoriser l'hébergement d'une partie IA.
+  classique). ~~UX du prérequis ?~~ **Tranché D24/D31** : handshake + challenge
+  avant ouverture, indicateur 4 états dans le lobby, blocage hors `Prêt`.
 
 ### Espace mémoire (doc 05, sémantiques tranchées par D7)
 - ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : `memory` global avec
@@ -577,14 +655,16 @@ reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 - Schéma/noms de la **configuration durable** et de l'**état runtime**.
   ~~Sauvegardable séparément ?~~ **Tranché D27 : sauvegarde de partie
   distincte de la map.**
-- **Transport runtime** : D15 demande un bus générique nouveau ; delta/snapshot
-  de réparation, retry/séquence, cadence et plafond restent ouverts.
+- ~~**Transport runtime** : delta/snapshot de réparation, retry/séquence,
+  cadence et plafond ?~~ **Tranché D35** : delta 30 Hz + snapshots de
+  réparation/structurel + resync, garanties hybrides, plafonds chiffrés.
 - **Undo ciblé** (D7) : write-set durable requis. ~~Conflit si une clé a changé
   depuis ?~~ **Tranché D28 : restaure malgré tout** (LWW assumé, R10 accepté).
   Comportement du **redo** encore à préciser.
 - Traiter proprement la **sérialisation string-manuelle** de `ItemSnapable::toJSON`
   (piège n°1).
-- Plafond de taille du blob.
+- ~~Plafond de taille du blob ?~~ **Tranché D35** : 1 KB/valeur, 8 KB/tuile,
+  256 KB/session, rejet structuré `quota_exceeded` (jamais de troncature).
 
 ### Skill client (doc 03)
 - ~~Agents initiaux ?~~ **Tranché D17 : Codex + Claude Code.**
@@ -612,10 +692,10 @@ reportés en D9→D34) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 | R10 | Undo d'un artefact écrasant un état concurrent | Accepté (D28) | Choix produit : restaure malgré tout (LWW) ; write-set ciblé, jamais snapshot global ; trace au journal D19 |
 | R11 | Boucle JS bloquant le GUI malgré `destroy()` | Critique → réduit (D26) | Validation en banc d'essai hors-process (process tué) ; budgets runtime pour le code déjà en partie |
 | R12 | Règles acceptées mais non exécutables/rejouables | Élevé | Matérialiser chaque règle acceptée dans une forme versionnée et validée |
-| R13 | Faux sentiment de fiabilité lié au nom `reliable.io` | Critique | ACK/retry/déduplication applicatifs pour commits ; séquence + resync pour état |
+| R13 | Faux sentiment de fiabilité lié au nom `reliable.io` | Critique → adressé (D35) | ACK/retry/déduplication applicatifs pour commits ; séquence + snapshot de réparation pour l'état (tranché D35) |
 | R14 | Transaction V2 groupée prise pour un commit atomique | Élevé | Prévalidation, staging, commit/rollback V3 et ACK de résultat |
-| R15 | Migration d'hôte sans contexte d'arbitre/règles/runtime | Élevé | Checkpoint versionné transférable avant reprise des propositions |
-| R16 | Checksum SHA-256 pris pour une signature officielle | Élevé | Signature asymétrique, clé éditeur embarquée et rotation/révocation |
+| R15 | Migration d'hôte sans contexte d'arbitre/règles/runtime | Élevé → adressé (D37) | Checkpoint versionné (règlement + hashes artefacts + snapshot `state` bloquants, contexte arbitre best-effort) avant reprise des propositions |
+| R16 | Checksum SHA-256 pris pour une signature officielle | Élevé — assumé au MVP (D38) | Sécurisation de la bibliothèque différée (D38) ; champs `signature`/`publisherKeyId` réservés ; à régler avant tout contenu communautaire |
 
 ## 4. Séquencement suggéré (non engageant)
 

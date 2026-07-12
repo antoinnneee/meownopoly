@@ -33,8 +33,9 @@ chez l'hôte, 1 chez le client).
 | 10 Audit stack existante | Audit V2 + chantiers M1→M13 | vérifié 2026-07-12 |
 | 11 Vertical slice | Slice solo S1/S2/S3, fil rouge, critères | défini 2026-07-12 |
 | 12 Banc d'essai R1 | Spec du banc hors-process (D26) : phases, corpus, sortie R1 | spécifié 2026-07-12 |
+| 13 Enveloppe de proposition | Schéma D11 : enveloppe, cycle de vie, verdict, transport | spécifié 2026-07-12 |
 
-## 3. Décisions prises (D1→D34)
+## 3. Décisions prises (D1→D39)
 
 ### Fondations
 - **D1 — QML génératif complet.** L'IA produit du vrai QML chargé au runtime.
@@ -75,7 +76,10 @@ chez l'hôte, 1 chez le client).
 - **D11 — Proposition auditable.** Enveloppe {auteur, intention, opérations,
   artefacts, write-set, version}. Flux : préfiltre mécanique → arbitre →
   validation complète → exécution. L'arbitre peut **amender et appliquer
-  immédiatement**, avec journal de l'original et des raisons.
+  immédiatement**, avec journal de l'original et des raisons. **Schéma
+  complet spécifié dans le doc 13** (cycle de vie, `requestType` calculé par
+  la passerelle — plancher D25 non contournable —, verdict à deux audiences
+  joueur/IA, tool bloquant 60 s, transport commit + dédup en collab).
 - **D19 — Journal configurable** avec noyau d'audit obligatoire (proposition,
   auteur, verdict, raisons, amendement, version) tant que l'action est rejouable.
 - **D24/D31 — Arbitre prouvé avant lancement, UX validée** : handshake de rôle
@@ -103,7 +107,8 @@ chez l'hôte, 1 chez le client).
   hors-process** (D26) : moteur/process distincts, la carte est réinstanciée
   depuis un snapshot pour tester l'artefact candidat (non-chargement, boucle
   infinie → process tué, le jeu ne gèle jamais). **Spécifié dans le doc 12**
-  (job/verdict JSON, phases P0→P5, corpus de test, pool, cache de verdicts,
+  (job/verdict JSON, préfiltre P0 in-game + phases P1→P5 au banc, corpus de
+  test, pool, cache de verdicts,
   critères de sortie R1). **Exécution en partie = confinement in-process**
   (D13, conditionnel R1 recentré) : contexte restreint, façade API, budgets
   runtime pour le code déjà validé.
@@ -132,6 +137,23 @@ chez l'hôte, 1 chez le client).
   systématique) ; exécution hôte seul ou chez chaque pair après revalidation,
   selon une propriété déclarée. Identité = QUuid d'instance + hash de contenu +
   version de manifeste (store par hash à créer).
+- **D35 — Bus d'état runtime complet.** Delta coalescé 30 Hz par (tuile, clé)
+  + **snapshot de réparation** périodique (~5 s / 128 deltas, séquencé) +
+  **snapshot structurel** (ajout/suppression d'item, entrée d'un pair) +
+  **resync à la demande** (`RequestStateSnapshot`). Garanties hybrides :
+  commits (propositions, verdicts, ops, `config`) = ACK applicatif + retry +
+  dédup ; état supersedable = séquence + réparation, jamais de retransmission.
+  Plafonds : 1 KB/valeur, 8 KB/tuile, 256 KB/session, ~64 KB/s/pair ; rejet
+  structuré `quota_exceeded` (jamais de troncature silencieuse).
+- **D36 — Artefact multi-tuiles** : store par hash + références
+  `{hash, version}`, refcount, orphelins purgés au save (GC, préserve l'undo),
+  migration référence par référence.
+- **D37 — Checkpoint de migration d'hôte** : règlement versionné + hashes des
+  artefacts actifs + snapshot `state` (bloquants), contexte d'arbitre
+  (best-effort via journal répliqué). Propositions suspendues jusqu'au
+  handshake D24 + ACK du checkpoint. Répond à R15.
+- **D39 — Divergence entre pairs** : hash du `state` diffusé avec le snapshot
+  de réparation (D35) ; un pair divergent demande `RequestStateSnapshot`.
 
 ### Produit & distribution
 - **D9 — Périmètre V3.** Trois contextes (éditeur solo assisté, éditeur collab,
@@ -149,11 +171,14 @@ chez l'hôte, 1 chez le client).
   (source de vérité unique). Cibles : Codex + Claude Code. **Embarquée dans
   l'app et injectée en pré-prompt** à l'invocation ingame — pas d'installation
   dans la configuration de l'agent du joueur.
-- **D4 / D18 / D29 — Bibliothèque.** Premier jalon : bibliothèque **locale
+- **D4 / D18 / D29 / D38 — Bibliothèque.** Premier jalon : bibliothèque **locale
   officielle unifiée** d'assets 3D (format **GLB**), alimentée par les devs,
   réutilisant `asset_server/` + launcher après audit. Package au **format de
-  l'asset manager existant, étendu** (version, hash, signature, types
-  d'entrées — D29). Signature d'éditeur et adressage par hash à créer.
+  l'asset manager existant, étendu** — champs du manifeste **validés** (D38 :
+  identité/métadonnées/contenu/dépendances/compat, champs de confiance
+  réservés). **Sécurisation (signature/confiance) explicitement différée**
+  (D38, R16 assumé au MVP, à régler avant tout contenu communautaire).
+  Budgets assets provisoires, à confirmer avec un premier package de test.
 
 ## 4. Principales questions encore ouvertes
 
@@ -166,21 +191,16 @@ Les principales :
   de mesure par le **doc 12** (corpus + critères de sortie) ; la préemption
   des boucles est couverte par le banc d'essai D26.
 - **Canal** : manifeste des 10 tools MVP proposé (Q-E08), schéma du résumé
-  d'événements + curseur proposé (Q-E06) ; garanties applicatives P2P
-  au-dessus de `reliable.io` (Q-F06, modèle hybride à confirmer).
-- **Mémoire/réseau** : delta 30 Hz + snapshot de réparation proposés (Q-F05),
-  plafonds du bus (Q-F07), sérialisation string-manuelle de
-  `ItemSnapable::toJSON` à assainir (bloquant pour le snapshot du banc,
-  doc 12 §10).
-- **Artefacts/migration** : cycle de vie multi-tuiles par refcount (Q-G06),
-  checkpoint de migration en 4 volets (Q-G07).
-- **Bibliothèque** : champs du manifeste étendu (Q-I04), modèle de confiance
-  (Q-I05, reco « officiel signé + communautaire revalidé »), budgets assets
-  (Q-I09).
-- **Sortie de cadrage** : données privées (Q-J02), détection de divergence
-  (Q-J03, reco hash + resync), indicateurs d'arbitrage (Q-J04), critères de
-  repli D1 (Q-J06), prochain doc = **schéma de l'enveloppe de proposition**
-  (Q-J07 — spec R1 ✓ doc 12, slice ✓ doc 11), responsables par famille (Q-J08).
+  d'événements + curseur proposé (Q-E06).
+- **Mémoire/réseau** : tranché (D35/D39) ; reste la sérialisation
+  string-manuelle de `ItemSnapable::toJSON` à assainir (bloquant pour le
+  snapshot du banc, doc 12 §10) et le détail `MemorySnapshot` dédié vs
+  extension du snapshot physique.
+- **Sortie de cadrage** : données privées (Q-J02), indicateurs d'arbitrage
+  (Q-J04), critères de repli D1 (Q-J06), responsables par famille (Q-J08).
+  Q-J07 : les trois documents de sortie sont produits (spec R1 ✓ doc 12,
+  slice ✓ doc 11, enveloppe ✓ doc 13) — la suite est l'**implémentation**
+  (prototype R1, puis chantiers M1/M-adaptateur du slice).
 
 ## 5. Risques majeurs (top)
 
@@ -189,11 +209,11 @@ Les principales :
 | R1 sandbox QML infaisable | Bloque D1 (repli « palette + mémoire ») — recentré par D26 sur le confinement runtime |
 | R2 RCE inter-joueurs via QML répliqué | Critique — exécution hôte par défaut |
 | R11 boucle JS bloquant le GUI | Réduit (D26) — les boucles franches meurent au banc d'essai hors-process |
-| R13 `reliable.io` pris pour fiable | Critique — ACK/retry/dédup applicatifs |
+| R13 `reliable.io` pris pour fiable | Adressé (D35) — ACK/retry/dédup pour les commits, séquence + réparation pour l'état |
 | R7 arbitre pris pour un garde-fou dur | Élevé — sécurité dure = sandbox |
 | R10 undo d'artefact écrasant du concurrent | Accepté (D28) — LWW assumé, trace au journal |
-| R15 migration d'hôte sans contexte arbitre | Élevé — checkpoint transférable |
-| R16 checksum SHA-256 pris pour signature | Élevé — signature asymétrique |
+| R15 migration d'hôte sans contexte arbitre | Adressé (D37) — checkpoint en 4 volets, propositions suspendues jusqu'à l'ACK |
+| R16 checksum SHA-256 pris pour signature | Assumé au MVP (D38) — sécurisation différée, champs réservés, à régler avant le communautaire |
 
 (Liste complète : doc 08 §3, R1→R16.)
 

@@ -177,10 +177,12 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   split-brain (deux pairs validant différemment) et réutilise le modèle réseau
   existant (`EditorSession`/`PhysicsSession` host-authoritative).
 
-> **À cadrer (décision D6, doc 08).** Nature de l'arbitre (LLM vs règles
-> déterministes vs hybride), grain d'arbitrage (par action / par lot / par
-> artefact QML), forme du verdict rendu au proposant (actionnable pour itérer),
-> et articulation exacte avec le sandbox (doc 04) et l'exécution des règles (doc 06).
+> **Sous-cadrage de D6 — depuis levé (doc 08).** La **nature** de l'arbitre est
+> tranchée (LLM externe supervisé, D10), le **grain** est configurable par UI
+> avec plancher sur code/règles (D25), la **forme du verdict** est spécifiée
+> (D11 + doc 13 : verdict à deux audiences, actionnable pour itérer). Reste
+> l'articulation fine avec l'exécution des règles (doc 06 §4 : mémorisation,
+> réplication).
 
 ## 5. Principes directeurs
 
