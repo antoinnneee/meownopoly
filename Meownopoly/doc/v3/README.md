@@ -14,7 +14,7 @@ Meownopoly V3 transforme le jeu en un **substrat de gameplay créé par des IA
 clientes** : chaque joueur dispose de « son IA » (un modèle fourni côté client) à
 qui il décrit en langage naturel les éléments **et le gameplay** qu'il veut voir
 apparaître ; cette **IA cliente** les matérialise en direct — en priorité dans
-l'**éditeur** — via un canal WebSocket local dédié, en **composant les briques
+l'**éditeur** — via un canal MCP local dédié (D20), en **composant les briques
 graphiques et gameplay préexistantes** de l'éditeur **et en y embarquant du code
 JS** pour le comportement nouveau (le QML/JS étant interprété au runtime). Le jeu
 n'est pas figé : il **se construit au fur et à mesure grâce aux utilisateurs**.
@@ -31,7 +31,7 @@ cf. doc 00 §4).
 | — | [`RECAP_CADRAGE.md`](./RECAP_CADRAGE.md) | Récapitulatif synthétique du cadrage (photo à date) | 2026-07-12 |
 | 00 | [`00_VISION.md`](./00_VISION.md) | Vision, principes directeurs, ce qui change / ce qui reste | draft |
 | 01 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | Vue d'ensemble des briques + flux, réutilisation du socle V2 | draft |
-| 02 | [`02_CANAL_IA_WEBSOCKET.md`](./02_CANAL_IA_WEBSOCKET.md) | Le canal WS dédié IA↔jeu (distinct de l'automation) | draft |
+| 02 | [`02_CANAL_IA.md`](./02_CANAL_IA.md) | Le canal MCP local IA↔jeu (distinct de l'automation ; ex-WS, D20) | draft |
 | 03 | [`03_SKILL_CLIENT_IA.md`](./03_SKILL_CLIENT_IA.md) | Le fichier de skill livré au joueur à l'installation | draft |
 | 04 | [`04_QML_GENERATIF_SANDBOX.md`](./04_QML_GENERATIF_SANDBOX.md) | Modèle d'exécution « QML à la volée » + sandbox de sécurité | draft |
 | 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | Mémoire `config/state`, persistance, bus runtime et undo | partiellement cadré |
@@ -49,9 +49,12 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   QML chargé au runtime (`Qt.createQmlObject` / `Loader`). Conséquence directe :
   le **sandbox d'exécution** (doc 04) devient la pièce d'architecture la plus
   critique du pivot.
-- **D2 — Canal d'interaction : nouveau WebSocket dédié.** On ne surcharge pas
-  l'`AutomationServer` existant (`cpp/automation/`, port 7700) : il reste réservé
-  au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02).
+- **D2/D20 — Canal d'interaction : serveur MCP local dédié.** On ne surcharge
+  pas l'`AutomationServer` existant (`cpp/automation/`, port 7700) : il reste
+  réservé au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02),
+  exposé comme **serveur MCP local** (D20 — remplace le WS custom initial) :
+  l'app spawne l'agent et injecte config + token, catalogue de tools groupé
+  économe en tokens, événements injectés par invocation + `events_poll`.
 - **D3 — Règles : détails de représentation/exécution différés** (doc 06).
   L'autorité de politique est tranchée par D8, mais son exécution runtime ne
   repose pas implicitement sur le LLM : elle doit être matérialisée par les
@@ -76,12 +79,13 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
   capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
-- **D9→D18 — Arbitrages issus du questionnaire.** Périmètre des trois modes V3,
-  agents Codex/Claude supervisés, proposition auditable avec amendement immédiat,
-  règles hiérarchiques, sandbox in-process conditionnel à R1, WS multiplexé,
-  mémoire `config/state`, artefacts sous autorité hôte, skill générée au build et
-  bibliothèque locale officielle GLB. Détail et réserves techniques dans les
-  docs 08→10.
+- **D9→D20 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
+  trois modes V3, agents Codex/Claude supervisés **invoqués in-app via tchat
+  ingame**, proposition auditable avec amendement immédiat, règles hiérarchiques,
+  sandbox in-process conditionnel à R1, canal **MCP local** multiplexé (D20),
+  mémoire `config/state`, artefacts sous autorité hôte, skill générée au build
+  **injectée en pré-prompt** et bibliothèque locale officielle GLB. Détail et
+  réserves techniques dans les docs 08→10.
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 

@@ -1,7 +1,7 @@
 # 09 — Questionnaire de cadrage V3 (questions ouvertes)
 
 > **Statut : épuré le 2026-07-12.** Le questionnaire initial a été dépouillé et
-> ses arbitrages reportés dans le doc 08 (**D9→D19**). Ce fichier ne contient
+> ses arbitrages reportés dans le doc 08 (**D9→D20**). Ce fichier ne contient
 > plus que les **questions encore ouvertes**, actualisées avec les décisions et
 > la précision « invocation in-app via tchat ingame » (D10/D17). Les questions
 > tranchées ou devenues caduques sont retirées ; la table §0 en garde la trace.
@@ -28,11 +28,13 @@
 | C10→C12 (tour, GameplayModuleManager, application d'un effet partagé) | tranchées | **D12 / D16** |
 | C09 (anti-boucle : profondeur + file + cycles, tous requis) | tranchée | **D12** |
 | D01→D03, D07→D10 (niveau d'isolation, lieu d'exécution, repli, revue humaine, menace, artefacts disque, tests R1) | tranchées (conditionnel R1) | **D13** |
-| E01, E04, E05, E07, E09 (WS multiplexé, version globale, adaptateur d'événements, tout-ou-rien, automation.raw dev-only) | tranchées | **D14** |
+| E01, E04, E05, E07, E09 (canal multiplexé, version globale, adaptateur d'événements, tout-ou-rien, automation.raw dev-only) | tranchées | **D14** (transport révisé par **D20** : MCP local) |
 | F01, F03, F04, F08, F09, F11 (namespaces config/state, portée tuiles+session+joueurs, bus générique, séquencement hôte/LWW, write-set, signaux) | tranchées | **D15** |
 | G01→G05 (source → hôte, exécution par propriété, identité UUID+hash, store map+séparé, artefact manquant) | tranchées | **D16** |
 | H01, H03, H05→H07 (Codex+Claude, manifeste source de vérité, génération au build, skill obsolète, catalogue curé) | tranchées | **D17** |
 | **H04 (emplacement d'installation de la skill)** | **caduque** : skill embarquée dans l'app, injectée en pré-prompt à l'invocation ingame | précision **D17** (2026-07-12) |
+| **E02, E03 (découverte du secret, authentification locale)** | **tranchées par construction** : l'app spawne l'agent et lui injecte config MCP + token éphémère ; tokens/capacités distincts par rôle | **D20** (2026-07-12) |
+| **H02 (comment l'agent atteint le canal)** | **tranchée** : connecteur MCP natif de `claude -p`/Codex, config injectée au spawn | **D20** (2026-07-12) |
 | I01→I03, I06, I07 (bibliothèque locale officielle, asset_server réutilisé, GLB, imports devs) | tranchées | **D18** |
 | I08 (référencement d'un asset) | tranchée dans son principe : clés existantes + version/hash | **D16/D18** |
 | J01 (journal configurable, noyau d'audit non désactivable) | tranchée (rétention → Q-J02) | **D19** |
@@ -133,51 +135,37 @@ sélectionnées. Reste la **liste exacte** (doc 04 §3.3).
 
 ---
 
-## E. Canal local : auth, secret, garanties
+## E. Canal local : intégration MCP et événements
 
-### Q-E02 — Comment le secret du canal est-il découvert ? — **B1**
+### Q-E11 — Quelle forme d'intégration du serveur MCP ? — **B0** *(nouvelle, D20)*
 
-Le port peut réutiliser le patron automation (`--port`/variable d'env). La
-stack ne fournit **aucun** mécanisme de secret. Nuance nouvelle : comme l'app
-**invoque elle-même** les agents (tchat ingame, D10), elle peut leur passer le
-secret directement (argument/env du process enfant) — la découverte « par un
-agent externe arbitraire » n'est plus le cas nominal.
+Le transport MCP est tranché (D20) ; reste sa forme concrète, à valider contre
+les capacités réelles des deux CLIs cibles.
 
-- [ ] Injection directe par l'app au lancement du process agent (env/argument)
-- [ ] Fichier runtime à permissions utilisateur
-- [ ] Port fixe + token affiché/copié (cas de secours/debug)
-
-- **Réponse :**
-
-### Q-E03 — Quel mécanisme d'authentification locale ? — **B0**
-
-La stack n'offre que le loopback — insuffisant pour un canal qui exécute à
-terme du QML (risque R3). Il faut aussi distinguer les **deux identités
-locales de l'hôte** (proposant vs arbitre), avec des capacités différentes.
-
-- [ ] Token éphémère par lancement + rôle au handshake (recommandation)
-- [ ] Token persistant par installation
-- [ ] Challenge/réponse lié au rôle
+- [ ] Serveur MCP **streamable HTTP loopback intégré au jeu** (direct, un seul
+      process ; support HTTP à vérifier côté Codex)
+- [ ] **Pont stdio** : petit exécutable MCP lancé par le CLI, relié au jeu par
+      IPC local (plus standard côté CLIs, un process de plus)
+- [ ] Selon l'agent (HTTP pour l'un, pont pour l'autre)
 
 - **Réponse :**
 
-### Q-E06 — Quelles garanties de livraison des événements poussés ? — **B1**
+### Q-E06 — Sémantique du résumé d'événements injecté et du curseur `events_poll` — **B1**
 
-`reliable.io` acquitte et fragmente mais **ne retransmet pas** (R13). Les
-garanties V3 exigent une couche applicative.
-
-- [ ] Au plus une fois
-- [ ] Au moins une fois + identifiant/déduplication
-- [ ] Relecture depuis un curseur/journal
+Reformulée par D20 : plus de push live — les événements sont **injectés par
+invocation** + relisibles via `events_poll(cursor)` sur le journal métier
+(D19). À spécifier : schéma du résumé, garanties du curseur (relecture,
+troncature du journal), filtrage par pertinence/rôle.
 
 - **Réponse :**
 
-### Q-E08 — Sous-ensemble exact des commandes portées au MVP — **B1** *(à affiner)*
+### Q-E08 — Sous-ensemble exact des tools portés au MVP — **B1** *(à affiner)*
 
 Familles retenues : `state.listTiles/getTile`, pose/édition par UUID, mémoire
 config/runtime, `qml.instantiate`, screenshot, runtime joueur/NPC,
-roster/modules. Reste à figer la **liste commande par commande** dans le
-manifeste du canal (doc 02 §4).
+roster/modules. Reste à figer la **liste tool par tool** dans le manifeste du
+canal (doc 02 §5), avec le **groupement** qui minimise les tokens sans rendre
+les schémas ambigus (doc 02 §3 — à mesurer sur les premiers workflows).
 
 - **Sous-ensemble retenu :**
 
@@ -253,23 +241,6 @@ migration d'arbitre avec état/version.
 - **Artefacts/hashes transférés :**
 - **État runtime/checkpoint transféré :**
 - **Nouvel arbitre requis avant reprise :**
-
----
-
-## H. Skill et connexion de l'agent
-
-### Q-H02 — Comment l'agent invoqué in-app atteint-il le canal WS ? — **B1**
-
-Reformulée après la précision « tchat ingame » (D10/D17) : l'app invoque le
-modèle et le pré-prompte avec la skill ; il n'y a plus d'installation côté
-agent (ex-H04 caduque). Reste le **mécanisme de connexion** de l'agent au canal.
-
-- [ ] Tool/CLI de connexion fourni par l'app (invoqué par l'agent)
-- [ ] WS brut, protocole documenté dans le pré-prompt
-- [ ] Connecteur natif propre à chaque agent (MCP local, etc.)
-
-- **Recommandation actuelle :** tool/adaptateur livré, protocole documenté.
-- **Réponse :**
 
 ---
 
@@ -379,15 +350,17 @@ gameplay, la physique, d'autres éléments et les interactions joueur.
 
 ## Synthèse (état au 2026-07-12)
 
-- **Arbitré (D9→D19)** : périmètre trois modes, arbitre obligatoire partout,
+- **Arbitré (D9→D20)** : périmètre trois modes, arbitre obligatoire partout,
   agents `claude -p`/Codex supervisés et **invoqués in-app via tchat ingame**,
   proposition auditable avec amendement immédiat, règles hiérarchiques,
-  sandbox in-process conditionnel à R1, un WS multiplexé, mémoire
-  `config`/`state` sur tuiles+session+joueurs, artefacts sous autorité hôte,
-  skill générée au build et **injectée en pré-prompt**, bibliothèque locale
-  officielle GLB, journal configurable à noyau d'audit obligatoire.
+  sandbox in-process conditionnel à R1, **canal = serveur MCP local**
+  (multiplexé, token injecté au spawn, catalogue groupé économe en tokens,
+  événements injectés + `events_poll`), mémoire `config`/`state` sur
+  tuiles+session+joueurs, artefacts sous autorité hôte, skill générée au build
+  et **injectée en pré-prompt**, bibliothèque locale officielle GLB, journal
+  configurable à noyau d'audit obligatoire.
 - **Encore bloqué par un prototype ou un choix** : grain d'arbitrage (C01),
-  sandbox R1 (contenu D04-D06), auth/secret du canal (E02/E03), garanties
-  réseau (E06/F06), sauvegarde runtime (F02), stratégie delta/snapshot (F05),
-  undo concurrent (F10), migration complète (G07), connexion de l'agent (H02),
-  signature/confiance (I05), scénarios du vertical slice (J05).
+  sandbox R1 (contenu D04-D06), forme d'intégration MCP (E11), sémantique
+  événements/curseur (E06), garanties réseau P2P (F06), sauvegarde runtime
+  (F02), stratégie delta/snapshot (F05), undo concurrent (F10), migration
+  complète (G07), signature/confiance (I05), scénarios du vertical slice (J05).

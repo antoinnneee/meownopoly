@@ -9,9 +9,9 @@
 CLIENT                                      HÔTE (autorité)
 
 IA cliente                                 IA cliente de l'hôte
-    │ WS local                                  │ WS local
+    │ tools MCP (local)                         │ tools MCP (local)
     ▼                                           ▼
-Passerelle IA locale                       Passerelle IA locale
+Passerelle IA locale (serveur MCP)         Passerelle IA locale (serveur MCP)
     │ proposition                                │ proposition locale
     └──────────── Catway / enveloppe ────────────┤
                                                  ▼
@@ -51,13 +51,15 @@ mais n'est pas ce canal.
 ## 2. Briques
 
 ### 2.1 Le canal d'interaction IA↔jeu (doc 02)
-Nouveau serveur WebSocket local, dédié. Protocole requête/réponse corrélé (calqué
-sur l'automation : `{id, cmd, params}` / `{id, ok, result|error}`) mais avec un
-**catalogue de commandes de haut niveau orienté gameplay** et une boucle
-**perception → action** (l'IA lit l'état, agit, observe). Distinct de
+**Serveur MCP local** exposé par le jeu (D20, révise la forme WS initiale) :
+l'app spawne l'agent (tchat ingame, D10) et lui injecte config MCP + token +
+pré-prompt skill. Catalogue de **tools de haut niveau orienté gameplay**,
+**réduit et groupé** pour économiser les tokens (doc 02 §3), avec une boucle
+**perception → action** (l'IA lit l'état, agit, observe) et des **événements
+injectés par invocation** + tool `events_poll` (doc 02 §4). Distinct de
 l'automation pour isoler les responsabilités et pouvoir durcir la sécurité
-indépendamment. **D14 retient un seul WS multiplexé**, avec rôles/namespaces et
-une version globale du protocole.
+indépendamment. **D14 retient un seul canal multiplexé**, avec rôles/namespaces
+et une version globale du protocole.
 
 ### 2.2 Le fichier de skill client (doc 03)
 Embarqué avec l'application et **injecté en pré-prompt** à chaque invocation
@@ -148,8 +150,8 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 2. L'IA cliente **génère un fichier QML** — l'élément et/ou son comportement — qui
    peut embarquer du **script QML/JS**. Ce script est écrit pour **lire et écrire
    l'espace mémoire** (doc 05) des tuiles : c'est par là qu'il crée le gameplay
-   (variables, état, effets). L'IA émet ce fichier sur le **canal WS** (doc 02),
-   éventuellement avec des commandes de pose (`place*`).
+   (variables, état, effets). L'IA émet ce fichier via les **tools MCP du
+   canal** (doc 02), éventuellement avec des commandes de pose (`editor_place`).
 3. **D'abord l'arbitre.** Toute proposition (client ou hôte) passe par l'**IA
    arbitre** de l'hôte (§2.5, **obligatoire**, en amont du sandbox) : jugement de
    viabilité sur les données **et** la source QML/JS → accepte / amende / rejette.

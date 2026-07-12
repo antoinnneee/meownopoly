@@ -27,9 +27,12 @@
   l'« hybride validé » et **réduit d'autant la surface du sandbox** (cf. doc 04 §5,
   doc 07 primitives).
 
-### D2 — Canal d'interaction : **nouveau WebSocket dédié**
-- **Décision.** Créer un canal WS **local dédié** IA↔jeu, distinct de
-  l'`AutomationServer` (qui reste réservé au test/debug interne).
+### D2 — Canal d'interaction : **canal local dédié** *(transport révisé par D20)*
+- **Décision.** Créer un canal **local dédié** IA↔jeu, distinct de
+  l'`AutomationServer` (qui reste réservé au test/debug interne). La forme
+  initialement envisagée (WebSocket maison) est **remplacée par un serveur MCP
+  local** — voir **D20**. L'essence de D2 (canal dédié, curé, ≠ automation)
+  demeure.
 - **Pourquoi.** Séparer les responsabilités (debug bas niveau vs capacités
   gameplay de haut niveau), pouvoir **durcir la sécurité** du canal IA
   indépendamment (allow-list vs introspection totale), évoluer sans casser le
@@ -206,15 +209,17 @@
 - **Signature.** Les artefacts officiels pourront faire confiance à une signature,
   mais la stack ne possède aujourd'hui qu'un checksum SHA-256 non signé (doc 10).
 
-### D14 — Un canal WS multiplexé et versionné
-- **Décision.** Un seul WebSocket local multiplexe rôles et namespaces, avec une
+### D14 — Un canal unique multiplexé et versionné *(transport révisé par D20)*
+- **Décision.** Un seul canal local multiplexe rôles et namespaces, avec une
   version globale du protocole. Les événements passent par un adaptateur unifié
   alimenté par les signaux internes et un nouveau journal métier. Les lots visent
   une sémantique tout-ou-rien. `automation.raw` n'existe qu'en build de dev et
-  reste absent du manifeste livré.
-- **Gaps.** Authentification, découverte du secret et garanties de livraison ne
-  sont pas couvertes par la stack. Les transactions V2 sont groupées, pas
-  rollback-atomiques ; `reliable.io` n'assure pas la retransmission (doc 10).
+  reste absent du manifeste livré. *(« WebSocket » remplacé par « serveur MCP
+  local » — D20 ; le reste de la décision demeure.)*
+- **Gaps.** Les transactions V2 sont groupées, pas rollback-atomiques ;
+  `reliable.io` n'assure pas la retransmission (doc 10). ~~Authentification et
+  découverte du secret~~ résolues par construction avec D20 (config/token
+  injectés au spawn de l'agent).
 
 ### D15 — Modèle mémoire V3
 - **Décision.** Un même objet `memory` contient deux namespaces `config` et
@@ -264,6 +269,34 @@
   l'action reste undoable/rejouable. Sa rétention et sa politique de confidentialité
   restent à définir.
 
+### D20 — Transport du canal : **serveur MCP local** (révise la forme de D2/D14)
+- **Décision (2026-07-12).** Le canal IA↔jeu est exposé comme **serveur MCP
+  local** (loopback) plutôt que comme protocole WebSocket maison. Conséquence
+  directe de l'invocation in-app (D10/D17) : l'app spawne l'agent et lui injecte
+  **config MCP + token + pré-prompt skill** — plus de découverte de port/secret,
+  plus de client WS à livrer.
+- **Pourquoi.** `claude -p` et Codex consomment des tools MCP **nativement** ;
+  le manifeste (D17) génère directement les schémas de tools (même pipeline que
+  le patron `automation_mcp/`) ; la boucle perception→action est native
+  (req/rep corrélé, typé). Le WS custom ne se justifiait que pour un agent
+  externe autonome — cas éliminé par D10.
+- **Économie de tokens (contrainte de conception).** La skill pré-promptée porte
+  la connaissance (workflows, recettes — stable donc cachée) ; le catalogue MCP
+  reste **réduit et groupé** (tools paramétrés type `editor_place(kind,…)`,
+  résultats paginés/compacts, préfixe stable pour le prompt caching,
+  divulgation progressive via `help(topic)` si besoin). Doc 02 §3.
+- **Événements.** Injectés par invocation (résumé depuis le dernier tour) +
+  tool `events_poll(cursor)` pour se resynchroniser en cours de tâche longue.
+  Pas d'agent persistant ni de canal push au premier jalon. Doc 02 §4.
+- **Ce qui survit de D2/D14.** Canal dédié ≠ automation, loopback strict,
+  serveur unique multiplexant rôles/namespaces (tokens distincts proposant vs
+  arbitre), version globale, lots tout-ou-rien, `automation.raw` dev-only.
+- **Encore ouvert (Q-E11).** Forme d'intégration : MCP streamable HTTP loopback
+  intégré au jeu, ou pont stdio relié au jeu par IPC local.
+- **Alternatives écartées.** Output formaté seul (unidirectionnel : pas de boucle
+  perception→action, l'IA travaille en aveugle) ; WS custom (client + auth +
+  protocole à créer sans bénéfice, les deux CLIs cibles parlant MCP).
+
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
@@ -279,20 +312,25 @@ reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   **exécution locale, sans broadcast aux pairs**.
 - Isolation QML : contexte/moteur in-process, processus auxiliaire, ou repli
   DSL/capacités si l'arrêt préemptif d'un JS bloquant est impossible ?
-- Authentification du canal local : simple loopback (comme l'automation) ou token
-  de session ? Reco : **token**, car le canal exécute à terme du QML.
+- ~~Authentification du canal local : simple loopback ou token ?~~ **Tranché
+  D20 : token éphémère injecté au spawn de l'agent** (l'app contrôle les deux
+  bouts) ; tokens/capacités distincts pour proposant et arbitre.
 
-### Canal WS (doc 02)
-- ~~Un canal multiplexé vs plusieurs ?~~ **Tranché D14 : un WS multiplexé.**
-- Comment distinguer et authentifier les deux clients locaux de l'hôte
-  (proposant vs arbitre), avec quelles capacités pour chacun ?
-- Schéma du nouvel adaptateur/journal d'**événements poussés** au-dessus de
-  `Game`, `EditorOpBus` et `ItemSnapableEvents` (D14).
+### Canal IA (doc 02)
+- ~~Un canal multiplexé vs plusieurs ?~~ **Tranché D14 : un canal multiplexé.**
+- ~~WS custom ou autre transport ?~~ **Tranché D20 : serveur MCP local** ;
+  reste **Q-E11** — MCP HTTP loopback intégré au jeu vs pont stdio + IPC local.
+- ~~Authentifier les deux clients locaux de l'hôte ?~~ **Tranché D20** :
+  configs/tokens distincts injectés au spawn, capacités différentes par rôle.
+- Schéma du **résumé d'événements injecté** par tour + sémantique du curseur
+  `events_poll`, au-dessus de l'adaptateur `Game`/`EditorOpBus`/
+  `ItemSnapableEvents` et du journal (D14/D19/D20).
 - **Quel sous-ensemble de l'automation porter** dans le catalogue curé du canal
   (pose, caméra, introspection d'état…) et lesquelles **rester** test-only ?
+  Granularité du **groupement de tools** à mesurer (économie de tokens, D20).
 - ~~Échappatoire `automation.raw` ?~~ **Tranché D14 : build dev uniquement.**
 - Garanties applicatives de livraison/retry/déduplication au-dessus du composant
-  d'ACK `reliable.io` (doc 10).
+  d'ACK `reliable.io` (doc 10) — concerne le P2P entre pairs, pas le canal local.
 
 ### Capacités manquantes (chantiers identifiés)
 - Réconcilier **hooks ↔ tools MCP** (des hooks existent sans tool MCP) — prérequis
@@ -340,8 +378,8 @@ reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 - ~~Emplacement d'installation standardisé multi-plateforme ?~~ **Caduc
   (précision D17, 2026-07-12)** : la skill est embarquée dans l'app et injectée
   en pré-prompt à l'invocation ingame — pas d'installation côté agent du joueur.
-- Comment l'agent invoqué in-app atteint le canal WS : tool de connexion fourni
-  par l'app, ou WS brut documenté dans le pré-prompt ?
+- ~~Comment l'agent atteint le canal ?~~ **Tranché D20 : connecteur MCP natif
+  des CLIs**, config injectée au spawn. Reste Q-E11 (forme d'intégration MCP).
 - ~~Génération ?~~ **Tranché D17 : au build depuis le manifeste.**
 
 ## 3. Risques majeurs
@@ -373,8 +411,8 @@ sont définis dans le doc 10, chantiers **M1→M13**.
 1. **Prototype sandbox QML** (R1) — dé-risque D1 avant tout le reste.
 2. **Couche réseau V3** : ACK applicatif/retry/déduplication et transaction
    prepare/commit/rollback, avant de lui confier propositions et verdicts.
-3. **Canal WS multiplexé minimal** : rôles, auth, version, introspection, pose et
-   enveloppe de proposition auditée.
+3. **Canal MCP minimal** (D20) : passerelle + tools d'introspection/pose,
+   rôles/tokens injectés, version, enveloppe de proposition auditée.
 4. **Espace mémoire** : modèle `config/state`, puis bus runtime et undo ciblé.
 5. **Adaptateur agents** : supervision `claude -p`/Codex + skill générée au build.
 6. **Vertical slice règles/runtime** avec modules, artefact et arbitrage.

@@ -35,7 +35,7 @@ Quatre idées portent le pivot :
 
 1. **« Son IA » — modèle fourni côté client, invoqué depuis le jeu.** Chaque
    joueur branche son propre modèle (Claude, un agent local, etc.). Le jeu ne
-   fournit pas l'IA ; il fournit le **point d'entrée** (canal WebSocket local),
+   fournit pas l'IA ; il fournit le **point d'entrée** (canal MCP local, doc 02),
    le **mode d'emploi** (skill embarquée, doc 03) et l'**interface** : un **tchat
    ingame** depuis lequel les IA sont **invoquées directement par l'application**
    (D10/D17) — le joueur n'exécute jamais les features depuis un CLI à part.
@@ -78,7 +78,7 @@ Quatre idées portent le pivot :
 ## 3. Boucle d'usage cible
 
 ```
-Joueur ──(tchat ingame)──▶ Son IA ──(WebSocket local dédié)──▶ Meownopoly
+Joueur ──(tchat ingame)──▶ Son IA ──(tools MCP, canal local)──▶ Meownopoly
    ▲     (invoquée par l'app,                                         │
    │      pré-promptée skills)                                        │
    └──────────────── observe le résultat en jeu / itère ◀────────────┘
@@ -111,7 +111,7 @@ rôles**, répartis selon la topologie host-authoritative existante :
 - **L'IA cliente (proposante).** Présente chez **chaque** joueur, hôte compris —
   c'est le même rôle partout. À partir du langage naturel du joueur, elle
   **produit** des propositions : nouveaux éléments, événements, artefacts QML à
-  charger à la volée. Elle les émet sur le canal WS local (doc 02).
+  charger à la volée. Elle les émet sur le canal MCP local (doc 02).
 - **L'IA arbitre / MJ.** Présente **uniquement chez l'hôte**. Avant qu'une
   proposition ne touche la map partagée, elle en **vérifie la viabilité** :
   cohérence avec les règles en cours, respect des invariants, faisabilité,
@@ -185,7 +185,8 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 ## 5. Principes directeurs
 
 - **Le jeu expose des capacités, pas des écrans.** L'IA agit via un contrat de
-  capacités stable (canal WS + skill), pas en simulant des clics fragiles.
+  capacités stable (tools MCP du canal + skill), pas en simulant des clics
+  fragiles.
 - **Les pipelines métier restent la source de vérité.** Comme les hooks
   d'automation actuels, les mutations structurelles de l'IA passent par les
   mêmes pipelines que l'humain (`Game.updateMap`, `EditorOpBus`) et conservent
@@ -207,7 +208,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 
 | Domaine | V2 | V3 |
 |---------|----|----|
-| Producteur de contenu | Humain via UI éditeur | Humain **+ son IA cliente** via canal WS |
+| Producteur de contenu | Humain via UI éditeur | Humain **+ son IA cliente** via canal MCP |
 | Validation du contenu | Règles C++ figées + host relais | + **IA arbitre / MJ** chez l'hôte (viabilité contextuelle) |
 | Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |

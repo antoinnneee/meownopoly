@@ -37,10 +37,12 @@ procédure d'implémentation.
 
 Contenu cible :
 
-1. **Comment se connecter** au canal WS local (doc 02) : hôte loopback, port,
-   handshake/token éventuel, version de protocole.
-2. **Catalogue de capacités** : chaque commande avec `cmd`, schéma des `params`,
-   schéma du `result`, erreurs possibles, exemple d'appel/réponse.
+1. ~~Comment se connecter au canal~~ **Caduc (D20)** : la connexion est portée
+   par la **config MCP injectée au spawn** par l'app — la skill n'a plus à
+   documenter port/handshake.
+2. **Catalogue de capacités** : porté par les **schémas de tools MCP** générés
+   depuis le manifeste (D20) ; la skill n'en donne que l'usage (recettes), pas
+   les schémas — c'est la clé de l'économie de tokens (doc 02 §3).
 3. **La boucle perception→action** : comment observer l'état, agir, vérifier.
 4. **Les garde-fous** : ce que l'IA **ne peut pas** faire (allow-list),
    contraintes du QML génératif (doc 04), tailles/quotas.
@@ -110,8 +112,9 @@ régénère, pas de dérive manuelle.
 ## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
 - ~~Quels agents cibler en premier ?~~ **Tranché D17 : Codex + Claude Code.**
-- La skill embarque-t-elle un tool de connexion au WS, ou suppose-t-on que l'agent
-  client sait parler WebSocket brut ?
+- ~~La skill embarque-t-elle un client de connexion ?~~ **Tranché D20** :
+  connecteur MCP natif des CLIs, config injectée au spawn — rien à embarquer
+  dans la skill. Reste Q-E11 (forme d'intégration MCP côté jeu).
 - ~~Emplacement d'installation standardisé, multi-plateforme ?~~ **Caduc**
   (précision 2026-07-12, §1) : skill embarquée dans l'app, injectée en pré-prompt.
 - ~~Génération au build ou au packaging ?~~ **Tranché D17 : au build.**

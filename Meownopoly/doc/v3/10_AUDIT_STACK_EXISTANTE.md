@@ -207,23 +207,30 @@ Cette section traduit les décisions D9→D19 en modifications concrètes du soc
 V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
 frontières sont, elles, normatives pour le cadrage.
 
-### M1 — Créer la passerelle WebSocket IA
+### M1 — Créer la passerelle MCP IA *(révisé par D20 : MCP local, plus de WS custom)*
 
-**Socle repris :** `AutomationServer` pour le bind loopback, le cycle WebSocket,
-le JSON corrélé et le dispatch sur le thread GUI.
+**Socle repris :** `AutomationServer` pour le bind loopback strict et le dispatch
+sur le thread GUI ; `automation_mcp/` comme **patron de déclaration de tools**
+(schémas). Le cycle WebSocket custom n'est plus repris tel quel : le transport
+est un **serveur MCP local** (D20).
 
 **Modifications :**
 
-- créer un serveur distinct, par exemple `AiGatewayServer`, sans réutiliser le
-  catalogue permissif de l'automation ;
-- ajouter un handshake `{protocolVersion, role, token, capabilities}` ;
-- gérer les rôles `proposer` et `arbiter` sur un même WS multiplexé ;
-- générer un token éphémère par lancement, le stocker dans un fichier runtime à
-  permissions utilisateur et le faire tourner à chaque redémarrage ;
-- introduire les namespaces `editor.*`, `state.*`, `artifact.*`, `rules.*` et
-  `runtime.*` ;
-- ajouter quotas par connexion, taille maximale, rate-limit et erreurs structurées
-  `{code, message, details, retryable}` ;
+- créer une passerelle distincte, par exemple `AiGatewayServer`, exposant le
+  catalogue curé comme **tools MCP**, sans réutiliser le catalogue permissif de
+  l'automation ;
+- trancher la forme d'intégration (**Q-E11**) : MCP streamable HTTP loopback
+  intégré au jeu, ou pont stdio + IPC local ;
+- générer un **token éphémère par session** et l'**injecter au spawn** du
+  process agent (env/config), avec des configs/capacités **distinctes** pour
+  les rôles `proposer` et `arbiter` (D20 — plus de fichier runtime de
+  découverte) ;
+- versionner le protocole globalement (`protocolVersion` dans le manifeste) ;
+- regrouper les tools par familles économes en tokens (`editor_place`,
+  `state_query`, `events_poll`… — doc 02 §3) sur les namespaces `editor.*`,
+  `state.*`, `artifact.*`, `rules.*` et `runtime.*` ;
+- ajouter quotas par session d'agent, taille maximale, rate-limit et erreurs
+  structurées `{code, message, details, retryable}` ;
 - conserver `AutomationServer` inchangé et test-only.
 
 **Points d'ancrage :**
@@ -612,7 +619,7 @@ comme source de vérité.
 | 1 | M9 — prototype sandbox R1 | — | D1, exécution d'artefacts |
 | 2 | M3 — fiabilité applicative | Catway existant | propositions, commits, migration |
 | 3 | M4 — transactions atomiques | M3 | application sûre des propositions |
-| 4 | M1 — passerelle WS | automation comme patron | connexion agents |
+| 4 | M1 — passerelle MCP | automation + automation_mcp comme patrons | connexion agents |
 | 5 | M2 — supervision agents | M1 | proposant + arbitre opérationnels |
 | 6 | M5 — événements métier | signaux V2 | règles, observation IA |
 | 7 | M6 — bus d'état mémoire | M3, M5 | runtime custom synchronisé |
