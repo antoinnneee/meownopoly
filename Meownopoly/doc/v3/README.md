@@ -38,7 +38,7 @@ cf. doc 00 §4).
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questionnaire exhaustif des arbitrages à rendre | **partiellement rempli** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes** (arbitrages D9→D19 reportés au doc 08) | **épuré 2026-07-12** |
 | 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Audit V2 + plan M1→M13 des modifications de stack | **vérifié 2026-07-12** |
 
 ## Décisions structurantes déjà prises

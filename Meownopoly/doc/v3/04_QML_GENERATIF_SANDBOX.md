@@ -151,7 +151,7 @@ Le QML totalement libre (scène de zéro) reste possible mais devient le cas
 **extrême**, pas le cas courant — ce qui concentre le risque sur une fraction des
 usages.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
+## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
 - Périmètre exact de l'**API de jeu** exposée à l'artefact (la façade §3.3).
 - Faisabilité réelle du **sandboxing QML/JS dans Qt** : jusqu'où peut-on

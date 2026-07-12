@@ -59,7 +59,7 @@ Trois facettes complémentaires sont envisagées :
 - **Sécurité** : toute création téléchargée depuis un dépôt est **non fiable** →
   re-validation obligatoire par le sandbox (doc 04) avant exécution.
 
-## 3. Questions à instruire (questionnaire exhaustif doc 09)
+## 3. Questions à instruire (questions ouvertes : doc 09)
 
 - ~~Local ou communautaire au premier jalon ?~~ **Tranché D18 : local officiel.**
 - Périmètre exact de la bibliothèque unifiée : primitives gameplay livrées avec

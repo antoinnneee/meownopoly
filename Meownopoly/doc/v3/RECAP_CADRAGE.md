@@ -29,7 +29,7 @@ chez l'hôte, 1 chez le client).
 | 06 Moteur de règles | Autorité/représentation/exécution | partiellement cadré |
 | 07 Bibliothèque | Primitives (dont assets 3D) | intention actée, archi ouverte |
 | 08 Décisions & questions | Registre ADR + risques | vivant |
-| 09 Questionnaire de cadrage | Arbitrages à rendre | partiellement rempli |
+| 09 Questionnaire de cadrage | Questions encore ouvertes uniquement | épuré 2026-07-12 |
 | 10 Audit stack existante | Audit V2 + chantiers M1→M13 | vérifié 2026-07-12 |
 
 ## 3. Décisions prises (D1→D19)
@@ -52,10 +52,14 @@ chez l'hôte, 1 chez le client).
   une règle acceptée est matérialisée en forme exécutable (config, module,
   primitive, QML/JS validé). **Aucun tour imposé** : il s'introduit par le prompt
   ou une proposition acceptée. Invariants durs = sandbox, pas arbitre.
-- **D10 — Agents externes supervisés.** Cibles : `claude -p` + équivalent Codex
-  non interactif, sessions isolées, lancés/supervisés par le launcher/jeu via un
-  adaptateur. Budget côté hôte, prompt/personnalité de l'arbitre configuré par
-  les joueurs. Migration d'arbitre avec transfert d'état requise.
+- **D10 — Agents externes supervisés, invoqués in-app.** Cibles : `claude -p` +
+  équivalent Codex non interactif, sessions isolées, lancés/supervisés par le
+  launcher/jeu via un adaptateur. **Le joueur interagit via un tchat ingame** :
+  les features ne s'exécutent jamais depuis un CLI à part — le CLI n'est que le
+  mécanisme sous-jacent, invisible. L'app **pré-prompte** chaque modèle à
+  l'invocation pour qu'il suive les workflows des skills internes. Budget côté
+  hôte, prompt/personnalité de l'arbitre configuré par les joueurs. Migration
+  d'arbitre avec transfert d'état requise.
 - **D11 — Proposition auditable.** Enveloppe {auteur, intention, opérations,
   artefacts, write-set, version}. Flux : préfiltre mécanique → arbitre →
   validation complète → exécution. L'arbitre peut **amender et appliquer
@@ -92,7 +96,9 @@ chez l'hôte, 1 chez le client).
   automatique sans revue humaine. Windows + Linux visés. Le mode classique
   survit à la transition mais n'est pas une cible à terme.
 - **D17 — Skill générée au build** depuis le manifeste versionné du canal
-  (source de vérité unique). Cibles : Codex + Claude Code.
+  (source de vérité unique). Cibles : Codex + Claude Code. **Embarquée dans
+  l'app et injectée en pré-prompt** à l'invocation ingame — pas d'installation
+  dans la configuration de l'agent du joueur.
 - **D4 / D18 — Bibliothèque.** Premier jalon : bibliothèque **locale officielle
   unifiée** d'assets 3D (format **GLB**), alimentée par les devs, réutilisant
   `asset_server/` + launcher après audit. Signature d'éditeur et adressage par
@@ -114,7 +120,9 @@ chez l'hôte, 1 chez le client).
 - **Capacités manquantes V2** : réconciliation hooks↔MCP, introspection d'état,
   édition ciblée par uuid, capacités runtime (piloter joueur/NPC).
 - **UX du prérequis arbitre** : comment le jeu détecte/exige un arbitre branché.
-- **Skill** : forme du client WS/CLI, emplacements d'installation.
+- **Skill** : comment l'agent invoqué in-app atteint le canal WS (tool fourni
+  par l'app vs WS brut documenté dans le pré-prompt). *(L'emplacement
+  d'installation est caduc : skill embarquée, injectée en pré-prompt.)*
 
 ## 5. Risques majeurs (top)
 

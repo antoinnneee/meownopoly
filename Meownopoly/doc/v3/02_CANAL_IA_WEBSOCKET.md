@@ -172,7 +172,7 @@ IA** (message clair, code stable), pas juste `ok:false`.
   proposition/commit/verdict doit donc porter ID, ACK applicatif, retry et
   déduplication. Les états supersédables utilisent séquence + resync (doc 10).
 
-## 7. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
+## 7. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
 - ~~Un seul canal multiplexé ou plusieurs ?~~ **Tranché D14 : un seul WS.**
 - Événements poussés : schéma du nouvel adaptateur/journal au-dessus des signaux

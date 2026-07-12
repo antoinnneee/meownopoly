@@ -33,11 +33,15 @@ que les IA **composent** — elles ne repartent pas de zéro à chaque fois.
 
 Quatre idées portent le pivot :
 
-1. **« Son IA » — modèle fourni côté client.** Chaque joueur branche son propre
-   modèle (Claude, un agent local, etc.). Le jeu ne fournit pas l'IA ; il fournit
-   le **point d'entrée** (canal WebSocket local) et le **mode d'emploi** (fichier
-   de skill livré à l'installation). L'intelligence vit côté client ; le jeu
-   expose une surface d'interaction et des garde-fous.
+1. **« Son IA » — modèle fourni côté client, invoqué depuis le jeu.** Chaque
+   joueur branche son propre modèle (Claude, un agent local, etc.). Le jeu ne
+   fournit pas l'IA ; il fournit le **point d'entrée** (canal WebSocket local),
+   le **mode d'emploi** (skill embarquée, doc 03) et l'**interface** : un **tchat
+   ingame** depuis lequel les IA sont **invoquées directement par l'application**
+   (D10/D17) — le joueur n'exécute jamais les features depuis un CLI à part.
+   À chaque invocation, l'app **pré-prompte** le modèle avec les workflows des
+   skills internes. L'intelligence vit côté client ; le jeu expose une surface
+   d'interaction et des garde-fous.
 
 2. **Le QML/JS interprété comme substrat vivant, les briques préexistantes comme
    vocabulaire.** Contrairement au C++ compilé, le QML (et le JS qu'il embarque)
@@ -74,10 +78,15 @@ Quatre idées portent le pivot :
 ## 3. Boucle d'usage cible
 
 ```
-Joueur ──(langage naturel)──▶ Son IA ──(WebSocket local dédié)──▶ Meownopoly
-   ▲                                                                  │
+Joueur ──(tchat ingame)──▶ Son IA ──(WebSocket local dédié)──▶ Meownopoly
+   ▲     (invoquée par l'app,                                         │
+   │      pré-promptée skills)                                        │
    └──────────────── observe le résultat en jeu / itère ◀────────────┘
 ```
+
+Le dialogue joueur↔IA se fait **dans le jeu** (tchat ingame) : c'est
+l'application qui invoque le modèle et lui injecte la skill en pré-prompt
+(D10/D17), pas le joueur depuis un terminal.
 
 Cette boucle est vue côté **proposant**. En multi-joueurs, une proposition n'est
 introduite dans la partie qu'après passage par l'**arbitre** de l'hôte (§4).

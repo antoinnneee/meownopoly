@@ -80,7 +80,7 @@ Conséquences directes :
   règles devra donc l'**introduire** (déclencheurs, phases, conditions de
   victoire), pas seulement surcharger un existant.
 
-## 4. Questions à instruire (questionnaire exhaustif doc 09)
+## 4. Questions à instruire (questions ouvertes : doc 09)
 
 - **Mémorisation du règlement en cours** : où vit l'état des règles que l'arbitre
   fait respecter — dans son seul contexte (prompt + historique), ou aussi

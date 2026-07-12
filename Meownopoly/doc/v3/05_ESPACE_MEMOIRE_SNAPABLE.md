@@ -207,7 +207,7 @@ la distinction de sémantique `config`/`state` doit être comprise par la couche
 transport afin de ne pas envoyer chaque tick dans l'undo ni de persister un état
 éphémère par accident. Le nom final de ces namespaces reste à valider.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
+## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
 - ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : un `memory` global avec
   namespaces `config`/`state`.**

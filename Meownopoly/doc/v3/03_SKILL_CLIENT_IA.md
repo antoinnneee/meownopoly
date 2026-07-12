@@ -4,10 +4,20 @@
 
 ## 1. Idée
 
-À l'installation, le joueur reçoit un **fichier de skill** : le mode d'emploi que
-son IA lit pour savoir **comment interagir avec le jeu**. Le joueur n'a pas à
+Le jeu embarque un **fichier de skill** : le mode d'emploi que l'IA du joueur
+lit pour savoir **comment interagir avec le jeu**. Le joueur n'a pas à
 documenter le protocole ni à écrire des tools : la skill rend son IA
 opérationnelle immédiatement.
+
+**Invocation in-app via tchat ingame (précision 2026-07-12, cf. D10/D17).**
+Le joueur n'exécute **pas** les features depuis un CLI à part : les IA clientes
+sont **invoquées directement depuis l'application**, à travers un **tchat
+ingame**. Les CLIs (`claude -p`, Codex non interactif) restent le mécanisme
+d'exécution **sous-jacent**, lancé et supervisé par l'app (D10) — invisibles
+pour le joueur. Conséquence directe : l'app **pré-prompte** chaque modèle à
+l'invocation pour qu'il suive les **workflows des skills internes** — la skill
+n'a pas besoin d'être installée dans la configuration de l'agent du joueur,
+elle est **injectée** par l'app.
 
 **La skill décrit le canal IA (doc 02), pas l'automation de test.** L'IA cliente
 n'a **aucun accès** au harnais d'automation (`automation_mcp/`, `AutomationServer`)
@@ -85,9 +95,11 @@ régénère, pas de dérive manuelle.
 
 ## 5. Cycle de vie
 
-- **Installation** : la skill est déposée dans un emplacement connu de l'IA du
-  joueur (à définir selon l'agent : `.agents/skills/`, dossier de config de
-  l'agent client, etc.).
+- **Distribution** : la skill est **embarquée avec l'application** et **injectée
+  en pré-prompt** à chaque invocation in-app d'un modèle (tchat ingame, §1).
+  ~~Dépôt dans un emplacement connu de l'IA du joueur (`.agents/skills/`,
+  dossier de config de l'agent…)~~ — caduc pour le flux nominal : il n'y a pas
+  d'installation côté agent du joueur.
 - **Génération** : la skill est produite au **build** depuis le manifeste du canal.
 - **Mise à jour** : versionner la skill avec le `protocolVersion` global. Une
   version obsolète utilise si possible un mode compatibilité négocié et reçoit une
@@ -95,10 +107,11 @@ régénère, pas de dérive manuelle.
 - **Découvrabilité** : la skill doit être auto-suffisante — l'IA ne doit pas avoir
   besoin de lire le code du jeu pour l'utiliser.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questionnaire exhaustif doc 09)
+## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
 - ~~Quels agents cibler en premier ?~~ **Tranché D17 : Codex + Claude Code.**
 - La skill embarque-t-elle un tool de connexion au WS, ou suppose-t-on que l'agent
   client sait parler WebSocket brut ?
-- Emplacement d'installation standardisé, multi-plateforme.
+- ~~Emplacement d'installation standardisé, multi-plateforme ?~~ **Caduc**
+  (précision 2026-07-12, §1) : skill embarquée dans l'app, injectée en pré-prompt.
 - ~~Génération au build ou au packaging ?~~ **Tranché D17 : au build.**

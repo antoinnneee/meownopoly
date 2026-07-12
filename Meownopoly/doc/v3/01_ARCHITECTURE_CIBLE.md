@@ -60,7 +60,9 @@ indépendamment. **D14 retient un seul WS multiplexé**, avec rôles/namespaces 
 une version globale du protocole.
 
 ### 2.2 Le fichier de skill client (doc 03)
-Livré à l'installation, généré à partir du **manifeste versionné du canal IA**.
+Embarqué avec l'application et **injecté en pré-prompt** à chaque invocation
+in-app d'un modèle (tchat ingame, D10/D17) — pas d'installation côté agent du
+joueur. Généré au build à partir du **manifeste versionné du canal IA**.
 Le MCP `automation_mcp/` sert de patron et de source de schémas à porter. Il décrit à
 l'IA du joueur **les capacités disponibles** (catalogue de commandes, schémas
 d'I/O, exemples, garde-fous). C'est le contrat qui rend l'IA opérationnelle sans
@@ -138,9 +140,11 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 
 ## 4. Flux type — « l'IA crée un élément de gameplay »
 
-1. Le joueur décrit l'intention à son **IA cliente**. Les premières intégrations
-   ciblent `claude -p` et un mode non interactif équivalent de Codex, démarrés et
-   supervisés par un adaptateur du launcher/jeu (nouvelle brique, doc 10).
+1. Le joueur décrit l'intention à son **IA cliente** via le **tchat ingame** :
+   l'application invoque le modèle et le pré-prompte avec la skill (D10/D17).
+   Les premières intégrations ciblent `claude -p` et un mode non interactif
+   équivalent de Codex, démarrés et supervisés par un adaptateur du launcher/jeu
+   (nouvelle brique, doc 10) — invisibles pour le joueur.
 2. L'IA cliente **génère un fichier QML** — l'élément et/ou son comportement — qui
    peut embarquer du **script QML/JS**. Ce script est écrit pour **lire et écrire
    l'espace mémoire** (doc 05) des tuiles : c'est par là qu'il crée le gameplay

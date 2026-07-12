@@ -164,6 +164,13 @@
 - **Migration.** Un changement d'arbitre avec transfert d'état/version est requis.
 - **Gap V2.** `LauncherManager` ne lance actuellement aucun processus ; la
   supervision et le transfert de contexte sont de nouveaux chantiers (doc 10).
+- **Précision interaction (2026-07-12).** Les IA clientes sont **invoquées
+  directement depuis l'application, via un tchat ingame** — le joueur n'exécute
+  **pas** les features depuis un CLI à part. `claude -p`/Codex non interactif
+  restent le **mécanisme d'exécution sous-jacent** piloté par l'app, invisible
+  pour le joueur. Bénéfice clé : l'app **pré-prompte** chaque modèle à
+  l'invocation pour qu'il suive les **workflows des skills internes** (doc 03) —
+  pas de dépendance à une configuration d'agent côté joueur.
 
 ### D11 — Proposition auditable, amendement immédiat et application automatique
 - **Décision.** Une proposition porte auteur, intention, opérations, artefacts,
@@ -233,7 +240,13 @@
   versionné du canal reste la source de vérité ; la skill est générée au build.
   Une version obsolète utilise si possible un mode compatibilité et propose une
   mise à jour automatique. Seul le catalogue curé est porté depuis les hooks/MCP.
-- **Encore ouvert.** Forme du client WS/CLI et emplacements d'installation.
+- **Précision distribution (2026-07-12).** La skill n'est **pas installée chez
+  l'agent du joueur** : elle est **embarquée avec l'application** et **injectée en
+  pré-prompt** à l'invocation in-app des modèles (tchat ingame, cf. D10). La
+  question « emplacement d'installation multi-plateforme » devient caduque pour
+  le flux nominal.
+- **Encore ouvert.** Forme du client WS embarqué côté app (comment l'agent
+  invoqué atteint le canal : tool fourni par l'app vs WS brut).
 
 ### D18 — Bibliothèque locale officielle unifiée
 - **Décision.** Le premier jalon est une bibliothèque locale officielle unifiée,
@@ -254,7 +267,8 @@
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
-remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
+remplissable des **questions encore ouvertes** (épuré le 2026-07-12, arbitrages
+reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
 
 ### Sécurité (bloquant pour D1)
 - Jusqu'où peut-on **verrouiller** un `QQmlContext` et l'allow-list d'imports dans
@@ -323,7 +337,11 @@ remplissable et exhaustif est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE
 
 ### Skill client (doc 03)
 - ~~Agents initiaux ?~~ **Tranché D17 : Codex + Claude Code.**
-- Emplacement d'installation standardisé multi-plateforme.
+- ~~Emplacement d'installation standardisé multi-plateforme ?~~ **Caduc
+  (précision D17, 2026-07-12)** : la skill est embarquée dans l'app et injectée
+  en pré-prompt à l'invocation ingame — pas d'installation côté agent du joueur.
+- Comment l'agent invoqué in-app atteint le canal WS : tool de connexion fourni
+  par l'app, ou WS brut documenté dans le pré-prompt ?
 - ~~Génération ?~~ **Tranché D17 : au build depuis le manifeste.**
 
 ## 3. Risques majeurs

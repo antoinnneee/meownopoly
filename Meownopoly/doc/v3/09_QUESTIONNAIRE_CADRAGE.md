@@ -1,422 +1,129 @@
-# 09 — Questionnaire de cadrage V3
+# 09 — Questionnaire de cadrage V3 (questions ouvertes)
 
-> **Statut : partiellement rempli, dépouillé le 2026-07-12.** Ce questionnaire consolide toutes les interrogations
-> ouvertes relevées dans les docs 00→08 et lors de leur audit de cohérence du
-> 2026-07-12. Une réponse peut être courte ; les champs « Pourquoi / contraintes »
-> servent à conserver l'intention derrière la décision.
+> **Statut : épuré le 2026-07-12.** Le questionnaire initial a été dépouillé et
+> ses arbitrages reportés dans le doc 08 (**D9→D19**). Ce fichier ne contient
+> plus que les **questions encore ouvertes**, actualisées avec les décisions et
+> la précision « invocation in-app via tchat ingame » (D10/D17). Les questions
+> tranchées ou devenues caduques sont retirées ; la table §0 en garde la trace.
 
 ## Mode d'emploi
 
 - **B0** : bloque le choix d'architecture ou la preuve de faisabilité.
 - **B1** : nécessaire avant un premier vertical slice multi-joueurs.
 - **B2** : peut être différé après le prototype, mais doit rester tracé.
-- Cocher une option, la remplacer, ou écrire « à prototyper » avec un critère de
-  décision. Une question sans réponse reste explicitement ouverte.
 - Après remplissage, reporter chaque arbitrage stable dans le doc 08 sous un ID
-  de décision. Ne pas transformer une recommandation de ce fichier en décision
-  tant qu'elle n'a pas été validée.
+  de décision, puis retirer la question d'ici.
 - Les mentions **Vérification stack** renvoient à
   [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md).
 
 ---
 
+## 0. Questions retirées (traçabilité)
 
-
-## A. Produit, périmètre et promesse
-
-
-
-### Q-A01 — Quels modes appartiennent à la V3 initiale, et dans quel ordre ? — **B0**
-
-- [x] Éditeur solo assisté par IA
-- [x] Éditeur collaboratif assisté par IA
-- [x] Partie runtime co-construite en direct
-- [ ] Vertical slice couvrant éditeur puis runtime
-
-- **Recommandation actuelle :** éditeur solo, puis collaboration, puis runtime.
-- **Lecture de la réponse :** les trois modes sont dans le périmètre V3. Leur
-  ordre de livraison n'est pas encore tranché puisque plusieurs « premiers modes »
-  ont été cochés.
-- **Réponse :**
-- **Pourquoi / contraintes :**
-
-
-
-### Q-A02 — L'arbitre est-il obligatoire en solo/offline ? — **B0**
-
-- [x] Oui, tout mode IA exige deux rôles
-- [ ] Non, obligatoire seulement quand un état est partagé
-- [ ] Non, remplacé en solo par une approbation humaine
-
-- **Réponse :**
-- **Pourquoi / contraintes :**
-
-
-
-### Q-A03 — Le « jeu classique » doit-il rester pleinement maintenu ? — **B1**
-
-- [ ] Oui, produit de premier rang
-- [ ] Oui, mode de repli pendant la transition seulement
-- [x] Non à terme, migration complète vers V3
-
-- **Réponse :**
-
-
-
-### Q-A04 — À quel moment une création IA entre-t-elle dans la partie ? — **B0**
-
-- [x] Dès acceptation de l'arbitre et validation mécanique
-- [ ] Après approbation explicite de l'hôte humain
-- [ ] En prévisualisation locale, puis publication explicite
-
-- **Réponse :**
-
-
-
-### Q-A05 — Une proposition acceptée peut-elle modifier une partie déjà commencée ? — **B1**
-
-- [x] Oui, sans restriction autre que l'arbitrage
-- [ ] Oui, seulement à des points sûrs/phases définies
-- [ ] Non, uniquement avant le lancement
-
-- **Réponse :**
-
-
-
-### Q-A06 — Quel niveau de liberté constitue le succès du MVP ? — **B0**
-
-- [x] Composer des primitives + configurer leur mémoire
-- [x] Ajouter du JS borné sur des primitives
-- [x] Charger du QML/JS libre
-
-- **Critère mesurable attendu : creation d'item qui modifie le gameplay, modificaiton de physique, d'element, interraction avec le joueur**
-- **Réponse :**
-
-
-
-### Q-A07 — Qui est l'utilisateur cible initial ? — **B1**
-
-- [ ] Joueur non technique
-- [ ] Créateur de maps
-- [ ] Moddeur/développeur
-- [x] Groupe mixte
-
-- **Réponse :**
-
-
-
-### Q-A08 — Quelles plateformes doivent être supportées au premier jalon ? — **B1**
-
-- [ ] Windows uniquement
-- [x] Windows + Linux
-- [ ] Windows + Linux + macOS
-
-- **Réponse :**
-- **Vérification stack :** cible Linux plausible côté CMake/C++/QML, mais aucun
-  packaging, CI ni test Linux n'existe encore. La réponse crée un chantier de
-  qualification Linux ; elle ne décrit pas un support déjà acquis.
+| Questions | Sort | Décision |
+|-----------|------|----------|
+| A02→A08 (arbitre solo, mode classique, entrée auto, modif en cours, liberté MVP, cible, plateformes) | tranchées | **D9** |
+| B01→B03, B05→B08 (instances isolées, fournisseurs, supervision, panne/migration, budget, visibilité règles, changement d'arbitre) | tranchées | **D10** |
+| C02→C05 (enveloppe, amendement immédiat, persistance verdict, ordre de contrôle) | tranchées | **D11** |
+| C10→C12 (tour, GameplayModuleManager, application d'un effet partagé) | tranchées | **D12 / D16** |
+| C09 (anti-boucle : profondeur + file + cycles, tous requis) | tranchée | **D12** |
+| D01→D03, D07→D10 (niveau d'isolation, lieu d'exécution, repli, revue humaine, menace, artefacts disque, tests R1) | tranchées (conditionnel R1) | **D13** |
+| E01, E04, E05, E07, E09 (WS multiplexé, version globale, adaptateur d'événements, tout-ou-rien, automation.raw dev-only) | tranchées | **D14** |
+| F01, F03, F04, F08, F09, F11 (namespaces config/state, portée tuiles+session+joueurs, bus générique, séquencement hôte/LWW, write-set, signaux) | tranchées | **D15** |
+| G01→G05 (source → hôte, exécution par propriété, identité UUID+hash, store map+séparé, artefact manquant) | tranchées | **D16** |
+| H01, H03, H05→H07 (Codex+Claude, manifeste source de vérité, génération au build, skill obsolète, catalogue curé) | tranchées | **D17** |
+| **H04 (emplacement d'installation de la skill)** | **caduque** : skill embarquée dans l'app, injectée en pré-prompt à l'invocation ingame | précision **D17** (2026-07-12) |
+| I01→I03, I06, I07 (bibliothèque locale officielle, asset_server réutilisé, GLB, imports devs) | tranchées | **D18** |
+| I08 (référencement d'un asset) | tranchée dans son principe : clés existantes + version/hash | **D16/D18** |
+| J01 (journal configurable, noyau d'audit non désactivable) | tranchée (rétention → Q-J02) | **D19** |
 
 ---
 
+## A. Produit et périmètre
 
+### Q-A01 — Dans quel ordre livrer les trois modes V3 ? — **B0**
 
-## B. IA cliente, arbitre et fournisseurs de modèles
+Le périmètre est tranché (D9 : éditeur solo assisté, éditeur collaboratif,
+partie runtime co-construite — tous avec les deux rôles IA). Seul l'**ordre de
+livraison** reste ouvert (les trois avaient été cochés « premier mode »).
 
-
-
-### Q-B01 — « Deux modèles chez l'hôte » signifie-t-il deux instances distinctes ? — **B0**
-
-- [x] Deux fournisseurs/processus réellement distincts
-- [x] Un même fournisseur avec deux sessions/contextes isolés
-- [ ] Une seule session pouvant changer de rôle
-
-- **Recommandation actuelle :** rôles et contextes isolés ; fournisseur commun autorisé.
-- **Réponse :**
-
-
-
-### Q-B02 — Quels fournisseurs/protocoles de modèle cible-t-on d'abord ? — **B1**
-
-- [ ] Agent local compatible skill
-- [ ] API cloud appelée par un adaptateur local
-- [ ] Serveur OpenAI-compatible local
-- [ ] Plusieurs via interface d'adaptation
-
-- **Réponse : claude -p et equivalent codex**
-
-
-
-### Q-B03 — Qui démarre et supervise les agents ? — **B1**
-
-- [ ] Le joueur hors du jeu
-- [x] Le launcher Meownopoly
-- [x] Le jeu via un adaptateur/processus enfant
+- [ ] Éditeur solo → collaboratif → runtime (recommandation actuelle)
+- [ ] Éditeur collaboratif d'abord (valide l'arbitrage réseau tôt)
+- [ ] Vertical slice traversant (mince mais couvrant éditeur puis runtime)
 
 - **Réponse :**
-- **Vérification stack :** `LauncherManager` ne lance aujourd'hui aucun processus.
-  La supervision de `claude -p` et de l'équivalent Codex exige un adaptateur basé
-  sur `QProcess`, avec cycle de vie, logs, timeout et secrets.
+- **Pourquoi / contraintes :**
 
+---
 
+## B. Arbitre : disponibilité et UX du prérequis
 
 ### Q-B04 — Comment le jeu prouve-t-il qu'un arbitre est prêt ? — **B0**
 
-- [ ] Connexion WS avec rôle + challenge de capacité
-- [ ] Simple présence d'une connexion déclarée arbitre
-- [ ] Test de santé et verdict sur proposition factice
+La configuration collective (prompt/personnalité, budget) est tranchée (D10).
+Reste la **preuve technique de disponibilité** : le mode IA doit être bloqué
+tant qu'aucun arbitre fonctionnel n'est branché (D6), et l'app invoque
+elle-même les modèles (tchat ingame) — elle peut donc tester avant de lancer.
 
-- **Réponse : Les joueur configure ensemble l'arbitre avec des prompt avant de lancer la partie**
-- **Point restant :** cette réponse décrit la configuration collective, pas la
-  preuve technique de disponibilité. Le handshake de rôle et un health-check
-  restent à choisir avant de pouvoir bloquer/débloquer le lancement.
+- [ ] Handshake de rôle sur le canal + challenge de capacité
+- [ ] Test de santé : verdict sur une proposition factice au démarrage
+- [ ] Les deux (handshake puis health-check)
 
-
-
-### Q-B05 — Que se passe-t-il si l'arbitre tombe en panne pendant une partie ? — **B0**
-
-- [ ] Gel des nouvelles propositions, partie existante continue
-- [ ] Pause complète de la partie
-- [x] Élection/migration vers un nouvel arbitre
-- [ ] Repli humain temporaire
-
-- **Réponse :**
-- **Vérification stack :** l'élection/promotion d'hôte éditeur existe. Elle ne
-  transfère ni contexte d'arbitre, ni règlement V3, ni état runtime générique.
-
-
-
-### Q-B06 — Qui paie et limite le coût des appels de l'arbitre ? — **B1**
-
-- [ ] L'hôte, sans quota produit
-- [x] L'hôte avec budget configurable
-- [ ] Budget partagé/quotas par joueur
-
-- **Réponse :**
-
-
-
-### Q-B07 — Les joueurs voient-ils le modèle/prompt de l'arbitre ? — **B1**
-
-- [ ] Oui, transparence complète
-- [ ] Prompt/règles visibles, secrets fournisseur masqués
-- [ ] Non, choix privé de l'hôte
-
-- **Réponse : l'arbitre choisis les regles qu'il affiche, elle peuvent etre modifier en cours de partie, l'affichage des regles dépendra du choix de l'arbitre (voir B04)**
-
-
-
-### Q-B08 — L'hôte peut-il changer d'arbitre en cours de partie ? — **B1**
-
-- [x] Oui, avec transfert d'état/version
-- [ ] Oui, mais seulement à un checkpoint
-- [ ] Non
-
+- **UX du prérequis** (comment le lobby exige/affiche l'état de l'arbitre) :
 - **Réponse :**
 
 ---
 
+## C. Arbitrage et règles
 
+### Q-C01 — Quelle unité déclenche un appel à l'arbitre ? — **B0**
 
-## C. Proposition, arbitrage et exécution des règles
+Le flux est tranché (D11 : préfiltre mécanique → arbitre → validation complète
+→ exécution). Reste le **grain** — coût/latence d'un appel LLM par action
+(risque R8).
 
-
-
-### Q-C01 — Qu'est-ce qui déclenche un appel à l'arbitre ? — **B0**
-
-- [ ] **Chaque commande** : poser une tuile et modifier une clé provoquent deux appels
-- [ ] **Une proposition complète** : « créer une rivière » forme un seul lot atomique
-- [ ] **Le code uniquement** : les opérations de données passent par validation mécanique
+- [ ] **Chaque commande**
+- [ ] **Une proposition complète** (lot atomique)
+- [ ] **Le code uniquement** (les données passent en validation mécanique)
 - [ ] **Politique hybride** : données sûres groupées, code/règles toujours arbitrés
 
 - **Recommandation actuelle :** transaction typée, avec chemin rapide mécanique.
 - **Réponse :**
 
+### Q-C06 — Affiner la hiérarchie des formes exécutables — **B1**
 
-
-### Q-C02 — Quel est le schéma minimal d'une enveloppe de proposition ? — **B0**
-
-- [x] Auteur + intention + opérations + artefacts + write-set + version
-- [ ] Texte libre + pièces jointes
-- [ ] Autre schéma :
-
-- **Réponse :**
-
-
-
-### Q-C03 — L'arbitre peut-il amender directement une proposition ? — **B0**
-
-- [ ] Non, accepte ou rejette avec corrections demandées
-- [ ] Oui, puis le proposant confirme
-- [x] Oui, l'amendement est immédiatement appliqué
-
-- **Recommandation actuelle :** pas de mutation silencieuse ; retour vers le proposant.
-- **Réponse : l'arbitre dispose d'une personalité définie avec les regles de début de partie**
-- **Décision lue :** l'amendement direct et immédiat est autorisé. La personnalité
-  explique *comment* il amende, mais il reste nécessaire de journaliser exactement
-  la version amendée appliquée pour rendre l'action auditée et rejouable.
-
-
-
-### Q-C04 — Quelles parties du verdict sont persistées ? — **B1**
-
-- [x] Verdict, raisons, proposition originale et version appliquée
-- [ ] Verdict + hash seulement
-- [ ] Rien après application
+L'orientation est tranchée (D12 : plan de capacités → config de modules →
+DSL/machine à états → QML/JS sandboxé, forme la moins libre suffisante).
+À affiner : **qui choisit la forme** (arbitre ? validateur ?), critères de
+sélection, et qui compile/valide chaque forme (doc 06 §4).
 
 - **Réponse :**
-
-
-
-### Q-C05 — Quel ordre de contrôle retient-on ? — **B0**
-
-- [x] Préfiltre mécanique → arbitre → validation complète → exécution
-- [ ] Arbitre → sandbox complet → exécution
-- [ ] Sandbox complet → arbitre → exécution
-
-- **Recommandation actuelle :** préfiltre bon marché, arbitre, validation complète.
-- **Réponse :**
-
-
-
-### Q-C06 — Sous quelle forme une règle acceptée devient-elle exécutable ? — **B0**
-
-- [x] Plan de commandes/capacités
-- [x] Configuration de modules existants
-- [x] DSL/machine à états bornée
-- [x] QML/JS sandboxé
-- [x] Combinaison hiérarchisée de ces formes
-
-- **Réponse : a affiner**
-
-
-
-### Q-C07 — Où vit le règlement autoritatif courant ? — **B0**
-
-- [x] Document structuré versionné dans l'état de session
-- [ ] Prompt + historique de l'arbitre uniquement
-- [ ] Artefacts exécutables + résumé structuré
-
-- **Recommandation actuelle :** état structuré versionné, jamais prompt seul.
-- **Réponse :**
-
-
 
 ### Q-C08 — Quels événements runtime peuvent déclencher une règle ? — **B1**
 
-- [ ] Liste à fournir : 
-
+- **Liste des événements** (collision, entrée de zone, écriture mémoire, tick,
+  action joueur…) :
 - **Autorité de chaque événement :**
 - **Ordre/priorité en cas d'événements simultanés :**
-- **A Affiner**
-
-
-
-### Q-C09 — Comment empêcher boucle, réentrance et cascade infinie de règles ? — **B0**
-
-- [x] Profondeur maximale + budget par tick
-- [x] File d'événements transactionnelle
-- [x] Détection de cycles/write-set
-- [ ] Combinaison :
-
-- **Réponse :**
-
-
-
-### Q-C10 — Comment introduire un tour par tour ? — **B1**
-
-- [ ] Primitive de tour fournie par le jeu, configurée par l'arbitre
-- [x] Artefact généré par l'IA
-- [x] Orchestration directe par l'arbitre
-
-- **Recommandation actuelle :** primitive déterministe configurable.
-- **Réponse :**
-- **Décision lue :** le tour, s'il existe, est généré/orchestré par l'IA et
-  l'arbitre ; aucune primitive de tour native n'est exigée à ce stade.
-
-
-
-### Q-C11 — Quelle est la relation avec `GameplayModuleManager` ? — **B1**
-
-- [x] Les modules sont les primitives d'exécution privilégiées
-- [x] Les règles forment une couche au-dessus des modules
-- [x] Les deux selon le type d'effet
-
-- **Réponse :**
-
-
-
-### Q-C12 — Qui applique un effet partagé ? — **B0**
-
-- [x] Hôte uniquement, puis réplication de l'état
-- [ ] Chaque pair exécute un artefact déterministe
-- [x] Hybride selon la capacité
-
-- **Réponse :**
 
 ---
 
+## D. Sandbox : contenu exact (structure tranchée D13, conditionnelle R1)
 
-
-## D. Sandbox, isolation et menace
-
-
-
-### Q-D01 — Quel niveau d'isolation est exigé avant d'activer D1 ? — **B0**
-
-- [x] Pas d'accès disque/réseau/process + limites de ressources préemptives
-- [ ] Isolation fonctionnelle sans garantie anti-DoS
-- [ ] Exécution locale assumée comme code utilisateur de confiance
-
-- **Réponse :**
-
-
-
-### Q-D02 — Où le code généré s'exécute-t-il ? — **B0**
-
-- [x] Même moteur QML / contexte restreint
-- [ ] `QQmlEngine` séparé dans le même processus
-- [ ] Processus auxiliaire avec IPC/rendu déporté
-- [ ] Jamais de QML libre ; DSL/capacités uniquement
-
-- **Critère de choix après prototype R1 :**
-- **Réponse :**
-- **Vérification stack :** aucun sandbox n'existe. Le moteur courant enregistre de
-  nombreux singletons globaux. Le choix « même moteur » est **conditionnel** : il
-  doit réussir D10, notamment l'arrêt préemptif d'une boucle infinie, avant d'être
-  considéré faisable.
-
-
-
-### Q-D03 — Quel est le repli officiel si le JS ne peut pas être interrompu ? — **B0**
-
-- [ ] Processus séparé tuable
-- [x] JS borné/instrumenté
-- [ ] DSL déclaratif
-- [ ] Palette + mémoire uniquement
-
-- **Réponse :**
-
-
-
-### Q-D04 — Quelle allow-list d'imports/types/fonctions est nécessaire au MVP ? — **B0**
+### Q-D04 — Quelle allow-list d'imports/types/fonctions au MVP ? — **B0**
 
 - **Imports autorisés :**
 - **Types autorisés :**
 - **Fonctions globales interdites :**
 
-On affinera plus tard
+### Q-D05 — Liste exacte de la façade « API de jeu » exposée au code — **B0**
 
-### Q-D05 — Quelle façade de jeu minimale expose-t-on au code ? — **B0**
+Orientation tranchée : mémoire + événements + animations + capacités gameplay
+sélectionnées. Reste la **liste exacte** (doc 04 §3.3).
 
-- [ ] Mémoire propre à l'élément seulement
-- [x] Mémoire + événements + animations
-- [x] Mémoire + capacités gameplay sélectionnées
+- **Liste :**
 
-- **Liste exacte :**
-
-
-
-### Q-D06 — Quels budgets impose-t-on ? — **B1**
+### Q-D06 — Quels budgets impose-t-on ? — **B1** *(à affiner en test)*
 
 - **Taille source/artefact :**
 - **CPU par événement/tick :**
@@ -424,168 +131,55 @@ On affinera plus tard
 - **Nombre d'objets :**
 - **Débit d'événements :**
 
-A affiner en test 
-
-### Q-D07 — Quelle est la politique de revue humaine ? — **B1**
-
-- [x] Jamais requise
-- [ ] Toujours pour du code
-- [ ] Seulement avant réplication/exécution distante
-- [ ] Configurable par l'hôte
-
-- **Réponse :**
-
-
-
-### Q-D08 — Quel est le modèle de menace local ? — **B0**
-
-- [ ] Processus du même utilisateur considéré hostile
-- [x] Seulement les pairs réseau sont hostiles
-- [ ] Machine locale de confiance
-
-- **Secrets/données à protéger :**
-
-
-
-### Q-D09 — Comment valide-t-on les artefacts chargés depuis disque/bibliothèque ? — **B1**
-
-- [ ] Revalidation complète à chaque chargement
-- [ ] Cache par hash + version de validateur
-- [x] Signature officielle suffisante
-
-- **Réponse :**
-- **Vérification stack :** le launcher vérifie un SHA-256 transmis par le serveur,
-  mais aucune signature cryptographique d'éditeur n'existe. « Signature officielle
-  suffisante » nécessite donc une nouvelle chaîne de signature et ne couvre pas
-  les artefacts générés/non officiels.
-
-
-
-### Q-D10 — Quels tests font réussir le prototype R1 ? — **B0**
-
-- [x] Blocage imports/singletons interdits
-- [x] Blocage fichier/réseau/process
-- [x] Arrêt d'une boucle infinie
-- [x] Plafond mémoire/objets
-- [x] Destruction/rechargement sans fuite
-- [ ] Autres :
-
 ---
 
+## E. Canal local : auth, secret, garanties
 
+### Q-E02 — Comment le secret du canal est-il découvert ? — **B1**
 
-## E. Canal local et protocole
+Le port peut réutiliser le patron automation (`--port`/variable d'env). La
+stack ne fournit **aucun** mécanisme de secret. Nuance nouvelle : comme l'app
+**invoque elle-même** les agents (tchat ingame, D10), elle peut leur passer le
+secret directement (argument/env du process enfant) — la découverte « par un
+agent externe arbitraire » n'est plus le cas nominal.
 
-
-
-### Q-E01 — Un canal multiplexé ou plusieurs serveurs ? — **B0**
-
-- [x] Un WS, rôles et namespaces multiplexés
-- [ ] Un WS proposant + un WS arbitre
-- [ ] Canaux séparés éditeur/runtime/arbitre
+- [ ] Injection directe par l'app au lancement du process agent (env/argument)
+- [ ] Fichier runtime à permissions utilisateur
+- [ ] Port fixe + token affiché/copié (cas de secours/debug)
 
 - **Réponse :**
-
-
-
-### Q-E02 — Comment le port et le secret sont-ils découverts ? — **B1**
-
-- [ ] Fichier runtime à permissions utilisateur
-- [ ] Argument/variable d'environnement
-- [ ] Port fixe + token affiché/copié
-- [ ] IPC natif plutôt que WS
-
-- **Réponse : stack reseau existante**
-- **Vérification stack :** l'automation accepte `--automation-port` ou
-  `MEOW_AUTOMATION_PORT`; aucun secret n'est découvert. Réutilisable pour le port,
-  insuffisant pour le secret du canal IA.
-
-
 
 ### Q-E03 — Quel mécanisme d'authentification locale ? — **B0**
 
-- [ ] Token éphémère par lancement
+La stack n'offre que le loopback — insuffisant pour un canal qui exécute à
+terme du QML (risque R3). Il faut aussi distinguer les **deux identités
+locales de l'hôte** (proposant vs arbitre), avec des capacités différentes.
+
+- [ ] Token éphémère par lancement + rôle au handshake (recommandation)
 - [ ] Token persistant par installation
 - [ ] Challenge/réponse lié au rôle
-- [ ] Loopback seul
-
-- **Recommandation actuelle :** token éphémère + rôle + rotation.
-- **Réponse : stack reseau existante**
-- **Vérification stack :** **réponse non close**. La stack n'offre que le loopback,
-  sans token, rôle ni challenge. L'une des trois premières options reste à choisir.
-
-
-
-### Q-E04 — Comment négocie-t-on les versions ? — **B1**
-
-- [x] Version protocole globale
-- [ ] Version + découverte dynamique des capacités
-- [ ] Versions par namespace
 
 - **Réponse :**
 
+### Q-E06 — Quelles garanties de livraison des événements poussés ? — **B1**
 
-
-### Q-E05 — Quel bus alimente les événements poussés ? — **B1**
-
-- [x] Adaptateur unifié au-dessus de `Game`/`EditorOpBus`/`ItemSnapableEvents`
-- [x] Connexion directe à plusieurs signaux internes
-- [x] Journal d'événements métier nouveau
-
-- **Réponse :** 
-
-
-
-### Q-E06 — Quelles garanties d'événements ? — **B1**
+`reliable.io` acquitte et fragmente mais **ne retransmet pas** (R13). Les
+garanties V3 exigent une couche applicative.
 
 - [ ] Au plus une fois
 - [ ] Au moins une fois + identifiant/déduplication
 - [ ] Relecture depuis un curseur/journal
 
-- **Réponse : stack reseau existante**
-- **Vérification stack :** **réponse non close**. `reliable.io` acquitte et
-  fragmente mais ne retransmet pas automatiquement. Les garanties V3 exigent ACK
-  applicatif/retry/déduplication ou snapshot de réparation.
-
-
-
-### Q-E07 — Quelle sémantique de transaction pour un lot ? — **B0**
-
-- [x] Tout ou rien
-- [ ] Résultat partiel détaillé
-- [ ] Prévalidation puis commit explicite
-
-- **Réponse :** 
-- **Vérification stack :** `groupId` groupe déjà undo/save/broadcast, mais les
-  mutations sont appliquées avant commit et aucun rollback automatique n'existe.
-  « Tout ou rien » est une nouvelle garantie V3.
-
-
-
-### Q-E08 — Quelles commandes V2 sont portées dans le MVP ? — **B1**
-
-- [x] `state.listTiles/getTile`
-- [x] pose et édition par UUID
-- [x] mémoire config/runtime
-- [x] `qml.instantiate`
-- [x] screenshot
-- [x] runtime joueur/NPC
-- [x] roster/modules
-
-- **Sous-ensemble retenu :**
-
-a affiner
-
-### Q-E09 — Une échappatoire `automation.raw` existe-t-elle ? — **B1**
-
-- [ ] Non
-- [x] Build dev uniquement, absent du manifeste livré
-- [ ] Oui avec permission explicite
-
-- **Recommandation actuelle :** build dev uniquement ou aucune.
 - **Réponse :**
 
+### Q-E08 — Sous-ensemble exact des commandes portées au MVP — **B1** *(à affiner)*
 
+Familles retenues : `state.listTiles/getTile`, pose/édition par UUID, mémoire
+config/runtime, `qml.instantiate`, screenshot, runtime joueur/NPC,
+roster/modules. Reste à figer la **liste commande par commande** dans le
+manifeste du canal (doc 02 §4).
+
+- **Sous-ensemble retenu :**
 
 ### Q-E10 — Quelle politique de capture d'écran ? — **B2**
 
@@ -595,347 +189,91 @@ a affiner
 
 ---
 
+## F. Mémoire et réseau runtime
 
+### Q-F02 — Où persiste l'état runtime pour une reprise de partie ? — **B0**
 
-## F. Mémoire, persistance, réseau et undo
+Deux options avaient été cochées (contradictoires). La sauvegarde actuelle ne
+contient que `mapInfo` + `snapableTiles` ; aucun format de sauvegarde runtime
+n'existe.
 
-
-
-### Q-F01 — Valide-t-on la séparation `config` / `state` ? — **B0**
-
-- [x] Oui, deux namespaces dans un même `memory`
-- [ ] Oui, deux propriétés/conteneurs distincts
-- [ ] Non, autre modèle :
-
-- **Réponse :**
-
-
-
-### Q-F02 — L'état runtime doit-il survivre à une sauvegarde/reprise ? — **B0**
-
-- [ ] Non, toujours réinitialisé
-- [x] Oui, dans une sauvegarde de partie distincte de la map
-- [x] Oui, directement dans le fichier map
-
-- **Recommandation actuelle :** sauvegarde de partie distincte.
-- **Réponse : Voir système de sauvegarde existant. A affiner, snaphot système /= runtime**    
-- **Vérification stack :** la sauvegarde actuelle ne contient que `mapInfo` et
-  `snapableTiles`; il n'existe aucun format de sauvegarde runtime séparé. Les deux
-  options cochées restent donc contradictoires. **À trancher :** état runtime dans
-  un fichier de partie séparé (recommandé) ou mélange dans la map.
-
-
-
-### Q-F03 — La mémoire existe-t-elle aussi au niveau partie/joueur ? — **B1**
-
-- [ ] Tuiles uniquement
-- [ ] Tuiles + `MapInfo`/session
-- [x] Tuiles + session + `PlayerProfile`/joueur
+- [ ] Sauvegarde de partie **distincte** de la map (recommandation)
+- [ ] Directement dans le fichier map
 
 - **Réponse :**
 
+### Q-F05 — Spécifier la stratégie delta/snapshot — **B0**
 
-
-### Q-F04 — Quel transport pour l'état runtime ? — **B0**
-
-- [ ] Nouveau protocole/message dédié
-- [ ] Extension de `PhysicsSession`
-- [x] Bus d'état générique partagé
+Orientation donnée : delta sur modification courante, snapshot sur ajout
+d'item. Mais aucun snapshot de **réparation** ne répare aujourd'hui un delta
+perdu. À spécifier : coalescence, déclencheurs de snapshot, resync.
 
 - **Réponse :**
-- **Vérification stack :** le bus générique choisi n'existe pas. La V2 possède
-  deux protocoles spécialisés (`EditorSession`, `PhysicsSession`) pouvant servir
-  de modèles, pas de bus commun réutilisable directement.
 
+### Q-F06 — Confirmer le modèle hybride reliable/supersedable — **B0**
 
+Le chemin nommé `reliable` ne retransmet pas (R13). Modèle cohérent avec D15 :
+**intentions/commits** avec ACK applicatif + retry ; **état supersedable** avec
+séquence + snapshot de réparation. À confirmer et spécifier.
 
-### Q-F05 — Delta ou snapshot ? — **B0**
+- **Réponse :**
 
-- [x] Delta par clé avec version
-- [x] Snapshot complet par entité
-- [ ] Delta fréquent + snapshot périodique de réparation
-
-- **Recommandation actuelle :** delta coalescé + snapshot de réparation.
-- **Réponse : stack existante; delta sur modification courante du runtime, snapshot sur ajout de nouvelle item . A affiner**
-- **Vérification stack :** l'éditeur utilise des deltas puis un `FullSync` à la
-  connexion/changement de carte ; la physique utilise des snapshots périodiques.
-  Aucun snapshot automatique « sur ajout d'item » ne répare actuellement un delta
-  perdu. La stratégie V3 delta + snapshot de réparation reste à spécifier.
-
-
-
-### Q-F06 — Reliable ou latest-state/raw ? — **B0**
-
-- [ ] Reliable ordonné
-- [ ] Raw/supersedable + séquence
-- [ ] Hybride : intentions fiables, états supersedables
-
-- **Recommandation actuelle :** hybride.
-- **Réponse : stack reseau existante**
-- **Vérification stack :** **réponse non close**. Le chemin nommé `reliable` ne
-  retransmet pas les paquets non acquittés. Pour le bus V3, le modèle cohérent avec
-  les réponses est : intentions/commits avec retry fiable applicatif ; état
-  supersédable avec séquence et snapshot de réparation.
-
-
-
-### Q-F07 — Cadence et plafonds ? — **B1**
+### Q-F07 — Cadence et plafonds du bus d'état ? — **B1** *(à affiner en test)*
 
 - **Cadence maximale :**
 - **Taille max par valeur/tuile/session :**
 - **Budget bande passante par pair :**
 - **Politique de dépassement :**
 
-A affiner en test
-
-### Q-F08 — Comment versionner/résoudre les écritures concurrentes ? — **B0**
-
-- [x] Hôte séquence tout, dernier accepté gagne
-- [ ] Version par clé + rejet des écritures périmées
-- [ ] Fusion spécifique au type
-
-- **Réponse :**
-
-
-
-### Q-F09 — Quel write-set une proposition doit-elle déclarer ? — **B1**
-
-- [ ] Tuiles seulement
-- [x] Tuiles + clés mémoire
-- [x] Ressources/capacités complètes
-
-- **Réponse :**
-
-
-
 ### Q-F10 — Que fait undo si une valeur durable a changé depuis ? — **B0**
 
 - [ ] Refuse et signale un conflit
 - [ ] Restaure malgré tout
-- [ ] Compensation conditionnelle par version
+- [ ] Compensation conditionnelle par version (recommandation, sinon conflit)
 
-- **Recommandation actuelle :** compensation conditionnelle, sinon conflit.
-- **Réponse : a affiner** 
-
-
-
-### Q-F11 — Quel signal QML exposer ? — **B1**
-
-- [ ] `userMemoryChanged()` global
-- [ ] `memoryValueChanged(namespace, key, value, version)` ciblé
-- [x] Les deux
-
-- **Réponse :** 
+- **Réponse :**
 
 ---
 
+## G. Artefacts : cycle de vie et migration
 
-
-## G. Artefacts, réplication et cycle de vie
-
-
-
-### Q-G01 — En posture initiale, où la source QML circule-t-elle ? — **B0**
-
-- [x] Client auteur → hôte arbitre seulement
-- [ ] Client → hôte → tous les pairs
-- [ ] Aucun code client ; génération uniquement chez l'hôte
-
-- **Recommandation actuelle :** auteur → hôte, sans broadcast aux pairs.
-- **Réponse : stack reseau existante**
-- **Vérification stack :** Catway/EditorSession savent transporter et chunker du
-  JSON, mais aucun message proposition/artefact/arbitre n'existe. La topologie est
-  décidée ; son protocole est à créer.
-
-
-
-### Q-G02 — Où le comportement accepté s'exécute-t-il ? — **B0**
-
-- [ ] Auteur seulement ; l'hôte valide chaque effet partagé
-- [x] Hôte seulement ; les effets sont répliqués
-- [x] Chaque pair après revalidation
-- [x] Selon une propriété de l'artefact
-
-- **Réponse :**
-
-
-
-### Q-G03 — Comment identifier/versionner un artefact ? — **B1**
-
-- [ ] Hash de contenu + manifeste + version de schéma
-- [x] UUID mutable
-- [ ] Nom logique + version sémantique
-
-- **Réponse : stack existante**
-- **Vérification stack :** **réponse à corriger.** Le `QUuid` existant identifie
-  une instance de tuile, pas le contenu/version d'un artefact partagé. Conserver
-  un UUID d'instance est utile, mais l'artefact requiert aussi un hash de contenu
-  et une version de manifeste.
-
-
-
-### Q-G04 — Où persister les sources acceptées ? — **B1**
-
-- [x] Dans le JSON de map
-- [x] Dans un store d'artefacts séparé, référencé par hash
-- [ ] Session seulement, non persistées
-
-- **Recommandation actuelle :** store séparé par hash.
-- **Réponse : stack existante a compléter** 
-- **Vérification stack :** la map JSON et le stockage d'assets sous
-  `AppDataLocation` existent ; aucun store adressé par hash n'existe. La réponse
-  implique un nouveau store séparé, référencé depuis la map.
-
-
-
-### Q-G05 — Que se passe-t-il si un artefact manque au chargement ? — **B1**
-
-- [ ] Chargement refusé
-- [x] Élément désactivé avec diagnostic
-- [x] Téléchargement automatique depuis la bibliothèque
-
-- **Réponse :**
-
-
-
-### Q-G06 — Quel est le cycle de vie d'un artefact attaché à plusieurs tuiles ? — **B1**
+### Q-G06 — Cycle de vie d'un artefact attaché à plusieurs tuiles ? — **B1**
 
 - **Ownership/références :**
 - **Suppression :**
 - **Mise à jour/migration :**
 
+### Q-G07 — Que transfère-t-on lors d'un changement d'hôte ? — **B0**
 
-
-### Q-G07 — Comment migre-t-on l'autorité lors d'un changement d'hôte ? — **B0**
+L'élection/promotion éditeur existe (Phase 8) mais ne transfère ni règlement,
+ni artefacts, ni état runtime, ni contexte d'arbitre (R15). D10 exige la
+migration d'arbitre avec état/version.
 
 - **État du règlement transféré :**
 - **Artefacts/hashes transférés :**
 - **État runtime/checkpoint transféré :**
 - **Nouvel arbitre requis avant reprise :**
-- **Vérification stack :** l'élection et la promotion éditeur existent, avec
-  préservation de la carte locale puis full-sync. Tous les quatre champs ci-dessus
-  sont nouveaux pour la V3 et restent à remplir.
 
 ---
 
+## H. Skill et connexion de l'agent
 
+### Q-H02 — Comment l'agent invoqué in-app atteint-il le canal WS ? — **B1**
 
-## H. Skill cliente et expérience d'installation
+Reformulée après la précision « tchat ingame » (D10/D17) : l'app invoque le
+modèle et le pré-prompte avec la skill ; il n'y a plus d'installation côté
+agent (ex-H04 caduque). Reste le **mécanisme de connexion** de l'agent au canal.
 
+- [ ] Tool/CLI de connexion fourni par l'app (invoqué par l'agent)
+- [ ] WS brut, protocole documenté dans le pré-prompt
+- [ ] Connecteur natif propre à chaque agent (MCP local, etc.)
 
-
-### Q-H01 — Quel agent cible-t-on en premier ? — **B1**
-
-- [x] Codex
-- [x] Claude Code
-- [ ] Agent générique avec tools JSON
-- [ ] Adaptateur indépendant de l'agent
-
-- **Réponse :**
-
-
-
-### Q-H02 — La skill contient-elle un client WS exécutable ? — **B1**
-
-- [ ] Oui, tool/CLI livré
-- [ ] Non, seulement la documentation du protocole
-- [ ] Connecteur natif propre à chaque agent
-
-- **Recommandation actuelle :** CLI/adaptateur livré, protocole documenté.
-- **Réponse : a affiner**
-
-
-
-### Q-H03 — Quel artefact est la source de vérité ? — **B0**
-
-- [x] Manifeste versionné du canal IA
-- [ ] MCP d'automation
-- [ ] Documentation manuscrite
-
-- **Confirmation / correction :**
-
-
-
-### Q-H04 — Où installer la skill par plateforme/agent ? — **B1**
-
-- **Windows :**
-- **Linux :**
-- **macOS :**
-- **Gestion de plusieurs agents :**
-
-
-
-### Q-H05 — Quand la skill est-elle générée/mise à jour ? — **B1**
-
-- [x] Build du jeu
-- [ ] Packaging de l'installeur
-- [ ] Génération dynamique depuis le serveur
-- [ ] Combinaison :
-
-- **Réponse :**
-
-
-
-### Q-H06 — Comment gère-t-on une skill obsolète ? — **B1**
-
-- [ ] Refus de connexion
-- [x] Mode compatibilité négocié
-- [x] Mise à jour automatique proposée
-
-- **Réponse :**
-
-
-
-### Q-H07 — Faut-il réconcilier tous les hooks avec le MCP ? — **B2**
-
-- [x] Non, inventorier puis porter seulement le catalogue curé
-- [ ] Oui, parité complète
-- [ ] Ajouter un invocateur générique
-
-- **Recommandation actuelle :** inventaire + port explicite, pas d'invocateur générique en prod.
+- **Recommandation actuelle :** tool/adaptateur livré, protocole documenté.
 - **Réponse :**
 
 ---
 
-
-
-## I. Bibliothèque et assets 3D
-
-
-
-### Q-I01 — Quel ordre de livraison ? — **B1**
-
-- [ ] Primitives gameplay → assets 3D → créations partagées
-- [ ] Assets 3D → primitives gameplay → créations partagées
-- [x] Bibliothèque locale unifiée dès le départ
-
-- **Réponse :**
-
-
-
-### Q-I02 — Bibliothèque locale ou communautaire au premier jalon ? — **B1**
-
-- [x] Locale officielle uniquement
-- [ ] Locale + imports utilisateur
-- [ ] Serveur communautaire
-
-- **Réponse :**
-
-
-
-### Q-I03 — Réutilise-t-on `asset_server/` et le launcher ? — **B1**
-
-- [x] Oui
-- [ ] Non, nouvelle infrastructure
-- [x] Après audit de compatibilité
-
-- **Critères d'audit :**
-- **Réponse :**
-- **Vérification stack :** audit favorable pour la distribution : file, reprise,
-  retry, SHA-256 et manifestes existent. Il faut ajouter signature d'éditeur,
-  dépendances par hash et type de package artefact V3.
-
-
+## I. Bibliothèque : format et confiance
 
 ### Q-I04 — Quel format de package commun ? — **B1**
 
@@ -945,9 +283,11 @@ A affiner en test
 - **Dépendances/assets :**
 - **Signature/hash :**
 
-
-
 ### Q-I05 — Quel modèle de confiance ? — **B0**
+
+Au premier jalon la bibliothèque est locale/officielle (D18), mais la chaîne de
+signature n'existe pas (R16 : le SHA-256 du launcher vérifie l'intégrité, pas
+l'identité de l'éditeur).
 
 - [ ] Officiel signé + communautaire revalidé
 - [ ] Tout revalider, signature informative
@@ -955,44 +295,6 @@ A affiner en test
 - [ ] Combinaison :
 
 - **Réponse :**
-
-
-
-### Q-I06 — Quels formats 3D supportés d'abord ? — **B1**
-
-- [x] glTF/GLB
-- [ ] OBJ
-- [ ] Formats convertis au build/import vers un format interne
-
-- **Réponse :**
-- **Vérification stack :** GLB est déjà importé par `createModelFromGlb` et chargé
-  par `RuntimeLoader` avec `model_manifest.json`. Choix directement supporté.
-
-
-
-### Q-I07 — Qui peut importer un asset 3D ? — **B1**
-
-- [x] Développeurs seulement
-- [ ] Hôte
-- [ ] Tout joueur, après validation/arbitrage
-
-- **Réponse :**
-
-
-
-### Q-I08 — Comment l'IA référence-t-elle un asset ? — **B1**
-
-- [ ] ID logique versionné
-- [ ] Hash de contenu
-- [ ] URL
-- [ ] ID + hash résolu par manifeste
-
-- **Réponse : stack  existante**
-- **Vérification stack :** la référence existante est `(category, type, id)` pour
-  les assets 2D et `modelName` + manifeste pour les modèles. La V3 doit y ajouter
-  version/hash ; aucune des options proposées n'est donc entièrement cochée.
-
-
 
 ### Q-I09 — Quels budgets pour les assets ? — **B1**
 
@@ -1003,61 +305,41 @@ A affiner en test
 
 ---
 
+## J. Observabilité et sortie du cadrage
 
+### Q-J02 — Politique de stockage/effacement des données privées — **B1**
 
-## J. Observabilité, gouvernance et critères de sortie du cadrage
-
-
-
-### Q-J01 — Quel journal d'audit conserve-t-on ? — **B1**
-
-- [ ] Propositions + verdicts + opérations + hashes
-- [ ] Erreurs uniquement
-- [x] Journal configurable
-
-- **Durée/rétention :**
-- **Réponse :**
-
-
-
-### Q-J02 — Quelles données peuvent contenir des informations privées ? — **B1**
-
-- [ ] Prompts/conversations
-- [ ] Captures d'écran
-- [ ] Sources générées
-- [ ] Identifiants/fournisseurs
+Dès que le canal/journal existe, prompts (tchat ingame), captures, sources
+générées et identifiants fournisseur peuvent contenir des données privées. Le
+noyau d'audit D19 est non désactivable : sa rétention et sa confidentialité
+doivent être définies ici.
 
 - **Politique de stockage/effacement :**
-
-**Correction :** non applicable uniquement tant que ces données ne sont pas
-stockées. Dès que le canal/journal existe, prompts, captures, sources générées et
-identifiants fournisseur peuvent tous contenir des données privées. La politique
-de stockage/effacement reste à définir.
+- **Durée/rétention du journal d'audit :**
 
 ### Q-J03 — Comment diagnostiquer une divergence entre pairs ? — **B1**
+
+Le full-sync éditeur et les snapshots physiques **réparent** mais ne
+**détectent** pas une divergence. Il manque au minimum hash/version d'état et
+demande explicite de resync.
 
 - [ ] Hash périodique d'état + resync
 - [ ] Journal d'événements rejouable
 - [ ] Snapshot autoritatif à la demande
 
-- **Réponse : stack reseau existante**
-- **Vérification stack :** full-sync éditeur et snapshots physiques savent
-  réparer certains états, mais ne **détectent** pas génériquement une divergence.
-  Il manque au minimum hash/version d'état et demande explicite de resync ; la
-  question reste ouverte.
+- **Réponse :**
 
-
-
-### Q-J04 — Quels indicateurs mesurent la qualité de l'arbitrage ? — **B2**
+### Q-J04 — Quels indicateurs mesurent la qualité de l'arbitrage ? — **B2** *(à affiner selon test)*
 
 - **Latence cible :**
 - **Taux d'acceptation/rejet/amendement :**
 - **Taux de rollback/erreur après acceptation :**
 - **Coût cible :**
 
-a affiner selon test 
-
 ### Q-J05 — Quels scénarios end-to-end valident le vertical slice ? — **B0**
+
+Critère produit déjà posé (D9/A06) : création d'un item qui modifie le
+gameplay, la physique, d'autres éléments et les interactions joueur.
 
 - [ ] Création solo d'un élément avec config + comportement
 - [ ] Proposition cliente arbitrée puis appliquée par l'hôte
@@ -1069,8 +351,6 @@ a affiner selon test
 
 - **Scénarios retenus :**
 
-a affiner
-
 ### Q-J06 — Quels critères font abandonner ou réduire D1 ? — **B0**
 
 - **Échec d'isolation :**
@@ -1078,18 +358,14 @@ a affiner
 - **Complexité multi-joueurs excessive :**
 - **Repli choisi :**
 
+### Q-J07 — Quel est le prochain document à produire ? — **B1**
 
-
-### Q-J07 — Quel est le prochain document à produire après réponses ? — **B1**
-
-- [ ] ADR consolidés D9+
 - [ ] Spécification du prototype sandbox R1
 - [ ] Schéma du protocole/enveloppe de proposition
 - [ ] Plan du vertical slice
+- [ ] ADR consolidés supplémentaires
 
 - **Ordre retenu :**
-
-
 
 ### Q-J08 — Qui valide définitivement chaque famille de décisions ? — **B1**
 
@@ -1101,29 +377,17 @@ a affiner
 
 ---
 
+## Synthèse (état au 2026-07-12)
 
-
-## Synthèse à remplir en dernier
-
-- **Premier mode livré :** les trois modes sont dans le périmètre ; ordre encore ouvert.
-- **Politique d'arbitre solo / multi :** obligatoire partout, rôles isolés,
-  configuration collective et migration avec état/version.
-- **Forme d'exécution des règles :** hiérarchie capacités → modules → DSL →
-  QML/JS ; document de règlement structuré versionné.
-- **Niveau d'isolation QML retenu :** même moteur + contexte restreint + JS
-  borné, **conditionnel à la réussite de R1**.
-- **Politique de réplication des artefacts :** auteur → hôte ; exécution hôte ou
-  pairs après revalidation selon une propriété de l'artefact.
-- **Modèle mémoire config/runtime :** un `memory` avec namespaces `config` et
-  `state`, porté par tuiles, session et joueurs.
-- **Transport runtime retenu :** bus d'état générique nouveau ; garanties exactes
-  encore ouvertes, la stack `reliable.io` étant insuffisante seule.
-- **Agent client initial :** Codex + Claude Code, supervisés par launcher/jeu.
-- **Périmètre initial de bibliothèque :** locale officielle unifiée, développeurs
-  uniquement, GLB, réutilisation du launcher/asset_server.
-- **Critères de réussite du vertical slice :** création d'un item modifiant le
-  gameplay, la physique, d'autres éléments et les interactions joueur ; scénarios
-  E2E exacts encore à sélectionner en J05.
-- **Décisions encore bloquées par un prototype :** unité d'arbitrage C01,
-  sandbox R1, auth/découverte canal, garanties réseau, atomicité transactionnelle,
-  sauvegarde runtime, undo concurrent, migration complète et signature officielle.
+- **Arbitré (D9→D19)** : périmètre trois modes, arbitre obligatoire partout,
+  agents `claude -p`/Codex supervisés et **invoqués in-app via tchat ingame**,
+  proposition auditable avec amendement immédiat, règles hiérarchiques,
+  sandbox in-process conditionnel à R1, un WS multiplexé, mémoire
+  `config`/`state` sur tuiles+session+joueurs, artefacts sous autorité hôte,
+  skill générée au build et **injectée en pré-prompt**, bibliothèque locale
+  officielle GLB, journal configurable à noyau d'audit obligatoire.
+- **Encore bloqué par un prototype ou un choix** : grain d'arbitrage (C01),
+  sandbox R1 (contenu D04-D06), auth/secret du canal (E02/E03), garanties
+  réseau (E06/F06), sauvegarde runtime (F02), stratégie delta/snapshot (F05),
+  undo concurrent (F10), migration complète (G07), connexion de l'agent (H02),
+  signature/confiance (I05), scénarios du vertical slice (J05).
