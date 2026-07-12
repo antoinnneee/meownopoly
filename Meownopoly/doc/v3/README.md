@@ -38,7 +38,7 @@ cf. doc 00 §4).
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes** (arbitrages D9→D19 reportés au doc 08) | **épuré 2026-07-12** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes** (arbitrages D9→D22 reportés au doc 08) | **épuré 2026-07-12** |
 | 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Audit V2 + plan M1→M13 des modifications de stack | **vérifié 2026-07-12** |
 
 ## Décisions structurantes déjà prises
@@ -55,6 +55,8 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   exposé comme **serveur MCP local** (D20 — remplace le WS custom initial) :
   l'app spawne l'agent et injecte config + token, catalogue de tools groupé
   économe en tokens, événements injectés par invocation + `events_poll`.
+  Forme d'intégration tranchée (**D21**) : endpoint **streamable HTTP loopback
+  intégré au process du jeu** (`QtHttpServer` à installer ; repli pont stdio).
 - **D3 — Règles : détails de représentation/exécution différés** (doc 06).
   L'autorité de politique est tranchée par D8, mais son exécution runtime ne
   repose pas implicitement sur le LLM : elle doit être matérialisée par les
@@ -79,10 +81,11 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
   capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
-- **D9→D20 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
+- **D9→D22 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
   trois modes V3, agents Codex/Claude supervisés **invoqués in-app via tchat
   ingame**, proposition auditable avec amendement immédiat, règles hiérarchiques,
-  sandbox in-process conditionnel à R1, canal **MCP local** multiplexé (D20),
+  sandbox in-process conditionnel à R1, canal **MCP local** multiplexé (D20) en
+  **streamable HTTP intégré au jeu** (D21), screenshots plafonnés/éphémères (D22),
   mémoire `config/state`, artefacts sous autorité hôte, skill générée au build
   **injectée en pré-prompt** et bibliothèque locale officielle GLB. Détail et
   réserves techniques dans les docs 08→10.

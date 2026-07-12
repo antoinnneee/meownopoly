@@ -114,7 +114,8 @@ régénère, pas de dérive manuelle.
 - ~~Quels agents cibler en premier ?~~ **Tranché D17 : Codex + Claude Code.**
 - ~~La skill embarque-t-elle un client de connexion ?~~ **Tranché D20** :
   connecteur MCP natif des CLIs, config injectée au spawn — rien à embarquer
-  dans la skill. Reste Q-E11 (forme d'intégration MCP côté jeu).
+  dans la skill. Forme d'intégration tranchée **D21** : streamable HTTP
+  loopback intégré au jeu (doc 02 §2 bis).
 - ~~Emplacement d'installation standardisé, multi-plateforme ?~~ **Caduc**
   (précision 2026-07-12, §1) : skill embarquée dans l'app, injectée en pré-prompt.
 - ~~Génération au build ou au packaging ?~~ **Tranché D17 : au build.**

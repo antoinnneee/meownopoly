@@ -11,9 +11,10 @@
 
 Le canal est **l'unique point de contact** entre « l'IA du joueur » et le jeu.
 Concrètement : le jeu expose son catalogue curé comme **serveur MCP local**
-(loopback) ; l'application **invoque elle-même** l'agent (`claude -p`, Codex non
-interactif — tchat ingame, D10) et lui **injecte la configuration MCP + le
-pré-prompt skill** au lancement. L'agent agit ensuite par **tool calls MCP**
+(loopback), sous forme d'**endpoint streamable HTTP embarqué dans le process du
+jeu** (D21 — pas de pont stdio externe, cf. §2 bis) ; l'application **invoque
+elle-même** l'agent (`claude -p`, Codex non interactif — tchat ingame, D10) et
+lui **injecte la configuration MCP + le pré-prompt skill** au lancement. L'agent agit ensuite par **tool calls MCP**
 qui sont traduits vers les **pipelines internes existants**
 (`editorAutomationHooks` → `Game.updateMap` → `EditorOpBus`), et reçoit en
 retour de l'**état observable**.
@@ -58,6 +59,28 @@ tout-ou-rien** et `automation.raw` réservé aux builds dev.
 
 Ce qui **tombe** : le protocole WS maison (`{id, cmd, params}`), le client WS à
 livrer, la découverte du secret par fichier runtime.
+
+## 2 bis. Forme d'intégration : streamable HTTP intégré au jeu (D21)
+
+Tranché le 2026-07-12 (ex-Q-E11) : le serveur MCP est un **endpoint streamable
+HTTP loopback embarqué dans le process du jeu**, pas un pont stdio externe.
+
+- **Compatibilité vérifiée** : les deux CLIs cibles supportent nativement le
+  streamable HTTP avec bearer token (Claude Code `--transport http` /
+  `--mcp-config` ; Codex `[mcp_servers.<n>] url = …` + `bearer_token_env_var`).
+- **Argument décisif : la distribution.** Un pont stdio réintroduirait un
+  runtime Node (ou un binaire packagé) à livrer à chaque joueur ; l'endpoint
+  intégré ne demande rien de plus que le CLI d'agent lui-même. Un seul process,
+  cycle de vie lié au jeu, un même endpoint pour proposante et arbitre (tokens
+  distincts).
+- **Coût assumé** : implémenter le sous-ensemble MCP en C++ (pas de SDK
+  officiel) — JSON-RPC 2.0 sur HTTP POST : `initialize`, `tools/list`,
+  `tools/call` suffisent au MVP ; SSE optionnel (réponses `application/json`).
+- **Prérequis kit** : ajouter l'add-on **`QtHttpServer`** (absent du kit
+  Qt 6.11.0 actuel) via le Maintenance Tool.
+- **Repli documenté** : pont stdio (`@modelcontextprotocol/sdk`) + IPC WS
+  loopback façon `automation_mcp/`, si un CLI exige une partie non implémentée
+  de la spec.
 
 ## 3. Économie de tokens (contrainte de conception)
 
@@ -147,7 +170,13 @@ Identifiées lors de la cartographie du socle — ce sont les vrais chantiers :
   **sandbox** (doc 04). Nouvelle capacité centrale du pivot.
 - **Événements** : `events_poll(cursor)` sur le journal métier (§4).
 - **Screenshot** : réutiliser `grabWindow` (déjà dans l'automation) pour donner à
-  l'IA un retour visuel — MCP supporte les résultats image nativement.
+  l'IA un retour visuel — MCP supporte les résultats image nativement. Politique
+  arbitrée (**D22**, 2026-07-12) : captures de l'**écran de jeu** uniquement, à
+  la demande de l'IA (visualiser la map si elle le juge utile) ; plafond **par
+  requête d'IA** via un `#define` compile-time pour affiner la valeur plus tard
+  — **défaut : 5** ; **rétention éphémère** (gardées quelques tours d'IA puis
+  purgées, pas d'accumulation) ; **aucun masquage** — le joueur est informé au
+  lancement, une fois, sans redemande.
 
 ## 6. Boucle perception → action
 
@@ -191,10 +220,8 @@ IA** (message clair, code stable, `retryable`), pas juste un échec opaque.
 
 ## 8. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
 
-- **Forme d'intégration MCP** (Q-E11) : serveur MCP **streamable HTTP loopback
-  intégré au jeu** (direct, mais support à vérifier côté Codex) ou **petit pont
-  stdio** lancé par le CLI et relié au jeu par IPC local (plus standard côté
-  CLIs, un process de plus) ?
+- ~~Forme d'intégration MCP (Q-E11)~~ **tranchée D21** : streamable HTTP
+  loopback intégré au jeu (§2 bis).
 - Schéma exact du **résumé d'événements injecté** par tour et sémantique du
   curseur `events_poll` (recouvrement avec le journal D19).
 - **Granularité du groupement de tools** (§3) : quel découpage minimise les

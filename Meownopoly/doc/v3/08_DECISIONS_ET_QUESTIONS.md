@@ -291,17 +291,56 @@
 - **Ce qui survit de D2/D14.** Canal dédié ≠ automation, loopback strict,
   serveur unique multiplexant rôles/namespaces (tokens distincts proposant vs
   arbitre), version globale, lots tout-ou-rien, `automation.raw` dev-only.
-- **Encore ouvert (Q-E11).** Forme d'intégration : MCP streamable HTTP loopback
-  intégré au jeu, ou pont stdio relié au jeu par IPC local.
+- ~~Encore ouvert (Q-E11)~~ **Tranché par D21** (forme d'intégration).
 - **Alternatives écartées.** Output formaté seul (unidirectionnel : pas de boucle
   perception→action, l'IA travaille en aveugle) ; WS custom (client + auth +
   protocole à créer sans bénéfice, les deux CLIs cibles parlant MCP).
+
+### D21 — Forme d'intégration : serveur MCP **streamable HTTP intégré au jeu** (ferme Q-E11)
+- **Décision (2026-07-12).** Le serveur MCP est un **endpoint streamable HTTP
+  loopback embarqué dans le process du jeu** — pas de pont stdio externe.
+- **Pourquoi.** Vérifié 2026-07-12 : les **deux CLIs cibles supportent
+  nativement le streamable HTTP avec bearer token** (Claude Code :
+  `claude mcp add --transport http` / `--mcp-config` ; Codex :
+  `[mcp_servers.<n>] url = …` + `bearer_token_env_var` dans `config.toml`) —
+  la compatibilité n'est pas un discriminant. L'argument décisif est la
+  **distribution** : un pont stdio réintroduirait un runtime Node (ou un binaire
+  packagé) à livrer à chaque joueur, alors que l'option intégrée ne demande rien
+  de plus que le CLI d'agent lui-même. Bonus : un seul process, cycle de vie
+  trivial (le serveur vit/meurt avec le jeu), un même endpoint sert proposante
+  et arbitre avec des tokens/capacités distincts.
+- **Coût assumé.** Implémenter le sous-ensemble MCP soi-même en C++ (pas de SDK
+  officiel) : JSON-RPC 2.0 sur HTTP POST — `initialize`, `tools/list`,
+  `tools/call` suffisent au MVP ; le flux SSE est optionnel (réponses
+  `application/json` simples). Suivre soi-même les évolutions de la spec.
+- **Prérequis kit.** Le module **`QtHttpServer` n'est pas installé** dans le kit
+  Qt 6.11.0 actuel (add-on optionnel) → à ajouter via le Maintenance Tool.
+  Alternative sans intérêt : micro-serveur HTTP sur `QTcpServer`.
+- **Repli documenté.** Si l'implémentation maison coince (ex. un CLI exige une
+  partie non implémentée de la spec) : pont stdio via le SDK officiel
+  `@modelcontextprotocol/sdk` + IPC WebSocket loopback (patron `automation_mcp/`).
+- **Écarté.** « Selon l'agent » (HTTP pour l'un, pont pour l'autre) : plus de
+  justification puisque les deux CLIs parlent HTTP.
+
+### D22 — Politique de capture d'écran (ferme Q-E10)
+- **Décision (2026-07-12).** Tool screenshot du canal (doc 02 §5) : captures de
+  l'**écran de jeu**, à la demande de l'IA (lui donner un visuel de la map si
+  elle le juge utile).
+- **Plafond.** Nombre max de captures **par requête d'IA**, porté par un
+  `#define` compile-time pour affiner la valeur en test — **défaut : 5**.
+- **Rétention éphémère.** Les captures ne sont **pas conservées** : gardées
+  brièvement, le temps de servir pendant **quelques tours d'IA**, puis purgées —
+  pas d'accumulation de stockage inutile. (La rétention du journal d'audit D19,
+  elle, reste à définir : Q-J02.)
+- **Masquage/consentement.** **Rien n'est masqué** : jouer au mode IA implique
+  la capture d'écran de jeu. Le joueur en est **informé au lancement** (une
+  fois), sans redemande ensuite.
 
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
 remplissable des **questions encore ouvertes** (épuré le 2026-07-12, arbitrages
-reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
+reportés en D9→D22) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md).
 
 ### Sécurité (bloquant pour D1)
 - Jusqu'où peut-on **verrouiller** un `QQmlContext` et l'allow-list d'imports dans
@@ -319,7 +358,8 @@ reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 ### Canal IA (doc 02)
 - ~~Un canal multiplexé vs plusieurs ?~~ **Tranché D14 : un canal multiplexé.**
 - ~~WS custom ou autre transport ?~~ **Tranché D20 : serveur MCP local** ;
-  reste **Q-E11** — MCP HTTP loopback intégré au jeu vs pont stdio + IPC local.
+  ~~forme d'intégration (Q-E11)~~ **tranchée D21 : streamable HTTP loopback
+  intégré au jeu** (`QtHttpServer` à installer ; repli pont stdio documenté).
 - ~~Authentifier les deux clients locaux de l'hôte ?~~ **Tranché D20** :
   configs/tokens distincts injectés au spawn, capacités différentes par rôle.
 - Schéma du **résumé d'événements injecté** par tour + sémantique du curseur
@@ -379,7 +419,8 @@ reportés en D9→D19) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   (précision D17, 2026-07-12)** : la skill est embarquée dans l'app et injectée
   en pré-prompt à l'invocation ingame — pas d'installation côté agent du joueur.
 - ~~Comment l'agent atteint le canal ?~~ **Tranché D20 : connecteur MCP natif
-  des CLIs**, config injectée au spawn. Reste Q-E11 (forme d'intégration MCP).
+  des CLIs**, config injectée au spawn. Forme d'intégration tranchée par **D21**
+  (streamable HTTP intégré au jeu).
 - ~~Génération ?~~ **Tranché D17 : au build depuis le manifeste.**
 
 ## 3. Risques majeurs

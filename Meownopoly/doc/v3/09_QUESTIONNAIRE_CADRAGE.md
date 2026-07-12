@@ -1,7 +1,7 @@
 # 09 — Questionnaire de cadrage V3 (questions ouvertes)
 
 > **Statut : épuré le 2026-07-12.** Le questionnaire initial a été dépouillé et
-> ses arbitrages reportés dans le doc 08 (**D9→D20**). Ce fichier ne contient
+> ses arbitrages reportés dans le doc 08 (**D9→D22**). Ce fichier ne contient
 > plus que les **questions encore ouvertes**, actualisées avec les décisions et
 > la précision « invocation in-app via tchat ingame » (D10/D17). Les questions
 > tranchées ou devenues caduques sont retirées ; la table §0 en garde la trace.
@@ -38,6 +38,8 @@
 | I01→I03, I06, I07 (bibliothèque locale officielle, asset_server réutilisé, GLB, imports devs) | tranchées | **D18** |
 | I08 (référencement d'un asset) | tranchée dans son principe : clés existantes + version/hash | **D16/D18** |
 | J01 (journal configurable, noyau d'audit non désactivable) | tranchée (rétention → Q-J02) | **D19** |
+| **E11 (forme d'intégration du serveur MCP)** | **tranchée** : streamable HTTP loopback **intégré au jeu** (les deux CLIs le supportent nativement, vérifié 2026-07-12 ; `QtHttpServer` à installer ; repli pont stdio documenté) | **D21** (2026-07-12) |
+| **E10 (politique de capture d'écran)** | **tranchée** : écran de jeu à la demande de l'IA, plafond par requête via `#define` (défaut 5), rétention éphémère (quelques tours), aucun masquage, information une fois au lancement | **D22** (2026-07-12) |
 
 ---
 
@@ -137,19 +139,6 @@ sélectionnées. Reste la **liste exacte** (doc 04 §3.3).
 
 ## E. Canal local : intégration MCP et événements
 
-### Q-E11 — Quelle forme d'intégration du serveur MCP ? — **B0** *(nouvelle, D20)*
-
-Le transport MCP est tranché (D20) ; reste sa forme concrète, à valider contre
-les capacités réelles des deux CLIs cibles.
-
-- [ ] Serveur MCP **streamable HTTP loopback intégré au jeu** (direct, un seul
-      process ; support HTTP à vérifier côté Codex)
-- [ ] **Pont stdio** : petit exécutable MCP lancé par le CLI, relié au jeu par
-      IPC local (plus standard côté CLIs, un process de plus)
-- [ ] Selon l'agent (HTTP pour l'un, pont pour l'autre)
-
-- **Réponse :**
-
 ### Q-E06 — Sémantique du résumé d'événements injecté et du curseur `events_poll` — **B1**
 
 Reformulée par D20 : plus de push live — les événements sont **injectés par
@@ -168,12 +157,6 @@ canal (doc 02 §5), avec le **groupement** qui minimise les tokens sans rendre
 les schémas ambigus (doc 02 §3 — à mesurer sur les premiers workflows).
 
 - **Sous-ensemble retenu :**
-
-### Q-E10 — Quelle politique de capture d'écran ? — **B2**
-
-- **Fréquence/résolution maximales :**
-- **Éléments privés à masquer :**
-- **Consentement utilisateur :**
 
 ---
 
@@ -280,10 +263,11 @@ l'identité de l'éditeur).
 
 ### Q-J02 — Politique de stockage/effacement des données privées — **B1**
 
-Dès que le canal/journal existe, prompts (tchat ingame), captures, sources
-générées et identifiants fournisseur peuvent contenir des données privées. Le
-noyau d'audit D19 est non désactivable : sa rétention et sa confidentialité
-doivent être définies ici.
+Dès que le canal/journal existe, prompts (tchat ingame), sources générées et
+identifiants fournisseur peuvent contenir des données privées. Le noyau d'audit
+D19 est non désactivable : sa rétention et sa confidentialité doivent être
+définies ici. *(Les captures d'écran sont réglées par D22 : rétention éphémère
+de quelques tours d'IA, aucun masquage, information une fois au lancement.)*
 
 - **Politique de stockage/effacement :**
 - **Durée/rétention du journal d'audit :**
@@ -350,17 +334,18 @@ gameplay, la physique, d'autres éléments et les interactions joueur.
 
 ## Synthèse (état au 2026-07-12)
 
-- **Arbitré (D9→D20)** : périmètre trois modes, arbitre obligatoire partout,
+- **Arbitré (D9→D22)** : périmètre trois modes, arbitre obligatoire partout,
   agents `claude -p`/Codex supervisés et **invoqués in-app via tchat ingame**,
   proposition auditable avec amendement immédiat, règles hiérarchiques,
-  sandbox in-process conditionnel à R1, **canal = serveur MCP local**
-  (multiplexé, token injecté au spawn, catalogue groupé économe en tokens,
-  événements injectés + `events_poll`), mémoire `config`/`state` sur
-  tuiles+session+joueurs, artefacts sous autorité hôte, skill générée au build
-  et **injectée en pré-prompt**, bibliothèque locale officielle GLB, journal
-  configurable à noyau d'audit obligatoire.
+  sandbox in-process conditionnel à R1, **canal = serveur MCP local en
+  streamable HTTP intégré au jeu** (multiplexé, token injecté au spawn,
+  catalogue groupé économe en tokens, événements injectés + `events_poll`),
+  screenshots plafonnés/éphémères/annoncés au lancement, mémoire
+  `config`/`state` sur tuiles+session+joueurs, artefacts sous autorité hôte,
+  skill générée au build et **injectée en pré-prompt**, bibliothèque locale
+  officielle GLB, journal configurable à noyau d'audit obligatoire.
 - **Encore bloqué par un prototype ou un choix** : grain d'arbitrage (C01),
-  sandbox R1 (contenu D04-D06), forme d'intégration MCP (E11), sémantique
-  événements/curseur (E06), garanties réseau P2P (F06), sauvegarde runtime
-  (F02), stratégie delta/snapshot (F05), undo concurrent (F10), migration
-  complète (G07), signature/confiance (I05), scénarios du vertical slice (J05).
+  sandbox R1 (contenu D04-D06), sémantique événements/curseur (E06), garanties
+  réseau P2P (F06), sauvegarde runtime (F02), stratégie delta/snapshot (F05),
+  undo concurrent (F10), migration complète (G07), signature/confiance (I05),
+  scénarios du vertical slice (J05).

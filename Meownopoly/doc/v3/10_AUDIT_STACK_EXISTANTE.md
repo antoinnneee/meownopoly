@@ -203,7 +203,7 @@ Elles restent ouvertes ou deviennent des chantiers explicites dans le doc 09.
 
 ## 9. Modifications à effectuer sur les stacks existantes
 
-Cette section traduit les décisions D9→D19 en modifications concrètes du socle
+Cette section traduit les décisions D9→D22 en modifications concrètes du socle
 V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
 frontières sont, elles, normatives pour le cadrage.
 
@@ -219,8 +219,14 @@ est un **serveur MCP local** (D20).
 - créer une passerelle distincte, par exemple `AiGatewayServer`, exposant le
   catalogue curé comme **tools MCP**, sans réutiliser le catalogue permissif de
   l'automation ;
-- trancher la forme d'intégration (**Q-E11**) : MCP streamable HTTP loopback
-  intégré au jeu, ou pont stdio + IPC local ;
+- forme d'intégration tranchée (**D21**, ex-Q-E11) : **endpoint MCP streamable
+  HTTP loopback intégré au process du jeu** — JSON-RPC 2.0 sur HTTP POST
+  (`initialize`, `tools/list`, `tools/call` au MVP, SSE optionnel). Prérequis :
+  installer l'add-on **`QtHttpServer`** (absent du kit Qt 6.11.0 actuel).
+  Repli documenté : pont stdio (`@modelcontextprotocol/sdk`) + IPC WS loopback ;
+- tool screenshot conforme à **D22** : plafond de captures **par requête d'IA**
+  via un `#define` (défaut 5), rétention éphémère (quelques tours), information
+  du joueur une fois au lancement du mode IA ;
 - générer un **token éphémère par session** et l'**injecter au spawn** du
   process agent (env/config), avec des configs/capacités **distinctes** pour
   les rôles `proposer` et `arbiter` (D20 — plus de fichier runtime de

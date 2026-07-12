@@ -32,19 +32,26 @@ chez l'hôte, 1 chez le client).
 | 09 Questionnaire de cadrage | Questions encore ouvertes uniquement | épuré 2026-07-12 |
 | 10 Audit stack existante | Audit V2 + chantiers M1→M13 | vérifié 2026-07-12 |
 
-## 3. Décisions prises (D1→D19)
+## 3. Décisions prises (D1→D22)
 
 ### Fondations
 - **D1 — QML génératif complet.** L'IA produit du vrai QML chargé au runtime.
   Précision 2026-07-11 : le but courant est de **composer les briques validées**
   + JS embarqué, pas de générer des scènes de zéro — ce qui réduit la surface du
   sandbox. Le sandbox (doc 04) reste la pièce la plus critique (risque R1).
-- **D2/D20 — Canal MCP local dédié.** Nouveau canal local IA↔jeu, exposé comme
-  **serveur MCP** (D20, remplace le WS custom initial) : l'app spawne l'agent et
-  lui injecte config + token + pré-prompt skill. Catalogue de tools **réduit et
-  groupé** pour économiser les tokens ; événements **injectés par invocation** +
-  tool `events_poll`. L'`AutomationServer` (7700) reste strictement test/debug,
-  **jamais accessible à l'IA cliente**.
+- **D2/D20/D21 — Canal MCP local dédié, streamable HTTP intégré au jeu.**
+  Nouveau canal local IA↔jeu, exposé comme **serveur MCP** (D20, remplace le WS
+  custom initial) : l'app spawne l'agent et lui injecte config + token +
+  pré-prompt skill. Forme d'intégration (D21) : **endpoint streamable HTTP
+  loopback embarqué dans le process du jeu** — les deux CLIs le supportent
+  nativement (vérifié 2026-07-12) ; sous-ensemble JSON-RPC à implémenter
+  (`initialize`, `tools/list`, `tools/call`), add-on `QtHttpServer` à installer,
+  repli pont stdio documenté. Catalogue de tools **réduit et groupé** pour
+  économiser les tokens ; événements **injectés par invocation** + tool
+  `events_poll`. Screenshots (D22) : écran de jeu à la demande de l'IA, plafond
+  par requête via `#define` (défaut 5), rétention éphémère, aucun masquage,
+  information une fois au lancement. L'`AutomationServer` (7700) reste
+  strictement test/debug, **jamais accessible à l'IA cliente**.
 - **D5 — Dossier de cadrage** dans `Meownopoly/doc/v3/`, en français, branche V3.
 
 ### Rôles IA & gouvernance
@@ -114,11 +121,11 @@ chez l'hôte, 1 chez le client).
 - **Grain d'arbitrage** (Q-C01) : par action, par lot, ou seulement les artefacts
   QML ? Coût/latence d'un appel LLM par action.
 - **Ordre de livraison des trois modes** V3 (tous cochés « premier mode »).
-- **Canal** : forme d'intégration MCP (Q-E11 — HTTP loopback intégré vs pont
-  stdio), sous-ensemble exact de tools à porter et leur groupement (économie de
-  tokens), sémantique du résumé d'événements injecté et du curseur
+- **Canal** : sous-ensemble exact de tools à porter et leur groupement (économie
+  de tokens), sémantique du résumé d'événements injecté et du curseur
   `events_poll` ; garanties applicatives P2P au-dessus de `reliable.io`.
-  *(Auth/découverte : résolues par D20, config injectée au spawn.)*
+  *(Auth/découverte : résolues par D20 ; forme d'intégration : tranchée D21,
+  HTTP loopback intégré au jeu.)*
 - **Mémoire** : schéma/noms `config`/`state`, delta vs snapshot, cadence,
   plafond, undo ciblé par write-set (conflits, redo), sérialisation
   string-manuelle de `ItemSnapable::toJSON` à assainir.
