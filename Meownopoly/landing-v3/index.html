@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Meownopoly V3 — le jeu de plateau vivant, co-créé en direct par les joueurs et leurs IA.">
+  <meta name="theme-color" content="#26245f">
+  <title>Meownopoly V3 — Inventez les règles. Jouez l'impossible.</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au contenu</a>
+
+  <header class="site-header" data-header>
+    <a class="brand" href="#top" aria-label="Meownopoly, accueil">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>MEOWNOPOLY<sup>V3</sup></span>
+    </a>
+    <nav aria-label="Navigation principale">
+      <a href="#concept">Le concept</a>
+      <a href="#experience">L'expérience</a>
+      <a href="#fondations">Les fondations</a>
+    </nav>
+    <a class="header-cta" href="#vision">Découvrir la vision <span aria-hidden="true">↘</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Un nouveau genre de jeu de plateau</p>
+        <h1>Inventez les règles.<br><em>Jouez l’impossible.</em></h1>
+        <p class="hero-lead">Décrivez une idée. Votre IA la transforme en monde jouable. Une IA maître du jeu l’équilibre. Et le plateau évolue, en direct, pour tout le monde.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#experience">Voir le jeu prendre vie <span aria-hidden="true">↓</span></a>
+          <a class="button button-ghost" href="../doc/v3/RECAP_CADRAGE.md">Lire le cadrage V3</a>
+        </div>
+        <p class="build-note"><span aria-hidden="true">●</span> V3 en construction · socle V2 déjà jouable</p>
+      </div>
+
+      <div class="world-demo" data-world="trap" aria-label="Démonstration interactive d'un plateau transformé par l'IA">
+        <div class="orbit orbit-a"></div>
+        <div class="orbit orbit-b"></div>
+        <div class="board-scene" aria-hidden="true">
+          <div class="board-shadow"></div>
+          <div class="board">
+            <div class="tile tile-corner"><span>GO!</span></div>
+            <div class="tile tile-plain"><i class="tree"></i></div>
+            <div class="tile tile-river"><i></i></div>
+            <div class="tile tile-plain"><i class="coin">×2</i></div>
+            <div class="tile tile-trap"><i class="trap-mark">!</i></div>
+            <div class="tile tile-bridge"><i></i></div>
+            <div class="tile tile-plain"><i class="crate"></i></div>
+            <div class="tile tile-moon"><i>☾</i></div>
+            <div class="tile tile-home"><i></i></div>
+            <div class="pawn pawn-cat"><i></i></div>
+            <div class="pawn pawn-orb"></div>
+          </div>
+        </div>
+
+        <div class="prompt-card">
+          <div class="prompt-topline">
+            <span class="avatar">A</span>
+            <span>Votre idée devient jouable</span>
+            <i class="live-dot"></i>
+          </div>
+          <p data-prompt-text>« Ajoute une plaque piégée qui propulse le prochain joueur. »</p>
+          <div class="prompt-status"><span class="status-check">✓</span><span data-status>Validé par le MJ · matérialisé</span></div>
+        </div>
+
+        <div class="world-controls" role="group" aria-label="Changer la création présentée">
+          <button class="is-active" type="button" data-scenario="trap" aria-pressed="true">Piège</button>
+          <button type="button" data-scenario="river" aria-pressed="false">Rivière</button>
+          <button type="button" data-scenario="moon" aria-pressed="false">Lune</button>
+        </div>
+      </div>
+      <p class="hero-side-note" aria-hidden="true">LE PLATEAU N’EST PLUS UNE LIMITE</p>
+    </section>
+
+    <section class="manifesto" id="concept">
+      <p class="section-kicker reveal">La partie ne se télécharge pas. Elle se raconte.</p>
+      <h2 class="reveal">Chaque joueur arrive avec une idée.<br>La partie repart avec <em>une nouvelle réalité.</em></h2>
+      <div class="manifesto-grid reveal">
+        <p>Meownopoly V3 transforme le langage naturel en gameplay : objets, comportements, événements et règles apparaissent sans recompilation, au fil de la session.</p>
+        <p>Vous ne choisissez plus seulement une stratégie dans un jeu fini. Vous participez à la création du jeu lui-même.</p>
+      </div>
+    </section>
+
+    <section class="how-it-works" id="experience">
+      <div class="section-heading reveal">
+        <p class="section-kicker">Une phrase. Deux intelligences. Un monde partagé.</p>
+        <h2>De l’imagination<br>au gameplay.</h2>
+      </div>
+
+      <div class="flow-grid">
+        <article class="flow-card flow-player reveal">
+          <div class="flow-icon" aria-hidden="true">“</div>
+          <p class="flow-label">Vous imaginez</p>
+          <h3>Parlez comme à un compagnon de jeu.</h3>
+          <p>Pas d’éditeur complexe à apprendre, pas de script à écrire. Demandez un pont, un piège, une quête ou une nouvelle façon de gagner.</p>
+          <div class="speech-sample">« Si quelqu’un miaule dans le chat, fais pleuvoir des pièces. »</div>
+        </article>
+
+        <article class="flow-card flow-ai reveal">
+          <div class="flow-icon" aria-hidden="true">✦</div>
+          <p class="flow-label">Votre IA construit</p>
+          <h3>Elle compose le monde, pas seulement le décor.</h3>
+          <p>Elle assemble les briques du jeu, leur donne une mémoire et écrit les comportements qui rendent votre idée réellement interactive.</p>
+          <div class="code-sample" aria-label="Exemple conceptuel de comportement">
+            <span>ON</span> player.enter<br>
+            <span>DO</span> launch(height: 4)<br>
+            <span>THEN</span> glow("coral")
+          </div>
+        </article>
+
+        <article class="flow-card flow-arbiter reveal">
+          <div class="flow-icon" aria-hidden="true">♜</div>
+          <p class="flow-label">Le MJ arbitre</p>
+          <h3>La créativité entre en jeu sans casser la partie.</h3>
+          <p>Chez l’hôte, une seconde IA examine la cohérence, peut amender la proposition et explique ses décisions avant application.</p>
+          <div class="verdict-sample"><span>Proposition amendée</span><strong>Propulsion limitée à 4 cases</strong></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="possibilities">
+      <div class="possibilities-copy reveal">
+        <p class="section-kicker">Un jeu qui refuse de rester le même</p>
+        <h2>Ce soir, une rivière.<br>Demain, <em>la lune.</em></h2>
+        <p>Le même plateau peut devenir une course coopérative, un terrain d’expériences physiques ou une aventure gouvernée par vos propres lois.</p>
+      </div>
+      <div class="marquee" aria-label="Exemples de possibilités">
+        <div class="marquee-track">
+          <span>QUÊTES ÉMERGENTES</span><i>✦</i><span>PHYSIQUE SUR MESURE</span><i>✦</i><span>RÈGLES VIVANTES</span><i>✦</i><span>MONDES COLLABORATIFS</span><i>✦</i>
+          <span aria-hidden="true">QUÊTES ÉMERGENTES</span><i aria-hidden="true">✦</i><span aria-hidden="true">PHYSIQUE SUR MESURE</span><i aria-hidden="true">✦</i><span aria-hidden="true">RÈGLES VIVANTES</span><i aria-hidden="true">✦</i><span aria-hidden="true">MONDES COLLABORATIFS</span><i aria-hidden="true">✦</i>
+        </div>
+      </div>
+      <div class="possibility-panels">
+        <article class="possibility-card pc-river reveal">
+          <div class="mini-world" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p>Économie vivante</p>
+          <h3>« Double les loyers au bord de l’eau. »</h3>
+          <span>Le paysage devient une règle.</span>
+        </article>
+        <article class="possibility-card pc-gravity reveal">
+          <div class="gravity-world" aria-hidden="true"><i>☾</i><b></b><b></b><b></b></div>
+          <p>Physique réinventée</p>
+          <h3>« La gravité baisse à chaque tour. »</h3>
+          <span>Le moteur Pattounx change la sensation du monde.</span>
+        </article>
+        <article class="possibility-card pc-story reveal">
+          <div class="story-world" aria-hidden="true"><span>CHAT-DOOR</span><i></i></div>
+          <p>Aventure spontanée</p>
+          <h3>« Cache une porte qui ne s’ouvre qu’en équipe. »</h3>
+          <span>Les joueurs inventent leur propre légende.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="foundations" id="fondations">
+      <div class="foundations-intro reveal">
+        <p class="section-kicker">Une vision ambitieuse. Des fondations bien réelles.</p>
+        <h2>La V3 ne part pas<br>d’une page blanche.</h2>
+        <p>Elle prolonge un jeu Qt/C++ déjà doté des briques difficiles : création, réseau, simulation et rendu 3D.</p>
+      </div>
+      <div class="foundation-list">
+        <article class="foundation-item reveal">
+          <span>01</span><div><h3>Éditeur riche</h3><p>Cartes, objets, zones, paramètres et undo : le monde possède déjà son atelier.</p></div><b>CRÉER</b>
+        </article>
+        <article class="foundation-item reveal">
+          <span>02</span><div><h3>Collaboration P2P</h3><p>Les créations se synchronisent entre joueurs sous l’autorité de l’hôte.</p></div><b>PARTAGER</b>
+        </article>
+        <article class="foundation-item reveal">
+          <span>03</span><div><h3>Pattounx v2</h3><p>Un moteur physique maison à 60 Hz pour donner du poids aux idées.</p></div><b>RESSENTIR</b>
+        </article>
+        <article class="foundation-item reveal">
+          <span>04</span><div><h3>Monde 3D vivant</h3><p>Assets GLB, acteurs, caméras et comportements composent déjà la scène.</p></div><b>INCARNER</b>
+        </article>
+      </div>
+    </section>
+
+    <section class="trust">
+      <div class="trust-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="trust-copy reveal">
+        <p class="section-kicker">Libre, pas incontrôlé</p>
+        <h2>L’imagination est ouverte.<br>Le monde, lui, reste protégé.</h2>
+        <p>La V3 sépare le jugement créatif des garde-fous techniques. Les propositions sont traçables, testées hors du jeu, puis exécutées dans un environnement borné.</p>
+      </div>
+      <div class="trust-points reveal">
+        <div><span>01</span><p><strong>Un MJ obligatoire</strong> arbitre le sens et l’équilibre.</p></div>
+        <div><span>02</span><p><strong>Un banc d’essai isolé</strong> éprouve le code avant la partie.</p></div>
+        <div><span>03</span><p><strong>Une autorité hôte</strong> garde tous les joueurs dans le même monde.</p></div>
+      </div>
+    </section>
+
+    <section class="vision-cta" id="vision">
+      <p class="section-kicker reveal">Meownopoly V3</p>
+      <h2 class="reveal">Et si votre prochaine partie<br>n’avait encore jamais existé ?</h2>
+      <p class="reveal">La première expérience vise un éditeur solo assisté, avant d’ouvrir la création collaborative puis le runtime co-construit.</p>
+      <div class="cta-actions reveal">
+        <a class="button button-light" href="../doc/v3/00_VISION.md">Explorer la vision complète <span aria-hidden="true">↗</span></a>
+        <a class="text-link" href="../doc/v3/11_VERTICAL_SLICE.md">Voir le premier vertical slice <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="cat-signature" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand brand-footer" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>MEOWNOPOLY<sup>V3</sup></span></a>
+    <p>Un jeu de plateau vivant, imaginé en France.</p>
+    <div><a href="../doc/v3/README.md">Documentation V3</a><span>© 2026</span></div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
