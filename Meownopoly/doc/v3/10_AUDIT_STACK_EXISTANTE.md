@@ -203,7 +203,7 @@ Elles restent ouvertes ou deviennent des chantiers explicites dans le doc 09.
 
 ## 9. Modifications à effectuer sur les stacks existantes
 
-Cette section traduit les décisions D9→D22 en modifications concrètes du socle
+Cette section traduit les décisions D9→D30 en modifications concrètes du socle
 V2. Les noms de nouvelles classes sont indicatifs ; les responsabilités et
 frontières sont, elles, normatives pour le cadrage.
 
@@ -473,23 +473,30 @@ stockage `AppDataLocation`.
 - une source modifiée produit un nouveau hash sans muter l'ancienne version ;
 - un hash incorrect ou une dépendance manquante empêche l'exécution.
 
-### M9 — Implémenter le sandbox QML/JS et son repli
+### M9 — Implémenter le sandbox QML/JS et son repli *(structuré en deux étages par D26)*
 
 **Socle repris :** moteur QML actuel uniquement comme environnement d'intégration ;
 aucune garantie de sécurité V2 n'est réutilisable telle quelle.
 
 **Modifications :**
 
+- **Étage 1 — banc d'essai hors-process (D26)** : exécutable de test Qt
+  headless distinct qui **réinstancie la carte depuis un snapshot** et
+  instancie l'artefact candidat ; verdict sur non-chargement, boucle infinie
+  (timeout → kill du process), crash, budgets. À spécifier : format du
+  snapshot, critères de verdict, pool de process ;
+- **Étage 2 — confinement runtime (D13)** dans le jeu, pour le code validé :
 - construire un parseur/validateur d'imports, types et JS interdits ;
 - fournir un module d'API de jeu minimal au lieu des singletons globaux ;
 - instrumenter le JS ou définir un sous-ensemble borné pour budgets et arrêt ;
 - isoler parentage, cycle de vie et quotas d'objets ;
 - mesurer l'accessibilité réelle des singletons enregistrés depuis un contexte
   enfant ;
-- si l'arrêt préemptif ou l'isolation échoue, basculer automatiquement vers un
-  moteur/processus séparé ou refuser le QML libre ;
+- si le confinement runtime échoue, refuser le QML libre (repli « palette +
+  mémoire ») — la préemption des boucles franches est, elle, déjà couverte par
+  l'étage 1 ;
 - revalider au chargement avec cache indexé par hash de source + version du
-  validateur ;
+  validateur (revalidation = repasser l'étage 1) ;
 - appliquer la politique d'exécution du manifeste : hôte seulement ou pairs
   après revalidation.
 
@@ -502,7 +509,8 @@ aucune garantie de sécurité V2 n'est réutilisable telle quelle.
 **Critères d'acceptation bloquants R1 :**
 
 - blocage des imports/singletons/fichier/réseau/process interdits ;
-- arrêt mesuré d'une boucle infinie sans geler le GUI ;
+- arrêt mesuré d'une boucle infinie **au banc d'essai** sans geler le GUI du
+  jeu (D26) ;
 - respect des plafonds mémoire/objets ;
 - destruction/rechargement sans fuite ;
 - échec fermé : aucun artefact n'est instancié si un contrôle est indécidable.

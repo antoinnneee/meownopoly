@@ -29,10 +29,11 @@ chez l'hôte, 1 chez le client).
 | 06 Moteur de règles | Autorité/représentation/exécution | partiellement cadré |
 | 07 Bibliothèque | Primitives (dont assets 3D) | intention actée, archi ouverte |
 | 08 Décisions & questions | Registre ADR + risques | vivant |
-| 09 Questionnaire de cadrage | Questions encore ouvertes uniquement | épuré 2026-07-12 |
+| 09 Questionnaire de cadrage | Questions ouvertes, chacune avec proposition | détaillé 2026-07-12 |
 | 10 Audit stack existante | Audit V2 + chantiers M1→M13 | vérifié 2026-07-12 |
+| 11 Vertical slice | Slice solo S1/S2/S3, fil rouge, critères | défini 2026-07-12 |
 
-## 3. Décisions prises (D1→D22)
+## 3. Décisions prises (D1→D30)
 
 ### Fondations
 - **D1 — QML génératif complet.** L'IA produit du vrai QML chargé au runtime.
@@ -76,6 +77,12 @@ chez l'hôte, 1 chez le client).
   immédiatement**, avec journal de l'original et des raisons.
 - **D19 — Journal configurable** avec noyau d'audit obligatoire (proposition,
   auteur, verdict, raisons, amendement, version) tant que l'action est rejouable.
+- **D24 — Arbitre prouvé avant lancement** : handshake de rôle sur le canal +
+  challenge de capacité, exécutés par l'app avant d'ouvrir le mode IA.
+  UX du prérequis (états lobby, blocage) : proposition au doc 09.
+- **D25 — Grain d'arbitrage configurable par UI** : les joueurs choisissent
+  quels types de requêtes passent par l'arbitre. Plancher proposé non
+  désactivable sur le code/les règles ; défaut hybride (atténue R8).
 
 ### Règles & exécution
 - **D3 — Détails du moteur de règles différés** (autorité tranchée par D8).
@@ -83,9 +90,12 @@ chez l'hôte, 1 chez le client).
   config de modules → DSL/machine à états → QML/JS sandboxé, selon le besoin.
   Règlement autoritatif dans un document structuré versionné. Protections :
   profondeur max, file transactionnelle, détection de cycles/write-set.
-- **D13 — Sandbox in-process visé** (même moteur QML, contexte restreint, JS
-  borné, pas de disque/réseau/process), **conditionnel à R1** (arrêt préemptif
-  d'une boucle infinie). Échec ⇒ processus séparé.
+- **D13/D26 — Sandbox à deux étages.** **Validation = banc d'essai
+  hors-process** (D26) : moteur/process distincts, la carte est réinstanciée
+  depuis un snapshot pour tester l'artefact candidat (non-chargement, boucle
+  infinie → process tué, le jeu ne gèle jamais). **Exécution en partie =
+  confinement in-process** (D13, conditionnel R1 recentré) : contexte
+  restreint, façade API, budgets runtime pour le code déjà validé.
 
 ### Canal, mémoire, artefacts
 - **D14 — Un seul canal multiplexé et versionné** (rôles + namespaces),
@@ -95,6 +105,12 @@ chez l'hôte, 1 chez le client).
   (durable : pipeline d'édition, undoable) et `state` (runtime : host-authoritative,
   LWW, non undoable), porté par tuiles, session et joueurs. Transport = bus d'état
   générique **à créer** (n'existe pas en V2).
+- **D27 — Sauvegarde de partie distincte de la map** : l'état runtime
+  (mémoires `state`, règlement, artefacts actifs) vit dans un fichier séparé
+  qui référence la map (id + version/hash).
+- **D28 — L'undo restaure malgré tout** : une valeur durable modifiée depuis
+  est écrasée (LWW assumé, R10 accepté comme choix produit, trace au journal).
+  Write-set ciblé requis, jamais de snapshot global.
 - **D16 — Artefacts sous autorité hôte.** Source auteur → hôte (pas de broadcast
   systématique) ; exécution hôte seul ou chez chaque pair après revalidation,
   selon une propriété déclarée. Identité = QUuid d'instance + hash de contenu +
@@ -105,61 +121,79 @@ chez l'hôte, 1 chez le client).
   partie runtime co-construite), tous avec les deux rôles IA. Application
   automatique sans revue humaine. Windows + Linux visés. Le mode classique
   survit à la transition mais n'est pas une cible à terme.
+- **D23 — Ordre de livraison : solo → collaboratif → runtime.** Le solo
+  dé-risque canal/skill/sandbox/arbitrage sans réseau ; le vertical slice
+  (D30) est défini sur ce mode.
+- **D30 — Vertical slice défini** (doc 11) : fil rouge « plaque piégée »
+  (gameplay + physique + autres éléments + interaction joueur), trois
+  scénarios — S1 création avec config + comportement, S2 proposition arbitrée
+  + banc d'essai + application, S3 rejet actionnable et itération.
 - **D17 — Skill générée au build** depuis le manifeste versionné du canal
   (source de vérité unique). Cibles : Codex + Claude Code. **Embarquée dans
   l'app et injectée en pré-prompt** à l'invocation ingame — pas d'installation
   dans la configuration de l'agent du joueur.
-- **D4 / D18 — Bibliothèque.** Premier jalon : bibliothèque **locale officielle
-  unifiée** d'assets 3D (format **GLB**), alimentée par les devs, réutilisant
-  `asset_server/` + launcher après audit. Signature d'éditeur et adressage par
-  hash à créer.
+- **D4 / D18 / D29 — Bibliothèque.** Premier jalon : bibliothèque **locale
+  officielle unifiée** d'assets 3D (format **GLB**), alimentée par les devs,
+  réutilisant `asset_server/` + launcher après audit. Package au **format de
+  l'asset manager existant, étendu** (version, hash, signature, types
+  d'entrées — D29). Signature d'éditeur et adressage par hash à créer.
 
 ## 4. Principales questions encore ouvertes
 
-- **Sandbox QML (bloquant D1/D13)** : verrouillage réel d'un `QQmlContext`,
-  allow-list d'imports, arrêt préemptif d'un JS bloquant → **prototype R1 requis**.
-- **Grain d'arbitrage** (Q-C01) : par action, par lot, ou seulement les artefacts
-  QML ? Coût/latence d'un appel LLM par action.
-- **Ordre de livraison des trois modes** V3 (tous cochés « premier mode »).
-- **Canal** : sous-ensemble exact de tools à porter et leur groupement (économie
-  de tokens), sémantique du résumé d'événements injecté et du curseur
-  `events_poll` ; garanties applicatives P2P au-dessus de `reliable.io`.
-  *(Auth/découverte : résolues par D20 ; forme d'intégration : tranchée D21,
-  HTTP loopback intégré au jeu.)*
-- **Mémoire** : schéma/noms `config`/`state`, delta vs snapshot, cadence,
-  plafond, undo ciblé par write-set (conflits, redo), sérialisation
-  string-manuelle de `ItemSnapable::toJSON` à assainir.
-- **Capacités manquantes V2** : réconciliation hooks↔MCP, introspection d'état,
-  édition ciblée par uuid, capacités runtime (piloter joueur/NPC).
-- **UX du prérequis arbitre** : comment le jeu détecte/exige un arbitre branché.
-- ~~Skill : comment l'agent atteint le canal~~ **tranché D20** : connecteur MCP
-  natif des CLIs, config injectée au spawn. *(L'emplacement d'installation
-  était déjà caduc : skill embarquée, injectée en pré-prompt.)*
+**Chaque question du doc 09 porte désormais une proposition prête à valider.**
+Les principales :
+
+- **Confinement runtime (D13, recentré par D26)** : verrouillage réel d'un
+  `QQmlContext`, allow-list d'imports (proposition Q-D04), façade `Meow.GameApi`
+  (Q-D05), budgets (Q-D06) → **prototype R1 requis** (la préemption des boucles
+  est, elle, couverte par le banc d'essai D26).
+- **Canal** : manifeste des 10 tools MVP proposé (Q-E08), schéma du résumé
+  d'événements + curseur proposé (Q-E06) ; garanties applicatives P2P
+  au-dessus de `reliable.io` (Q-F06, modèle hybride à confirmer).
+- **Mémoire/réseau** : delta 30 Hz + snapshot de réparation proposés (Q-F05),
+  plafonds du bus (Q-F07), sérialisation string-manuelle de
+  `ItemSnapable::toJSON` à assainir.
+- **Arbitre** : UX du prérequis dans le lobby (Q-B04, états proposés),
+  sélection/validation des formes exécutables (Q-C06), autorité/ordre des
+  événements déclencheurs (Q-C08).
+- **Artefacts/migration** : cycle de vie multi-tuiles par refcount (Q-G06),
+  checkpoint de migration en 4 volets (Q-G07).
+- **Bibliothèque** : champs du manifeste étendu (Q-I04), modèle de confiance
+  (Q-I05, reco « officiel signé + communautaire revalidé »), budgets assets
+  (Q-I09).
+- **Sortie de cadrage** : données privées (Q-J02), détection de divergence
+  (Q-J03, reco hash + resync), indicateurs d'arbitrage (Q-J04), critères de
+  repli D1 (Q-J06), prochain doc = spec du banc d'essai R1/D26 (Q-J07),
+  responsables par famille (Q-J08).
 
 ## 5. Risques majeurs (top)
 
 | Risque | Impact |
 |--------|--------|
-| R1 sandbox QML infaisable | Bloque D1 (repli « palette + mémoire ») |
+| R1 sandbox QML infaisable | Bloque D1 (repli « palette + mémoire ») — recentré par D26 sur le confinement runtime |
 | R2 RCE inter-joueurs via QML répliqué | Critique — exécution hôte par défaut |
-| R11 boucle JS bloquant le GUI | Critique — isolation préemptive à prototyper |
+| R11 boucle JS bloquant le GUI | Réduit (D26) — les boucles franches meurent au banc d'essai hors-process |
 | R13 `reliable.io` pris pour fiable | Critique — ACK/retry/dédup applicatifs |
 | R7 arbitre pris pour un garde-fou dur | Élevé — sécurité dure = sandbox |
-| R10 undo d'artefact écrasant du concurrent | Élevé — inverse ciblé par write-set |
+| R10 undo d'artefact écrasant du concurrent | Accepté (D28) — LWW assumé, trace au journal |
 | R15 migration d'hôte sans contexte arbitre | Élevé — checkpoint transférable |
 | R16 checksum SHA-256 pris pour signature | Élevé — signature asymétrique |
 
 (Liste complète : doc 08 §3, R1→R16.)
 
-## 6. Séquencement suggéré (non engageant)
+## 6. Séquencement suggéré (non engageant, aligné D23/D30)
 
-1. **Prototype sandbox QML** (R1) — dé-risque tout le reste.
-2. **Couche réseau V3** : ACK applicatif, retry/dédup, transaction prepare/commit/rollback.
-3. **Canal MCP minimal** (D20) : passerelle + tools d'introspection/pose, rôles/tokens injectés, version, enveloppe de proposition.
-4. **Espace mémoire** : modèle `config/state`, bus runtime, undo ciblé.
-5. **Adaptateur agents** : supervision `claude -p`/Codex + skill générée au build.
-6. **Vertical slice règles/runtime** : modules + artefact + arbitrage.
-7. **Bibliothèque officielle GLB** sur launcher/asset_server audité.
+1. **Prototype sandbox** (R1 recentré D26) : banc d'essai hors-process +
+   confinement runtime.
+2. **Canal MCP minimal** (D20/D21) : passerelle streamable HTTP + tools MVP,
+   rôles/tokens injectés, enveloppe de proposition.
+3. **Adaptateur agents** : supervision `claude -p`/Codex, skill au build,
+   handshake arbitre (D24), tchat ingame minimal.
+4. **Vertical slice solo** (D30, doc 11) : S1/S2/S3 sur le fil rouge.
+5. **Couche réseau V3** : ACK applicatif, retry/dédup, transaction
+   prepare/commit/rollback (prérequis du collab).
+6. **Espace mémoire** : bus runtime `state`, undo ciblé, sauvegarde de partie (D27).
+7. **Bibliothèque officielle GLB** au format asset manager étendu (D29).
 
 Détail technique : doc 10, chantiers **M1→M13**.
 

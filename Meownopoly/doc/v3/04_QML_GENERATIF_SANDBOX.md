@@ -48,11 +48,22 @@ n'est pas une option de confort, c'est la condition de viabilité de D1.
 Le sandbox est le **point de passage obligatoire** de tout QML génératif entre le
 canal (doc 02) et la scène.
 
-**Orientation D13, conditionnelle à R1 :** même moteur QML, contexte restreint et
-JS borné/instrumenté. La machine locale est considérée de confiance et les pairs
-réseau hostiles. Cette préférence ne devient viable que si le prototype sait
-réellement interrompre une boucle, borner CPU/mémoire et masquer les singletons
-globaux ; la stack V2 ne le fait pas (doc 10).
+**Deux étages depuis D26 (2026-07-12) :**
+
+1. **Validation = banc d'essai hors-process.** La sandbox de validation est un
+   **outil de test distinct du jeu en cours** : moteur QML distinct, **process
+   distinct**. Elle **réinstancie la carte depuis un snapshot** et y instancie
+   l'artefact candidat pour détecter avant introduction : non-chargement,
+   **boucle infinie** (→ le process de test est tué, le jeu ne gèle jamais),
+   crash, dépassement de budget. À spécifier : format du snapshot injecté,
+   critères de verdict, coût de spawn d'un process Qt headless (pool ?).
+2. **Exécution en partie = confinement in-process (D13, conditionnel R1
+   recentré).** Le code **déjà validé** tourne dans le moteur du jeu avec
+   contexte restreint, façade API et budgets runtime. La machine locale est
+   considérée de confiance et les pairs réseau hostiles. Le prototype R1 se
+   concentre désormais sur cet étage : masquage réel des singletons,
+   allow-list d'imports, budgets — la stack V2 n'offre rien de tout ça
+   (doc 10).
 
 ### 3.1 Validation avant instanciation
 - **Allow-list d'imports** : seuls des modules explicitement autorisés
@@ -88,9 +99,10 @@ du canal.
   taille max de l'artefact (cf. seuils réseau existants 20–30 KB).
 - Kill-switch : pouvoir **détruire** un artefact qui dérape. Limite fondamentale :
   `destroy()` ne peut pas interrompre une boucle JS qui bloque déjà le thread GUI.
-  Un timeout préemptif crédible suppose de l'isolation hors du thread/processus
-  principal, ou un langage/DSL borné. Le prototype R1 doit mesurer ce point avant
-  de promettre un « sandbox » in-process.
+  **Réponse D26** : les boucles franches sont éliminées **avant** introduction,
+  au banc d'essai hors-process (process tué). Le résidu — un artefact validé qui
+  dérape *en partie* sur un chemin non couvert au banc — reste le point que le
+  prototype R1 doit mesurer (budgets runtime, instrumentation).
 
 ### 3.5 Cycle de vie
 - **Instanciation** : canal → validation → contexte restreint → rattachement.
@@ -157,8 +169,9 @@ usages.
 - Faisabilité réelle du **sandboxing QML/JS dans Qt** : jusqu'où peut-on
   verrouiller le `QQmlContext` et les imports ? (à prototyper — c'est le risque
   technique n°1 du pivot).
-- Frontière d'isolation : même moteur QML, moteur séparé dans le même processus,
-  processus auxiliaire, ou repli vers un DSL/capacités déclaratives ?
+- ~~Frontière d'isolation~~ **précisée D26** : validation en banc d'essai
+  hors-process ; confinement in-process pour l'exécution en partie (D13,
+  conditionnel R1 recentré).
 - Réplication : critères autorisant la propriété « exécution chez chaque pair ».
 - Validation : parser maison, `qmllint`, ou analyse d'AST ? Que fait-on des faux
   négatifs ?

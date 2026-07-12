@@ -38,8 +38,9 @@ cf. doc 00 §4).
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes** (arbitrages D9→D22 reportés au doc 08) | **épuré 2026-07-12** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes**, chacune avec une proposition prête à valider (arbitrages D9→D30 reportés au doc 08) | **détaillé 2026-07-12** |
 | 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Audit V2 + plan M1→M13 des modifications de stack | **vérifié 2026-07-12** |
+| 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | Vertical slice solo S1/S2/S3 (D30) : fil rouge, briques traversées, critères | **défini 2026-07-12** |
 
 ## Décisions structurantes déjà prises
 
@@ -81,14 +82,19 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
   capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
-- **D9→D22 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
-  trois modes V3, agents Codex/Claude supervisés **invoqués in-app via tchat
-  ingame**, proposition auditable avec amendement immédiat, règles hiérarchiques,
-  sandbox in-process conditionnel à R1, canal **MCP local** multiplexé (D20) en
+- **D9→D30 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
+  trois modes V3 **livrés solo → collab → runtime** (D23), agents Codex/Claude
+  supervisés **invoqués in-app via tchat ingame**, arbitre prouvé par
+  **handshake + challenge** (D24) avec grain d'arbitrage **configurable par UI**
+  (D25), proposition auditable avec amendement immédiat, règles hiérarchiques,
+  **sandbox de validation = banc d'essai hors-process sur snapshot** (D26,
+  confinement runtime D13 recentré), canal **MCP local** multiplexé (D20) en
   **streamable HTTP intégré au jeu** (D21), screenshots plafonnés/éphémères (D22),
-  mémoire `config/state`, artefacts sous autorité hôte, skill générée au build
-  **injectée en pré-prompt** et bibliothèque locale officielle GLB. Détail et
-  réserves techniques dans les docs 08→10.
+  mémoire `config/state` avec **sauvegarde de partie distincte** (D27) et **undo
+  qui restaure malgré tout** (D28), artefacts sous autorité hôte, skill générée
+  au build **injectée en pré-prompt**, bibliothèque locale officielle GLB au
+  **format asset manager étendu** (D29), et **vertical slice solo défini**
+  (D30, doc 11). Détail et réserves techniques dans les docs 08→11.
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 
