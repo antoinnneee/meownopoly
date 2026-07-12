@@ -28,6 +28,7 @@ cf. doc 00 §4).
 | # | Document | Rôle | Statut |
 |---|----------|------|--------|
 | — | [`README.md`](./README.md) | Index (ce fichier) | draft |
+| — | [`RECAP_CADRAGE.md`](./RECAP_CADRAGE.md) | Récapitulatif synthétique du cadrage (photo à date) | 2026-07-12 |
 | 00 | [`00_VISION.md`](./00_VISION.md) | Vision, principes directeurs, ce qui change / ce qui reste | draft |
 | 01 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | Vue d'ensemble des briques + flux, réutilisation du socle V2 | draft |
 | 02 | [`02_CANAL_IA_WEBSOCKET.md`](./02_CANAL_IA_WEBSOCKET.md) | Le canal WS dédié IA↔jeu (distinct de l'automation) | draft |
