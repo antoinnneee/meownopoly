@@ -1,0 +1,2137 @@
+ ▐▛███▜▌   Claude Code v2.1.207
+▝▜█████▛▘  Fable 5 · Claude Max
+  ▘▘ ▝▝    ~\Documents\GitHub\meownopoly
+
+ ▎ Extended through July 19
+ ▎ We're extending Claude Fable 5 access on all paid plans, as well as keeping Claude Code’s weekly rate limits 50% higher, through July 19.
+ ▎
+ ▎ As before, you can use up to half of your weekly usage limit on Fable 5. After that, you can keep using Fable 5 with usage credits, or switch to another model to keep working within your remaining limits.
+ ▎
+ ▎ More details here: https://support.claude.com/en/articles/15424964-claude-fable-5-promotional-access
+
+❯ ───────────────────────────────────────────────────────────────────────────── 
+  ───────────────────────────────────────────────────────────────────────────── 
+  ─────────────────────────────────────────────────── Antoine et valou avons    
+  besoin de vérifier chaque brique logicielle avant de travailler sur un plan   
+  d'implémentation pour la mise en place de la v3 de ce projet.                 
+    Je veux que tu lises la documentation, et que dans l'ordre, pour la V3      
+  spécifiquement, tu nous résumes paragraphe par paragraphe les briques         
+  logicielle qui vont etre amenée à étre implémenter ou créer. Pour chaque      
+  paragraohe ou blocs de paragraphe tu vas nous exposer les principaux concepts 
+  & définitions, puis nous faire une série de questions qui vont t'ammener à    
+  modifier ces docs en conséquences. Fait d'abord une première lecture          
+    génèrale de la doc, puis on va petit à petit traiter les fichiers de docs.  
+  Enfin, note que ce travail vas ce faire sur plusieurs session de claude afin  
+  de réinitialiser le ctx. En conséquence, créer un                             
+    document qui tient à jour les modifs (note conçise des lignes et modifs) et 
+  garde en tête l'idée que l'on change de session (intégre le en haut de page   
+  du document de suivi journalier évoquée précédememnt). Lit les documentations 
+  généraux & le dossier V3                                                      
+
+● Très bien. Je commence par une lecture générale : je liste les docs V3 et les
+  documents généraux, puis je crée le document de suivi inter-sessions.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Je lis maintenant l'ensemble du dossier doc/v3 (lecture générale, première
+  passe).
+
+  Read 2 files (ctrl+o to expand)
+
+● Je vérifie la taille des documents V3 avant de tout lire.
+
+  Read 14 files (ctrl+o to expand)
+
+● Write(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Wrote 101 lines to Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md
+       1 # Suivi de revue des briques logicielles V3 (Antoine + Valou)
+       3 > **⚠️ PROTOCOLE MULTI-SESSIONS — À LIRE EN PREMIER PAR TOUTE NOU
+         VELLE SESSION CLAUDE.**
+       5 > Ce document pilote un travail de revue qui s'étale sur **plusi
+       6 > (le contexte est réinitialisé entre chaque session). Toute nou
+         velle session doit :
+       8 > 1. **Lire ce fichier en entier** (état d'avancement §2, journa
+         l des modifs §4).
+         cours"** dans la table §2.
+         aragraphe par paragraphe
+     … +163 lines (ctrl+o to expand)
+
+  Recalled 1 memory, wrote 3 memories (ctrl+o to expand)
+
+● Première lecture générale terminée. J'ai créé le document de suivi
+  inter-sessions Meownopoly/doc/v3/SUIVI_REVUE_BRIQUES.md : il contient en tête
+  le protocole que toute nouvelle session Claude devra suivre (lire ce fichier,
+  reprendre au prochain doc « à traiter », résumer paragraphe par paragraphe,
+  poser les questions, journaliser les modifs avec date/fichier/lignes), la
+  table d'avancement des 14 docs, l'inventaire des briques, et le journal des
+  modifications. J'ai aussi noté ce workflow dans ma mémoire persistante pour le
+  retrouver automatiquement en début de session.
+
+  Synthèse de la lecture générale
+
+  Le pivot en bref : la V3 transforme le jeu en substrat de gameplay créé par
+  des IA clientes. Chaque joueur invoque « son IA » depuis un tchat ingame ;
+  elle matérialise ses demandes en composant les briques existantes de l'éditeur
+  et en y embarquant du JS. Une IA arbitre obligatoire chez l'hôte valide
+  chaque proposition avant application. Le cadrage est très avancé : 39
+  décisions (D1→D39) sont actées, 16 risques identifiés, et il ne reste que 6
+  questions ouvertes (Q-E06, E08, J02, J04, J06, J08).
+
+  Les briques logicielles à créer ou modifier (détail complet dans le suivi §3)
+  :
+
+  1. Passerelle MCP AiGatewayServer (M1) — serveur MCP streamable HTTP loopback
+  embarqué dans le jeu, ~10 tools groupés, tokens distincts proposant/arbitre.
+  Prérequis : installer QtHttpServer.
+  2. Superviseur d'agents + tchat ingame (M2) — spawn/supervision de claude 
+  -p/Codex via QProcess, handshake arbitre, UX lobby 4 états.
+  3. Fiabilité applicative P2P (M3) — ACK/retry/dédup au-dessus de Catway
+  (reliable.io ne retransmet pas — point corrigé par l'audit).
+  4. Transactions atomiques (M4) — passer du groupement actuel à
+  prepare/commit/rollback.
+  5. Journal d'événements métier GameplayEventBus (M5) — curseur, audit,
+  adaptateur pour l'IA.
+  6. Espace mémoire config/state + bus d'état runtime (M6) — sur ItemSnapable,
+  session et joueurs ; delta 30 Hz + snapshots + resync.
+  7. Sauvegarde de partie distincte de la map (M7).
+  8. Store d'artefacts par hash (M8) — refcount, GC au save.
+  9. Sandbox à deux étages (M9, risque n°1 / prototype R1) — banc d'essai
+  hors-process meow_testbench (spécifié doc 12) + confinement runtime in-process
+  (façade Meow.GameApi, budgets D34).
+  10. Enveloppe de proposition (doc 13) — cycle de vie, verdict à deux
+  audiences, plancher d'arbitrage non contournable.
+  11. Migration d'hôte V3 (M10), bibliothèque GLB (M11), skill générée au build
+  (M12), qualification Linux (M13), et le moteur de règles (doc 06, le moins
+  mûr).
+
+  Prérequis bloquant signalé partout : assainir la sérialisation string-manuelle
+  de ItemSnapable::toJSON (risque R4), qui conditionne le snapshot du banc
+  d'essai.
+
+  Proposition pour la suite
+
+  L'ordre de traitement que je propose est simplement l'ordre de lecture 00 → 13
+  (chaque doc aval s'appuie sur les concepts des docs amont). À la prochaine
+  étape — dans cette session si vous voulez continuer, ou dans une nouvelle — on
+  attaque 00_VISION.md : résumé bloc par bloc, concepts/définitions, puis mes
+  questions (par exemple : le repli « jeu classique » si pas d'arbitre, la
+  portée réelle de « aucune revue humaine », le budget/coût des 2 modèles chez
+  l'hôte). Dites-moi quand vous voulez démarrer le doc 00.
+
+✻ Churned for 3m 41s
+
+※ recap: On révise les briques logicielles V3 doc par doc avant le plan d'implémentation ; la lecture générale est faite et le suivi inter-sessions SUIVI_REVUE_BRIQUES.md est créé. Prochaine action : traiter 00_VISION.md paragraphe par paragraphe avec mes questions. (disable recaps in /config)
+
+❯ ok go pour la première doc                                                    
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line, removed 1 line
+      39  | # | Document | Statut | Notes de session |
+      40  |---|----------|--------|------------------|
+      41  | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas d
+          e revue dédiée, servent d'index |
+      42 -| 00 | `00_VISION.md` | à traiter | vision, 2 rôles IA, princip
+         -es |                                                           
+      42 +| 00 | `00_VISION.md` | en cours (S1 2026-07-13) | vision, 2 rô
+         +les IA, principes — résumé fait, questions posées |            
+      43  | 01 | `01_ARCHITECTURE_CIBLE.md` | à traiter | vue d'ensemble 
+          briques + flux |
+      44  | 02 | `02_CANAL_IA.md` | à traiter | passerelle MCP (M1) |
+      45  | 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au b
+          uild (M12) |
+
+● User answered Claude's questions:
+  ⎿  · §2 idée 1 dit « chaque joueur branche son propre modèle (Claude, un agent
+     local, etc.) », mais D10/D17 ne ciblent que `claude -p` et Codex. Les 
+     agents/modèles locaux (Ollama, LM Studio…) font-ils partie du périmètre de 
+     la vision ? → Il pourra s'agir à terme d'agents locaux. Dans un premier 
+     temps on privilégie les ia commercial 
+     · L'arbitre est obligatoire même en solo/offline (§8) : un joueur seul paie
+     donc 2 sessions de modèle (coût tokens + latence à chaque proposition). Ce
+     coût est-il assumé tel quel, ou la vision doit-elle prévoir un arbitre « 
+     allégé » ? → le 1), note pour plus tard que le rôle de l'arbitre sera 
+     étendu (est imaginé une "personnalité" permettant à l'arbitre d'avoir des 
+     "objectif" propre, à définir. Cela permet notamment de permettre du 
+     divertissement même solo)
+     · §3 et D9 posent « application automatique, aucune revue humaine ». 
+     Faut-il quand même prévoir un mode opt-in où le joueur hôte approuve 
+     manuellement les propositions (ex. entre inconnus) ? → Non, rester sur D9
+     · Public initial « du joueur non technique au moddeur » (§8) : un joueur 
+     non technique devra pourtant avoir un compte fournisseur (Anthropic/OpenAI)
+     + le CLI installé. Faut-il expliciter ce prérequis d'onboarding dans la 
+     vision ? → Oui, expliciter le prérequis
+
+● Réponses enregistrées. J'applique les modifications au doc 00 (+ une trace
+  dans le doc 08 pour la nouvelle idée « personnalité de l'arbitre »).
+
+● Update(Meownopoly\doc\v3\00_VISION.md)
+  ⎿  Added 3 lines, removed 1 line
+      34  Quatre idées portent le pivot :
+      35  
+      36  1. **« Son IA » — modèle fourni côté client, invoqué depuis le 
+          jeu.** Chaque
+      37 -   joueur branche son propre modèle (Claude, un agent local, et
+         -c.). Le jeu ne                                                 
+      37 +   joueur branche son propre modèle — **en priorité les IA comm
+         +erciales**                                                     
+      38 +   ciblées par D10/D17 (`claude -p`, Codex) ; des **agents loca
+         +ux** (type                                                     
+      39 +   Ollama) sont envisagés **à terme**, hors périmètre du premie
+         +r jalon. Le jeu ne                                             
+      40     fournit pas l'IA ; il fournit le **point d'entrée** (canal M
+          CP local, doc 02),
+      41     le **mode d'emploi** (skill embarquée, doc 03) et l'**interf
+          ace** : un **tchat
+      42     ingame** depuis lequel les IA sont **invoquées directement p
+          ar l'application**
+
+● Update(Meownopoly\doc\v3\00_VISION.md)
+  ⎿  Added 7 lines
+      127    un moteur runtime. **Aucun tour n'est imposé** — il s'introd
+           uit par le prompt à
+      128    l'arbitre ou par une proposition d'IA cliente acceptée (règl
+           ement évolutif).
+      129  
+      130 +> **Extension prévue (note 2026-07-13, à cadrer).** Le rôle de
+          + l'arbitre sera                                               
+      131 +> **étendu** au-delà de la validation : une **« personnalité »
+          +** configurable                                               
+      132 +> lui donnera des **objectifs propres** (à définir). But produ
+          +it : faire de                                                 
+      133 +> l'arbitre un acteur de **divertissement** à part entière — c
+          +e qui justifie                                                
+      134 +> notamment le coût du second modèle **même en solo**. Questio
+          +n ouverte tracée                                              
+      135 +> au doc 08 (§2, IA arbitre).                                 
+      136 +                                                              
+      137  ### Topologie : 2 rôles isolés chez l'hôte, 1 chez le client
+      138  
+      139  ```
+
+● Update(Meownopoly\doc\v3\00_VISION.md)
+  ⎿  Added 1 line, removed 1 line
+      223  | Validation du contenu | Règles C++ figées + host relais | + 
+           **IA arbitre / MJ** chez l'hôte (viabilité contextuelle) |
+      224  | Extension d'un élément | Recompilation C++ (nouveau `TileTyp
+           e`, paramètre) | **Variables typées synchronisées** (espace mé
+           moire réactif) + **JS embarqué** sur briques préexistantes (co
+           mportement) (doc 04/05) |
+      225  | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA +
+            joueurs**, au fil des parties (JS embarqué, briques composées
+           ) |
+      226 -| Point d'entrée IA | Automation (debug/dev) | **Canal WS dédi
+          -é** IA-joueur (doc 02) |                                      
+      226 +| Point d'entrée IA | Automation (debug/dev) | **Canal MCP loc
+          +al dédié** IA-joueur (D20, doc 02) |                          
+      227  | Règles de partie | Pas de moteur de règles formel ni de syst
+           ème de tour | **Gouvernées par l'arbitre**, matérialisées/exéc
+           utées par les capacités du jeu ; tour optionnel (doc 06, D8) |
+      228  | Partage de contenu | Fichiers map JSON | + **Bibliothèque** 
+           de primitives/créations (doc 07, différé) |
+      229  | Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (pilo
+           té à terme par l'IA) ; **palette visuelle élargie par une bibl
+           iothèque d'assets 3D prévue** (doc 07) |
+
+● Update(Meownopoly\doc\v3\00_VISION.md)
+  ⎿  Added 4 lines, removed 1 line
+      250  
+      251  - Les trois usages appartiennent à la cible V3 : **éditeur sol
+           o assisté**,
+      252    **éditeur collaboratif assisté** et **runtime co-construit e
+           n direct**.
+      253 -- L'arbitre reste obligatoire dans les trois, y compris en sol
+          -o/offline.                                                    
+      253 +- L'arbitre reste obligatoire dans les trois, y compris en sol
+          +o/offline. Le                                                 
+      254 +  **coût des deux modèles est assumé tel quel** (pas d'arbitre
+          + « allégé » prévu                                             
+      255 +  au cadrage) — et sera justifié à terme par l'extension « per
+          +sonnalité » de                                                
+      256 +  l'arbitre (cf. §4, note).                                   
+      257  - Le niveau de liberté cible couvre composition de primitives,
+            JS borné et QML/JS
+      258    libre si R1 rend son isolation viable.
+      259  - Public initial : groupe mixte, du joueur non technique au mo
+           ddeur.
+● Update(Meownopoly\doc\v3\00_VISION.md)
+  ⎿  Added 4 lines
+      257  - Le niveau de liberté cible couvre composition de primitives,
+            JS borné et QML/JS
+      258    libre si R1 rend son isolation viable.
+      259  - Public initial : groupe mixte, du joueur non technique au mo
+           ddeur.
+      260 +  **Prérequis d'onboarding assumé** : chaque joueur dispose d'
+          +un **compte                                                   
+      261 +  fournisseur d'IA** et du **CLI d'agent installé** sur sa mac
+          +hine — le jeu                                                 
+      262 +  guide l'installation/configuration mais ne fournit ni modèle
+          + ni compte                                                    
+      263 +  (cf. §7, « pas d'IA hébergée par le jeu »).                 
+      264  - Plateformes visées : **Windows et Linux**. Linux demande enc
+           ore packaging, CI
+      265    et qualification (doc 10).
+      266  
+
+● Update(Meownopoly\doc\v3\08_DECISIONS_ET_QUESTIONS.md)
+  ⎿  Added 6 lines
+      631    absentes en V2, requises pour « modules NPC/joueur ».
+      632  
+      633  ### IA arbitre / MJ (doc 00 §4, D6/D10/D11)
+      634 +- **Personnalité et objectifs propres de l'arbitre (nouveau, 2
+          +026-07-13)** :                                                
+      635 +  extension prévue du rôle — une « personnalité » configurable
+          + donnant à                                                    
+      636 +  l'arbitre des **objectifs propres** (à définir), pour en fai
+          +re un acteur de                                               
+      637 +  **divertissement** y compris en solo. Va au-delà du « prompt
+          +/personnalité                                                 
+      638 +  configuré par les joueurs » de D10 (qui ne couvre que le par
+          +amétrage du                                                   
+      639 +  jugement). À cadrer (doc 00 §4, note).                      
+      640  - ~~Nature de l'arbitre ?~~ **Tranché : LLM externe** (`claude
+            -p`/équivalent
+      641    Codex) pour le contextuel, entouré de validateurs mécaniques
+           .
+      642  - ~~Grain d'arbitrage~~ **Tranché D25 : configurable par UI** 
+           (types de
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line, removed 1 line
+      39  | # | Document | Statut | Notes de session |
+      40  |---|----------|--------|------------------|
+      41  | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas d
+          e revue dédiée, servent d'index |
+      42 -| 00 | `00_VISION.md` | en cours (S1 2026-07-13) | vision, 2 rô
+         -les IA, principes — résumé fait, questions posées |            
+      42 +| 00 | `00_VISION.md` | traité (S1 2026-07-13) | 4 questions ar
+         +bitrées : IA commerciales d'abord (locaux à terme), coût 2 modè
+         +les assumé + extension « personnalité arbitre » (nouvelle idée,
+         + tracée doc 08), pas de revue humaine (D9 confirmé), prérequis 
+         +onboarding explicité |                                         
+      43  | 01 | `01_ARCHITECTURE_CIBLE.md` | à traiter | vue d'ensemble 
+          briques + flux |
+      44  | 02 | `02_CANAL_IA.md` | à traiter | passerelle MCP (M1) |
+      45  | 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au b
+          uild (M12) |
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 6 lines
+       92  | Date | Session | Fichier | Lignes (~) | Modification |
+       93  |------|---------|---------|------------|--------------|
+       94  | 2026-07-13 | S1 | `SUIVI_REVUE_BRIQUES.md` | — | Création du
+            document de suivi + inventaire initial des briques (1re lectu
+           re générale) |
+       95 +| 2026-07-13 | S1 | `00_VISION.md` | ~37 (§2 idée 1) | Précisi
+          +on : IA commerciales (`claude -p`/Codex) en priorité, agents l
+          +ocaux à terme hors premier jalon |                            
+       96 +| 2026-07-13 | S1 | `00_VISION.md` | ~130 (§4, avant Topologie
+          +) | Ajout note « Extension prévue » : personnalité de l'arbitr
+          +e avec objectifs propres (divertissement, même solo) |        
+       97 +| 2026-07-13 | S1 | `00_VISION.md` | ~225 (§6 tableau) | Corre
+          +ction incohérence : « Canal WS dédié » → « Canal MCP local déd
+          +ié (D20) » |                                                  
+       98 +| 2026-07-13 | S1 | `00_VISION.md` | ~252 (§8) | Coût 2 modèle
+          +s assumé tel quel (pas d'arbitre allégé) + renvoi note personn
+          +alité |                                                       
+       99 +| 2026-07-13 | S1 | `00_VISION.md` | ~256 (§8) | Prérequis d'o
+          +nboarding explicité : compte fournisseur + CLI installé, le je
+          +u guide mais ne fournit pas |                                 
+      100 +| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~633 (§2 
+          +IA arbitre) | Nouvelle question ouverte : personnalité/objecti
+          +fs propres de l'arbitre (au-delà du paramétrage D10) |        
+      101  
+      102  ## 5. Questions/réponses en attente (inter-sessions)
+      103  
+
+● Doc 00 traité. Voici le bilan :
+
+  Modifications appliquées à 00_VISION.md (toutes journalisées dans
+  SUIVI_REVUE_BRIQUES.md §4) :
+  1. §2 — « Claude, un agent local, etc. » reformulé : IA commerciales (claude 
+  -p, Codex) en priorité, agents locaux envisagés à terme mais hors premier
+  jalon.
+  2. §4 — nouvelle note « Extension prévue » : la personnalité de l'arbitre avec
+  objectifs propres (votre nouvelle idée — divertissement même en solo). Comme
+  c'est un concept qui va au-delà du simple « prompt configuré par les joueurs »
+  de D10, je l'ai aussi ajoutée comme question ouverte au doc 08 (§2, section
+  IA arbitre) pour qu'elle soit cadrée plus tard — elle mérite probablement une
+  future décision D40 quand vous aurez défini ce que sont ces « objectifs ».
+  3. §6 — correction de l'incohérence « Canal WS dédié » → « Canal MCP local
+  dédié (D20) ».
+  4. §8 — coût des deux modèles assumé tel quel (pas d'arbitre allégé), avec
+  renvoi vers la note personnalité qui le justifie.
+  5. §8 — prérequis d'onboarding explicité : compte fournisseur + CLI installé,
+  le jeu guide l'installation mais ne fournit rien.
+
+  Sur la revue humaine : D9 confirmé, aucune modification (le doc était déjà
+  correct).
+
+  Prochain document : 01_ARCHITECTURE_CIBLE.md — la vue d'ensemble des briques
+  et des flux, avec le tableau de réutilisation du socle V2. C'est là qu'on
+  vérifiera notamment l'ordre du pipeline de proposition (passerelle → arbitre →
+  validation → application) et les points d'ancrage V2 cités. Dites-moi quand
+  vous voulez enchaîner (dans cette session ou une prochaine — le suivi est à
+  jour dans les deux cas).
+
+✻ Cogitated for 3m 23s
+
+❯ go pour la doc 01                                                             
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line, removed 1 line
+      40  |---|----------|--------|------------------|
+      41  | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas d
+          e revue dédiée, servent d'index |
+      42  | 00 | `00_VISION.md` | traité (S1 2026-07-13) | 4 questions ar
+          bitrées : IA commerciales d'abord (locaux à terme), coût 2 modè
+          les assumé + extension « personnalité arbitre » (nouvelle idée,
+           tracée doc 08), pas de revue humaine (D9 confirmé), prérequis 
+          onboarding explicité |
+      43 -| 01 | `01_ARCHITECTURE_CIBLE.md` | à traiter | vue d'ensemble 
+         -briques + flux |                                               
+      43 +| 01 | `01_ARCHITECTURE_CIBLE.md` | en cours (S1 2026-07-13) | 
+         +vue d'ensemble briques + flux |                                
+      44  | 02 | `02_CANAL_IA.md` | à traiter | passerelle MCP (M1) |
+      45  | 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au b
+          uild (M12) |
+      46  | 04 | `04_QML_GENERATIF_SANDBOX.md` | à traiter | sandbox 2 ét
+          ages (M9) |
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+● User declined to answer questions
+  ⎿  · Le §2 liste 6 briques, mais deux chantiers devenus structurants n'y 
+     figurent pas comme briques de premier rang : l'**adaptateur d'agents + 
+     tchat ingame** (M2 — spawn/supervision claude/Codex, handshake arbitre) et 
+     le **journal/bus d'événements métier** (M5 — alimente events_poll, l'audit 
+     D19 et les règles). Les ajouter au doc 01 ? (Oui, ajouter les deux 
+     (Recommandé) / Seulement l'adaptateur agents / Non, laisser tel quel)
+     · §2.5 dit que l'arbitrage s'ancre sur « le même domaine d'autorité que 
+     EditorSession » sans trancher la forme. Côté réseau, la passerelle de 
+     proposition V3 doit-elle être une **nouvelle session dédiée** (ex. 
+     ProposalSession, plage de messages V3 propre) ou une **extension 
+     d'EditorSession** ? (Nouvelle session dédiée (Recommandé) / Étendre 
+     EditorSession / Différer au plan d'implémentation)
+     · Le préfiltre mécanique **P0** (parse + allow-list + taille, doc 12) 
+     tourne « dans le jeu » — mais chez qui en collab ? Le schéma §1 le place 
+     chez l'hôte après transport ; on pourrait aussi l'exécuter côté auteur 
+     avant l'envoi (fail-fast, économie réseau/arbitre). (Hôte + copie client 
+     (Recommandé) / Hôte uniquement / Client uniquement)
+     · Le tableau §3 fait des modules gameplay (vie, inventaire, monnaie, 
+     stats/XP + equipment) le « vocabulaire gameplay » de l'IA, mais le 
+     manifeste MVP 10 tools (Q-E08) n'expose aucun tool 
+     d'activation/configuration de module (seul stats passe par la façade). 
+     L'activation des modules par l'IA est-elle MVP ou post-MVP ? (Post-MVP 
+     (Recommandé) / MVP via tool dédié / MVP via editor_edit/memory)
+
+● Bien sûr — que souhaitez-vous clarifier avant de répondre ? N'hésitez pas à me
+  poser vos questions sur l'un ou l'autre de ces quatre points (briques
+  manquantes du §2, forme réseau de la passerelle d'arbitrage, localisation du
+  préfiltre P0, activation des modules gameplay au MVP), ou à m'apporter du
+  contexte supplémentaire — je reformulerai les questions en conséquence.
+
+✻ Sautéed for 2m 31s
+
+❯ Alons y quesiton par question. précise ce que tu veux dire pour le 1          
+
+● Question 1 en détail — les briques « oubliées » du §2 du doc 01
+
+  Le constat. Le doc 01 se présente comme la vue d'ensemble des briques V3 : son
+  §2 en liste six (canal IA, skill, sandbox, espace mémoire, arbitre,
+  règles/bibliothèque). Or, en croisant avec le doc 10 (chantiers M1→M13) et le
+  vertical slice (doc 11), il y a deux morceaux de logiciel entièrement 
+  nouveaux, gros et structurants, qui ne sont pas présentés comme des briques
+  dans ce doc — ils n'apparaissent qu'en passant, au détour d'une phrase :
+
+  1. L'adaptateur d'agents + tchat ingame (chantier M2). C'est le composant qui
+  :
+  - lance et supervise les processus claude -p / Codex (QProcess, démarrage,
+  kill, timeout, crash, redémarrage) ;
+  - injecte le token MCP, le rôle (proposer/arbiter) et le pré-prompt skill au
+  spawn ;
+  - exécute le handshake + challenge de l'arbitre (D24) avant d'ouvrir le mode
+  IA ;
+  - porte l'UI du tchat ingame, c'est-à-dire l'interface principale du joueur
+  avec tout le pivot.
+
+  Dans le doc 01, il n'est mentionné qu'à l'étape 1 du flux §4 (« démarrés et
+  supervisés par un adaptateur du launcher/jeu (nouvelle brique, doc 10) »).
+  C'est paradoxal : c'est la brique par laquelle le joueur entre dans la V3,
+  elle est requise dès S1 du slice, et elle n'a même pas de doc dédié
+  (contrairement au canal, à la skill, au sandbox…).
+
+  2. Le journal/bus d'événements métier (chantier M5, GameplayEventBus). C'est
+  le composant qui unifie les signaux existants (Game, EditorOpBus,
+  ItemSnapableEvents, physique) en un journal typé, séquencé, avec curseur. Il
+  sert quatre consommateurs à la fois : le résumé d'événements injecté à chaque
+  invocation d'IA + le tool events_poll (doc 02 §4), le noyau d'audit
+  obligatoire (D19), le déclenchement des règles (D33 : ordre déterministe
+  physique → mémoire → actions → tick), et la détection de cycles (D12). Dans le
+  doc 01, il n'existe qu'implicitement derrière « l'adaptateur unifié » du doc
+  02.
+
+  L'enjeu de la question. Ce n'est pas juste de la mise en forme : le doc 01 est
+  le document qu'on lira pour découper les chantiers et se les répartir. Si ces
+  deux briques n'y sont pas visibles au même rang que les six autres, on risque
+  de sous-estimer leur poids (le M2 en particulier : gestion de processus,
+  états d'UI, deux CLIs différents à adapter…).
+
+  Les trois options que je proposais :
+  - A. Ajouter les deux comme §2.7 (adaptateur agents & tchat) et §2.8 (journal
+  d'événements) — le doc 01 redevient la liste exhaustive des briques. C'est ma
+  recommandation.
+  - B. Ajouter seulement l'adaptateur — le journal resterait un détail
+  d'infrastructure décrit au doc 02 §4 et dans D19/M5.
+  - C. Ne rien changer — le doc 01 ne liste que les briques « conceptuelles » du
+  pivot, et le découpage en chantiers reste l'affaire du doc 10.
+
+  Question subsidiaire si vous choisissez A : l'adaptateur agents mériterait-il
+  à terme son propre doc de cadrage (un « doc 14 »), vu qu'il n'a aujourd'hui
+  aucun document dédié ? (Pas obligatoire pour cette revue, mais c'est le seul
+  gros morceau sans doc.)
+
+  Quelle option retenez-vous pour la question 1 ?
+
+✻ Baked for 25s
+
+❯ option A, avec le doc 14 pour l'adaptateur                                    
+
+● Option A actée. J'applique : ajout des briques 2.7/2.8 au doc 01, création du
+  doc 14, mise à jour de l'index README et du suivi.
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 19 lines
+      124  développement) qui **élargit le vocabulaire graphique** compos
+           able par l'IA,
+      125  adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
+      126  
+      127 +### 2.7 L'adaptateur d'agents & le tchat ingame (doc 14) — nou
+          +velle brique                                                  
+      128 +Le composant par lequel le joueur **entre** dans la V3 (ajouté
+          + à cette liste le                                             
+      129 +2026-07-13 ; c'était jusqu'ici une mention en passant du flux 
+          +§4). Il **lance et                                            
+      130 +supervise** les CLIs (`claude -p`, Codex non interactif) via `
+          +QProcess` :                                                   
+      131 +démarrage, arrêt gracieux, kill, timeout, crash, redémarrage ;
+          + il **injecte** au                                            
+      132 +spawn la config MCP + le token de rôle (`proposer`/`arbiter`) 
+          ++ le pré-prompt                                               
+      133 +skill (D10/D17/D20) ; il exécute le **handshake + challenge de
+          + l'arbitre** (D24)                                            
+      134 +et pilote les états UX du lobby (D31) ; et il porte l'**UI du 
+          +tchat ingame**,                                               
+      135 +l'interface principale joueur↔IA. Aucun socle V2 : `LauncherMa
+          +nager` ne lance                                               
+      136 +aucun processus (doc 10, B03). Chantier **M2**. Détail : doc 1
+          +4.                                                            
+      137 +                                                              
+      138 +### 2.8 Le journal d'événements métier (`GameplayEventBus`)   
+      139 +Unifie les signaux existants (`Game`, `EditorOpBus`, `ItemSnap
+          +ableEvents`,                                                  
+      140 +physique) en un **journal typé, séquencé, à curseur** (ajouté 
+          +à cette liste le                                              
+      141 +2026-07-13). Quatre consommateurs : le **résumé d'événements i
+          +njecté** par                                                  
+      142 +invocation + le tool `events_poll` (doc 02 §4), le **noyau d'a
+          +udit** (D19), le                                              
+      143 +**déclenchement des règles** avec ordre déterministe (D33), et
+          + la **détection de                                            
+      144 +cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Ch
+          +antier **M5**.                                                
+      145 +                                                              
+      146  ## 3. Réutilisation du socle V2 (points d'ancrage réels)
+      147  
+      148  | Brique V3 | S'appuie sur (V2) | Fichiers |
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 2 lines
+      158  | Partage des actions | Collab host-authoritative (traitement 
+           + broadcast) | `EditorOpBus`/`EditorSession` |
+      159  | Runtime piloté | `PhysicsSession`, `World3D`, `InputControll
+           er` | `cpp/game/physics/`, `qml/world3d/` |
+      160  | Réseau/collab | Catway, `EditorSession` host-authoritative |
+            `cpp/communication/`, `cpp/editor/network/` |
+      161 +| Adaptateur agents (doc 14) | `LauncherManager` (cycle d'opér
+          +ations longues, statuts, erreurs — pas de lancement de process
+          +) | `cpp/launcher/launcher_manager.{h,cpp}` |                 
+      162 +| Journal d'événements métier | signaux existants à adapter (p
+          +as de bus unifié en V2) | `cpp/game/game.*`, `cpp/editor/ops/`
+          +, `cpp/game/physics/item_snapable_events.*` |                 
+      163  | Domaine réseau d'arbitrage (D6) | `EditorSession` (rate-limi
+           t, séquencement, rebroadcast ; validation sémantique à créer) 
+           | `cpp/editor/network/` |
+      164  
+      165  ## 4. Flux type — « l'IA crée un élément de gameplay »
+
+● Maintenant le doc 14 :
+
+● Write(Meownopoly\doc\v3\14_ADAPTATEUR_AGENTS.md)
+  ⎿  Wrote 88 lines to Meownopoly\doc\v3\14_ADAPTATEUR_AGENTS.md
+       1 # 14 — Adaptateur d'agents & tchat ingame
+       3 > **Statut : cadrage (draft, créé le 2026-07-13).** Brique ident
+         ifiée dès le
+       4 > chantier M2 (doc 10) mais sans document dédié jusqu'ici — le d
+       5 > réintègre dans la vue d'ensemble. Ce document rassemble ce qui
+          est déjà
+       7 
+       8 ## 1. Rôle
+       9 
+         tre** dans la
+     … +119 lines (ctrl+o to expand)
+
+● Update(Meownopoly\doc\v3\README.md)  ⎿  Added 1 line
+      43  | 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | Verti
+          cal slice solo S1/S2/S3 (D30) : fil rouge, briques traversées, 
+          critères | **défini 2026-07-12** |
+      44  | 12 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | Spec du
+           banc d'essai hors-process (D26/R1) : job/verdict, préfiltre P0
+           in-game + phases P1→P5, corpus, critères de sortie | **spécifi
+          é 2026-07-12** |
+      45  | 13 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITI
+          ON.md) | Schéma de l'enveloppe de proposition (D11) : cycle de 
+          vie, verdict, transport, journal | **spécifié 2026-07-12** |
+      46 +| 14 | [`14_ADAPTATEUR_AGENTS.md`](./14_ADAPTATEUR_AGENTS.md) |
+         + Adaptateur d'agents (spawn/supervision CLIs, handshake arbitre
+         +) + tchat ingame (M2) | draft 2026-07-13 |                     
+      47  
+      48  ## Décisions structurantes déjà prises
+      49  
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 4 lines
+       98  | 2026-07-13 | S1 | `00_VISION.md` | ~252 (§8) | Coût 2 modèle
+           s assumé tel quel (pas d'arbitre allégé) + renvoi note personn
+           alité |
+       99  | 2026-07-13 | S1 | `00_VISION.md` | ~256 (§8) | Prérequis d'o
+           nboarding explicité : compte fournisseur + CLI installé, le je
+           u guide mais ne fournit pas |
+      100  | 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~633 (§2 
+           IA arbitre) | Nouvelle question ouverte : personnalité/objecti
+           fs propres de l'arbitre (au-delà du paramétrage D10) |
+      101 +| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~126 (fin §2)
+          + | Ajout briques §2.7 (adaptateur agents + tchat ingame, M2) e
+          +t §2.8 (journal d'événements métier, M5) — Q1 doc 01, option A
+          + |                                                            
+      102 +| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~160 (§3 tabl
+          +eau) | Ajout lignes adaptateur agents (LauncherManager) et jou
+          +rnal d'événements (signaux existants) |                       
+      103 +| 2026-07-13 | S1 | `14_ADAPTATEUR_AGENTS.md` | — | Création d
+          +u doc 14 : adaptateur d'agents & tchat ingame (rôle, responsab
+          +ilités, socle V2, questions ouvertes) |                       
+      104 +| 2026-07-13 | S1 | `README.md` (v3) | ~46 (table) | Ajout lig
+          +ne doc 14 dans l'ordre de lecture |                           
+      105  
+      106  ## 5. Questions/réponses en attente (inter-sessions)
+      107  
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line
+      53  | 11 | `11_VERTICAL_SLICE.md` | à traiter | slice solo S1/S2/S3
+           |
+      54  | 12 | `12_BANC_ESSAI_R1.md` | à traiter | banc hors-process (m
+          eow_testbench) |
+      55  | 13 | `13_ENVELOPPE_PROPOSITION.md` | à traiter | schéma envel
+          oppe/verdict |
+      56 +| 14 | `14_ADAPTATEUR_AGENTS.md` | créé S1 (2026-07-13) | rédig
+         +é pendant la revue du doc 01 ; à relire par Antoine/Valou en fi
+         +n de revue |                                                   
+      57  
+      58  ## 3. Inventaire des briques logicielles V3 (issu de la 1re lec
+          ture générale, 2026-07-13)
+      59  
+
+● User declined to answer questions
+  ⎿  · Forme réseau de la passerelle de proposition/arbitrage (doc 01 §2.5) : 
+     nouvelle session dédiée, extension d'EditorSession, ou décision différée ? 
+     (Nouvelle session dédiée (Recommandé) / Étendre EditorSession / Différer)
+
+● Qu'aimeriez-vous clarifier sur cette question 2 ? Je peux par exemple
+  détailler ce que recouvre concrètement le patron COLLAB_SESSION_PATTERN, ce
+  qu'impliquerait la double migration d'hôte avec deux sessions, ou comment le
+  mode runtime consommerait l'une ou l'autre option.
+
+✻ Cogitated for 2m 24s
+
+❯ Peux tu définir un peu mieux ce dont tu parles et ce que ca implique          
+
+● Reprenons depuis le début : de quoi je parle exactement
+
+  Ce qu'est une « session » dans votre code aujourd'hui
+
+  Catway, c'est le transport brut : des paquets UDP P2P entre pairs. Au-dessus,
+  chaque domaine fonctionnel du jeu a sa propre « session », c'est-à-dire une
+  classe C++ qui définit :
+
+  - une plage de types de messages (le 1er octet du paquet) pour cohabiter sur
+  le même transport : GameSession utilise 0x01–0x11, EditorSession 0x20+,
+  PhysicsSession 0x40+ ;
+  - un modèle d'autorité host-authoritative : les clients envoient des
+  intentions, l'hôte valide/applique/rebroadcaste ;
+  - un cycle de vie : démarrage (startAsHost/startAsClient), handshake d'entrée
+  (Hello → full-sync de l'état), arrêt, et pour l'éditeur la migration d'hôte
+  (élection, promotion, resync).
+
+  COLLAB_SESSION_PATTERN.md (doc V2) décrit justement ce moule pour pouvoir en
+  créer d'autres.
+
+  Ce que la V3 doit transporter de nouveau
+
+  Le pipeline de proposition (docs 11/13) génère de nouveaux flux réseau,
+  uniquement en mode collab et runtime (en solo tout est local, aucun réseau) :
+
+  1. client → hôte : l'enveloppe de proposition (intention, opérations, source
+  QML/JS jusqu'à 20 KB) — avec garanties « commit » (ACK applicatif, retry,
+  dédup, chantier M3) ;
+  2. hôte → auteur : le verdict (accepté/amendé/rejeté + raisons) ;
+  3. hôte → tous : l'application des effets validés + l'entrée de journal
+  répliquée ;
+  4. plus tard : le bus d'état mémoire (deltas 30 Hz, snapshots — D35) et le
+  checkpoint de migration (D37).
+
+  La question 2, c'est : dans quelle « boîte » réseau ces messages vivent-ils ?
+
+  Option 1 — Nouvelle session dédiée (ex. ProposalSession)
+
+  On crée une paire classe/protocole neuve sur le moule existant, avec sa propre
+  plage (ex. 0x60+).
+
+  Ce que ça implique concrètement :
+  - Plus de travail initial : nouvelle classe C++, son protocole, son handshake,
+  son câblage dans main.qml, et il faudra étendre la migration d'hôte pour
+  qu'elle couvre deux sessions (l'éditeur + celle-ci) de façon coordonnée (le
+  checkpoint D37 devra de toute façon orchestrer ça).
+  - En échange : l'arbitrage est indépendant de l'éditeur. Quand vous livrerez
+  le 3e mode (partie runtime co-construite, D23), il n'y a pas d'éditeur ouvert
+  — la session de proposition tourne telle quelle à côté de
+  GameSession/PhysicsSession. Rien à re-migrer. Et zéro risque de casser le
+  collab éditeur V2 qui marche aujourd'hui.
+
+  Option 2 — Étendre EditorSession
+
+  On ajoute les types Proposal, Verdict, etc. à la plage 0x20+ existante et les
+  handlers dans EditorSession.
+
+  Ce que ça implique concrètement :
+  - Beaucoup moins de code maintenant : le cycle Hello/FullSync/migration existe
+  déjà, on greffe dessus. Le slice collab éditeur arrive plus vite.
+  - Mais : le jour du mode runtime, soit vous faites tourner une EditorSession
+  sans éditeur (conceptuellement bancal : son full-sync, son undo, ses ops n'ont
+  pas de sens en partie), soit vous extrayez à ce moment-là les messages de
+  proposition vers une session dédiée — c'est-à-dire l'option 1, mais payée plus
+  tard, avec un protocole déjà en circulation à migrer. Ça couple aussi la
+  pièce de gouvernance centrale du pivot au module éditeur.
+
+  Option 3 — Différer
+
+  On écrit les deux options dans le doc 01 §2.5 et on tranche à l'ouverture des
+  chantiers. C'est sans coût pour le vertical slice (solo = pas de réseau du
+  tout). Le risque est ailleurs : le doc 13 (enveloppe) et le doc 10 (M3)
+  parlent déjà de « transport commit », et si on commence M1/M3 sans avoir
+  choisi la boîte, on risque de figer des détails de protocole au mauvais
+  endroit.
+
+  En une phrase
+
+  C'est un choix entre payer maintenant une session propre qui servira aux trois
+  modes (option 1), aller plus vite sur l'éditeur en acceptant une dette à 
+  rembourser au mode runtime (option 2), ou repousser le choix puisque le slice
+  solo n'en dépend pas (option 3). Ma recommandation reste l'option 1, mais
+  l'option 3 est défendable si vous voulez garder la décision pour le moment où
+  vous aurez le slice solo sous les yeux.
+
+  Laquelle retenez-vous ?
+
+✻ Worked for 47s
+
+❯ option 1                                                                      
+
+● Option 1 actée. J'applique : décision tracée dans le doc 08 (nouvelle D40),
+  doc 01 §2.5 mis à jour, journal de suivi.
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 7 lines, removed 2 lines
+      106  sandbox (doc 04). C'est aussi **lui qui gouverne les règles** 
+           (D8) : il accepte
+      107  leur évolution, tandis que leur forme matérialisée est exécuté
+           e par les capacités
+      108  du jeu. Le prompt seul n'est ni un état persistant ni un moteu
+           r runtime.
+      109 -Point d'ancrage réseau pressenti : le même domaine d'autorité 
+          -que                                                           
+      110 -`EditorSession`. Le code V2 fournit déjà rate-limit, séquencem
+          -ent et rebroadcast,                                           
+      109 +Point d'ancrage réseau **tranché (D40, 2026-07-13)** : une **s
+          +ession dédiée**                                               
+      110 +(`ProposalSession`, nom indicatif) construite sur le patron   
+      111 +`COLLAB_SESSION_PATTERN`, avec sa **propre plage de types de m
+          +essages V3**                                                  
+      112 +(hors 0x01–0x11/0x20+/0x40+ existants) et la couche de fiabili
+          +té M3 —                                                       
+      113 +**pas une extension d'`EditorSession`** : l'arbitrage doit fon
+          +ctionner dans                                                 
+      114 +les trois modes (D23), y compris le runtime sans éditeur ouver
+          +t. Le code V2                                                 
+      115 +fournit déjà rate-limit, séquencement et rebroadcast,         
+      116  mais **pas une validation sémantique générique** des ops : la 
+           passerelle
+      117  d'arbitrage et ses validateurs sont donc une nouvelle responsa
+           bilité, pas un
+      118  simple branchement sur un validateur existant. Sous-cadrage D6
+            depuis levé :
+
+● Update(Meownopoly\doc\v3\08_DECISIONS_ET_QUESTIONS.md)
+  ⎿  Added 19 lines
+      581    local diverge demande `RequestStateSnapshot`. Coût quasi nul
+           , réutilise la
+      582    mécanique F05/D35.
+      583  
+      584 +### D40 — Transport des propositions : session réseau dédiée (
+          +pas d'extension d'EditorSession)                              
+      585 +- **Décision (2026-07-13).** Les enveloppes de proposition, ve
+          +rdicts et                                                     
+      586 +  messages associés (puis le bus d'état D35 et le checkpoint D
+          +37) transitent                                                
+      587 +  par une **session host-authoritative dédiée** (`ProposalSess
+          +ion`, nom                                                     
+      588 +  indicatif), construite sur le patron `COLLAB_SESSION_PATTERN
+          +` avec sa                                                     
+      589 +  **propre plage de types de messages V3** (sans chevauchement
+          + avec                                                         
+      590 +  Game 0x01–0x11 / Editor 0x20+ / Physics 0x40+) et la couche 
+          +de fiabilité                                                  
+      591 +  applicative M3.                                             
+      592 +- **Pourquoi.** L'arbitrage est le mécanisme central des **tro
+          +is modes**                                                    
+      593 +  (D23) ; le mode runtime co-construit n'a pas d'`EditorSessio
+          +n` ouverte.                                                   
+      594 +  Une session dédiée évite de coupler la gouvernance au module
+          + éditeur et                                                   
+      595 +  tout risque de régression sur le collab V2.                 
+      596 +- **Coût assumé.** Une session de plus à orchestrer : câblage,
+          + handshake, et                                                
+      597 +  migration d'hôte coordonnée entre sessions (le checkpoint D3
+          +7 orchestre).                                                 
+      598 +- **Alternatives écartées.** Étendre `EditorSession` (rapide p
+          +our le slice                                                  
+      599 +  collab éditeur, mais dette à rembourser au mode runtime avec
+          + un protocole                                                 
+      600 +  déjà en circulation) ; différer (risque de figer des détails
+          + de transport                                                 
+      601 +  au mauvais endroit dans M1/M3).                             
+      602 +                                                              
+      603  ## 2. Questions ouvertes (par thème)
+      604  
+      605  Cette section reste le registre synthétique proche des décisio
+           ns. Le questionnaire
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 2 lines
+      103  | 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~160 (§3 tabl
+           eau) | Ajout lignes adaptateur agents (LauncherManager) et jou
+           rnal d'événements (signaux existants) |
+      104  | 2026-07-13 | S1 | `14_ADAPTATEUR_AGENTS.md` | — | Création d
+           u doc 14 : adaptateur d'agents & tchat ingame (rôle, responsab
+           ilités, socle V2, questions ouvertes) |
+      105  | 2026-07-13 | S1 | `README.md` (v3) | ~46 (table) | Ajout lig
+           ne doc 14 dans l'ordre de lecture |
+      106 +| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~109 (§2.5) |
+          + Q2 doc 01 tranchée : transport des propositions = session déd
+          +iée (D40), pas d'extension d'EditorSession |                  
+      107 +| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~578 (fin
+          + §1) | Nouvelle décision D40 : ProposalSession dédiée (patron 
+          +COLLAB_SESSION_PATTERN, plage messages V3 propre, fiabilité M3
+          +) |                                                           
+      108  
+      109  ## 5. Questions/réponses en attente (inter-sessions)
+      110  
+
+● D40 enregistrée. Passons à la question 3.
+
+  Question 3 en détail — où s'exécute le préfiltre mécanique P0
+
+  Ce qu'est P0. Dans le pipeline de validation (doc 12 §1 et §3), P0 est la
+  toute première barrière, purement mécanique et quasi gratuite : parser le
+  QML/JS, vérifier l'allow-list d'imports (D34), la taille ≤ 20 KB, et calculer
+  le requestType de l'enveloppe (data_safe/structure/rules/code — doc 13). Elle
+  rejette immédiatement les cas triviaux (ex. import QtWebSockets) sans payer ni
+  l'arbitre LLM ni le spawn du banc d'essai. Le doc 12 dit qu'elle tourne «
+  dans le jeu » — mais en collab, « le jeu » tourne chez chaque pair, et les
+  docs ne précisent pas chez qui : le schéma du doc 01 §1 la place chez l'hôte,
+  après le transport de l'enveloppe.
+
+  Pourquoi ça compte. Deux propriétés sont en tension :
+
+  - L'autorité. Le calcul du requestType par P0 est ce qui rend le plancher
+  d'arbitrage D25 non contournable (une enveloppe contenant du code est code,
+  quoi qu'en dise l'IA). Si l'hôte fait confiance à un P0 exécuté chez un
+  client, un client modifié/malveillant pourrait mentir — contraire à la posture
+  « pairs hostiles » (doc 04).
+  - La latence d'itération. Le scénario S3 du slice exige que l'IA converge en ≤
+  2 itérations sur les erreurs mécaniques. Si chaque erreur triviale (import
+  interdit, source trop grosse) doit faire l'aller-retour réseau client → hôte →
+  verdict → client, on ajoute de la latence et du trafic pour rien, et on
+  consomme la file de propositions de l'hôte.
+
+  Les trois options :
+
+  1. Hôte + copie côté auteur (ma recommandation). P0 s'exécute toujours chez 
+  l'hôte (c'est lui qui fait foi : requestType, routage D25) et aussi chez 
+  l'auteur avant l'envoi, en best-effort : la passerelle MCP locale du client
+  rejette immédiatement une source manifestement interdite, sans réseau. Le même
+  code C++ tourne aux deux endroits (aucune duplication de logique). Coût :
+  quasi nul. C'est le classique « valider tôt côté client pour l'UX, revalider
+  côté serveur pour la sécurité ».
+  2. Hôte uniquement. Un seul point d'exécution, plus simple à raisonner ; l'IA
+  cliente paie un aller-retour réseau pour chaque erreur triviale. Acceptable au
+  MVP puisque le slice est solo (auteur = hôte), mais à documenter.
+  3. Client uniquement. Économique en réseau mais l'hôte ferait confiance au
+  préfiltre d'un pair — incompatible avec la posture de sécurité. Je la
+  mentionne pour être complet, je la déconseille fermement.
+
+  Ce que la réponse modifiera : le doc 12 §3 (préciser « P0 chez l'hôte, copie
+  best-effort chez l'auteur » ou « hôte seul ») et une note dans le doc 13 (le
+  requestType reste calculé par la passerelle de l'hôte, jamais repris de
+  l'enveloppe reçue).
+
+  Quelle option retenez-vous ?
+
+✻ Sautéed for 1m 33s
+
+❯ pense a definir techniqizment les concepts qoe tu avance au dela de la        
+  problematique. une definition courte. option 1                                
+
+● Noté pour les définitions — je le fais dès la question 4, et je l'enregistre
+  dans ma mémoire pour les prochaines sessions. J'applique d'abord l'option 1 de
+  la question 3.
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 8 lines
+       95  D34, taille ≤ 20 KB) tourne **dans le jeu** avant même de spaw
+           ner le banc —
+       96  inutile de payer un process pour un import interdit.
+       97  
+       98 +**Localisation de P0 en collab (précision 2026-07-13).** P0 s'
+          +exécute                                                       
+       99 +**toujours chez l'hôte** — c'est ce P0-là qui fait foi (calcul
+          + du                                                           
+      100 +`requestType`, routage D25) — **et aussi chez l'auteur avant l
+          +'envoi**, en                                                  
+      101 +best-effort : la passerelle MCP locale du client rejette imméd
+          +iatement une                                                  
+      102 +source manifestement invalide sans aller-retour réseau (fail-f
+          +ast, S3).                                                     
+      103 +Même code C++ aux deux endroits, pas de duplication de logique
+          + ; l'hôte ne                                                  
+      104 +fait **jamais** confiance au résultat du P0 d'un pair.        
+      105 +                                                              
+      106  | Phase | Contenu | Échec type |
+      107  |-------|---------|------------|
+      108  | **P1 — Reconstruction** | recharge le snapshot (carte + mémo
+           ire), démarre le moteur physique | `snapshot_invalid` (bug int
+           erne, pas la faute de l'artefact) |
+
+● Update(Meownopoly\doc\v3\13_ENVELOPPE_PROPOSITION.md)
+  ⎿  Added 4 lines
+      108  - **`requestType`** est **calculé par la passerelle** (P0), ja
+           mais déclaré
+      109    seul par l'IA : une enveloppe contenant `artifacts[]` est `c
+           ode` quoi
+      110    qu'en dise l'auteur — c'est ce qui rend le plancher D25 non 
+           contournable.
+      111 +  **En collab (précision 2026-07-13)** : le `requestType` qui 
+          +fait foi est                                                  
+      112 +  **recalculé par le P0 de l'hôte à réception** — jamais repri
+          +s du champ                                                    
+      113 +  porté par une enveloppe reçue d'un pair. Le P0 exécuté chez 
+          +l'auteur                                                      
+      114 +  (fail-fast, doc 12 §3) n'est qu'un confort local.           
+      115    Catégories : `data_safe` (poses/écritures dans les quotas), 
+           `structure`
+      116    (suppressions, resize, roster), `rules` (modification du règ
+           lement D12),
+      117    `code` (au moins un artefact QML/JS).
+
+  Wrote 2 memories (ctrl+o to expand)
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 2 lines
+      105  | 2026-07-13 | S1 | `README.md` (v3) | ~46 (table) | Ajout lig
+           ne doc 14 dans l'ordre de lecture |
+      106  | 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~109 (§2.5) |
+            Q2 doc 01 tranchée : transport des propositions = session déd
+           iée (D40), pas d'extension d'EditorSession |
+      107  | 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~578 (fin
+            §1) | Nouvelle décision D40 : ProposalSession dédiée (patron 
+           COLLAB_SESSION_PATTERN, plage messages V3 propre, fiabilité M3
+           ) |
+      108 +| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~97 (§3) | Q3 doc 
+          +01 : P0 exécuté chez l'hôte (fait foi) + copie best-effort che
+          +z l'auteur (fail-fast), même code aux deux endroits |         
+      109 +| 2026-07-13 | S1 | `13_ENVELOPPE_PROPOSITION.md` | ~109 (§3 n
+          +otes) | requestType recalculé par le P0 de l'hôte à réception,
+          + jamais repris d'une enveloppe reçue |                        
+      110  
+      111  ## 5. Questions/réponses en attente (inter-sessions)
+      112  
+
+● Question 3 réglée (docs 12 et 13 précisés, journal à jour). Passons à la
+  dernière question sur le doc 01.
+
+  Question 4 en détail — l'activation des modules gameplay par l'IA au MVP
+
+  Définitions courtes des concepts mobilisés :
+  - GameplayModuleManager (C++, cpp/game/modules/) : le gestionnaire V2 des
+  modules gameplay — des systèmes activables/désactivables par map qui ajoutent
+  une mécanique transverse : vie (health), inventaire, monnaie (currency),
+  stats, équipement, niveau/XP. Vérifié dans le code ce jour.
+  - Tool MCP : une fonction typée (nom + schéma de paramètres JSON) que le jeu
+  expose à l'IA via le canal ; c'est l'unité d'action de l'IA (ex.
+  editor_place).
+  - Manifeste MVP 10 tools (Q-E08) : la liste proposée (doc 09) des 10 tools que
+  le canal exposera au premier jalon — pose, lecture d'état, écriture mémoire,
+  soumission d'artefact, verdict… C'est une des 6 questions encore ouvertes du
+  cadrage.
+  - Façade Meow.GameApi (D34) : l'unique objet API exposé au JS embarqué dans un
+  artefact (à la place des singletons du jeu) — memory.get/set, events.on,
+  stats.addModifier, etc. À distinguer des tools MCP : la façade sert au code
+  qui tourne dans la partie, les tools servent à l'IA au moment où elle crée.
+
+  Le constat. Le doc 01 §3 désigne les modules gameplay comme le « vocabulaire
+  gameplay » que l'IA compose — c'est un pilier de la vision (§2 du doc 00 :
+  composer les briques existantes). Or, dans l'état du cadrage, l'IA n'a aucun 
+  moyen d'activer ou configurer un module : aucun des 10 tools du manifeste MVP
+  ne le permet, et la façade D34 n'expose que stats.addModifier (modifier une
+  stat, pas activer le module stats). Seul un hook V2 existe
+  (setStatsModuleEnabled), non porté dans le manifeste. Il y a donc un écart
+  entre le discours (« les modules sont le vocabulaire de l'IA ») et le contrat
+  réel du MVP.
+
+  Les trois options :
+  1. Post-MVP (ma recommandation). Le vertical slice n'en a pas besoin (le fil
+  rouge « plaque piégée » n'utilise que stats via la façade). On note
+  explicitement dans le doc 01 §2.6 et dans Q-E08 : « activation/configuration
+  de modules = post-MVP » — l'écart devient un choix documenté au lieu d'un
+  trou.
+  2. MVP via un tool dédié. Ajouter un 11e tool module_config(id, enabled, 
+  params) au manifeste. Cohérent avec la vision, mais ça grossit le manifeste et
+  le slice ne l'exercera pas.
+  3. MVP via les mécanismes existants. Pas de tool dédié : l'activation d'un
+  module serait une opération d'édition ordinaire (portée par l'enveloppe, type
+  structure). À spécifier — c'est la voie la plus floue aujourd'hui.
+
+  Ce que la réponse modifiera : doc 01 §2.6 (une phrase), doc 09 Q-E08 (la table
+  des tools ou la liste post-MVP).
+
+  Quelle option retenez-vous ?
+✻ Cogitated for 1m 47s
+
+❯ précise le concept de Meow.api et son périmètre.  Définit ausis clairement le 
+  vertical slice. A priori on partirait sur 1 ou 2 mais donne moi les           
+  définitions avant de valider                                                  
+
+● Définition — la façade Meow.GameApi (D34, doc 04 §3.3)
+
+  Ce que c'est. Quand un artefact QML/JS généré par l'IA est instancié, le
+  sandbox le place dans un QQmlContext restreint (un contexte QML dédié) où tous
+  les singletons du jeu sont masqués — l'artefact ne peut pas toucher Game,
+  Catway, EditorOpBus, PhysicsSession, etc. À la place, il voit un seul objet :
+  Meow.GameApi. C'est le vocabulaire complet et exhaustif de ce qu'un
+  comportement généré a le droit de faire pendant qu'il tourne dans la partie.
+
+  Son périmètre MVP (arrêté par D34) :
+
+  ┌──────────────┬──────────────────────────────┬───────────────────────────┐
+  │   Domaine    │            Appels            │     Ce que ça permet      │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │              │                              │ lire/écrire l'espace      │
+  │ Mémoire      │ memory.get/set/onChanged     │ mémoire de sa tuile       │
+  │              │                              │ porteuse, réagir aux      │
+  │              │                              │ changements               │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │ Session      │ session.get                  │ lire la mémoire de la     │
+  │              │                              │ partie (lecture seule)    │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │              │                              │ s'abonner aux événements  │
+  │ Événements   │ events.on/emit               │ du jeu (entrée de zone…), │
+  │              │                              │  en émettre               │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │ Joueur/zone  │ player.position(),           │ percevoir qui est où      │
+  │              │ zone.playersInside()         │                           │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │              │                              │ modifier une stat d'un    │
+  │ Gameplay     │ stats.addModifier            │ joueur (le seul module V2 │
+  │              │                              │  exposé)                  │
+  ├──────────────┼──────────────────────────────┼───────────────────────────┤
+  │ Présentation │ dialogue.show, anim.play,    │ retour visuel/sonore      │
+  │              │ fx.spawn, sound.play         │                           │
+  └──────────────┴──────────────────────────────┴───────────────────────────┘
+
+  Explicitement hors MVP : téléportation, créer/détruire des tuiles, tout accès
+  réseau, écrire la mémoire d'autres tuiles. Chaque appel est soumis aux budgets
+  D34 (2 ms/handler, 30 émissions/s…) et au write-set déclaré dans l'enveloppe.
+
+  La distinction clé (source fréquente de confusion, d'où votre question) :
+  - Tools MCP = ce que l'IA peut faire au moment de créer (poser une zone,
+  soumettre un artefact) — surface côté canal.
+  - Meow.GameApi = ce que le code généré peut faire pendant la partie (réagir,
+  lire la mémoire, jouer un son) — surface côté sandbox.
+
+  Un module_config (option 2) serait un tool MCP (acte de création : « active le
+  module monnaie sur cette map »), pas une entrée de la façade.
+
+  Définition — le vertical slice (D30, doc 11)
+
+  Le concept général : un vertical slice est une implémentation minimale qui
+  traverse toutes les couches de l'architecture au moins une fois, de bout en
+  bout — « mince mais traversant » — pour prouver que l'ensemble tient, par
+  opposition à construire chaque couche à fond l'une après l'autre.
+
+  Le vôtre (doc 11) : en éditeur solo assisté (premier mode livré, D23), le fil
+  rouge est « plaque piégée : un chat qui marche dessus est projeté en l'air et 
+  perd 5 points, sauf s'il possède la case ». Trois scénarios : S1 création
+  (l'IA pose une zone + config mémoire + artefact JS), S2 proposition arbitrée
+  (arbitre → banc d'essai → application, journal complet), S3 rejet actionnable
+  (l'IA reçoit une erreur exploitable, corrige, re-soumet). Il traverse :
+  passerelle MCP, adaptateur agents/tchat, skill, enveloppe, arbitre, banc,
+  confinement runtime, mémoire config. Il exclut explicitement : réseau, bus
+  d'état 30 Hz, migration, bibliothèque.
+
+  Le lien avec la question 4 : la plaque piégée n'active aucun module —
+  stats.addModifier (déjà dans la façade) suffit. Donc :
+  - Option 1 (post-MVP) = cohérente avec le slice : on n'implémente rien que le
+  slice ne testera pas ; on documente l'écart.
+  - Option 2 (tool module_config au MVP) = la vision est servie plus tôt (les
+  modules sont réellement pilotables par l'IA dès le premier jalon), mais ce 11e
+  tool ne serait exercé par aucun scénario du slice — il arriverait non testé
+  de bout en bout, et grossit le manifeste (coût en tokens à chaque invocation,
+  doc 02 §3).
+
+  Une voie médiane honnête existe : option 1 maintenant, avec module_config 
+  explicitement nommé comme premier tool post-slice (au lieu d'un vague «
+  post-MVP »). Vous validez quoi — 1, 2, ou la médiane ?
+
+✻ Churned for 36s
+
+❯ Que faire dans le cas ou un artefact propose l'usage d'un module. I.e une     
+  lecture de session nécessaire pour un artefact/item qml proposé               
+
+● Excellente question — vous venez de mettre le doigt sur un trou du cadrage :
+  la notion de dépendance d'un artefact. Posons-le proprement.
+
+  Le problème : un artefact qui dépend d'un module
+
+  Définition courte préalable — dépendance d'artefact : une capacité que le code
+  généré appelle via la façade (stats.addModifier, session.get…) mais dont la
+  disponibilité dépend de l'état de la map (module activé ou non), pas du code
+  lui-même.
+
+  Concrètement : l'IA propose une plaque qui fait stats.addModifier(...). Si le
+  module stats n'est pas activé sur cette map, que se passe-t-il ? Aujourd'hui
+  les docs ne le disent pas, et les trois issues possibles par défaut sont
+  toutes mauvaises :
+  - Échec silencieux au runtime : l'artefact passe le banc, s'applique, et ne
+  fait rien en partie — le pire cas (le joueur voit un item mort).
+  - Activation implicite : appeler la façade active le module à la volée — effet
+  de bord caché que l'arbitre n'a jamais jugé.
+  - Rejet sec sans explication : l'IA ne peut pas converger (contraire à S3).
+
+  Et remarquez que votre vertical slice est déjà concerné : la plaque piégée du
+  fil rouge utilise stats.addModifier — elle suppose le module stats actif.
+
+  Le mécanisme que je propose (3 morceaux)
+
+  1. Dépendances déclarées dans l'enveloppe. Le bloc artifacts[] du doc 13 porte
+  déjà declaredWriteSet (les clés que l'artefact écrira) et listensTo (les
+  événements qu'il écoute). On ajoute un champ frère : requiresModules: 
+  ["stats"] — déclaré par l'IA, vérifié mécaniquement : en P0 contre l'état réel
+  de la map (module absent → rejet immédiat, avant l'arbitre), et au banc (le
+  snapshot du job doit inclure l'état des modules, ce qui manque d'ailleurs au
+  schéma du job doc 12 §2.3).
+
+  2. Erreur actionnable. Le rejet est {code: "missing_module", details: "le 
+  module 'stats' n'est pas actif sur cette map", retryable: true} — l'IA sait
+  exactement quoi corriger (S3).
+
+  3. Comment l'IA satisfait la dépendance — c'est là que votre question rejoint
+  la question 4, avec deux variantes :
+  - Variante A (= option 2 renforcée) : le tool module_config entre au manifeste
+  MVP. L'IA peut alors inclure l'activation du module dans la même enveloppe
+  que l'artefact — lot atomique (« tout-ou-rien », D14 : soit toutes les
+  opérations de l'enveloppe s'appliquent, soit aucune). L'arbitre juge le tout
+  d'un bloc (« cette proposition active le module stats ET pose la plaque »).
+  L'activation serait de requestType: structure. Le slice l'exercerait
+  naturellement (S1 activerait stats).
+  - Variante B (= option 1 + dépendances) : pas de tool au MVP ; l'activation
+  des modules reste un geste humain dans l'UI de l'éditeur. L'IA se contente de
+  déclarer/vérifier, et le rejet missing_module dit au joueur « active le module
+  stats puis redemande ». Moins fluide, mais manifeste plus petit.
+
+  Mon avis : votre scénario montre que la dépendance arrive dès le premier
+  artefact réaliste — la variante A est la plus cohérente avec « l'IA compose
+  les briques gameplay », et elle reste petite (un tool, un champ, une
+  vérification).
+
+  On part sur A ou B ? (Dans les deux cas j'ajoute requiresModules + l'état des
+  modules dans le snapshot du banc + le code d'erreur — c'est le socle commun.)
+
+✻ Cooked for 46s
+
+❯ A                                                                             
+
+● Variante A actée. J'applique les modifications en cascade (docs 13, 12, 09,
+  01, 08, 11), puis les corrections de cohérence du doc 01 annoncées en début de
+  revue.
+
+● Update(Meownopoly\doc\v3\13_ENVELOPPE_PROPOSITION.md)
+  ⎿  Added 2 lines, removed 1 line
+      92        "targetUuid": "tuile porteuse (optionnel)",
+      93        "executionPolicy": "host_only | replicated_revalidated",
+      94        "declaredWriteSet": ["<uuid>/state/score"],
+      95 -      "listensTo": ["zoneEntered", "memory:<uuid>/config/owner"
+         -]                                                              
+      95 +      "listensTo": ["zoneEntered", "memory:<uuid>/config/owner"
+         +],                                                             
+      96 +      "requiresModules": ["stats"]                             
+      97      }
+      98    ],
+      99  
+
+● Update(Meownopoly\doc\v3\13_ENVELOPPE_PROPOSITION.md)
+  ⎿  Added 11 lines
+      127    (write-set observé, doc 12 §3) ; la validation mécanique vér
+           ifie les
+      128    opérations. Il alimente aussi l'undo ciblé (D15/D28) et la d
+           étection de
+      129    cycles (D12).
+      130 +- **`requiresModules`** (ajout 2026-07-13, D41) : dépendances 
+          +de l'artefact                                                 
+      131 +  vers les **modules gameplay** (`GameplayModuleManager`). Vér
+          +ification                                                     
+      132 +  **mécanique** : P0 rejette `{code: "missing_module", retryab
+          +le: true}` si un                                              
+      133 +  module requis n'est ni actif sur la map ni activé par une op
+          +ération                                                       
+      134 +  `module_config` **du même lot** ; le banc rejoue avec l'état
+          + des modules                                                  
+      135 +  porté par le snapshot (doc 12 §2.3). Jamais d'activation imp
+          +licite par un                                                 
+      136 +  appel de façade.                                            
+      137 +- **Activation de module = opération** : `module_config(id, en
+          +abled, params?)`                                              
+      138 +  est un tool MCP du manifeste MVP (D41) qui produit une opéra
+          +tion de                                                       
+      139 +  `requestType: structure`, intégrable au même lot atomique qu
+          +e l'artefact qui                                              
+      140 +  en dépend — l'arbitre juge l'ensemble d'un bloc.            
+      141  - **`operations[].clientOpId`** : déduplication idempotente au
+            rejeu réseau
+      142    (Q-F06) — même id, même effet, appliqué une fois.
+      143  - **Tout-ou-rien** (D14) : l'enveloppe est le **lot atomique**
+           . Soit toutes
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 2 lines, removed 1 line
+      65    "benchVersion": 1,
+      66    "snapshot": {
+      67      "map": { /* sérialisation map existante : mapInfo + snapabl
+          eTiles */ },
+      68 -    "memory": { /* namespaces config+state par uuid (doc 05) */
+         - }                                                             
+      68 +    "memory": { /* namespaces config+state par uuid (doc 05) */
+         + },                                                            
+      69 +    "modules": { /* état d'activation des modules gameplay (D41
+         +), ex. {"stats": true} */ }                                    
+      70    },
+      71    "artifact": {
+      72      "source": "…QML/JS…",
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 3 lines, removed 2 lines
+       93  ## 3. Phases de test (P1→P5)
+       94  
+       95  Le préfiltre statique **P0** (parse QML, allow-list d'imports/
+           types/fonctions
+       96 -D34, taille ≤ 20 KB) tourne **dans le jeu** avant même de spaw
+          -ner le banc —                                                 
+       97 -inutile de payer un process pour un import interdit.          
+       96 +D34, taille ≤ 20 KB, **vérification des `requiresModules`** co
+          +ntre l'état de la                                             
+       97 +map et les opérations du lot — D41) tourne **dans le jeu** ava
+          +nt même de                                                    
+       98 +spawner le banc — inutile de payer un process pour un import i
+          +nterdit.                                                      
+       99  
+      100  **Localisation de P0 en collab (précision 2026-07-13).** P0 s'
+           exécute
+      101  **toujours chez l'hôte** — c'est ce P0-là qui fait foi (calcul
+            du
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 1 line, removed 1 line
+      107  
+      108  | Phase | Contenu | Échec type |
+      109  |-------|---------|------------|
+      110 -| **P1 — Reconstruction** | recharge le snapshot (carte + mémo
+          -ire), démarre le moteur physique | `snapshot_invalid` (bug int
+          -erne, pas la faute de l'artefact) |                           
+      110 +| **P1 — Reconstruction** | recharge le snapshot (carte + mémo
+          +ire + état des modules gameplay, D41), démarre le moteur physi
+          +que | `snapshot_invalid` (bug interne, pas la faute de l'artef
+          +act) |                                                        
+      111  | **P2 — Instanciation** | crée l'artefact dans le contexte re
+           streint (même façade `Meow.GameApi` que le runtime), rattaché 
+           à `targetUuid` | `load_failed` (erreur QML), `load_timeout` (>
+            5 s : boucle au chargement) |
+      112  | **P3 — Simulation à vide** | `N_IDLE` ticks de simulation (d
+           éfaut **600** ticks = 10 s à 60 Hz, accélérés : le banc ne dor
+           t pas entre les ticks) | `tick_budget` (> 0,5 ms/tick soutenu)
+           , `runaway_alloc` |
+      113  | **P4 — Stimulation** | rejoue les `stimuli` du job : pour ch
+           aque hook que l'artefact écoute (`events.on`), le jeu a généré
+            un scénario — entrée/sortie de zone d'un acteur fantôme, écri
+           ture mémoire, action joueur simulée, ticks | `event_budget` (>
+            2 ms/handler), `event_flood` (> 30 émissions/s), `memory_quot
+           a` (écritures hors quotas D15) |
+
+● Update(Meownopoly\doc\v3\09_QUESTIONNAIRE_CADRAGE.md)
+  ⎿  Added 2 lines, removed 1 line
+      102  
+      103  ### Q-E08 — Sous-ensemble exact des tools portés au MVP — **B1
+           **
+      104  
+      105 -Familles retenues (doc 02 §5). **Proposition de manifeste MVP 
+          -— 10 tools** :                                                
+      105 +Familles retenues (doc 02 §5). **Proposition de manifeste MVP 
+          +— 11 tools**                                                  
+      106 +(le 11e, `module_config`, ajouté par D41 le 2026-07-13) :     
+      107  
+      108  
+      109  | Tool                                                        
+           | Rôle                                                        
+                               | Regroupe                                
+                                 |
+
+● Update(Meownopoly\doc\v3\09_QUESTIONNAIRE_CADRAGE.md)
+  ⎿  Added 1 line
+      118  | `events_poll(cursor)`                                       
+           | resynchronisation en cours de tâche                         
+                               | —                                       
+                                 |
+      119  | `screenshot(view?)`                                         
+           | retour visuel (plafond D22)                                 
+                               | —                                       
+                                 |
+      120  | `arbiter_verdict(proposalId, verdict, reasons, amendment?)` 
+           | **token arbitre uniquement**                                
+                               | —                                       
+                                 |
+      121 +| `module_config(id, enabled, params?)` (D41)                 
+          +| activation/config d'un module gameplay ; op `structure`, sat
+          +isfait les `requiresModules` d'un artefact du même lot | setSt
+          +atsModuleEnabled (hook, généralisé) |                         
+      122  
+      123  
+      124  - **Post-MVP** (hors manifeste v1) : `runtime_input` (piloter 
+           joueur/NPC),
+
+● Update(Meownopoly\doc\v3\08_DECISIONS_ET_QUESTIONS.md)
+  ⎿  Added 22 lines
+      600    déjà en circulation) ; différer (risque de figer des détails
+            de transport
+      601    au mauvais endroit dans M1/M3).
+      602  
+      603 +### D41 — Dépendances de modules des artefacts + tool `module_
+          +config` au MVP                                                
+      604 +- **Décision (2026-07-13).** Un artefact déclare ses dépendanc
+          +es vers les                                                   
+      605 +  modules gameplay (`GameplayModuleManager`) via un champ **`r
+          +equiresModules`**                                             
+      606 +  de l'enveloppe (doc 13 §3). Vérification **mécanique** : P0 
+          +rejette                                                       
+      607 +  `{code: "missing_module", retryable: true}` si un module req
+          +uis n'est ni                                                  
+      608 +  actif sur la map ni activé par une opération du même lot ; l
+          +e snapshot du                                                 
+      609 +  banc d'essai porte l'**état des modules** (doc 12 §2.3) pour
+          + tester                                                       
+      610 +  l'artefact dans les conditions réelles. **Jamais d'activatio
+          +n implicite**                                                 
+      611 +  par un appel de façade.                                     
+      612 +- **Tool au MVP.** `module_config(id, enabled, params?)` entre
+          + au manifeste                                                 
+      613 +  (11e tool, Q-E08) : il produit une opération de `requestType
+          +: structure`,                                                 
+      614 +  intégrable au **lot atomique** de l'enveloppe (D14) — l'IA p
+          +eut activer un                                                
+      615 +  module et poser l'artefact qui en dépend dans la même propos
+          +ition, jugée                                                  
+      616 +  d'un bloc par l'arbitre.                                    
+      617 +- **Pourquoi.** Sans ce mécanisme, un artefact dépendant d'un 
+          +module inactif                                                
+      618 +  échoue silencieusement en partie (item mort), ou active le m
+          +odule par effet                                               
+      619 +  de bord non arbitré. Le fil rouge du slice (plaque piégée → 
+      620 +  `stats.addModifier`) rencontre ce cas dès S1.               
+      621 +- **Alternatives écartées.** Activation implicite à l'appel de
+          + façade (effet                                                
+      622 +  de bord caché de l'arbitrage) ; activation manuelle par le j
+          +oueur seulement                                               
+      623 +  (rejet `missing_module` non résoluble par l'IA, contraire à 
+          +S3).                                                          
+      624 +                                                              
+      625  ## 2. Questions ouvertes (par thème)
+      626  
+      627  Cette section reste le registre synthétique proche des décisio
+           ns. Le questionnaire
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 6 lines
+      120  à deux audiences (D11, doc 13).
+      121  
+      122  ### 2.6 Règles (doc 06, gouvernées par l'arbitre) & Bibliothèq
+           ue (doc 07)
+      123 +> **Modules gameplay pilotables par l'IA (D41, 2026-07-13).** 
+          +Les modules                                                   
+      124 +> (`GameplayModuleManager` : vie, inventaire, monnaie, stats, 
+          +équipement,                                                   
+      125 +> niveau/XP) sont activables par l'IA via le tool `module_conf
+          +ig` (manifeste                                                
+      126 +> MVP) ; un artefact déclare ses dépendances `requiresModules`
+          +, vérifiées                                                   
+      127 +> mécaniquement (P0 + banc). Cf. doc 13 §3, doc 12 §2.3/§3.   
+      128 +                                                              
+      129  Les **règles sont gouvernées par l'arbitre** (D8, §2.5) — pas 
+           de moteur générique
+      130  séparé acté ; leur forme acceptée doit être exécutable par le 
+           jeu. Il n'y
+      131  a **pas de tour imposé** (il s'introduit par prompt ou proposi
+           tion acceptée). Les
+
+● Maintenant le doc 11 (le slice exerce désormais module_config) :
+
+● Update(Meownopoly\doc\v3\11_VERTICAL_SLICE.md)
+  ⎿  Added 3 lines, removed 2 lines
+      47  1. Invocation in-app (tchat ingame) : l'app spawne `claude -p` 
+          (puis Codex en
+      48     variante) avec config MCP + token `proposer` + pré-prompt sk
+          ill (D10/D17/D20).
+      49  2. L'IA observe : `state_query(tiles)`, `screenshot` (≤ 5, D22)
+          .
+      50 -3. L'IA agit : `editor_place(zone, …)`, `memory_set(config, …)`
+         -,                                                              
+      51 -   `artifact_submit(source JS, target uuid)`.                  
+      50 +3. L'IA agit : `module_config(stats, enabled)` (dépendance de l
+         +'artefact,                                                     
+      51 +   D41), `editor_place(zone, …)`, `memory_set(config, …)`,     
+      52 +   `artifact_submit(source JS, target uuid, requiresModules: ["
+         +stats"])`.                                                     
+      53  4. L'élément apparaît dans l'éditeur, son comportement est acti
+          f, sa mémoire
+      54     visible.
+      55  
+
+● Update(Meownopoly\doc\v3\11_VERTICAL_SLICE.md)
+  ⎿  Added 1 line, removed 1 line
+       96  | Brique (traversée a minima) | Chantier doc 10 | Décisions |
+       97  |-----------------------------|-----------------|-----------|
+       98  | Passerelle MCP streamable HTTP + tokens par rôle | M1 | D20/
+           D21 |
+       99 -| Tools (sous-ensemble du manifeste MVP à 10 tools traversé pa
+          -r le slice — `help` et `roster_edit` non requis) : `state_quer
+          -y`, `editor_place`, `editor_edit`, `memory_set`, `artifact_sub
+          -mit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-
+          -E08 |                                                         
+       99 +| Tools (sous-ensemble du manifeste MVP à 11 tools traversé pa
+          +r le slice — `help` et `roster_edit` non requis) : `state_quer
+          +y`, `editor_place`, `editor_edit`, `memory_set`, `module_confi
+          +g` (D41), `artifact_submit`, `events_poll`, `screenshot`, `arb
+          +iter_verdict` | M1 | Q-E08 |                                  
+      100  | Adaptateur agents (spawn `claude -p`, supervision, pré-promp
+           t) + tchat ingame minimal | M-adaptateur | D10/D17 |
+      101  | Skill générée du manifeste, injectée en pré-prompt | M-skill
+            | D17 |
+      102  | Handshake + challenge arbitre | M-adaptateur | D24 |
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 4 lines, removed 4 lines
+      37  le fait de cacher la proposition à l'arbitre : sinon D6 serait 
+          impossible.
+      38  
+      39  Le sandbox reste une barrière de sécurité indépendante de l'arb
+          itre. L'ordre
+      40 -exact entre analyse statique peu coûteuse et arbitrage LLM rest
+         -e à mesurer : un                                               
+      41 -préfiltre mécanique peut rejeter immédiatement une source manif
+         -estement interdite,                                            
+      42 -puis l'arbitre juge la viabilité, puis l'artefact accepté subit
+         - la validation                                                 
+      43 -complète avant exécution. Les propositions sans code ne passent
+         - pas par le                                                    
+      40 +est **figé depuis** (docs 12/13, mise à jour 2026-07-13) : **pr
+         +éfiltre P0**                                                   
+      41 +(chez l'hôte — copie best-effort chez l'auteur pour le fail-fas
+         +t, doc 12 §3) →                                                
+      42 +**arbitre** (selon le grain configuré D25) → **banc d'essai hor
+         +s-process                                                      
+      43 +P1→P5** (D26) → application. Les propositions sans code ne pass
+         +ent pas par le                                                 
+      44  sandbox QML, mais restent soumises aux validateurs de schéma, d
+          'autorisation et
+      45  de quotas du canal.
+      46  
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 6 lines, removed 4 lines
+      73  ### 2.3 Le bac à sable QML (doc 04) — pièce critique
+      74  Reçoit le QML généré par l'IA (D1), le **valide** et tente de l
+          e charger dans une
+      75  frontière restreinte (pas d'accès disque/réseau/process, API al
+          low-list, budget).
+      76 -La robustesse de cette frontière in-process n'est pas acquise :
+         - R1 doit décider                                               
+      77 -si un moteur/processus séparé ou un repli déclaratif est nécess
+         -aire (doc 04).                                                 
+      78 -La préférence produit est le **même moteur QML avec JS borné/in
+         -strumenté**, mais                                              
+      79 -elle reste conditionnelle à l'arrêt préemptif réel d'un script 
+         -bloquant.                                                      
+      76 +Structure **à deux étages tranchée depuis** (D26, mise à jour 2
+         +026-07-13) :                                                   
+      77 +la **validation** est un banc d'essai hors-process (doc 12 — un
+         +e boucle                                                       
+      78 +infinie tue le process de test, jamais le jeu) ; l'**exécution 
+         +en partie**                                                    
+      79 +reste un confinement in-process (D13, contenu arrêté par D34). 
+         +Le prototype                                                   
+      80 +R1 est recentré sur ce second étage : masquage réel des singlet
+         +ons,                                                           
+      81 +allow-list, budgets runtime.                                   
+      82  
+      83  ### 2.4 L'espace mémoire par `snapableElement` (doc 05)
+      84  Chaque `ItemSnapable` gagne un **set de variables sérialisables
+          **. Le cadrage
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 4 lines, removed 2 lines
+      86  persistance, undo) et **état runtime** (autorité hôte, dernier 
+          état, non undoable
+      87  au grain de l'écriture). Cette séparation évite de sauvegarder 
+          accidentellement
+      88  un état éphémère dans la map ou de restaurer toute la partie lo
+          rs d'un undo.
+      89 -La cadence et le transport du flux runtime restent à mesurer ; 
+         -« 30 Hz reliable »                                             
+      90 -n'est pas une décision V3.                                     
+      89 +Cadence et transport du flux runtime **tranchés depuis** (D35, 
+         +mise à jour                                                    
+      90 +2026-07-13) : delta coalescé 30 Hz max par (tuile, clé) + snaps
+         +hots de                                                        
+      91 +réparation/structurel + resync à la demande, garanties hybrides
+      92 +commits/supersedable, plafonds chiffrés.                       
+      93  **Réactif** : une écriture (locale ou reçue par snapshot) émet 
+          un signal QML
+      94  (`userMemoryChanged`) auquel les règles custom / comportements 
+          générés s'abonnent —
+      95  c'est le **bus de variables** entre la donnée synchronisée et l
+          e JS embarqué.
+
+● Update(Meownopoly\doc\v3\01_ARCHITECTURE_CIBLE.md)
+  ⎿  Added 1 line, removed 1 line
+      202     configuration durable suivent une transaction d'édition. Le
+           s mutations d'état
+      203     runtime deviennent des intentions adressées à l'hôte, puis 
+           des mises à jour à
+      204     sémantique « dernier état » vers les pairs. Elles ne sont p
+           as undoables au
+      205 -   grain de l'écriture. La cadence, la fiabilité et le format 
+          -sont à trancher.                                              
+      205 +   grain de l'écriture. Cadence, fiabilité et format tranchés 
+          +par D35.                                                      
+      206     La source cliente transite vers l'hôte pour arbitrage sans 
+           broadcast
+      207     systématique. Une propriété de l'artefact choisit ensuite :
+            exécution hôte
+      208     seulement avec réplication des effets, ou exécution chez ch
+           aque pair après
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 7 lines
+      107  | 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~578 (fin
+            §1) | Nouvelle décision D40 : ProposalSession dédiée (patron 
+           COLLAB_SESSION_PATTERN, plage messages V3 propre, fiabilité M3
+           ) |
+      108  | 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~97 (§3) | Q3 doc 
+           01 : P0 exécuté chez l'hôte (fait foi) + copie best-effort che
+           z l'auteur (fail-fast), même code aux deux endroits |
+      109  | 2026-07-13 | S1 | `13_ENVELOPPE_PROPOSITION.md` | ~109 (§3 n
+           otes) | requestType recalculé par le P0 de l'hôte à réception,
+            jamais repris d'une enveloppe reçue |
+      110 +| 2026-07-13 | S1 | `13_ENVELOPPE_PROPOSITION.md` | ~97, ~126 
+          +(§3) | D41 : champ `requiresModules` dans artifacts[] + notes 
+          +(vérif P0, erreur missing_module, module_config = op structure
+          + du même lot) |                                               
+      111 +| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~67, ~95, ~101 | D
+          +41 : snapshot du job étendu à l'état des modules ; P0 vérifie 
+          +requiresModules ; P1 recharge les modules |                   
+      112 +| 2026-07-13 | S1 | `09_QUESTIONNAIRE_CADRAGE.md` | ~105-120 (
+          +Q-E08) | Manifeste MVP passe à 11 tools : ajout `module_config
+          +(id, enabled, params?)` (D41) |                               
+      113 +| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~600 (fin
+          + §1) | Nouvelle décision D41 : dépendances requiresModules + t
+          +ool module_config au MVP |                                    
+      114 +| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~137 (§2.6) |
+          + Note D41 : modules gameplay pilotables par l'IA (module_confi
+          +g + requiresModules) |                                        
+      115 +| 2026-07-13 | S1 | `11_VERTICAL_SLICE.md` | ~50, ~98 | S1 exe
+          +rce module_config(stats) + requiresModules ; table §4 passe au
+          + manifeste 11 tools |                                         
+      116 +| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~40 (§1), ~77
+          + (§2.3), ~90 (§2.4), ~185 (§4 ét.5) | 4 corrections de cohéren
+          +ce : pipeline P0→arbitre→banc figé (docs 12/13), sandbox 2 éta
+          +ges (D26), transport runtime tranché (D35) ×2 |               
+      117  
+      118  ## 5. Questions/réponses en attente (inter-sessions)
+      119  
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line, removed 1 line
+      40  |---|----------|--------|------------------|
+      41  | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas d
+          e revue dédiée, servent d'index |
+      42  | 00 | `00_VISION.md` | traité (S1 2026-07-13) | 4 questions ar
+          bitrées : IA commerciales d'abord (locaux à terme), coût 2 modè
+          les assumé + extension « personnalité arbitre » (nouvelle idée,
+           tracée doc 08), pas de revue humaine (D9 confirmé), prérequis 
+          onboarding explicité |
+      43 -| 01 | `01_ARCHITECTURE_CIBLE.md` | en cours (S1 2026-07-13) | 
+         -vue d'ensemble briques + flux |                                
+      43 +| 01 | `01_ARCHITECTURE_CIBLE.md` | traité (S1 2026-07-13) | 4 
+         +questions arbitrées : briques §2.7/§2.8 ajoutées + doc 14 créé 
+         +; D40 (ProposalSession dédiée) ; P0 hôte + copie auteur ; D41 (
+         +requiresModules + module_config au MVP, variante A). 4 correcti
+         +ons de cohérence appliquées. Ancrages V2 vérifiés (GameplayModu
+         +leManager OK, hooks l.2634 OK) |                               
+      44  | 02 | `02_CANAL_IA.md` | à traiter | passerelle MCP (M1) |
+      45  | 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au b
+          uild (M12) |
+      46  | 04 | `04_QML_GENERATIF_SANDBOX.md` | à traiter | sandbox 2 ét
+          ages (M9) |
+
+● Doc 01 traité. Bilan de la variante A et de la clôture :
+
+  Décision D41 créée (doc 08) — le mécanisme complet des dépendances de modules
+  :
+  - requiresModules ajouté au schéma de l'enveloppe (doc 13 §3) : un artefact
+  déclare les modules gameplay dont il dépend ; vérification mécanique en P0
+  (missing_module, retryable), jamais d'activation implicite par la façade.
+  - Snapshot du banc étendu (doc 12) : le job porte désormais l'état
+  d'activation des modules, P1 le recharge — l'artefact est testé dans les
+  conditions réelles.
+  - module_config(id, enabled, params?) devient le 11e tool du manifeste MVP
+  (doc 09 Q-E08) ; il produit une opération structure intégrable au même lot 
+  atomique que l'artefact — l'arbitre juge le tout d'un bloc.
+  - Le vertical slice l'exerce (doc 11) : S1 active désormais le module stats
+  avant de poser la plaque piégée — le tool ne partira pas non testé.
+
+  Aussi appliqué : les 4 corrections de cohérence du doc 01 (pipeline
+  P0→arbitre→banc figé par les docs 12/13, sandbox à deux étages D26, transport
+  runtime tranché D35 ×2).
+
+  Récapitulatif de la session sur les docs 00-01 : 2 nouvelles décisions (D40
+  ProposalSession dédiée, D41 dépendances de modules), 1 nouveau doc (14,
+  adaptateur d'agents), 1 nouvelle question ouverte (personnalité de l'arbitre),
+  8 fichiers modifiés — tout est journalisé dans SUIVI_REVUE_BRIQUES.md (26
+  entrées au journal, statuts à jour).
+
+  Prochain document : 02_CANAL_IA.md — le serveur MCP local. Points que je
+  prévois d'y creuser : le schéma du résumé d'événements injecté (Q-E06, encore
+  ouverte), la granularité du groupement des tools, et la politique
+  multi-joueurs des commandes locales vs propositions. On peut enchaîner ici ou
+  reprendre dans une prochaine session — le suivi permet de repartir de zéro
+  sans perte.
+
+✻ Brewed for 3m 59s
+
+❯ go pour la doc 02                                                             
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 1 line, removed 1 line
+      41  | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas d
+          e revue dédiée, servent d'index |
+      42  | 00 | `00_VISION.md` | traité (S1 2026-07-13) | 4 questions ar
+          bitrées : IA commerciales d'abord (locaux à terme), coût 2 modè
+          les assumé + extension « personnalité arbitre » (nouvelle idée,
+           tracée doc 08), pas de revue humaine (D9 confirmé), prérequis 
+          onboarding explicité |
+      43  | 01 | `01_ARCHITECTURE_CIBLE.md` | traité (S1 2026-07-13) | 4 
+          questions arbitrées : briques §2.7/§2.8 ajoutées + doc 14 créé 
+          ; D40 (ProposalSession dédiée) ; P0 hôte + copie auteur ; D41 (
+          requiresModules + module_config au MVP, variante A). 4 correcti
+          ons de cohérence appliquées. Ancrages V2 vérifiés (GameplayModu
+          leManager OK, hooks l.2634 OK) |
+      44 -| 02 | `02_CANAL_IA.md` | à traiter | passerelle MCP (M1) |    
+      44 +| 02 | `02_CANAL_IA.md` | en cours (S1 2026-07-13) | passerelle
+         + MCP (M1) |                                                    
+      45  | 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au b
+          uild (M12) |
+      46  | 04 | `04_QML_GENERATIF_SANDBOX.md` | à traiter | sandbox 2 ét
+          ages (M9) |
+      47  | 05 | `05_ESPACE_MEMOIRE_SNAPABLE.md` | à traiter | memory con
+          fig/state (M6) |
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Hooks vérifiés dans Editor.qml : les 13 fonctions listées au §5.1 du doc 02
+  existent toutes (l. 2709–3093) — le catalogue « déjà exposé » est exact.
+
+  Revue du doc 02 — 02_CANAL_IA.md
+
+  Définitions courtes des concepts du doc
+
+  - MCP (Model Context Protocol) : protocole standard par lequel un agent LLM
+  découvre et appelle des tools (fonctions typées) exposés par un serveur ;
+  claude -p et Codex le parlent nativement.
+  - Streamable HTTP : l'un des transports MCP — le serveur est un endpoint HTTP
+  ; le client POSTe des requêtes JSON-RPC 2.0 (format requête/réponse JSON
+  corrélé par id ; 3 méthodes suffisent : initialize, tools/list, tools/call).
+  - Loopback : interface réseau 127.0.0.1 — joignable uniquement depuis la
+  machine elle-même.
+  - Bearer token : secret passé dans l'en-tête HTTP de chaque requête ; ici
+  généré par session et injecté au spawn de l'agent, il bloque les autres 
+  process de la machine (risque R3).
+  - Prompt caching : les fournisseurs LLM facturent moins cher un préfixe de
+  prompt identique d'une requête à l'autre — d'où l'exigence « pré-prompt skill
+  + schémas de tools stables ».
+  - Journal métier / curseur : le journal (M5/D19) est la suite numérotée (seq
+  monotone) des événements de la partie ; un curseur est la position seq
+  jusqu'où un lecteur a consommé — events_poll(cursor) rend « tout ce qui s'est
+  passé depuis ».
+
+  Résumé bloc par bloc
+
+  §1 — Rôle. Le canal est l'unique point de contact IA↔jeu, et son but est de
+  créer des briques de gameplay porteuses de logique — pas de tester le jeu.
+  Frontière non négociable : l'IA ne parle jamais à l'automation (port 7700) ;
+  le canal ré-expose un sous-ensemble curé.
+
+  §2 / §2 bis — Pourquoi MCP, et sous quelle forme (D20/D21). Le WS maison est
+  mort car l'app spawne elle-même les agents (D10) : découverte et
+  authentification sont résolues par construction, et les deux CLIs parlent MCP
+  nativement. Forme : endpoint streamable HTTP loopback dans le process du jeu
+  (sous-ensemble JSON-RPC à implémenter en C++, QtHttpServer à installer, repli
+  pont stdio documenté).
+
+  §3 — Économie de tokens (contrainte de conception). La skill porte la
+  connaissance (cachée), le catalogue reste réduit et groupé (tools paramétrés),
+  résultats compacts/paginés, préfixe stable, help(topic) en divulgation
+  progressive.
+
+  §4 — Événements. Pas d'agent persistant : résumé des événements injecté à 
+  chaque invocation + events_poll(cursor) pour se resynchroniser en cours de
+  tâche. Nécessite l'adaptateur d'événements unifié (= brique §2.8/M5 qu'on a
+  promue au doc 01).
+
+  §5 — Catalogue. 5.1 : les 13 hooks existants (vérifiés ce jour) réutilisés
+  comme implémentation. 5.2 : les vrais chantiers — introspection d'état
+  (listTiles/getTile), édition par uuid, mémoire, enums, roster, runtime
+  (totalement absent en V2), qml.instantiate, events_poll, screenshot (D22).
+
+  §6 — Boucle perception→action : contexte → observe → décide → agit → vérifie ;
+  exigence : erreurs de tools exploitables par une IA (code stable, retryable).
+
+  §7 — Sécurité : loopback strict opt-in, token au spawn, deux identités chez
+  l'hôte, allow-list de tools, le QML transite en enveloppe, quotas, garanties
+  applicatives P2P.
+
+  §8 — Questions ouvertes. Une est périmée : « sous quelle forme le verdict
+  revient-il au proposant ? » — c'est tranché depuis par le doc 13 §5 (tool
+  bloquant 60 s, sinon pending + résumé du tour suivant). Je la corrigerai.
+  Restent : Q-E06 (résumé/curseur), granularité du groupement (à mesurer au
+  slice), frontière locale/proposition.
+
+  Les 3 questions de ce doc
+
+  1. Valider la proposition Q-E06 (schéma du résumé d'événements + garanties du
+  curseur) — la dernière grosse question ouverte du canal.
+  2. La frontière « commande locale » vs « proposition » : quels tools
+  s'exécutent sans enveloppe.
+  3. Les quotas du canal : chiffrer maintenant ou à l'implémentation.
+
+  Question 1 en détail — le schéma d'événements Q-E06
+
+  La proposition du doc 09 (prête à valider) :
+  - Curseur = seq monotone du journal métier. Chaque entrée : {seq, ts, type, 
+  actor, summary, refs} (refs = uuids touchés).
+  - Résumé injecté par invocation : bloc compact « depuis ton dernier tour (seq
+  N→M) : X tuiles posées, Y verdicts, Z changements d'état », plafonné ~30 
+  lignes, avec mention explicite + K événements omis — events_poll(N).
+  - Garanties du curseur : relecture idempotente depuis tout seq conservé ; si
+  le journal est tronqué en-deçà, réponse {truncated: true, oldestSeq} → l'agent
+  resynchronise par state_query (état courant) au lieu de rejouer l'historique.
+  - Filtrage par rôle : le proposant voit les événements publics ; l'arbitre
+  voit en plus la file de propositions et les amendements. Filtré côté serveur
+  selon le token.
+
+  Si vous validez, ça devient une décision (D42), Q-E06 est retirée du
+  questionnaire, et le doc 02 §4/§8 est mis à jour. Vous pouvez aussi amender
+  (ex. le plafond de 30 lignes, le contenu d'une entrée). Valider tel quel, 
+  amender, ou laisser ouverte ?
+
+✻ Baked for 1m 28s
+
+※ recap: Nous passons en revue les docs de cadrage V3 un par un avant le plan d'implémentation ; docs 00 et 01 sont traités, le doc 02 (canal MCP) est en cours. Prochaine action : répondre à la question 1 (valider le schéma d'événements Q-E06). (disable recaps in /config)
+
+❯ §1 — Je comprend l'idée. Quels sont globalement les problématiques si l'on    
+  expose la sandbox de test d'un item, sa génération, à l'ia cliente ? Afin que 
+  cette dernière puissent suivre voir modifier en "temps-réel" l'évolution et   
+  la perfection d'un item avant sa pose au jeu en runtime. Cela implique de     
+  modifier le cadrage mais quelle est la portée que tu estimerais               
+
+● Excellente piste — analysons-la proprement. Définition courte de ce que vous
+  décrivez : un mode atelier (ou dry-run) — la possibilité pour l'IA cliente
+  d'exécuter le banc d'essai comme outil d'itération pendant la création, avant
+  artifact_submit, au lieu de ne le rencontrer qu'en aval comme couperet de
+  validation.
+
+  Ce que ça ne casse pas (bonne nouvelle)
+
+  Le pipeline autoritaire reste intact : le banc-verdict (après arbitre,
+  D26/D32) ne bouge pas. Un dry-run ne serait jamais un laissez-passer —
+  l'artefact soumis repasse toujours P0 → arbitre → banc autoritaire. On aurait
+  donc deux usages du même exécutable meow_testbench : atelier (avant
+  soumission, au service de l'IA) et verdict (après arbitre, au service de
+  l'hôte). C'est exactement le même patron que ce qu'on vient d'acter pour P0
+  (copie locale fail-fast + exécution autoritaire chez l'hôte).
+
+  Et le bénéfice est réel : l'IA converge avant de soumettre → moins
+  d'allers-retours d'arbitrage (chaque rejet S3 coûte un appel LLM arbitre +
+  potentiellement un run de banc), meilleure UX, et le critère « ≤ 2 itérations
+  » de S3 devient facile.
+
+  Les problématiques, par ordre de gravité
+
+  1. Ressources (la vraie contrainte). Un run de banc = un process Qt offscreen,
+  cible < 8 s par validation saine. Une IA qui « perfectionne » peut itérer
+  10-20 fois. En solo, c'est la machine du joueur — acceptable. En collab, il ne
+  faut surtout pas que les dry-runs des clients tournent chez l'hôte (déni de
+  service trivial) : le dry-run doit être local chez l'auteur (le binaire du
+  banc est livré avec chaque installation). Il faut un quota de dry-runs par
+  invocation (pattern #define, ex. 10).
+  2. Le « temps réel » est le point cher. Le banc actuel est batch : un job JSON
+  entre, un verdict JSON sort, le process meurt. « Suivre et modifier en temps
+  réel » impliquerait un mode session : process qui reste vivant, l'IA pousse
+  une version modifiée, déclenche des stimuli à la demande, lit des métriques en
+  continu — un nouveau protocole jeu↔banc, un cycle de vie de session lié à
+  l'invocation, et si vous voulez du visuel, il faudrait sortir du headless (le
+  banc est -platform offscreen, il ne rend rien) — gros surcoût. À noter : le
+  mode pool prévu (doc 12 §6, jobs par stdin sur process chaud) fournit déjà 80
+  % de la plomberie d'un mode itératif sans aller jusqu'au streaming.
+  3. Divergence de verdicts. Un dry-run pass chez l'auteur peut donner fail chez
+  l'hôte (versions de banc/budgets différentes entre installations). Mitigeable
+  : benchVersion + budgets sont déjà dans le job et la clé de cache — l'erreur
+  devient explicable. Mais la skill doit marteler : un pass local n'est pas une 
+  acceptation.
+  4. Sécurité : quasi neutre. Le banc est déjà conçu pour exécuter du code
+  hostile (hors-process, masqué, sans module réseau lié). L'exposer à la
+  proposante n'ajoute pas de surface — tant que le verdict qui fait foi reste
+  celui de l'hôte, et que le cache de verdicts de l'hôte n'accepte jamais un
+  verdict calculé par un pair (R16 : pas de signature au MVP).
+
+  Portée estimée sur le cadrage : moyenne, en deux paliers
+
+  - Palier 1 (petit, MVP possible) : un tool artifact_dryrun(source, 
+  targetUuid?) — one-shot, local, renvoie le verdict complet avec les métriques
+  (l'IA voit tickUsP95, writeSet observé, etc. — c'est déjà très « suivre la
+  perfection de l'item »). Impact docs : 12e tool (Q-E08), un § dans doc 12
+  (mode atelier + quota), une note doc 02 §5, une décision D42, skill
+  (avertissement pass local ≠ acceptation). Réutilise le banc tel quel : ~zéro 
+  architecture nouvelle.
+  - Palier 2 (post-MVP) : la session atelier interactive (stimuli à la demande,
+  métriques continues, éventuellement rendu/capture du banc). Nouveau protocole,
+  cycle de vie, à cadrer plus tard — je le noterais comme extension dans doc 12
+  §11.
+
+  Ma recommandation : acter le palier 1 au MVP (il rentabilise le banc et sert
+  directement S3) + tracer le palier 2 comme extension. Avec la règle stricte :
+  dry-run local chez l'auteur, quota par invocation, jamais de confiance
+  inter-pairs sur les verdicts.
+
+  On acte ça (palier 1 MVP + palier 2 tracé) ? Ou vous préférez le palier 1
+  lui-même en post-MVP pour ne pas grossir le slice ? Ensuite on reviendra à la
+  question Q-E06 laissée en suspens.
+
+✻ Worked for 1m 7s
+
+❯ palier 1 MVP + palier 2 tracé                                                 
+
+● J'applique le palier 1 (MVP) + palier 2 tracé : nouvelle décision D42, tool
+  artifact_dryrun au manifeste, section atelier dans le doc 12.
+
+● Update(Meownopoly\doc\v3\08_DECISIONS_ET_QUESTIONS.md)
+  ⎿  Added 22 lines
+      622    de bord caché de l'arbitrage) ; activation manuelle par le j
+           oueur seulement
+      623    (rejet `missing_module` non résoluble par l'IA, contraire à 
+           S3).
+      624  
+      625 +### D42 — Banc d'essai exposé à l'IA cliente : mode atelier (d
+          +ry-run) au MVP, session interactive tracée                    
+      626 +- **Décision (2026-07-13).** Le banc d'essai (doc 12) devient 
+          +aussi un **outil                                              
+      627 +  d'itération** pour l'IA cliente, en deux paliers :          
+      628 +  - **Palier 1 (MVP)** : tool **`artifact_dryrun(source, targe
+          +tUuid?)`** —                                                  
+      629 +    exécution one-shot du banc **en local chez l'auteur**, ren
+          +voyant le                                                     
+      630 +    verdict complet **avec les métriques** (tickUs, write-set 
+          +observé,                                                      
+      631 +    peakMem…) pour que l'IA perfectionne l'artefact **avant** 
+          +de le                                                         
+      632 +    soumettre. Quota par invocation (`MEOW_BENCH_DRYRUN_QUOTA`
+          +, défaut 10).                                                 
+      633 +  - **Palier 2 (post-MVP, tracé doc 12 §11)** : session atelie
+          +r                                                             
+      634 +    **interactive** (process de banc persistant, versions pous
+          +sées à chaud,                                                 
+      635 +    stimuli à la demande, métriques continues, rendu éventuel)
+          +.                                                             
+      636 +- **Invariants.** Un dry-run n'est **jamais** un laissez-passe
+          +r : l'artefact                                                
+      637 +  soumis repasse toujours P0 → arbitre → **banc autoritaire ch
+          +ez l'hôte**                                                   
+      638 +  (même patron que P0 : copie locale fail-fast + exécution aut
+          +oritaire).                                                    
+      639 +  En collab, les dry-runs des clients ne tournent **jamais** c
+          +hez l'hôte                                                    
+      640 +  (anti-DoS). L'hôte n'accepte jamais un verdict calculé par u
+          +n pair (R16).                                                 
+      641 +  La skill (doc 03) doit énoncer : *pass local ≠ acceptation* 
+          +(divergence                                                   
+      642 +  possible de `benchVersion`/budgets, explicable via le job). 
+      643 +- **Pourquoi.** L'IA converge avant de soumettre → moins d'all
+          +ers-retours                                                   
+      644 +  d'arbitrage (coût LLM), S3 facilité ; réutilise `meow_testbe
+          +nch` tel quel                                                 
+      645 +  (~zéro architecture nouvelle au palier 1).                  
+      646 +                                                              
+      647  ## 2. Questions ouvertes (par thème)
+      648  
+      649  Cette section reste le registre synthétique proche des décisio
+           ns. Le questionnaire
+
+● Update(Meownopoly\doc\v3\09_QUESTIONNAIRE_CADRAGE.md)
+  ⎿  Added 2 lines, removed 2 lines
+      102  
+      103  ### Q-E08 — Sous-ensemble exact des tools portés au MVP — **B1
+           **
+      104  
+      105 -Familles retenues (doc 02 §5). **Proposition de manifeste MVP 
+          -— 11 tools**                                                  
+      106 -(le 11e, `module_config`, ajouté par D41 le 2026-07-13) :     
+      105 +Familles retenues (doc 02 §5). **Proposition de manifeste MVP 
+          +— 12 tools**                                                  
+      106 +(`module_config` ajouté par D41, `artifact_dryrun` par D42, le
+          + 2026-07-13) :                                                
+      107  
+      108  
+      109  | Tool                                                        
+           | Rôle                                                        
+                               | Regroupe                                
+                                 |
+
+● Update(Meownopoly\doc\v3\09_QUESTIONNAIRE_CADRAGE.md)
+  ⎿  Added 1 line
+      119  | `screenshot(view?)`                                         
+           | retour visuel (plafond D22)                                 
+                               | —                                       
+                                 |
+      120  | `arbiter_verdict(proposalId, verdict, reasons, amendment?)` 
+           | **token arbitre uniquement**                                
+                               | —                                       
+                                 |
+      121  | `module_config(id, enabled, params?)` (D41)                 
+           | activation/config d'un module gameplay ; op `structure`, sat
+           isfait les `requiresModules` d'un artefact du même lot | setSt
+           atsModuleEnabled (hook, généralisé) |
+      122 +| `artifact_dryrun(source, targetUuid?)` (D42)                
+          +| itération pré-soumission : banc d'essai local, verdict + mét
+          +riques complets ; quota par invocation ; pass local ≠ acceptat
+          +ion | — |                                                     
+      123  
+      124  
+      125  - **Post-MVP** (hors manifeste v1) : `runtime_input` (piloter 
+           joueur/NPC),
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 18 lines
+      189    propositions sont déjà sérialisées par la file transactionne
+           lle D12) ;
+      190    le pool > 1 ne sert que le collab futur.
+      191  
+      192 +## 6 bis. Mode atelier : dry-run pour l'IA cliente (D42)      
+      193 +                                                              
+      194 +Le banc sert aussi d'**outil d'itération pré-soumission** (déc
+          +ision D42,                                                    
+      195 +2026-07-13) :                                                 
+      196 +                                                              
+      197 +- **Tool `artifact_dryrun(source, targetUuid?)`** (manifeste M
+          +VP) : exécute                                                 
+      198 +  un job de banc **en local chez l'auteur** et renvoie à l'IA 
+          +le verdict                                                    
+      199 +  complet **avec les métriques** (§4) — l'IA perfectionne son 
+          +artefact avant                                                
+      200 +  `artifact_submit`.                                          
+      201 +- **Quota** : `MEOW_BENCH_DRYRUN_QUOTA` dry-runs par invocatio
+          +n (défaut 10).                                                
+      202 +- **Invariants** : un pass en dry-run n'est **jamais** un lais
+          +sez-passer — la                                               
+      203 +  soumission repasse le pipeline complet, banc autoritaire che
+          +z l'hôte                                                      
+      204 +  compris. En collab, les dry-runs des clients ne tournent jam
+          +ais chez                                                      
+      205 +  l'hôte (anti-DoS) ; aucun verdict calculé par un pair n'est 
+          +accepté (R16).                                                
+      206 +  La skill énonce *pass local ≠ acceptation* (une divergence d
+          +e                                                             
+      207 +  `benchVersion`/budgets entre installations reste possible et
+          + explicable).                                                 
+      208 +- **Palier 2 (post-MVP, tracé §11)** : session atelier interac
+          +tive.                                                         
+      209 +                                                              
+      210  ## 7. Cache de verdicts
+      211  
+      212  Clé : `contentHash(artifact) + benchVersion + hash(budgets)`. 
+           Un artefact déjà
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 1 line
+      259  | `MEOW_BENCH_MAX_RSS_MB` | 512 | auto-kill mémoire du banc |
+      260  | `MEOW_BENCH_POOL` | 1 | process chauds |
+      261  | `MEOW_BENCH_JOBS_PER_PROCESS` | 10 | recyclage même en `pass
+           ` |
+      262 +| `MEOW_BENCH_DRYRUN_QUOTA` | 10 | dry-runs `artifact_dryrun` 
+          +par invocation d'IA (D42) |                                   
+      263  | Budgets artefact | valeurs D34 | sérialisés dans le job |
+      264  
+      265  ## 10. Points d'ancrage code
+
+● Update(Meownopoly\doc\v3\12_BANC_ESSAI_R1.md)
+  ⎿  Added 6 lines
+      288    physique réelle n'apporte rien au verdict budgets.)
+      289  - **Confinement OS post-MVP** : Job Objects / cgroups — après 
+           R1 si les
+      290    mesures MVP suffisent.
+      291 +- **Session atelier interactive (palier 2 de D42, post-MVP)** 
+          +: process de                                                  
+      292 +  banc persistant dédié à l'IA cliente — versions d'artefact p
+          +oussées à                                                     
+      293 +  chaud, stimuli déclenchés à la demande, métriques en continu
+          +,                                                             
+      294 +  éventuellement rendu/capture (sortie du headless). Nouveau p
+          +rotocole                                                      
+      295 +  jeu↔banc et cycle de vie de session à cadrer ; le mode pool 
+          +(§6, jobs par                                                 
+      296 +  stdin) fournit une partie de la plomberie.                  
+
+● Update(Meownopoly\doc\v3\02_CANAL_IA.md)  ⎿  Added 4 lines
+      168    requis pour « l'usage de modules liés au NPC/joueur ».
+      169  - **QML génératif** : `qml.instantiate(artefact, attachToUuid?
+           )` — passe par le
+      170    **sandbox** (doc 04). Nouvelle capacité centrale du pivot.
+      171 +- **Dry-run d'artefact** (D42, 2026-07-13) : `artifact_dryrun(
+          +source,                                                       
+      172 +  targetUuid?)` — itération pré-soumission sur le **banc d'ess
+          +ai local**                                                    
+      173 +  (verdict + métriques complets, quota par invocation ; *pass 
+          +local ≠                                                       
+      174 +  acceptation*). Cf. doc 12 §6 bis.                           
+      175  - **Événements** : `events_poll(cursor)` sur le journal métier
+            (§4).
+      176  - **Screenshot** : réutiliser `grabWindow` (déjà dans l'automa
+           tion) pour donner à
+      177    l'IA un retour visuel — MCP supporte les résultats image nat
+           ivement. Politique
+
+● Update(Meownopoly\doc\v3\11_VERTICAL_SLICE.md)
+  ⎿  Added 1 line, removed 1 line
+       96  | Brique (traversée a minima) | Chantier doc 10 | Décisions |
+       97  |-----------------------------|-----------------|-----------|
+       98  | Passerelle MCP streamable HTTP + tokens par rôle | M1 | D20/
+           D21 |
+       99 -| Tools (sous-ensemble du manifeste MVP à 11 tools traversé pa
+          -r le slice — `help` et `roster_edit` non requis) : `state_quer
+          -y`, `editor_place`, `editor_edit`, `memory_set`, `module_confi
+          -g` (D41), `artifact_submit`, `events_poll`, `screenshot`, `arb
+          -iter_verdict` | M1 | Q-E08 |                                  
+       99 +| Tools (sous-ensemble du manifeste MVP à 12 tools traversé pa
+          +r le slice — `help`, `roster_edit` et `artifact_dryrun` non re
+          +quis) : `state_query`, `editor_place`, `editor_edit`, `memory_
+          +set`, `module_config` (D41), `artifact_submit`, `events_poll`,
+          + `screenshot`, `arbiter_verdict` | M1 | Q-E08 |               
+      100  | Adaptateur agents (spawn `claude -p`, supervision, pré-promp
+           t) + tchat ingame minimal | M-adaptateur | D10/D17 |
+      101  | Skill générée du manifeste, injectée en pré-prompt | M-skill
+            | D17 |
+      102  | Handshake + challenge arbitre | M-adaptateur | D24 |
+
+● Update(Meownopoly\doc\v3\SUIVI_REVUE_BRIQUES.md)
+  ⎿  Added 5 lines
+      114  | 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~137 (§2.6) |
+            Note D41 : modules gameplay pilotables par l'IA (module_confi
+           g + requiresModules) |
+      115  | 2026-07-13 | S1 | `11_VERTICAL_SLICE.md` | ~50, ~98 | S1 exe
+           rce module_config(stats) + requiresModules ; table §4 passe au
+            manifeste 11 tools |
+      116  | 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~40 (§1), ~77
+            (§2.3), ~90 (§2.4), ~185 (§4 ét.5) | 4 corrections de cohéren
+           ce : pipeline P0→arbitre→banc figé (docs 12/13), sandbox 2 éta
+           ges (D26), transport runtime tranché (D35) ×2 |
+      117 +| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~625 (fin
+          + §1) | Nouvelle décision D42 : banc exposé à l'IA cliente — ar
+          +tifact_dryrun (MVP, local, quota 10) + session atelier interac
+          +tive (palier 2 tracé) |                                       
+      118 +| 2026-07-13 | S1 | `09_QUESTIONNAIRE_CADRAGE.md` | ~105-122 (
+          +Q-E08) | Manifeste MVP passe à 12 tools : ajout `artifact_dryr
+          +un` (D42) |                                                   
+      119 +| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~200 (§6 bis), ~25
+          +0 (§9), ~285 (§11) | Nouveau §6 bis mode atelier (D42) ; const
+          +ante MEOW_BENCH_DRYRUN_QUOTA ; palier 2 (session interactive) 
+          +tracé en §11 |                                                
+      120 +| 2026-07-13 | S1 | `02_CANAL_IA.md` | ~180 (§5.2) | Ajout cap
+          +acité artifact_dryrun (D42) au catalogue à créer |            
+      121 +| 2026-07-13 | S1 | `11_VERTICAL_SLICE.md` | ~98 (§4) | Table 
+          +tools : manifeste 12 tools, artifact_dryrun non requis par le 
+          +slice |                                                       
+      122  
+      123  ## 5. Questions/réponses en attente (inter-sessions)
+      124  
+
+● D42 actée et propagée (docs 08, 09, 12 §6 bis + constante + palier 2 en §11,
+  02, 11 ; journal à jour). Le banc devient officiellement un outil d'itération
+  pour l'IA cliente, avec les invariants anti-abus (local chez l'auteur, quota
+  10/invocation, pass local ≠ acceptation).
+
+  Revenons maintenant à la question 1 du doc 02, laissée en suspens — la
+  validation de la proposition Q-E06 (schéma du résumé d'événements injecté +
+  curseur events_poll). Pour rappel, la proposition prête à valider :
+
+  - Curseur = seq monotone du journal métier ; entrée = {seq, ts, type, actor, 
+  summary, refs}.
+  - Résumé injecté à chaque invocation : bloc compact plafonné (~30 lignes) avec
+  mention + K événements omis — events_poll(N).
+  - Garanties : relecture idempotente depuis tout seq conservé ; journal tronqué
+  → {truncated: true, oldestSeq} et l'agent resynchronise par state_query au
+  lieu de rejouer l'historique.
+  - Filtrage par rôle : proposant = événements publics ; arbitre = + file de
+  propositions et amendements (filtré côté serveur selon le token).
+
+  Petit ajout de cohérence que je suggère si vous validez : les verdicts de 
+  dry-run (D42) n'entrent pas au journal partagé (c'est de l'itération privée de
+  l'auteur) — seules les vraies propositions y figurent.
+
+  Valider tel quel (→ D43), amender (par exemple le plafond de 30 lignes, ou le 
+  contenu d'une entrée), ou laisser ouverte ?
+
+✻ Churned for 1m 57s
+
+※ recap: Nous passons en revue les docs de cadrage V3 un par un avant le plan d'implémentation ; docs 00-01 traités, doc 02 en cours. Prochaine action : valider, amender ou laisser ouverte la proposition Q-E06 (résumé d'événements + curseur). (disable recaps in /config)
