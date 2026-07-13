@@ -37,10 +37,10 @@ mot « local-only » du doc 04 qualifie l'**exécution/réplication aux pairs**,
 le fait de cacher la proposition à l'arbitre : sinon D6 serait impossible.
 
 Le sandbox reste une barrière de sécurité indépendante de l'arbitre. L'ordre
-exact entre analyse statique peu coûteuse et arbitrage LLM reste à mesurer : un
-préfiltre mécanique peut rejeter immédiatement une source manifestement interdite,
-puis l'arbitre juge la viabilité, puis l'artefact accepté subit la validation
-complète avant exécution. Les propositions sans code ne passent pas par le
+est **figé depuis** (docs 12/13, mise à jour 2026-07-13) : **préfiltre P0**
+(chez l'hôte — copie best-effort chez l'auteur pour le fail-fast, doc 12 §3) →
+**arbitre** (selon le grain configuré D25) → **banc d'essai hors-process
+P1→P5** (D26) → application. Les propositions sans code ne passent pas par le
 sandbox QML, mais restent soumises aux validateurs de schéma, d'autorisation et
 de quotas du canal.
 
@@ -73,10 +73,12 @@ que le joueur ait à documenter le protocole.
 ### 2.3 Le bac à sable QML (doc 04) — pièce critique
 Reçoit le QML généré par l'IA (D1), le **valide** et tente de le charger dans une
 frontière restreinte (pas d'accès disque/réseau/process, API allow-list, budget).
-La robustesse de cette frontière in-process n'est pas acquise : R1 doit décider
-si un moteur/processus séparé ou un repli déclaratif est nécessaire (doc 04).
-La préférence produit est le **même moteur QML avec JS borné/instrumenté**, mais
-elle reste conditionnelle à l'arrêt préemptif réel d'un script bloquant.
+Structure **à deux étages tranchée depuis** (D26, mise à jour 2026-07-13) :
+la **validation** est un banc d'essai hors-process (doc 12 — une boucle
+infinie tue le process de test, jamais le jeu) ; l'**exécution en partie**
+reste un confinement in-process (D13, contenu arrêté par D34). Le prototype
+R1 est recentré sur ce second étage : masquage réel des singletons,
+allow-list, budgets runtime.
 
 ### 2.4 L'espace mémoire par `snapableElement` (doc 05)
 Chaque `ItemSnapable` gagne un **set de variables sérialisables**. Le cadrage
@@ -84,8 +86,10 @@ distingue désormais deux sémantiques : **configuration durable** (édition,
 persistance, undo) et **état runtime** (autorité hôte, dernier état, non undoable
 au grain de l'écriture). Cette séparation évite de sauvegarder accidentellement
 un état éphémère dans la map ou de restaurer toute la partie lors d'un undo.
-La cadence et le transport du flux runtime restent à mesurer ; « 30 Hz reliable »
-n'est pas une décision V3.
+Cadence et transport du flux runtime **tranchés depuis** (D35, mise à jour
+2026-07-13) : delta coalescé 30 Hz max par (tuile, clé) + snapshots de
+réparation/structurel + resync à la demande, garanties hybrides
+commits/supersedable, plafonds chiffrés.
 **Réactif** : une écriture (locale ou reçue par snapshot) émet un signal QML
 (`userMemoryChanged`) auquel les règles custom / comportements générés s'abonnent —
 c'est le **bus de variables** entre la donnée synchronisée et le JS embarqué.
@@ -106,8 +110,13 @@ C'est la couche de jugement *contextuel* au-dessus des garde-fous *mécaniques* 
 sandbox (doc 04). C'est aussi **lui qui gouverne les règles** (D8) : il accepte
 leur évolution, tandis que leur forme matérialisée est exécutée par les capacités
 du jeu. Le prompt seul n'est ni un état persistant ni un moteur runtime.
-Point d'ancrage réseau pressenti : le même domaine d'autorité que
-`EditorSession`. Le code V2 fournit déjà rate-limit, séquencement et rebroadcast,
+Point d'ancrage réseau **tranché (D40, 2026-07-13)** : une **session dédiée**
+(`ProposalSession`, nom indicatif) construite sur le patron
+`COLLAB_SESSION_PATTERN`, avec sa **propre plage de types de messages V3**
+(hors 0x01–0x11/0x20+/0x40+ existants) et la couche de fiabilité M3 —
+**pas une extension d'`EditorSession`** : l'arbitrage doit fonctionner dans
+les trois modes (D23), y compris le runtime sans éditeur ouvert. Le code V2
+fournit déjà rate-limit, séquencement et rebroadcast,
 mais **pas une validation sémantique générique** des ops : la passerelle
 d'arbitrage et ses validateurs sont donc une nouvelle responsabilité, pas un
 simple branchement sur un validateur existant. Sous-cadrage D6 depuis levé :
@@ -115,6 +124,12 @@ nature tranchée (LLM externe, D10), grain configurable par UI (D25), verdict
 à deux audiences (D11, doc 13).
 
 ### 2.6 Règles (doc 06, gouvernées par l'arbitre) & Bibliothèque (doc 07)
+> **Modules gameplay pilotables par l'IA (D41, 2026-07-13).** Les modules
+> (`GameplayModuleManager` : vie, inventaire, monnaie, stats, équipement,
+> niveau/XP) sont activables par l'IA via le tool `module_config` (manifeste
+> MVP) ; un artefact déclare ses dépendances `requiresModules`, vérifiées
+> mécaniquement (P0 + banc). Cf. doc 13 §3, doc 12 §2.3/§3.
+
 Les **règles sont gouvernées par l'arbitre** (D8, §2.5) — pas de moteur générique
 séparé acté ; leur forme acceptée doit être exécutable par le jeu. Il n'y
 a **pas de tour imposé** (il s'introduit par prompt ou proposition acceptée). Les
@@ -123,6 +138,25 @@ a **pas de tour imposé** (il s'introduit par prompt ou proposition acceptée). 
 primitives réutilisables — dont une **bibliothèque d'assets 3D** (prévue au
 développement) qui **élargit le vocabulaire graphique** composable par l'IA,
 adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
+
+### 2.7 L'adaptateur d'agents & le tchat ingame (doc 14) — nouvelle brique
+Le composant par lequel le joueur **entre** dans la V3 (ajouté à cette liste le
+2026-07-13 ; c'était jusqu'ici une mention en passant du flux §4). Il **lance et
+supervise** les CLIs (`claude -p`, Codex non interactif) via `QProcess` :
+démarrage, arrêt gracieux, kill, timeout, crash, redémarrage ; il **injecte** au
+spawn la config MCP + le token de rôle (`proposer`/`arbiter`) + le pré-prompt
+skill (D10/D17/D20) ; il exécute le **handshake + challenge de l'arbitre** (D24)
+et pilote les états UX du lobby (D31) ; et il porte l'**UI du tchat ingame**,
+l'interface principale joueur↔IA. Aucun socle V2 : `LauncherManager` ne lance
+aucun processus (doc 10, B03). Chantier **M2**. Détail : doc 14.
+
+### 2.8 Le journal d'événements métier (`GameplayEventBus`)
+Unifie les signaux existants (`Game`, `EditorOpBus`, `ItemSnapableEvents`,
+physique) en un **journal typé, séquencé, à curseur** (ajouté à cette liste le
+2026-07-13). Quatre consommateurs : le **résumé d'événements injecté** par
+invocation + le tool `events_poll` (doc 02 §4), le **noyau d'audit** (D19), le
+**déclenchement des règles** avec ordre déterministe (D33), et la **détection de
+cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
 
 ## 3. Réutilisation du socle V2 (points d'ancrage réels)
 
@@ -139,6 +173,8 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
 | Partage des actions | Collab host-authoritative (traitement + broadcast) | `EditorOpBus`/`EditorSession` |
 | Runtime piloté | `PhysicsSession`, `World3D`, `InputController` | `cpp/game/physics/`, `qml/world3d/` |
 | Réseau/collab | Catway, `EditorSession` host-authoritative | `cpp/communication/`, `cpp/editor/network/` |
+| Adaptateur agents (doc 14) | `LauncherManager` (cycle d'opérations longues, statuts, erreurs — pas de lancement de process) | `cpp/launcher/launcher_manager.{h,cpp}` |
+| Journal d'événements métier | signaux existants à adapter (pas de bus unifié en V2) | `cpp/game/game.*`, `cpp/editor/ops/`, `cpp/game/physics/item_snapable_events.*` |
 | Domaine réseau d'arbitrage (D6) | `EditorSession` (rate-limit, séquencement, rebroadcast ; validation sémantique à créer) | `cpp/editor/network/` |
 
 ## 4. Flux type — « l'IA crée un élément de gameplay »
@@ -166,7 +202,7 @@ adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
    configuration durable suivent une transaction d'édition. Les mutations d'état
    runtime deviennent des intentions adressées à l'hôte, puis des mises à jour à
    sémantique « dernier état » vers les pairs. Elles ne sont pas undoables au
-   grain de l'écriture. La cadence, la fiabilité et le format sont à trancher.
+   grain de l'écriture. Cadence, fiabilité et format tranchés par D35.
    La source cliente transite vers l'hôte pour arbitrage sans broadcast
    systématique. Une propriété de l'artefact choisit ensuite : exécution hôte
    seulement avec réplication des effets, ou exécution chez chaque pair après

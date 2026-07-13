@@ -65,7 +65,8 @@ Deux invariants :
   "benchVersion": 1,
   "snapshot": {
     "map": { /* sérialisation map existante : mapInfo + snapableTiles */ },
-    "memory": { /* namespaces config+state par uuid (doc 05) */ }
+    "memory": { /* namespaces config+state par uuid (doc 05) */ },
+    "modules": { /* état d'activation des modules gameplay (D41), ex. {"stats": true} */ }
   },
   "artifact": {
     "source": "…QML/JS…",
@@ -92,12 +93,21 @@ Deux invariants :
 ## 3. Phases de test (P1→P5)
 
 Le préfiltre statique **P0** (parse QML, allow-list d'imports/types/fonctions
-D34, taille ≤ 20 KB) tourne **dans le jeu** avant même de spawner le banc —
-inutile de payer un process pour un import interdit.
+D34, taille ≤ 20 KB, **vérification des `requiresModules`** contre l'état de la
+map et les opérations du lot — D41) tourne **dans le jeu** avant même de
+spawner le banc — inutile de payer un process pour un import interdit.
+
+**Localisation de P0 en collab (précision 2026-07-13).** P0 s'exécute
+**toujours chez l'hôte** — c'est ce P0-là qui fait foi (calcul du
+`requestType`, routage D25) — **et aussi chez l'auteur avant l'envoi**, en
+best-effort : la passerelle MCP locale du client rejette immédiatement une
+source manifestement invalide sans aller-retour réseau (fail-fast, S3).
+Même code C++ aux deux endroits, pas de duplication de logique ; l'hôte ne
+fait **jamais** confiance au résultat du P0 d'un pair.
 
 | Phase | Contenu | Échec type |
 |-------|---------|------------|
-| **P1 — Reconstruction** | recharge le snapshot (carte + mémoire), démarre le moteur physique | `snapshot_invalid` (bug interne, pas la faute de l'artefact) |
+| **P1 — Reconstruction** | recharge le snapshot (carte + mémoire + état des modules gameplay, D41), démarre le moteur physique | `snapshot_invalid` (bug interne, pas la faute de l'artefact) |
 | **P2 — Instanciation** | crée l'artefact dans le contexte restreint (même façade `Meow.GameApi` que le runtime), rattaché à `targetUuid` | `load_failed` (erreur QML), `load_timeout` (> 5 s : boucle au chargement) |
 | **P3 — Simulation à vide** | `N_IDLE` ticks de simulation (défaut **600** ticks = 10 s à 60 Hz, accélérés : le banc ne dort pas entre les ticks) | `tick_budget` (> 0,5 ms/tick soutenu), `runaway_alloc` |
 | **P4 — Stimulation** | rejoue les `stimuli` du job : pour chaque hook que l'artefact écoute (`events.on`), le jeu a généré un scénario — entrée/sortie de zone d'un acteur fantôme, écriture mémoire, action joueur simulée, ticks | `event_budget` (> 2 ms/handler), `event_flood` (> 30 émissions/s), `memory_quota` (écritures hors quotas D15) |
@@ -179,6 +189,24 @@ types + reconstruction de la carte) est **la mesure n°1 du prototype R1**.
   propositions sont déjà sérialisées par la file transactionnelle D12) ;
   le pool > 1 ne sert que le collab futur.
 
+## 6 bis. Mode atelier : dry-run pour l'IA cliente (D42)
+
+Le banc sert aussi d'**outil d'itération pré-soumission** (décision D42,
+2026-07-13) :
+
+- **Tool `artifact_dryrun(source, targetUuid?)`** (manifeste MVP) : exécute
+  un job de banc **en local chez l'auteur** et renvoie à l'IA le verdict
+  complet **avec les métriques** (§4) — l'IA perfectionne son artefact avant
+  `artifact_submit`.
+- **Quota** : `MEOW_BENCH_DRYRUN_QUOTA` dry-runs par invocation (défaut 10).
+- **Invariants** : un pass en dry-run n'est **jamais** un laissez-passer — la
+  soumission repasse le pipeline complet, banc autoritaire chez l'hôte
+  compris. En collab, les dry-runs des clients ne tournent jamais chez
+  l'hôte (anti-DoS) ; aucun verdict calculé par un pair n'est accepté (R16).
+  La skill énonce *pass local ≠ acceptation* (une divergence de
+  `benchVersion`/budgets entre installations reste possible et explicable).
+- **Palier 2 (post-MVP, tracé §11)** : session atelier interactive.
+
 ## 7. Cache de verdicts
 
 Clé : `contentHash(artifact) + benchVersion + hash(budgets)`. Un artefact déjà
@@ -231,6 +259,7 @@ avec le banc (`test_artifacts/`) :
 | `MEOW_BENCH_MAX_RSS_MB` | 512 | auto-kill mémoire du banc |
 | `MEOW_BENCH_POOL` | 1 | process chauds |
 | `MEOW_BENCH_JOBS_PER_PROCESS` | 10 | recyclage même en `pass` |
+| `MEOW_BENCH_DRYRUN_QUOTA` | 10 | dry-runs `artifact_dryrun` par invocation d'IA (D42) |
 | Budgets artefact | valeurs D34 | sérialisés dans le job |
 
 ## 10. Points d'ancrage code
@@ -259,3 +288,9 @@ avec le banc (`test_artifacts/`) :
   physique réelle n'apporte rien au verdict budgets.)
 - **Confinement OS post-MVP** : Job Objects / cgroups — après R1 si les
   mesures MVP suffisent.
+- **Session atelier interactive (palier 2 de D42, post-MVP)** : process de
+  banc persistant dédié à l'IA cliente — versions d'artefact poussées à
+  chaud, stimuli déclenchés à la demande, métriques en continu,
+  éventuellement rendu/capture (sortie du headless). Nouveau protocole
+  jeu↔banc et cycle de vie de session à cadrer ; le mode pool (§6, jobs par
+  stdin) fournit une partie de la plomberie.

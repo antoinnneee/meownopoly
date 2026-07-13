@@ -43,6 +43,7 @@ cf. doc 00 §4).
 | 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | Vertical slice solo S1/S2/S3 (D30) : fil rouge, briques traversées, critères | **défini 2026-07-12** |
 | 12 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | Spec du banc d'essai hors-process (D26/R1) : job/verdict, préfiltre P0 in-game + phases P1→P5, corpus, critères de sortie | **spécifié 2026-07-12** |
 | 13 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) | Schéma de l'enveloppe de proposition (D11) : cycle de vie, verdict, transport, journal | **spécifié 2026-07-12** |
+| 14 | [`14_ADAPTATEUR_AGENTS.md`](./14_ADAPTATEUR_AGENTS.md) | Adaptateur d'agents (spawn/supervision CLIs, handshake arbitre) + tchat ingame (M2) | draft 2026-07-13 |
 
 ## Décisions structurantes déjà prises
 

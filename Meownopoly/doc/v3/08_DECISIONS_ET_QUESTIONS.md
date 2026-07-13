@@ -581,6 +581,69 @@
   local diverge demande `RequestStateSnapshot`. Coût quasi nul, réutilise la
   mécanique F05/D35.
 
+### D40 — Transport des propositions : session réseau dédiée (pas d'extension d'EditorSession)
+- **Décision (2026-07-13).** Les enveloppes de proposition, verdicts et
+  messages associés (puis le bus d'état D35 et le checkpoint D37) transitent
+  par une **session host-authoritative dédiée** (`ProposalSession`, nom
+  indicatif), construite sur le patron `COLLAB_SESSION_PATTERN` avec sa
+  **propre plage de types de messages V3** (sans chevauchement avec
+  Game 0x01–0x11 / Editor 0x20+ / Physics 0x40+) et la couche de fiabilité
+  applicative M3.
+- **Pourquoi.** L'arbitrage est le mécanisme central des **trois modes**
+  (D23) ; le mode runtime co-construit n'a pas d'`EditorSession` ouverte.
+  Une session dédiée évite de coupler la gouvernance au module éditeur et
+  tout risque de régression sur le collab V2.
+- **Coût assumé.** Une session de plus à orchestrer : câblage, handshake, et
+  migration d'hôte coordonnée entre sessions (le checkpoint D37 orchestre).
+- **Alternatives écartées.** Étendre `EditorSession` (rapide pour le slice
+  collab éditeur, mais dette à rembourser au mode runtime avec un protocole
+  déjà en circulation) ; différer (risque de figer des détails de transport
+  au mauvais endroit dans M1/M3).
+
+### D41 — Dépendances de modules des artefacts + tool `module_config` au MVP
+- **Décision (2026-07-13).** Un artefact déclare ses dépendances vers les
+  modules gameplay (`GameplayModuleManager`) via un champ **`requiresModules`**
+  de l'enveloppe (doc 13 §3). Vérification **mécanique** : P0 rejette
+  `{code: "missing_module", retryable: true}` si un module requis n'est ni
+  actif sur la map ni activé par une opération du même lot ; le snapshot du
+  banc d'essai porte l'**état des modules** (doc 12 §2.3) pour tester
+  l'artefact dans les conditions réelles. **Jamais d'activation implicite**
+  par un appel de façade.
+- **Tool au MVP.** `module_config(id, enabled, params?)` entre au manifeste
+  (11e tool, Q-E08) : il produit une opération de `requestType: structure`,
+  intégrable au **lot atomique** de l'enveloppe (D14) — l'IA peut activer un
+  module et poser l'artefact qui en dépend dans la même proposition, jugée
+  d'un bloc par l'arbitre.
+- **Pourquoi.** Sans ce mécanisme, un artefact dépendant d'un module inactif
+  échoue silencieusement en partie (item mort), ou active le module par effet
+  de bord non arbitré. Le fil rouge du slice (plaque piégée →
+  `stats.addModifier`) rencontre ce cas dès S1.
+- **Alternatives écartées.** Activation implicite à l'appel de façade (effet
+  de bord caché de l'arbitrage) ; activation manuelle par le joueur seulement
+  (rejet `missing_module` non résoluble par l'IA, contraire à S3).
+
+### D42 — Banc d'essai exposé à l'IA cliente : mode atelier (dry-run) au MVP, session interactive tracée
+- **Décision (2026-07-13).** Le banc d'essai (doc 12) devient aussi un **outil
+  d'itération** pour l'IA cliente, en deux paliers :
+  - **Palier 1 (MVP)** : tool **`artifact_dryrun(source, targetUuid?)`** —
+    exécution one-shot du banc **en local chez l'auteur**, renvoyant le
+    verdict complet **avec les métriques** (tickUs, write-set observé,
+    peakMem…) pour que l'IA perfectionne l'artefact **avant** de le
+    soumettre. Quota par invocation (`MEOW_BENCH_DRYRUN_QUOTA`, défaut 10).
+  - **Palier 2 (post-MVP, tracé doc 12 §11)** : session atelier
+    **interactive** (process de banc persistant, versions poussées à chaud,
+    stimuli à la demande, métriques continues, rendu éventuel).
+- **Invariants.** Un dry-run n'est **jamais** un laissez-passer : l'artefact
+  soumis repasse toujours P0 → arbitre → **banc autoritaire chez l'hôte**
+  (même patron que P0 : copie locale fail-fast + exécution autoritaire).
+  En collab, les dry-runs des clients ne tournent **jamais** chez l'hôte
+  (anti-DoS). L'hôte n'accepte jamais un verdict calculé par un pair (R16).
+  La skill (doc 03) doit énoncer : *pass local ≠ acceptation* (divergence
+  possible de `benchVersion`/budgets, explicable via le job).
+- **Pourquoi.** L'IA converge avant de soumettre → moins d'allers-retours
+  d'arbitrage (coût LLM), S3 facilité ; réutilise `meow_testbench` tel quel
+  (~zéro architecture nouvelle au palier 1).
+
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
@@ -631,6 +694,12 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   absentes en V2, requises pour « modules NPC/joueur ».
 
 ### IA arbitre / MJ (doc 00 §4, D6/D10/D11)
+- **Personnalité et objectifs propres de l'arbitre (nouveau, 2026-07-13)** :
+  extension prévue du rôle — une « personnalité » configurable donnant à
+  l'arbitre des **objectifs propres** (à définir), pour en faire un acteur de
+  **divertissement** y compris en solo. Va au-delà du « prompt/personnalité
+  configuré par les joueurs » de D10 (qui ne couvre que le paramétrage du
+  jugement). À cadrer (doc 00 §4, note).
 - ~~Nature de l'arbitre ?~~ **Tranché : LLM externe** (`claude -p`/équivalent
   Codex) pour le contextuel, entouré de validateurs mécaniques.
 - ~~Grain d'arbitrage~~ **Tranché D25 : configurable par UI** (types de

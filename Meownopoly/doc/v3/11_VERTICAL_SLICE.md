@@ -47,8 +47,9 @@ impulsion via la façade) et écrit le score (`memory.set`).
 1. Invocation in-app (tchat ingame) : l'app spawne `claude -p` (puis Codex en
    variante) avec config MCP + token `proposer` + pré-prompt skill (D10/D17/D20).
 2. L'IA observe : `state_query(tiles)`, `screenshot` (≤ 5, D22).
-3. L'IA agit : `editor_place(zone, …)`, `memory_set(config, …)`,
-   `artifact_submit(source JS, target uuid)`.
+3. L'IA agit : `module_config(stats, enabled)` (dépendance de l'artefact,
+   D41), `editor_place(zone, …)`, `memory_set(config, …)`,
+   `artifact_submit(source JS, target uuid, requiresModules: ["stats"])`.
 4. L'élément apparaît dans l'éditeur, son comportement est actif, sa mémoire
    visible.
 
@@ -95,7 +96,7 @@ le joueur voit dans le tchat une explication compréhensible du refus.
 | Brique (traversée a minima) | Chantier doc 10 | Décisions |
 |-----------------------------|-----------------|-----------|
 | Passerelle MCP streamable HTTP + tokens par rôle | M1 | D20/D21 |
-| Tools (sous-ensemble du manifeste MVP à 10 tools traversé par le slice — `help` et `roster_edit` non requis) : `state_query`, `editor_place`, `editor_edit`, `memory_set`, `artifact_submit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-E08 |
+| Tools (sous-ensemble du manifeste MVP à 12 tools traversé par le slice — `help`, `roster_edit` et `artifact_dryrun` non requis) : `state_query`, `editor_place`, `editor_edit`, `memory_set`, `module_config` (D41), `artifact_submit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-E08 |
 | Adaptateur agents (spawn `claude -p`, supervision, pré-prompt) + tchat ingame minimal | M-adaptateur | D10/D17 |
 | Skill générée du manifeste, injectée en pré-prompt | M-skill | D17 |
 | Handshake + challenge arbitre | M-adaptateur | D24 |

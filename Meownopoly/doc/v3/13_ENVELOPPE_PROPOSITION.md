@@ -92,7 +92,8 @@ Règles d'états :
       "targetUuid": "tuile porteuse (optionnel)",
       "executionPolicy": "host_only | replicated_revalidated",
       "declaredWriteSet": ["<uuid>/state/score"],
-      "listensTo": ["zoneEntered", "memory:<uuid>/config/owner"]
+      "listensTo": ["zoneEntered", "memory:<uuid>/config/owner"],
+      "requiresModules": ["stats"]
     }
   ],
 
@@ -108,6 +109,10 @@ Notes de conception :
 - **`requestType`** est **calculé par la passerelle** (P0), jamais déclaré
   seul par l'IA : une enveloppe contenant `artifacts[]` est `code` quoi
   qu'en dise l'auteur — c'est ce qui rend le plancher D25 non contournable.
+  **En collab (précision 2026-07-13)** : le `requestType` qui fait foi est
+  **recalculé par le P0 de l'hôte à réception** — jamais repris du champ
+  porté par une enveloppe reçue d'un pair. Le P0 exécuté chez l'auteur
+  (fail-fast, doc 12 §3) n'est qu'un confort local.
   Catégories : `data_safe` (poses/écritures dans les quotas), `structure`
   (suppressions, resize, roster), `rules` (modification du règlement D12),
   `code` (au moins un artefact QML/JS).
@@ -122,6 +127,17 @@ Notes de conception :
   (write-set observé, doc 12 §3) ; la validation mécanique vérifie les
   opérations. Il alimente aussi l'undo ciblé (D15/D28) et la détection de
   cycles (D12).
+- **`requiresModules`** (ajout 2026-07-13, D41) : dépendances de l'artefact
+  vers les **modules gameplay** (`GameplayModuleManager`). Vérification
+  **mécanique** : P0 rejette `{code: "missing_module", retryable: true}` si un
+  module requis n'est ni actif sur la map ni activé par une opération
+  `module_config` **du même lot** ; le banc rejoue avec l'état des modules
+  porté par le snapshot (doc 12 §2.3). Jamais d'activation implicite par un
+  appel de façade.
+- **Activation de module = opération** : `module_config(id, enabled, params?)`
+  est un tool MCP du manifeste MVP (D41) qui produit une opération de
+  `requestType: structure`, intégrable au même lot atomique que l'artefact qui
+  en dépend — l'arbitre juge l'ensemble d'un bloc.
 - **`operations[].clientOpId`** : déduplication idempotente au rejeu réseau
   (Q-F06) — même id, même effet, appliqué une fois.
 - **Tout-ou-rien** (D14) : l'enveloppe est le **lot atomique**. Soit toutes

@@ -102,7 +102,8 @@ amendements. Filtrage fait côté serveur MCP (capacités du token, D20).
 
 ### Q-E08 — Sous-ensemble exact des tools portés au MVP — **B1**
 
-Familles retenues (doc 02 §5). **Proposition de manifeste MVP — 10 tools** :
+Familles retenues (doc 02 §5). **Proposition de manifeste MVP — 12 tools**
+(`module_config` ajouté par D41, `artifact_dryrun` par D42, le 2026-07-13) :
 
 
 | Tool                                                        | Rôle                                                                            | Regroupe                                                      |
@@ -117,6 +118,8 @@ Familles retenues (doc 02 §5). **Proposition de manifeste MVP — 10 tools** :
 | `events_poll(cursor)`                                       | resynchronisation en cours de tâche                                             | —                                                             |
 | `screenshot(view?)`                                         | retour visuel (plafond D22)                                                     | —                                                             |
 | `arbiter_verdict(proposalId, verdict, reasons, amendment?)` | **token arbitre uniquement**                                                    | —                                                             |
+| `module_config(id, enabled, params?)` (D41)                 | activation/config d'un module gameplay ; op `structure`, satisfait les `requiresModules` d'un artefact du même lot | setStatsModuleEnabled (hook, généralisé) |
+| `artifact_dryrun(source, targetUuid?)` (D42)                | itération pré-soumission : banc d'essai local, verdict + métriques complets ; quota par invocation ; pass local ≠ acceptation | — |
 
 
 - **Post-MVP** (hors manifeste v1) : `runtime_input` (piloter joueur/NPC),

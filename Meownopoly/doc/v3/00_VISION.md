@@ -34,7 +34,9 @@ que les IA **composent** — elles ne repartent pas de zéro à chaque fois.
 Quatre idées portent le pivot :
 
 1. **« Son IA » — modèle fourni côté client, invoqué depuis le jeu.** Chaque
-   joueur branche son propre modèle (Claude, un agent local, etc.). Le jeu ne
+   joueur branche son propre modèle — **en priorité les IA commerciales**
+   ciblées par D10/D17 (`claude -p`, Codex) ; des **agents locaux** (type
+   Ollama) sont envisagés **à terme**, hors périmètre du premier jalon. Le jeu ne
    fournit pas l'IA ; il fournit le **point d'entrée** (canal MCP local, doc 02),
    le **mode d'emploi** (skill embarquée, doc 03) et l'**interface** : un **tchat
    ingame** depuis lequel les IA sont **invoquées directement par l'application**
@@ -125,6 +127,13 @@ rôles**, répartis selon la topologie host-authoritative existante :
   un moteur runtime. **Aucun tour n'est imposé** — il s'introduit par le prompt à
   l'arbitre ou par une proposition d'IA cliente acceptée (règlement évolutif).
 
+> **Extension prévue (note 2026-07-13, à cadrer).** Le rôle de l'arbitre sera
+> **étendu** au-delà de la validation : une **« personnalité »** configurable
+> lui donnera des **objectifs propres** (à définir). But produit : faire de
+> l'arbitre un acteur de **divertissement** à part entière — ce qui justifie
+> notamment le coût du second modèle **même en solo**. Question ouverte tracée
+> au doc 08 (§2, IA arbitre).
+
 ### Topologie : 2 rôles isolés chez l'hôte, 1 chez le client
 
 ```
@@ -214,7 +223,7 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 | Validation du contenu | Règles C++ figées + host relais | + **IA arbitre / MJ** chez l'hôte (viabilité contextuelle) |
 | Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |
-| Point d'entrée IA | Automation (debug/dev) | **Canal WS dédié** IA-joueur (doc 02) |
+| Point d'entrée IA | Automation (debug/dev) | **Canal MCP local dédié** IA-joueur (D20, doc 02) |
 | Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gouvernées par l'arbitre**, matérialisées/exécutées par les capacités du jeu ; tour optionnel (doc 06, D8) |
 | Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations (doc 07, différé) |
 | Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** (doc 07) |
@@ -241,10 +250,17 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 
 - Les trois usages appartiennent à la cible V3 : **éditeur solo assisté**,
   **éditeur collaboratif assisté** et **runtime co-construit en direct**.
-- L'arbitre reste obligatoire dans les trois, y compris en solo/offline.
+- L'arbitre reste obligatoire dans les trois, y compris en solo/offline. Le
+  **coût des deux modèles est assumé tel quel** (pas d'arbitre « allégé » prévu
+  au cadrage) — et sera justifié à terme par l'extension « personnalité » de
+  l'arbitre (cf. §4, note).
 - Le niveau de liberté cible couvre composition de primitives, JS borné et QML/JS
   libre si R1 rend son isolation viable.
 - Public initial : groupe mixte, du joueur non technique au moddeur.
+  **Prérequis d'onboarding assumé** : chaque joueur dispose d'un **compte
+  fournisseur d'IA** et du **CLI d'agent installé** sur sa machine — le jeu
+  guide l'installation/configuration mais ne fournit ni modèle ni compte
+  (cf. §7, « pas d'IA hébergée par le jeu »).
 - Plateformes visées : **Windows et Linux**. Linux demande encore packaging, CI
   et qualification (doc 10).
 

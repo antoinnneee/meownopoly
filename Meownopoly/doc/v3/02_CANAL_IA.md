@@ -168,6 +168,10 @@ Identifiées lors de la cartographie du socle — ce sont les vrais chantiers :
   requis pour « l'usage de modules liés au NPC/joueur ».
 - **QML génératif** : `qml.instantiate(artefact, attachToUuid?)` — passe par le
   **sandbox** (doc 04). Nouvelle capacité centrale du pivot.
+- **Dry-run d'artefact** (D42, 2026-07-13) : `artifact_dryrun(source,
+  targetUuid?)` — itération pré-soumission sur le **banc d'essai local**
+  (verdict + métriques complets, quota par invocation ; *pass local ≠
+  acceptation*). Cf. doc 12 §6 bis.
 - **Événements** : `events_poll(cursor)` sur le journal métier (§4).
 - **Screenshot** : réutiliser `grabWindow` (déjà dans l'automation) pour donner à
   l'IA un retour visuel — MCP supporte les résultats image nativement. Politique
