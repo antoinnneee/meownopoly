@@ -5,13 +5,13 @@
 > décidé à ce stade) ; il n'y a pas de
 > tour imposé, il s'introduit par prompt ou proposition acceptée. Les **détails**
 > (format d'une règle, mémorisation, réplication) restent différés — à reprendre
-> après stabilisation des docs 02/04/05.
+> après stabilisation des docs [02](./02_CANAL_IA.md)/[04](./04_QML_GENERATIF_SANDBOX.md)/[05](./05_ESPACE_MEMOIRE_SNAPABLE.md).
 
 ## 1. Intention & décision cadre (D8)
 
 Chaque joueur, via son IA, doit pouvoir **construire une partie selon ses propres
 règles**. **Décision (D8) : les règles sont gouvernées par l'IA arbitre**
-(doc 00 §4, D6) — c'est l'arbitre qui accepte ou refuse les propositions et
+([doc 00](./00_VISION.md) §4, D6) — c'est l'arbitre qui accepte ou refuse les propositions et
 maintient la politique courante. Cela ne signifie pas que le LLM exécute chaque
 événement du runtime : une règle acceptée doit être **matérialisée** sous une forme
 exécutable par le jeu (configuration, module, primitive ou artefact QML/JS validé).
@@ -28,7 +28,7 @@ Conséquences directes :
      l'accepte** — le règlement est donc **négociable et évolutif en cours de
      partie**, sous l'autorité de l'arbitre.
 - **Les invariants durs restent hors de l'arbitre** : intégrité/sécurité sont
-  tenues par le **sandbox** (doc 04), pas par le jugement souple du MJ (doc 00 §9).
+  tenues par le **sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)), pas par le jugement souple du MJ ([doc 00](./00_VISION.md) §9).
 
 ## 2. Périmètre (recadré par D8)
 
@@ -48,7 +48,7 @@ Conséquences directes :
   suffisante : plan de capacités, configuration de module, DSL/machine à états,
   puis QML/JS sandboxé. Le règlement autoritatif est un document structuré
   versionné ; le prompt n'en est qu'une vue/configuration.
-- **Invariants durs = sandbox + garde-fous** (doc 04) : intégrité de partie,
+- **Invariants durs = sandbox + garde-fous** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) : intégrité de partie,
   anti-triche, limites de ressources, sécurité — **non-négociables**, hors du
   jugement de l'arbitre. L'arbitre affine ; il ne peut jamais lever ces invariants.
 
@@ -59,15 +59,15 @@ Conséquences directes :
 
 ## 3. Ancrages avec le reste du cadrage
 
-- **Consomme l'espace mémoire** (doc 05) : les règles lisent **et écrivent** la
+- **Consomme l'espace mémoire** ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) : les règles lisent **et écrivent** la
   configuration et l'état des tuiles (`config`, `state`, `tags`) pour décider des
   effets (« si `tags` contient `water-adjacent`, loyer
   ×`config.rentMultiplier` »). Surtout, elles
-  **réagissent** aux changements via le signal `userMemoryChanged` (doc 05 §1
+  **réagissent** aux changements via le signal `userMemoryChanged` ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md) §1
   usage 3) — un changement de variable, local ou reçu par broadcast, réveille la
   règle. L'espace mémoire est donc le **bus de variables** des comportements, pas
   un simple stockage passif.
-- **Peut déléguer au QML génératif** (doc 04) pour les effets non exprimables en
+- **Peut déléguer au QML génératif** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) pour les effets non exprimables en
   données.
 - **Doit rester compatible host-authoritative** : les effets s'appliquent-ils
   chez l'hôte uniquement puis se répliquent, ou chez chaque pair à partir d'un
@@ -80,15 +80,15 @@ Conséquences directes :
   règles devra donc l'**introduire** (déclencheurs, phases, conditions de
   victoire), pas seulement surcharger un existant.
 
-## 4. Questions à instruire (questions ouvertes : doc 09)
+## 4. Questions à instruire (questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - **Mémorisation du règlement en cours** : où vit l'état des règles que l'arbitre
   fait respecter — dans son seul contexte (prompt + historique), ou aussi
-  matérialisé (espace mémoire d'une entité « partie », doc 05) pour survivre à un
+  matérialisé (espace mémoire d'une entité « partie », [doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) pour survivre à un
   redémarrage / une migration d'hôte ?
 - **Format d'une règle proposée** par une IA cliente : texte libre pour l'arbitre,
-  données structurées, ou artefact QML/JS (doc 04) ? Le mécanisme d'acceptation
-  est, lui, spécifié : verdict D11 (deux audiences, doc 13) et application via
+  données structurées, ou artefact QML/JS ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) ? Le mécanisme d'acceptation
+  est, lui, spécifié : verdict D11 (deux audiences, [doc 13](./13_ENVELOPPE_PROPOSITION.md)) et application via
   l'enveloppe de proposition.
 - ~~**Forme exécutable d'une règle acceptée** : qui compile/valide cette
   forme ?~~ **Tranché D32** : sélection **mécanique** d'abord (l'échelle D12
@@ -112,9 +112,9 @@ Conséquences directes :
 
 ## 5. Prochaine action
 
-Une partie du sous-cadrage est depuis posée dans le doc 08 : représentation
+Une partie du sous-cadrage est depuis posée dans le [doc 08](./08_DECISIONS_ET_QUESTIONS.md) : représentation
 hiérarchique (D12), sélection des formes exécutables (D32), autorité/ordre des
 événements (D33). Rouvrir ce document pour le reste (mémorisation du règlement,
-réplication, format d'une règle proposée) une fois les docs 04 (sandbox) et 05
+réplication, format d'une règle proposée) une fois les [docs 04](./04_QML_GENERATIF_SANDBOX.md) (sandbox) et 05
 (espace mémoire) stables, et après une cartographie dédiée du gameplay V2
 existant.

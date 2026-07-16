@@ -2,7 +2,7 @@
 
 > **Statut : épuré le 2026-07-12, questions restantes détaillées le 2026-07-12.**
 > Le questionnaire initial a été dépouillé et ses arbitrages reportés dans le
-> doc 08 (**D9→D39**). Ce fichier ne contient plus que les **questions encore
+> [doc 08](./08_DECISIONS_ET_QUESTIONS.md) (**D9→D39**). Ce fichier ne contient plus que les **questions encore
 > ouvertes**, chacune détaillée avec son contexte, ses options et une
 > **proposition** prête à être validée ou amendée. Les questions tranchées ou
 > devenues caduques sont retirées ; la table §0 en garde la trace.
@@ -14,10 +14,10 @@
 - **B2** : peut être différé après le prototype, mais doit rester tracé.
 - Chaque question porte désormais une **Proposition** argumentée : valider,
 amender ou refuser suffit à la fermer.
-- Après remplissage, reporter chaque arbitrage stable dans le doc 08 sous un ID
+- Après remplissage, reporter chaque arbitrage stable dans le [doc 08](./08_DECISIONS_ET_QUESTIONS.md) sous un ID
 de décision, puis retirer la question d'ici.
 - Les mentions **Vérification stack** renvoient à
-`[10_AUDIT_STACK_EXISTANTE.md](./10_AUDIT_STACK_EXISTANTE.md)`.
+[`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md).
 
 ---
 
@@ -53,7 +53,7 @@ de décision, puis retirer la question d'ici.
 | **F02 (persistance de l'état runtime)**                                                                                                         | **tranchée** : sauvegarde de partie **distincte** de la map                                                                                                                                                                         | **D27** (2026-07-12)                               |
 | **F10 (undo sur valeur modifiée depuis)**                                                                                                       | **tranchée** : **restaure malgré tout** (LWW assumé, R10 accepté, trace au journal)                                                                                                                                                 | **D28** (2026-07-12)                               |
 | **I04 — principe (format de package)**                                                                                                          | **tranchée dans son principe** : même format que l'`AssetManager`/asset_server, étendu ; **les champs exacts restent ci-dessous**                                                                                                   | **D29** (2026-07-12)                               |
-| **J05 (scénarios du vertical slice)**                                                                                                           | **tranchée** : slice solo S1/S2/S3, défini dans `[11_VERTICAL_SLICE.md](./11_VERTICAL_SLICE.md)`                                                                                                                                    | **D30** (2026-07-12)                               |
+| **J05 (scénarios du vertical slice)**                                                                                                           | **tranchée** : slice solo S1/S2/S3, défini dans [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md)                                                                                                                                    | **D30** (2026-07-12)                               |
 | **B04 — reste (UX du prérequis arbitre)**                                                                                                       | **tranchée** : proposition validée telle quelle (indicateur 4 états, bouton grisé hors `Prêt`, test manuel + auto, bandeau + file si l'arbitre meurt)                                                                               | **D31** (2026-07-12)                               |
 | **C06 (qui choisit/valide la forme exécutable)**                                                                                                | **tranchée** : sélection mécanique d'abord, arbitre confirme/rétrograde ; **un élément amendé par l'arbitre repasse par la sandbox de validation (banc D26)**                                                                       | **D32** (2026-07-12)                               |
 | **C08 — restes (autorité/ordre des événements)**                                                                                                | **tranchée** : **autorité par source** (tout passe par l'hôte), ordre déterministe physique → mémoire → actions → tick via la file D12                                                                                              | **D33** (2026-07-12)                               |
@@ -102,7 +102,7 @@ amendements. Filtrage fait côté serveur MCP (capacités du token, D20).
 
 ### Q-E08 — Sous-ensemble exact des tools portés au MVP — **B1**
 
-Familles retenues (doc 02 §5). **Proposition de manifeste MVP — 12 tools**
+Familles retenues ([doc 02](./02_CANAL_IA.md) §5). **Proposition de manifeste MVP — 12 tools**
 (`module_config` ajouté par D41, `artifact_dryrun` par D42, le 2026-07-13) :
 
 
@@ -126,7 +126,7 @@ Familles retenues (doc 02 §5). **Proposition de manifeste MVP — 12 tools**
 `save_map`, tools caméra (`editor_camera`) — utiles mais non requis par le
 vertical slice.
 - Le groupement exact reste à **mesurer** sur les premiers workflows
-(tokens des schémas vs ambiguïté, doc 02 §3).
+(tokens des schémas vs ambiguïté, [doc 02](./02_CANAL_IA.md) §3).
 - **Sous-ensemble retenu :**
 
 ---
@@ -199,23 +199,19 @@ briques + espace mémoire + règles en config/DSL, sans QML génératif.
 ### Q-J07 — Quel est le prochain document à produire ? — **B1**
 
 - [x] Spécification du prototype sandbox R1 — **fait** :
-  ```
-  `[12_BANC_ESSAI_R1.md](./12_BANC_ESSAI_R1.md)` (banc d'essai
+  [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) (banc d'essai
   hors-process D26 : job/verdict JSON, préfiltre P0 in-game + phases
   P1→P5 au banc, corpus de test,
   critères de sortie R1, pool, cache de verdicts)
-  ```
-- [x] Plan du vertical slice — **fait** : `[11_VERTICAL_SLICE.md](./11_VERTICAL_SLICE.md)`
+- [x] Plan du vertical slice — **fait** : [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md)
 - [x] Schéma du protocole/enveloppe de proposition — **fait** :
-  ```
-  `[13_ENVELOPPE_PROPOSITION.md](./13_ENVELOPPE_PROPOSITION.md)`
+  [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md)
   (enveloppe, cycle de vie, verdict à deux audiences, transport, journal)
-  ```
 - [ ] ADR consolidés supplémentaires
 
 - **Ordre retenu :** spec R1 ✓ → slice ✓ → enveloppe ✓ → les trois documents
 de sortie de cadrage sont produits ; la suite est l'**implémentation**
-(prototype R1 doc 12, puis chantiers M1/M-adaptateur du slice).
+(prototype R1 [doc 12](./12_BANC_ESSAI_R1.md), puis chantiers M1/M-adaptateur du slice).
 
 
 
@@ -243,7 +239,7 @@ grain d'arbitrage **configurable par UI**, **un amendement d'arbitre repasse
 par le banc de validation**, événements en **autorité par source** (tout
 passe par l'hôte, ordre déterministe), agents `claude -p`/Codex supervisés
 et **invoqués in-app via tchat ingame**, sandbox de validation = **banc
-d'essai hors-process** (spécifié doc 12) avec **allow-list élargie**
+d'essai hors-process** (spécifié [doc 12](./12_BANC_ESSAI_R1.md)) avec **allow-list élargie**
 (`QtQuick.Controls` + modules custom énumérés), **façade** `Meow.GameApi` **et
 budgets validés**, canal = serveur MCP local en **streamable HTTP intégré au
 jeu**, screenshots plafonnés/éphémères/annoncés, mémoire `config`/`state`
@@ -256,8 +252,8 @@ GC au save, D36) et **checkpoint de migration d'hôte** (D37), skill générée
 au build et injectée en pré-prompt, bibliothèque locale officielle GLB au
 **format asset manager étendu** avec **manifeste de package validé** (D38 ;
 sécurisation différée, budgets assets provisoires), journal configurable à
-noyau d'audit obligatoire, **vertical slice solo S1/S2/S3 défini (doc 11)**,
-**enveloppe de proposition spécifiée (doc 13)**.
+noyau d'audit obligatoire, **vertical slice solo S1/S2/S3 défini ([doc 11](./11_VERTICAL_SLICE.md))**,
+**enveloppe de proposition spécifiée ([doc 13](./13_ENVELOPPE_PROPOSITION.md))**.
 - **Encore ouvert — chaque question ci-dessus porte une proposition prête à
 valider** : résumé/curseur d'événements (E06), manifeste des tools MVP (E08),
 données privées (J02), indicateurs d'arbitrage (J04), critères de repli D1

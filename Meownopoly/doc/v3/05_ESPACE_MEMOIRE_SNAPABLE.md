@@ -11,7 +11,7 @@ Donner à **chaque élément posable** (`ItemSnapable`) un **espace mémoire** :
 **set de valeurs sérialisables** (`int`, `string`, `bool`, `real`, listes/objets)
 attachées à l'élément, sans schéma de clés métier imposé côté cœur, que
 l'IA du joueur lit et écrit pour **personnaliser** l'élément (« loyer ×2 », état,
-compteur, paramètres d'un comportement, référence à un artefact QML de la doc 04).
+compteur, paramètres d'un comportement, référence à un artefact QML de la [doc 04](./04_QML_GENERATIF_SANDBOX.md)).
 
 Le cadrage D15 distingue deux namespaces dans un même objet `memory` :
 
@@ -35,7 +35,7 @@ Ces valeurs ont **trois usages liés** :
    la mémoire d'une zone devient l'**état lisible/modifiable d'une règle** (ex.
    « multiplicateur de loyer de cette zone », « nombre de passages »).
 3. **Réactivité par signaux QML.** Une écriture émet un **signal QML** que les
-   comportements générés / règles custom (doc 04/06) **écoutent** pour réagir
+   comportements générés / règles custom (doc [04](./04_QML_GENERATIF_SANDBOX.md)/[06](./06_MOTEUR_REGLES.md)) **écoutent** pour réagir
    (`onUserMemoryChanged`). C'est le **point de couplage** entre la donnée
    synchronisée et le JS embarqué : une règle réagit à un changement de variable,
    qu'il vienne d'une écriture locale **ou** d'un snapshot distant (§4).
@@ -155,7 +155,7 @@ s'appuie sur le futur bus d'état générique (§2.3) :
 - l'hôte séquence les écritures acceptées ; la résolution initiale est LWW selon
   cet ordre autoritatif.
 
-Reste à trancher (doc 08) : message `MemorySnapshot` **dédié** vs **extension**
+Reste à trancher ([doc 08](./08_DECISIONS_ET_QUESTIONS.md)) : message `MemorySnapshot` **dédié** vs **extension**
 du snapshot physique (détail d'implémentation). Le **delta par-clé**, le débit
 et les plafonds sont tranchés par **D35**.
 
@@ -177,9 +177,9 @@ séparément B (runtime) et C (transaction durable) avec des tests de concurrenc
 - **Taille du flux** : un gros blob envoyé périodiquement est coûteux.
   Privilégier un **delta par-clé** (n'émettre que les variables changées) plutôt
   qu'un snapshot complet par tuile, et **plafonner** la taille (cf. sandbox
-  doc 04 §3.4), coalescer et ne publier qu'en cas de changement.
+  [doc 04](./04_QML_GENERATIF_SANDBOX.md) §3.4), coalescer et ne publier qu'en cas de changement.
 - **Pas de schéma métier côté cœur** : le C++ traite les valeurs comme opaques. Le
-  **sens** des clés est une **convention IA / comportements** (doc 06), pas du C++.
+  **sens** des clés est une **convention IA / comportements** ([doc 06](./06_MOTEUR_REGLES.md)), pas du C++.
   préserve la liberté (point central du pivot) tout en gardant le cœur stable.
 - **Undo** : ne pas router les écritures d'état runtime par
   `submitOpWithUndo`/`ApplyState`. Les écritures de **configuration durable**, elles,
@@ -196,7 +196,7 @@ séparément B (runtime) et C (transaction durable) avec des tests de concurrenc
   delta et casse la sync.
 - **Sécurité** : si le blob **référence ou contient du QML** (comportement
   généré), ce QML **ne doit jamais** être instancié sans passer par le sandbox
-  (doc 04). Le blob sur disque n'est **pas** de confiance : re-valider au
+  ([doc 04](./04_QML_GENERATIF_SANDBOX.md)). Le blob sur disque n'est **pas** de confiance : re-valider au
   chargement.
 
 ## 5. Conventions d'usage (proposition, non normatif côté cœur)
@@ -219,7 +219,7 @@ la distinction de sémantique `config`/`state` doit être comprise par la couche
 transport afin de ne pas envoyer chaque tick dans l'undo ni de persister un état
 éphémère par accident. Le nom final de ces namespaces reste à valider.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
+## 6. Questions ouvertes (synthèse [doc 08](./08_DECISIONS_ET_QUESTIONS.md) ; questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : un `memory` global avec
   namespaces `config`/`state`.**

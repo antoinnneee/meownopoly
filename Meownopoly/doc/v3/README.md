@@ -21,7 +21,7 @@ n'est pas figé : il **se construit au fur et à mesure grâce aux utilisateurs*
 Comme du code entre dans la partie, l'hôte fait **obligatoirement** tourner une
 seconde IA — l'**arbitre / MJ** — qui vérifie la viabilité de chaque proposition
 avant qu'elle n'entre dans la partie partagée (2 modèles côté hôte, 1 côté client ;
-cf. doc 00 §4).
+cf. [doc 00](./00_VISION.md) §4).
 
 ## Ordre de lecture
 
@@ -38,12 +38,13 @@ cf. doc 00 §4).
 | 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | Autorité, représentation et exécution des règles | **partiellement cadré** |
 | 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | Bibliothèque (primitives — dont assets 3D — et/ou créations partagées) | **intention actée, architecture ouverte** |
 | 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | Registre des décisions (ADR léger) + questions ouvertes + risques | vivant |
-| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes**, chacune avec une proposition prête à valider (arbitrages D9→D39 reportés au doc 08) | **détaillé 2026-07-12** |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Questions **encore ouvertes**, chacune avec une proposition prête à valider (arbitrages D9→D39 reportés au [doc 08](./08_DECISIONS_ET_QUESTIONS.md)) | **détaillé 2026-07-12** |
 | 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | Audit V2 + plan M1→M13 des modifications de stack | **vérifié 2026-07-12** |
 | 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | Vertical slice solo S1/S2/S3 (D30) : fil rouge, briques traversées, critères | **défini 2026-07-12** |
 | 12 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | Spec du banc d'essai hors-process (D26/R1) : job/verdict, préfiltre P0 in-game + phases P1→P5, corpus, critères de sortie | **spécifié 2026-07-12** |
 | 13 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) | Schéma de l'enveloppe de proposition (D11) : cycle de vie, verdict, transport, journal | **spécifié 2026-07-12** |
 | 14 | [`14_ADAPTATEUR_AGENTS.md`](./14_ADAPTATEUR_AGENTS.md) | Adaptateur d'agents (spawn/supervision CLIs, handshake arbitre) + tchat ingame (M2) | draft 2026-07-13 |
+| 15 | [`15_PLAN_IMPLEMENTATION.md`](./15_PLAN_IMPLEMENTATION.md) | Plan d'implémentation : phases 0→5, fichiers impactés (vérifiés code), complexité par tâche, lots parallèles, jalon R1 | **draft 2026-07-17** (revue briques en cours) |
 
 ## Décisions structurantes déjà prises
 
@@ -51,23 +52,23 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
 
 - **D1 — Modèle d'exécution : QML génératif complet.** L'IA produit du vrai code
   QML chargé au runtime (`Qt.createQmlObject` / `Loader`). Conséquence directe :
-  le **sandbox d'exécution** (doc 04) devient la pièce d'architecture la plus
+  le **sandbox d'exécution** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) devient la pièce d'architecture la plus
   critique du pivot.
 - **D2/D20 — Canal d'interaction : serveur MCP local dédié.** On ne surcharge
   pas l'`AutomationServer` existant (`cpp/automation/`, port 7700) : il reste
-  réservé au test/debug interne. Un canal séparé « IA-joueur » est créé (doc 02),
+  réservé au test/debug interne. Un canal séparé « IA-joueur » est créé ([doc 02](./02_CANAL_IA.md)),
   exposé comme **serveur MCP local** (D20 — remplace le WS custom initial) :
   l'app spawne l'agent et injecte config + token, catalogue de tools groupé
   économe en tokens, événements injectés par invocation + `events_poll`.
   Forme d'intégration tranchée (**D21**) : endpoint **streamable HTTP loopback
   intégré au process du jeu** (`QtHttpServer` à installer ; repli pont stdio).
-- **D3 — Règles : détails de représentation/exécution différés** (doc 06).
+- **D3 — Règles : détails de représentation/exécution différés** ([doc 06](./06_MOTEUR_REGLES.md)).
   L'autorité de politique est tranchée par D8, mais son exécution runtime ne
   repose pas implicitement sur le LLM : elle doit être matérialisée par les
   primitives/modules/QML acceptés.
-- **D4 — Bibliothèque : architecture différée** (doc 07). Première intention de
+- **D4 — Bibliothèque : architecture différée** ([doc 07](./07_BIBLIOTHEQUE.md)). Première intention de
   contenu actée : une **bibliothèque d'assets 3D** (versant primitives graphiques,
-  doc 07 §1).
+  [doc 07](./07_BIBLIOTHEQUE.md) §1).
 - **D6 — Deux rôles d'IA : cliente (proposante) partout + arbitre (MJ) chez
   l'hôte, obligatoire.** L'hôte fait tourner 2 modèles (proposant + arbitre de
   viabilité), le client 1 (proposant). L'arbitre est **requis** pour gouverner la
@@ -75,16 +76,16 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   sécurité. Il se place dans le flux d'acceptation **avant l'application** et
   avant l'exécution finale (préfiltre mécanique possible avant le LLM).
   Nature/grain/verdict à cadrer
-  (doc 00 §4, doc 08).
+  ([doc 00](./00_VISION.md) §4, [doc 08](./08_DECISIONS_ET_QUESTIONS.md)).
 - **D7 — Espace mémoire : deux sémantiques, deux chemins.** La configuration
   durable suit le pipeline d'édition/persistance et peut être undoable ; l'état
   runtime suit un flux host-authoritative à sémantique « dernier état » et n'est
   pas undoable au grain de l'écriture. La cadence, le transport et la stratégie
-  d'undo structurel restent à trancher (doc 05, doc 08).
+  d'undo structurel restent à trancher ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md), [doc 08](./08_DECISIONS_ET_QUESTIONS.md)).
 - **D8 — L'arbitre gouverne les règles ; le jeu exécute leur forme acceptée.**
   Aucun moteur générique séparé n'est acté. **Aucun tour imposé** : il s'introduit
   par le prompt ou une proposition acceptée, puis doit être matérialisé dans des
-  capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc 06/08).
+  capacités/modules/QML validés. Invariants durs = contrôles mécaniques (doc [06](./06_MOTEUR_REGLES.md)/[08](./08_DECISIONS_ET_QUESTIONS.md)).
 - **D9→D39 — Arbitrages issus du questionnaire et de ses suites.** Périmètre des
   trois modes V3 **livrés solo → collab → runtime** (D23), agents Codex/Claude
   supervisés **invoqués in-app via tchat ingame**, arbitre prouvé par
@@ -97,19 +98,19 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   qui restaure malgré tout** (D28), artefacts sous autorité hôte, skill générée
   au build **injectée en pré-prompt**, bibliothèque locale officielle GLB au
   **format asset manager étendu** (D29), et **vertical slice solo défini**
-  (D30, doc 11). Suites du 2026-07-12 : **UX du prérequis arbitre validée**
+  (D30, [doc 11](./11_VERTICAL_SLICE.md)). Suites du 2026-07-12 : **UX du prérequis arbitre validée**
   (D31), **un amendement d'arbitre repasse par le banc** (D32), **événements
   en autorité par source** (D33), **allow-list/façade/budgets du sandbox
   arrêtés** (D34, allow-list élargie à `QtQuick.Controls` + modules custom
-  énumérés), **banc d'essai spécifié** (doc 12), **enveloppe de proposition
-  spécifiée** (doc 13). Dernière vague (2026-07-12) : **bus d'état runtime
+  énumérés), **banc d'essai spécifié** ([doc 12](./12_BANC_ESSAI_R1.md)), **enveloppe de proposition
+  spécifiée** ([doc 13](./13_ENVELOPPE_PROPOSITION.md)). Dernière vague (2026-07-12) : **bus d'état runtime
   complet** — delta 30 Hz, snapshots de réparation/structurel, resync,
   garanties hybrides commits/supersedable, plafonds chiffrés (D35) ;
   **cycle de vie des artefacts multi-tuiles** (store par hash, refcount, GC
   au save, D36) ; **checkpoint de migration d'hôte** (D37) ; **manifeste de
   package validé, sécurisation de la bibliothèque différée, budgets assets
   provisoires** (D38) ; **divergence détectée par hash périodique + resync**
-  (D39). Détail et réserves techniques dans les docs 08→13.
+  (D39). Détail et réserves techniques dans les docs [08](./08_DECISIONS_ET_QUESTIONS.md)→[13](./13_ENVELOPPE_PROPOSITION.md).
 
 ## Ce que le pivot réutilise du socle V2 (ne pas réinventer)
 
@@ -117,13 +118,13 @@ Détail et justification dans [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET
   `editorAutomationHooks` dans `qml/editor/Editor.qml`) : réutilisés **comme
   patron de code** (protocole, loopback, dispatch) et comme **implémentation** des
   capacités portées dans le canal. ⚠️ **L'automation reste test-only : l'IA
-  cliente n'y a aucun accès** — le canal ré-expose un sous-ensemble curé (D2, doc 02).
+  cliente n'y a aucun accès** — le canal ré-expose un sous-ensemble curé (D2, [doc 02](./02_CANAL_IA.md)).
 - **MCP `automation_mcp/`** : **patron d'outillage** et source de schémas à porter.
   La source de vérité livrée est le **manifeste du canal IA**, jamais le MCP
-  d'automation lui-même (doc 03).
+  d'automation lui-même ([doc 03](./03_SKILL_CLIENT_IA.md)).
 - **`ItemSnapable` + `EditDelta` + `EditorOpBus`/`EditorSession`** : le pipeline
   de mutation/sérialisation/sync collaboratif dans lequel s'insère l'espace
-  mémoire (doc 05).
+  mémoire ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)).
 - **`PhysicsSession` / Pattounx v2 / World3D** : présentation et simulation
   runtime que l'IA pilotera à terme.
 

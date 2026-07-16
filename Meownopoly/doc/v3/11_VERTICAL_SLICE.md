@@ -54,7 +54,7 @@ impulsion via la façade) et écrit le score (`memory.set`).
    visible.
 
 **Réussite** : l'élément fonctionne (marcher sur la plaque produit l'effet),
-il est sauvegardé/rechargé avec la map (re-validation au chargement, doc 04
+il est sauvegardé/rechargé avec la map (re-validation au chargement, [doc 04](./04_QML_GENERATIF_SANDBOX.md)
 §3.5), l'undo structurel le retire proprement.
 
 ### S2 — Proposition arbitrée puis appliquée
@@ -66,7 +66,7 @@ il est sauvegardé/rechargé avec la map (re-validation au chargement, doc 04
    par l'app avec le contexte de la proposition.
 3. Verdict de l'arbitre (via `arbiter_verdict`) : accepté (éventuellement
    amendé, journalisé D19).
-4. **Banc d'essai hors-process** (D26, spécifié doc 12) : la carte est
+4. **Banc d'essai hors-process** (D26, spécifié [doc 12](./12_BANC_ESSAI_R1.md)) : la carte est
    réinstanciée depuis un snapshot dans un process de test, l'artefact
    instancié, budgets vérifiés (chargement, boucle, CPU/mémoire — D34).
 5. Application dans la partie ; le journal contient proposition, verdict,
@@ -93,7 +93,7 @@ le joueur voit dans le tchat une explication compréhensible du refus.
 
 ## 4. Briques traversées ↔ chantiers
 
-| Brique (traversée a minima) | Chantier doc 10 | Décisions |
+| Brique (traversée a minima) | Chantier [doc 10](./10_AUDIT_STACK_EXISTANTE.md) | Décisions |
 |-----------------------------|-----------------|-----------|
 | Passerelle MCP streamable HTTP + tokens par rôle | M1 | D20/D21 |
 | Tools (sous-ensemble du manifeste MVP à 12 tools traversé par le slice — `help`, `roster_edit` et `artifact_dryrun` non requis) : `state_query`, `editor_place`, `editor_edit`, `memory_set`, `module_config` (D41), `artifact_submit`, `events_poll`, `screenshot`, `arbiter_verdict` | M1 | Q-E08 |
@@ -101,7 +101,7 @@ le joueur voit dans le tchat une explication compréhensible du refus.
 | Skill générée du manifeste, injectée en pré-prompt | M-skill | D17 |
 | Handshake + challenge arbitre | M-adaptateur | D24 |
 | Enveloppe de proposition + journal noyau d'audit | M-proposition | D11/D19 |
-| Banc d'essai hors-process (snapshot → test → verdict) | M-sandbox | D26, spec doc 12 |
+| Banc d'essai hors-process (snapshot → test → verdict) | M-sandbox | D26, spec [doc 12](./12_BANC_ESSAI_R1.md) |
 | Confinement runtime minimal (contexte restreint + façade `Meow.GameApi` réduite aux besoins du fil rouge) | M-sandbox | D13, D34 |
 | Mémoire `config` sur tuile (persistance + undo structurel) | M-mémoire | D7/D15 |
 
@@ -119,13 +119,13 @@ bibliothèque GLB, migration, sauvegarde de partie runtime.
 3. **Audit complet** : chaque proposition du slice est rejouable depuis le
    journal (proposition, verdict, raisons, version — D19).
 4. **Économie mesurée** : tokens consommés par invocation relevés (schémas
-   tools + pré-prompt) — première mesure réelle pour Q-E08/doc 02 §3.
+   tools + pré-prompt) — première mesure réelle pour Q-E08/[doc 02](./02_CANAL_IA.md) §3.
 5. **Critère produit D9** : la plaque piégée du fil rouge fonctionne de bout
    en bout, survit à un save/load, et son retrait par undo laisse la map saine.
 
 ## 6. Hors périmètre explicite (post-slice)
 
-Dans l'ordre suggéré ensuite (aligné D23 + doc 08 §4) : couche réseau V3 →
+Dans l'ordre suggéré ensuite (aligné D23 + [doc 08](./08_DECISIONS_ET_QUESTIONS.md) §4) : couche réseau V3 →
 slice **collaboratif** (proposition d'un client distant, autorité hôte) →
 bus d'état + slice **runtime** (règles déclenchées en partie) → undo
 concurrent, reconnexion/resync, migration hôte/arbitre, sauvegarde de partie,

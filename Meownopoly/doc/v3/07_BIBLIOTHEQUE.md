@@ -18,7 +18,7 @@ Trois facettes complémentaires sont envisagées :
 - **Bibliothèque de primitives** : un catalogue de briques fournies par le jeu
   (composants QML de base, actions, templates de comportement/règles) dans lequel
   l'IA **pioche** pour construire. C'est le **vocabulaire de base** offert aux IA —
-  et, pour le QML génératif (doc 04), la source de blocs **déjà validés** que
+  et, pour le QML génératif ([doc 04](./04_QML_GENERATIF_SANDBOX.md)), la source de blocs **déjà validés** que
   l'IA assemble plutôt que de tout générer de zéro (réduit la surface du sandbox).
 - **Bibliothèque de créations partagées** : un dépôt d'éléments/comportements
   **produits par les IA/joueurs**, sauvegardables et échangeables entre parties et
@@ -29,9 +29,9 @@ Trois facettes complémentaires sont envisagées :
   versant **graphique** du vocabulaire — dont le but explicite est d'offrir un
   **large éventail de possibilités** de construction sans générer chaque forme de
   zéro. **Prévue au développement.** S'appuie sur le rendu 3D existant (World3D /
-  Pattounx v2, doc 01) et, pour la distribution, sur l'`asset_server/` (§2).
+  Pattounx v2, [doc 01](./01_ARCHITECTURE_CIBLE.md)) et, pour la distribution, sur l'`asset_server/` (§2).
 
-> **Le but affiné de la V3 (doc 00 §2) rend ces deux lectures porteuses**, sans
+> **Le but affiné de la V3 ([doc 00](./00_VISION.md) §2) rend ces deux lectures porteuses**, sans
 > pour autant lever le report (D4). (a) « Composer les briques préexistantes
 > plutôt que générer de zéro » place les **primitives** au cœur du mécanisme : ce
 > sont le vocabulaire graphique/gameplay que l'IA assemble. (b) « Le jeu se
@@ -43,24 +43,24 @@ Trois facettes complémentaires sont envisagées :
 
 ## 2. Ancrages avec le reste du cadrage
 
-- **Primitives ↔ sandbox (doc 04)** : plus la bibliothèque de primitives est
+- **Primitives ↔ sandbox ([doc 04](./04_QML_GENERATIF_SANDBOX.md))** : plus la bibliothèque de primitives est
   riche, moins l'IA a besoin de générer du QML libre → surface de risque réduite.
   Une primitive de la bibliothèque est un artefact **pré-validé/signé**.
-- **Créations partagées ↔ espace mémoire (doc 05)** : une « création » = un blob
+- **Créations partagées ↔ espace mémoire ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md))** : une « création » = un blob
   mémoire (données + réf. comportement) + éventuellement un artefact QML. Le format
   d'échange s'appuie sur la sérialisation existante (`toJSON`, map JSON).
 - **Assets 3D ↔ rendu (World3D / Pattounx v2)** : la bibliothèque d'assets 3D
-  alimente directement le rendu 3D existant (doc 01 §3, `qml/world3d/`). Une
+  alimente directement le rendu 3D existant ([doc 01](./01_ARCHITECTURE_CIBLE.md) §3, `qml/world3d/`). Une
   entrée « asset 3D » = un modèle importable + ses métadonnées (pose, échelle,
   point d'ancrage) ; format et pipeline d'import **à instruire** (§3).
 - **Distribution** : le projet a déjà un `asset_server/` (serveur HTTP de
   distribution d'assets, launcher avec queue/retry/checksum). D18 décide de le
   **réutiliser après audit**. L'audit confirme file, reprise, retry, SHA-256 et
-  manifestes, mais pas de signature d'éditeur ni adressage par hash (doc 10).
+  manifestes, mais pas de signature d'éditeur ni adressage par hash ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 - **Sécurité** : toute création téléchargée depuis un dépôt est **non fiable** →
-  re-validation obligatoire par le sandbox (doc 04) avant exécution.
+  re-validation obligatoire par le sandbox ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) avant exécution.
 
-## 3. Questions à instruire (questions ouvertes : doc 09)
+## 3. Questions à instruire (questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - ~~Local ou communautaire au premier jalon ?~~ **Tranché D18 : local officiel.**
 - Périmètre exact de la bibliothèque unifiée : primitives gameplay livrées avec
@@ -87,11 +87,11 @@ Trois facettes complémentaires sont envisagées :
 
 ## 4. Prochaine action
 
-Rouvrir après les docs 04 (sandbox) et 05 (espace mémoire) : le format d'une
+Rouvrir après les [docs 04](./04_QML_GENERATIF_SANDBOX.md) (sandbox) et 05 (espace mémoire) : le format d'une
 entrée de bibliothèque dépend directement de la façon dont un comportement/donnée
 est représenté et validé. Poser alors une décision **D-bibliothèque** dans le
-doc 08.
+[doc 08](./08_DECISIONS_ET_QUESTIONS.md).
 
 Cas particulier : le **versant assets 3D** (purement graphique) dépend surtout du
 rendu (World3D) et de la distribution, **moins du sandbox** — il peut être
-**instruit plus tôt**, en parallèle des docs 04/05.
+**instruit plus tôt**, en parallèle des docs [04](./04_QML_GENERATIF_SANDBOX.md)/[05](./05_ESPACE_MEMOIRE_SNAPABLE.md).

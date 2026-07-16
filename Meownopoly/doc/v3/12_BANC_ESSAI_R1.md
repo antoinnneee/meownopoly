@@ -4,7 +4,7 @@
 > (D26) : le banc d'essai hors-process qui valide tout artefact QML/JS candidat
 > avant son introduction dans la partie. C'est aussi le **prototype R1** : ses
 > mesures décident du maintien de D1 (critères de sortie Q-J06). L'étage 2
-> (confinement runtime in-process, D13) est spécifié dans le doc 04.
+> (confinement runtime in-process, D13) est spécifié dans le [doc 04](./04_QML_GENERATIF_SANDBOX.md).
 
 ## 1. Rôle et position dans le pipeline
 
@@ -24,7 +24,7 @@ Deux invariants :
 
 - **Aucun code n'atteint la partie sans verdict `pass` du banc** — y compris
   un élément **amendé par l'arbitre** (D32) et tout artefact **rechargé depuis
-  le disque** (revalidation au chargement, doc 04 §3.5, avec cache §7).
+  le disque** (revalidation au chargement, [doc 04](./04_QML_GENERATIF_SANDBOX.md) §3.5, avec cache §7).
 - **Le jeu ne gèle jamais** : tout comportement pathologique (boucle infinie,
   allocation massive, crash) se produit dans le process de test, qui est tué.
 
@@ -81,7 +81,7 @@ Deux invariants :
 ```
 
 - **Snapshot** : réutilise la sérialisation de sauvegarde existante (map) +
-  l'export mémoire (doc 05). Le banc reconstruit la carte via
+  l'export mémoire ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)). Le banc reconstruit la carte via
   `ItemSnapableFactory.createItemSnapableFromJson` — même chemin que le
   full-sync collab (pas de format nouveau).
 - **Budgets sérialisés dans le job** : le jeu est la source de vérité des
@@ -211,7 +211,7 @@ Le banc sert aussi d'**outil d'itération pré-soumission** (décision D42,
 
 Clé : `contentHash(artifact) + benchVersion + hash(budgets)`. Un artefact déjà
 validé (même source, même banc, mêmes budgets) n'est **pas** re-testé — c'est
-le mécanisme de « revalidation au chargement » à coût nul (doc 04 §3.5) et de
+le mécanisme de « revalidation au chargement » à coût nul ([doc 04](./04_QML_GENERATIF_SANDBOX.md) §3.5) et de
 la revalidation chez les pairs (D16). **Le snapshot ne fait pas partie de la
 clé** : le verdict du banc porte sur le comportement intrinsèque de
 l'artefact (budgets, chargement, fuites), pas sur une carte précise — c'est
@@ -225,7 +225,7 @@ avec le banc (`test_artifacts/`) :
 
 | Artefact | Attendu |
 |----------|---------|
-| `sain_plaque_piegee.qml` (fil rouge doc 11) | `pass`, metrics dans les budgets |
+| `sain_plaque_piegee.qml` (fil rouge [doc 11](./11_VERTICAL_SLICE.md)) | `pass`, metrics dans les budgets |
 | `boucle_infinie_onload.qml` (`while(true)` au `Component.onCompleted`) | `load_timeout`, jeu jamais gelé |
 | `boucle_infinie_handler.qml` (boucle dans un handler d'événement) | `event_budget`/`bench_timeout` en P4 |
 | `timer_spam.qml` (Timer 1 ms + emit) | `event_flood` ou rejet P0 (plancher Timer) |

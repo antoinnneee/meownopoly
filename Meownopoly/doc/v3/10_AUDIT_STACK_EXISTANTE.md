@@ -202,7 +202,7 @@ Les réponses suivantes ne peuvent pas être closes par « stack existante » :
   périodique + `RequestStateSnapshot`).
 
 Celles non tranchées restent ouvertes ou deviennent des chantiers explicites
-dans le doc 09.
+dans le [doc 09](./09_QUESTIONNAIRE_CADRAGE.md).
 
 ## 9. Modifications à effectuer sur les stacks existantes
 
@@ -236,7 +236,7 @@ est un **serveur MCP local** (D20).
   découverte) ;
 - versionner le protocole globalement (`protocolVersion` dans le manifeste) ;
 - regrouper les tools par familles économes en tokens (`editor_place`,
-  `state_query`, `events_poll`… — doc 02 §3) sur les namespaces `editor.*`,
+  `state_query`, `events_poll`… — [doc 02](./02_CANAL_IA.md) §3) sur les namespaces `editor.*`,
   `state.*`, `artifact.*`, `rules.*` et `runtime.*` ;
 - ajouter quotas par session d'agent, taille maximale, rate-limit et erreurs
   structurées `{code, message, details, retryable}` ;

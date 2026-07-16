@@ -1,8 +1,8 @@
 # Récapitulatif du cadrage V3
 
 > **Statut : synthèse ponctuelle (2026-07-12).** Photo de l'état du cadrage à date,
-> dérivée du README et du registre `08_DECISIONS_ET_QUESTIONS.md`. En cas de
-> divergence, les docs 00→10 font foi.
+> dérivée du README et du registre [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md). En cas de
+> divergence, les docs [00](./00_VISION.md)→[10](./10_AUDIT_STACK_EXISTANTE.md) font foi.
 
 ## 1. Le pivot en bref
 
@@ -41,7 +41,7 @@ chez l'hôte, 1 chez le client).
 - **D1 — QML génératif complet.** L'IA produit du vrai QML chargé au runtime.
   Précision 2026-07-11 : le but courant est de **composer les briques validées**
   + JS embarqué, pas de générer des scènes de zéro — ce qui réduit la surface du
-  sandbox. Le sandbox (doc 04) reste la pièce la plus critique (risque R1).
+  sandbox. Le sandbox ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) reste la pièce la plus critique (risque R1).
 - **D2/D20/D21 — Canal MCP local dédié, streamable HTTP intégré au jeu.**
   Nouveau canal local IA↔jeu, exposé comme **serveur MCP** (D20, remplace le WS
   custom initial) : l'app spawne l'agent et lui injecte config + token +
@@ -77,7 +77,7 @@ chez l'hôte, 1 chez le client).
   artefacts, write-set, version}. Flux : préfiltre mécanique → arbitre →
   validation complète → exécution. L'arbitre peut **amender et appliquer
   immédiatement**, avec journal de l'original et des raisons. **Schéma
-  complet spécifié dans le doc 13** (cycle de vie, `requestType` calculé par
+  complet spécifié dans le [doc 13](./13_ENVELOPPE_PROPOSITION.md)** (cycle de vie, `requestType` calculé par
   la passerelle — plancher D25 non contournable —, verdict à deux audiences
   joueur/IA, tool bloquant 60 s, transport commit + dédup en collab).
 - **D19 — Journal configurable** avec noyau d'audit obligatoire (proposition,
@@ -106,7 +106,7 @@ chez l'hôte, 1 chez le client).
 - **D13/D26 — Sandbox à deux étages.** **Validation = banc d'essai
   hors-process** (D26) : moteur/process distincts, la carte est réinstanciée
   depuis un snapshot pour tester l'artefact candidat (non-chargement, boucle
-  infinie → process tué, le jeu ne gèle jamais). **Spécifié dans le doc 12**
+  infinie → process tué, le jeu ne gèle jamais). **Spécifié dans le [doc 12](./12_BANC_ESSAI_R1.md)**
   (job/verdict JSON, préfiltre P0 in-game + phases P1→P5 au banc, corpus de
   test, pool, cache de verdicts,
   critères de sortie R1). **Exécution en partie = confinement in-process**
@@ -163,7 +163,7 @@ chez l'hôte, 1 chez le client).
 - **D23 — Ordre de livraison : solo → collaboratif → runtime.** Le solo
   dé-risque canal/skill/sandbox/arbitrage sans réseau ; le vertical slice
   (D30) est défini sur ce mode.
-- **D30 — Vertical slice défini** (doc 11) : fil rouge « plaque piégée »
+- **D30 — Vertical slice défini** ([doc 11](./11_VERTICAL_SLICE.md)) : fil rouge « plaque piégée »
   (gameplay + physique + autres éléments + interaction joueur), trois
   scénarios — S1 création avec config + comportement, S2 proposition arbitrée
   + banc d'essai + application, S3 rejet actionnable et itération.
@@ -182,24 +182,24 @@ chez l'hôte, 1 chez le client).
 
 ## 4. Principales questions encore ouvertes
 
-**Chaque question du doc 09 porte désormais une proposition prête à valider.**
+**Chaque question du [doc 09](./09_QUESTIONNAIRE_CADRAGE.md) porte désormais une proposition prête à valider.**
 Les principales :
 
 - **Confinement runtime (D13, recentré par D26)** : verrouillage réel d'un
   `QQmlContext` et masquage des singletons → **prototype R1 requis** — le
   contenu (allow-list, façade, budgets) est arrêté par **D34**, le protocole
-  de mesure par le **doc 12** (corpus + critères de sortie) ; la préemption
+  de mesure par le **[doc 12](./12_BANC_ESSAI_R1.md)** (corpus + critères de sortie) ; la préemption
   des boucles est couverte par le banc d'essai D26.
 - **Canal** : manifeste des 10 tools MVP proposé (Q-E08), schéma du résumé
   d'événements + curseur proposé (Q-E06).
 - **Mémoire/réseau** : tranché (D35/D39) ; reste la sérialisation
   string-manuelle de `ItemSnapable::toJSON` à assainir (bloquant pour le
-  snapshot du banc, doc 12 §10) et le détail `MemorySnapshot` dédié vs
+  snapshot du banc, [doc 12](./12_BANC_ESSAI_R1.md) §10) et le détail `MemorySnapshot` dédié vs
   extension du snapshot physique.
 - **Sortie de cadrage** : données privées (Q-J02), indicateurs d'arbitrage
   (Q-J04), critères de repli D1 (Q-J06), responsables par famille (Q-J08).
-  Q-J07 : les trois documents de sortie sont produits (spec R1 ✓ doc 12,
-  slice ✓ doc 11, enveloppe ✓ doc 13) — la suite est l'**implémentation**
+  Q-J07 : les trois documents de sortie sont produits (spec R1 ✓ [doc 12](./12_BANC_ESSAI_R1.md),
+  slice ✓ [doc 11](./11_VERTICAL_SLICE.md), enveloppe ✓ [doc 13](./13_ENVELOPPE_PROPOSITION.md)) — la suite est l'**implémentation**
   (prototype R1, puis chantiers M1/M-adaptateur du slice).
 
 ## 5. Risques majeurs (top)
@@ -215,7 +215,7 @@ Les principales :
 | R15 migration d'hôte sans contexte arbitre | Adressé (D37) — checkpoint en 4 volets, propositions suspendues jusqu'à l'ACK |
 | R16 checksum SHA-256 pris pour signature | Assumé au MVP (D38) — sécurisation différée, champs réservés, à régler avant le communautaire |
 
-(Liste complète : doc 08 §3, R1→R16.)
+(Liste complète : [doc 08](./08_DECISIONS_ET_QUESTIONS.md) §3, R1→R16.)
 
 ## 6. Séquencement suggéré (non engageant, aligné D23/D30)
 
@@ -225,13 +225,13 @@ Les principales :
    rôles/tokens injectés, enveloppe de proposition.
 3. **Adaptateur agents** : supervision `claude -p`/Codex, skill au build,
    handshake arbitre (D24), tchat ingame minimal.
-4. **Vertical slice solo** (D30, doc 11) : S1/S2/S3 sur le fil rouge.
+4. **Vertical slice solo** (D30, [doc 11](./11_VERTICAL_SLICE.md)) : S1/S2/S3 sur le fil rouge.
 5. **Couche réseau V3** : ACK applicatif, retry/dédup, transaction
    prepare/commit/rollback (prérequis du collab).
 6. **Espace mémoire** : bus runtime `state`, undo ciblé, sauvegarde de partie (D27).
 7. **Bibliothèque officielle GLB** au format asset manager étendu (D29).
 
-Détail technique : doc 10, chantiers **M1→M13**.
+Détail technique : [doc 10](./10_AUDIT_STACK_EXISTANTE.md), chantiers **M1→M13**.
 
 ## 7. Socle V2 réutilisé
 

@@ -12,7 +12,7 @@
 - **Pourquoi.** Liberté maximale, cohérente avec « ajouter des éléments à la
   volée » et « une partie selon ses propres règles ». Exploite le fait que le QML
   est interprété.
-- **Conséquence.** Le **sandbox** (doc 04) devient la pièce d'architecture la plus
+- **Conséquence.** Le **sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) devient la pièce d'architecture la plus
   critique ; c'est la plus grande surface de sécurité du projet. Risque technique
   n°1 : la faisabilité réelle du sandboxing QML/JS dans Qt (à prototyper tôt).
 - **Alternatives écartées.** « Palette + espace mémoire » (plus sûr, moins libre) ;
@@ -24,8 +24,8 @@
   activables) **et en y embarquant du code JS** pour le comportement nouveau. D1
   reste « vrai code au runtime » (le JS embarqué en est), mais **adossé à un
   vocabulaire de briques validées** — ce qui rapproche l'usage courant de
-  l'« hybride validé » et **réduit d'autant la surface du sandbox** (cf. doc 04 §5,
-  doc 07 primitives).
+  l'« hybride validé » et **réduit d'autant la surface du sandbox** (cf. [doc 04](./04_QML_GENERATIF_SANDBOX.md) §5,
+  [doc 07](./07_BIBLIOTHEQUE.md) primitives).
 
 ### D2 — Canal d'interaction : **canal local dédié** *(transport révisé par D20)*
 - **Décision.** Créer un canal **local dédié** IA↔jeu, distinct de
@@ -38,7 +38,7 @@
   indépendamment (allow-list vs introspection totale), évoluer sans casser le
   harnais de dev.
 - **Conséquence.** Réutiliser les **fondations** de l'automation (loopback strict,
-  JSON corrélé, GUI thread) mais **pas** son catalogue permissif. Doc 02.
+  JSON corrélé, GUI thread) mais **pas** son catalogue permissif. [Doc 02](./02_CANAL_IA.md).
 - **Frontière d'accès (non-négociable).** L'IA cliente n'a **aucun accès** au
   harnais d'automation (`AutomationServer` port 7700, `automation_mcp/`), réservé
   au test/debug. Le canal ré-expose un **sous-ensemble curé** (certaines features
@@ -49,23 +49,23 @@
   contrat d'IA) ; décider plus tard (le pivot a besoin du canal tôt).
 
 ### D3 — Moteur de règles : **cadrage différé** (partiellement levé par D8)
-- **Décision.** Reporter le cadrage des **détails** (doc 06). L'**ownership** est,
+- **Décision.** Reporter le cadrage des **détails** ([doc 06](./06_MOTEUR_REGLES.md)). L'**ownership** est,
   lui, tranché par **D8** : les règles sont **gouvernées par l'arbitre** et leur
   forme acceptée est exécutée par le jeu ; pas de moteur générique séparé acté.
 - **Pourquoi.** Le format d'une règle proposée / sa mémorisation / sa réplication
-  dépend encore des docs 04 (sandbox) et 05 (espace mémoire), à stabiliser d'abord.
+  dépend encore des [docs 04](./04_QML_GENERATIF_SANDBOX.md) (sandbox) et 05 (espace mémoire), à stabiliser d'abord.
 
 ### D4 — Bibliothèque : **cadrage différé**
-- **Décision.** Reporter le cadrage (doc 07 = stub). Réserver l'emplacement.
+- **Décision.** Reporter le cadrage ([doc 07](./07_BIBLIOTHEQUE.md) = stub). Réserver l'emplacement.
 - **Pourquoi.** Le format d'une entrée de bibliothèque dépend de la représentation
-  d'un comportement/donnée (docs 04/05).
+  d'un comportement/donnée (docs [04](./04_QML_GENERATIF_SANDBOX.md)/[05](./05_ESPACE_MEMOIRE_SNAPABLE.md)).
 - **Précision du contenu (2026-07-12).** Une première brique de contenu est actée
   au niveau **intention** : une **bibliothèque d'assets 3D**, prévue au
   développement, pour **élargir le vocabulaire graphique** composable par l'IA
-  (« large éventail de possibilités », doc 00 §2, doc 07 §1). Cela **précise** la
+  (« large éventail de possibilités », [doc 00](./00_VISION.md) §2, [doc 07](./07_BIBLIOTHEQUE.md) §1). Cela **précise** la
   lecture « primitives » (son versant graphique) **sans lever** le report : format
   d'entrée, pipeline d'import 3D, distribution et modèle de confiance restent à
-  cadrer (doc 07 §3).
+  cadrer ([doc 07](./07_BIBLIOTHEQUE.md) §3).
 
 ### D5 — Dossier de cadrage
 - **Décision.** Regrouper le cadrage V3 dans `Meownopoly/doc/v3/`, docs numérotés,
@@ -77,10 +77,10 @@
   **IA arbitre / MJ** présente **uniquement chez l'hôte**, qui vérifie la
   viabilité d'une proposition avant son introduction dans la partie. Topologie :
   **2 modèles chez l'hôte** (cliente + arbitre), **1 chez le client** (cliente).
-  Cf. doc 00 §4.
+  Cf. [doc 00](./00_VISION.md) §4.
 - **Pourquoi.** Séparer une posture *créative/permissive* (proposer) d'une posture
   *conservatrice/responsable* (arbitrer) ; ajouter un jugement **contextuel**
-  au-dessus des garde-fous **mécaniques** (sandbox doc 04, validateurs de
+  au-dessus des garde-fous **mécaniques** (sandbox [doc 04](./04_QML_GENERATIF_SANDBOX.md), validateurs de
   capacités) ; garder un **point d'autorité unique** aligné sur le host-authoritative
   (`EditorSession`) pour éviter le split-brain.
 - **Arbitre obligatoire.** Le mécanisme central ouvre la construction d'une
@@ -97,8 +97,8 @@
 - **Sous-cadrage (depuis levé).** La **nature** de l'arbitre est tranchée
   (LLM externe supervisé, D10) ; le **grain** par **D25** (configurable par
   UI, plancher sur code/règles) ; le **format de verdict** par **D11** et le
-  doc 13 (verdict à deux audiences). Reste son **articulation** avec
-  l'exécution des règles (doc 06 §4 : mémorisation, réplication).
+  [doc 13](./13_ENVELOPPE_PROPOSITION.md) (verdict à deux audiences). Reste son **articulation** avec
+  l'exécution des règles ([doc 06](./06_MOTEUR_REGLES.md) §4 : mémorisation, réplication).
 - **Alternatives écartées.** IA unique par joueur mêlant proposition et validation
   (dilue la garantie d'intégrité) ; validation purement mécanique sans arbitre
   (perd le jugement contextuel « cohérence/équilibre »).
@@ -119,7 +119,7 @@
   extension physique ; delta/snapshot, coalescence, fiabilité, cadence ; conflits
   d'undo/redo ciblé.
 - **Alternative écartée pour le runtime.** « Voyage gratuit via `EditDelta`/`ApplyState` »
-  (thèse initiale de doc 05) : simple mais **inadapté à la fréquence runtime** et
+  (thèse initiale de [doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) : simple mais **inadapté à la fréquence runtime** et
   polluerait l'undo d'édition. Conservé pour la configuration durable et sa
   persistance/transaction d'undo.
 
@@ -138,9 +138,9 @@
 - **Conséquence.** Répond à la question d'autorité : l'arbitre gouverne, mais ne
   devient pas implicitement une boucle d'exécution temps réel. Les **invariants
   durs** (sécurité,
-  intégrité) restent au **sandbox** (doc 04), pas à l'arbitre (jugement souple).
+  intégrité) restent au **sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)), pas à l'arbitre (jugement souple).
   Détails différés (format proposé/accepté, exécution, mémorisation, réplication)
-  — doc 06 §4.
+  — [doc 06](./06_MOTEUR_REGLES.md) §4.
 - **Alternatives écartées.** Moteur de règles déclaratif figé côté C++ (rigide,
   contraire à la liberté du pivot) ; règles hardcodées type « système de tour V2 »
   (**inexistant** de toute façon, cf. §Capacités).
@@ -153,7 +153,7 @@
   commencée. Le mode classique est conservé pendant la transition mais n'est pas
   une cible maintenue à terme.
 - **Plateformes.** Windows et Linux sont visés. L'audit confirme un cœur largement
-  portable mais aucun packaging/CI/test Linux actuel (doc 10).
+  portable mais aucun packaging/CI/test Linux actuel ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 - **Encore ouvert.** Les trois modes ont été cochés comme « premier mode » : leur
   ordre réel de livraison reste à décider.
 
@@ -167,13 +167,13 @@
   affiche et cette visibilité peut évoluer en cours de partie.
 - **Migration.** Un changement d'arbitre avec transfert d'état/version est requis.
 - **Gap V2.** `LauncherManager` ne lance actuellement aucun processus ; la
-  supervision et le transfert de contexte sont de nouveaux chantiers (doc 10).
+  supervision et le transfert de contexte sont de nouveaux chantiers ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 - **Précision interaction (2026-07-12).** Les IA clientes sont **invoquées
   directement depuis l'application, via un tchat ingame** — le joueur n'exécute
   **pas** les features depuis un CLI à part. `claude -p`/Codex non interactif
   restent le **mécanisme d'exécution sous-jacent** piloté par l'app, invisible
   pour le joueur. Bénéfice clé : l'app **pré-prompte** chaque modèle à
-  l'invocation pour qu'il suive les **workflows des skills internes** (doc 03) —
+  l'invocation pour qu'il suive les **workflows des skills internes** ([doc 03](./03_SKILL_CLIENT_IA.md)) —
   pas de dépendance à une configuration d'agent côté joueur.
 
 ### D11 — Proposition auditable, amendement immédiat et application automatique
@@ -204,7 +204,7 @@
   disponibles** du jeu peuvent déclencher une règle (collision, entrée/sortie de
   zone, écriture mémoire, tick, action joueur…). L'**autorité** de chaque
   événement et l'**ordre/priorité** en cas de simultanéité restent à affiner
-  (doc 09, Q-C08).
+  ([doc 09](./09_QUESTIONNAIRE_CADRAGE.md), Q-C08).
 
 ### D13 — Cible de sandbox in-process, conditionnée par R1
 - **Intention validée.** Le chemin préféré est le même moteur QML avec contexte
@@ -216,7 +216,7 @@
   réussite de R1, notamment l'arrêt réel d'une boucle infinie. En cas d'échec,
   l'isolation en processus séparé redevient nécessaire.
 - **Signature.** Les artefacts officiels pourront faire confiance à une signature,
-  mais la stack ne possède aujourd'hui qu'un checksum SHA-256 non signé (doc 10).
+  mais la stack ne possède aujourd'hui qu'un checksum SHA-256 non signé ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 - **Précision (2026-07-12).** La **validation** d'un artefact candidat se fait
   désormais dans un **banc d'essai hors-process** (D26) — D13 reste la cible
   pour le **confinement à l'exécution en partie** du code validé.
@@ -229,7 +229,7 @@
   reste absent du manifeste livré. *(« WebSocket » remplacé par « serveur MCP
   local » — D20 ; le reste de la décision demeure.)*
 - **Gaps.** Les transactions V2 sont groupées, pas rollback-atomiques ;
-  `reliable.io` n'assure pas la retransmission (doc 10). ~~Authentification et
+  `reliable.io` n'assure pas la retransmission ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)). ~~Authentification et
   découverte du secret~~ résolues par construction avec D20 (config/token
   injectés au spawn de l'agent).
 
@@ -252,7 +252,7 @@
   téléchargé automatiquement.
 - **Correction stack.** Le `QUuid` existant reste l'identité d'instance. Une
   identité d'artefact immuable exige en plus hash de contenu + version de
-  manifeste ; aucun store par hash n'existe encore (doc 10).
+  manifeste ; aucun store par hash n'existe encore ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 
 ### D17 — Skill Codex + Claude générée au build
 - **Décision.** Codex et Claude Code sont les deux premières cibles. Le manifeste
@@ -274,7 +274,7 @@
 - **Validation stack.** Distribution, retry, checksum, manifestes et chargement
   GLB existent. Signature d'éditeur, adressage par hash et package V3 restent à
   créer. Les références existantes `(category,type,id)`/`modelName` seront
-  étendues avec version/hash (doc 10).
+  étendues avec version/hash ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 
 ### D19 — Journal configurable avec noyau d'audit obligatoire
 - **Décision.** Le niveau de verbosité, la durée et l'export du journal sont
@@ -298,10 +298,10 @@
   la connaissance (workflows, recettes — stable donc cachée) ; le catalogue MCP
   reste **réduit et groupé** (tools paramétrés type `editor_place(kind,…)`,
   résultats paginés/compacts, préfixe stable pour le prompt caching,
-  divulgation progressive via `help(topic)` si besoin). Doc 02 §3.
+  divulgation progressive via `help(topic)` si besoin). [Doc 02](./02_CANAL_IA.md) §3.
 - **Événements.** Injectés par invocation (résumé depuis le dernier tour) +
   tool `events_poll(cursor)` pour se resynchroniser en cours de tâche longue.
-  Pas d'agent persistant ni de canal push au premier jalon. Doc 02 §4.
+  Pas d'agent persistant ni de canal push au premier jalon. [Doc 02](./02_CANAL_IA.md) §4.
 - **Ce qui survit de D2/D14.** Canal dédié ≠ automation, loopback strict,
   serveur unique multiplexant rôles/namespaces (tokens distincts proposant vs
   arbitre), version globale, lots tout-ou-rien, `automation.raw` dev-only.
@@ -337,7 +337,7 @@
   justification puisque les deux CLIs parlent HTTP.
 
 ### D22 — Politique de capture d'écran (ferme Q-E10)
-- **Décision (2026-07-12).** Tool screenshot du canal (doc 02 §5) : captures de
+- **Décision (2026-07-12).** Tool screenshot du canal ([doc 02](./02_CANAL_IA.md) §5) : captures de
   l'**écran de jeu**, à la demande de l'IA (lui donner un visuel de la map si
   elle le juge utile).
 - **Plafond.** Nombre max de captures **par requête d'IA**, porté par un
@@ -358,7 +358,7 @@
   arbitrage) **sans** la couche réseau ; le collaboratif ajoute ensuite
   l'autorité hôte et les garanties P2P (F06) sur une base validée ; le runtime
   vient en dernier car il dépend du bus d'état (D15) et des capacités runtime
-  encore absentes de V2. Le vertical slice (D30, doc 11) est défini sur le
+  encore absentes de V2. Le vertical slice (D30, [doc 11](./11_VERTICAL_SLICE.md)) est défini sur le
   mode solo.
 
 ### D24 — Disponibilité de l'arbitre : handshake de rôle + challenge de capacité (ferme Q-B04 dans son principe)
@@ -486,7 +486,7 @@
   Champ `priority` par règle possible plus tard, pas au MVP.
 
 ### D34 — Contenu du sandbox au MVP : allow-list, façade, budgets (ferme Q-D04/D05/D06)
-- **Décision (2026-07-12).** Les trois propositions du doc 09 sont validées,
+- **Décision (2026-07-12).** Les trois propositions du [doc 09](./09_QUESTIONNAIRE_CADRAGE.md) sont validées,
   avec un **élargissement de l'allow-list** demandé par l'utilisateur.
 - **Imports autorisés** : `QtQuick`, `QtQuick.Shapes`, `QtQuick.Layouts`,
   **`QtQuick.Controls`** (ajout), **les modules QML custom déjà existants du
@@ -510,7 +510,7 @@
   ≤ 30 émissions/s ; `Timer` ≥ 100 ms ; chargement au banc ≤ 5 s.
 
 ### D35 — Bus d'état runtime : delta/snapshot, garanties hybrides, plafonds (ferme Q-F05/Q-F06/Q-F07)
-- **Décision (2026-07-12).** Les trois propositions du doc 09 sont validées.
+- **Décision (2026-07-12).** Les trois propositions du [doc 09](./09_QUESTIONNAIRE_CADRAGE.md) sont validées.
 - **Stratégie delta/snapshot (F05).** Le flux de base reste le delta coalescé
   par (tuile, clé) à 30 Hz max, LWW hôte (D7). Trois mécanismes de rattrapage
   retenus explicitement : **snapshot de réparation** périodique du namespace
@@ -574,7 +574,7 @@
   pas de shader custom au MVP.
 
 ### D39 — Divergence entre pairs : hash périodique d'état + resync (ferme Q-J03)
-- **Décision (2026-07-12).** Vérification stack faite (doc 10) : le full-sync
+- **Décision (2026-07-12).** Vérification stack faite ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)) : le full-sync
   éditeur et les snapshots physiques **réparent** mais ne **détectent** pas
   (aucun hash/version d'état en V2). Choix : **hash du `state` calculé côté
   hôte et diffusé avec le snapshot de réparation D35** ; un pair dont le hash
@@ -603,10 +603,10 @@
 ### D41 — Dépendances de modules des artefacts + tool `module_config` au MVP
 - **Décision (2026-07-13).** Un artefact déclare ses dépendances vers les
   modules gameplay (`GameplayModuleManager`) via un champ **`requiresModules`**
-  de l'enveloppe (doc 13 §3). Vérification **mécanique** : P0 rejette
+  de l'enveloppe ([doc 13](./13_ENVELOPPE_PROPOSITION.md) §3). Vérification **mécanique** : P0 rejette
   `{code: "missing_module", retryable: true}` si un module requis n'est ni
   actif sur la map ni activé par une opération du même lot ; le snapshot du
-  banc d'essai porte l'**état des modules** (doc 12 §2.3) pour tester
+  banc d'essai porte l'**état des modules** ([doc 12](./12_BANC_ESSAI_R1.md) §2.3) pour tester
   l'artefact dans les conditions réelles. **Jamais d'activation implicite**
   par un appel de façade.
 - **Tool au MVP.** `module_config(id, enabled, params?)` entre au manifeste
@@ -623,14 +623,14 @@
   (rejet `missing_module` non résoluble par l'IA, contraire à S3).
 
 ### D42 — Banc d'essai exposé à l'IA cliente : mode atelier (dry-run) au MVP, session interactive tracée
-- **Décision (2026-07-13).** Le banc d'essai (doc 12) devient aussi un **outil
+- **Décision (2026-07-13).** Le banc d'essai ([doc 12](./12_BANC_ESSAI_R1.md)) devient aussi un **outil
   d'itération** pour l'IA cliente, en deux paliers :
   - **Palier 1 (MVP)** : tool **`artifact_dryrun(source, targetUuid?)`** —
     exécution one-shot du banc **en local chez l'auteur**, renvoyant le
     verdict complet **avec les métriques** (tickUs, write-set observé,
     peakMem…) pour que l'IA perfectionne l'artefact **avant** de le
     soumettre. Quota par invocation (`MEOW_BENCH_DRYRUN_QUOTA`, défaut 10).
-  - **Palier 2 (post-MVP, tracé doc 12 §11)** : session atelier
+  - **Palier 2 (post-MVP, tracé [doc 12](./12_BANC_ESSAI_R1.md) §11)** : session atelier
     **interactive** (process de banc persistant, versions poussées à chaud,
     stimuli à la demande, métriques continues, rendu éventuel).
 - **Invariants.** Un dry-run n'est **jamais** un laissez-passer : l'artefact
@@ -638,7 +638,7 @@
   (même patron que P0 : copie locale fail-fast + exécution autoritaire).
   En collab, les dry-runs des clients ne tournent **jamais** chez l'hôte
   (anti-DoS). L'hôte n'accepte jamais un verdict calculé par un pair (R16).
-  La skill (doc 03) doit énoncer : *pass local ≠ acceptation* (divergence
+  La skill ([doc 03](./03_SKILL_CLIENT_IA.md)) doit énoncer : *pass local ≠ acceptation* (divergence
   possible de `benchVersion`/budgets, explicable via le job).
 - **Pourquoi.** L'IA converge avant de soumettre → moins d'allers-retours
   d'arbitrage (coût LLM), S3 facilité ; réutilise `meow_testbench` tel quel
@@ -665,7 +665,7 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   D20 : token éphémère injecté au spawn de l'agent** (l'app contrôle les deux
   bouts) ; tokens/capacités distincts pour proposant et arbitre.
 
-### Canal IA (doc 02)
+### Canal IA ([doc 02](./02_CANAL_IA.md))
 - ~~Un canal multiplexé vs plusieurs ?~~ **Tranché D14 : un canal multiplexé.**
 - ~~WS custom ou autre transport ?~~ **Tranché D20 : serveur MCP local** ;
   ~~forme d'intégration (Q-E11)~~ **tranchée D21 : streamable HTTP loopback
@@ -685,7 +685,7 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 
 ### Capacités manquantes (chantiers identifiés)
 - Réconcilier **hooks ↔ tools MCP** (des hooks existent sans tool MCP) — prérequis
-  à la génération de la skill (doc 03).
+  à la génération de la skill ([doc 03](./03_SKILL_CLIENT_IA.md)).
 - Ajouter l'**introspection d'état** (lister tuiles par uuid/type/pos, énumérer les
   enums) — requise par la boucle perception→action.
 - Ajouter l'**édition ciblée par uuid** (`deleteTile`, `moveTile`, `resizeTile`,
@@ -693,13 +693,13 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 - Ajouter les capacités **runtime** (piloter joueur/NPC en jeu, lire les bodies) —
   absentes en V2, requises pour « modules NPC/joueur ».
 
-### IA arbitre / MJ (doc 00 §4, D6/D10/D11)
+### IA arbitre / MJ ([doc 00](./00_VISION.md) §4, D6/D10/D11)
 - **Personnalité et objectifs propres de l'arbitre (nouveau, 2026-07-13)** :
   extension prévue du rôle — une « personnalité » configurable donnant à
   l'arbitre des **objectifs propres** (à définir), pour en faire un acteur de
   **divertissement** y compris en solo. Va au-delà du « prompt/personnalité
   configuré par les joueurs » de D10 (qui ne couvre que le paramétrage du
-  jugement). À cadrer (doc 00 §4, note).
+  jugement). À cadrer ([doc 00](./00_VISION.md) §4, note).
 - ~~Nature de l'arbitre ?~~ **Tranché : LLM externe** (`claude -p`/équivalent
   Codex) pour le contextuel, entouré de validateurs mécaniques.
 - ~~Grain d'arbitrage~~ **Tranché D25 : configurable par UI** (types de
@@ -712,13 +712,13 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 - ~~Frontière avec le contrat de règles : l'arbitre EST-il le moteur de règles ?~~
   **Tranché (D8) sur l'autorité** : l'arbitre gouverne les règles. L'exécution
   appartient à une forme matérialisée acceptée par le jeu. Restent ouverts :
-  format proposé/accepté, exécution, mémorisation et réplication (doc 06 §4).
+  format proposé/accepté, exécution, mémorisation et réplication ([doc 06](./06_MOTEUR_REGLES.md) §4).
 - ~~Panne / absence d'arbitre~~ **Tranché (D6)** : l'arbitre est **obligatoire**.
   Pas d'hôte sans arbitre ; à défaut, le mode IA est indisponible (repli jeu
   classique). ~~UX du prérequis ?~~ **Tranché D24/D31** : handshake + challenge
   avant ouverture, indicateur 4 états dans le lobby, blocage hors `Prêt`.
 
-### Espace mémoire (doc 05, sémantiques tranchées par D7)
+### Espace mémoire ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md), sémantiques tranchées par D7)
 - ~~Blob global ou par sous-paramètre ?~~ **Tranché D15 : `memory` global avec
   `config`/`state`, également porté par session et joueurs.**
 - Schéma/noms de la **configuration durable** et de l'**état runtime**.
@@ -735,7 +735,7 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 - ~~Plafond de taille du blob ?~~ **Tranché D35** : 1 KB/valeur, 8 KB/tuile,
   256 KB/session, rejet structuré `quota_exceeded` (jamais de troncature).
 
-### Skill client (doc 03)
+### Skill client ([doc 03](./03_SKILL_CLIENT_IA.md))
 - ~~Agents initiaux ?~~ **Tranché D17 : Codex + Claude Code.**
 - ~~Emplacement d'installation standardisé multi-plateforme ?~~ **Caduc
   (précision D17, 2026-07-12)** : la skill est embarquée dans l'app et injectée
@@ -752,10 +752,10 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 | R1 | Sandbox QML infaisable/insuffisant dans Qt | Bloque D1 | Prototyper tôt ; repli « palette + mémoire » ; démarrer en exécution locale arbitrée par l'hôte |
 | R2 | RCE inter-joueurs via QML répliqué | Critique | Exécution hôte par défaut ; activation pair par artefact après R1 + revalidation |
 | R3 | Canal local détourné par un autre process | Élevé | Token de session + loopback strict |
-| R4 | Sérialisation cassée du blob mémoire | Moyen | Passer `toJSON` du blob par `QJsonDocument` (doc 05 §3) |
+| R4 | Sérialisation cassée du blob mémoire | Moyen | Passer `toJSON` du blob par `QJsonDocument` ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md) §3) |
 | R5 | Dérive skill ↔ capacités réelles | Moyen | Générer la skill depuis le manifeste versionné du canal (source unique) ; MCP = patron uniquement |
 | R6 | Complexité multi-joueurs des règles custom | Moyen | Différé (D3) ; concevoir avec host-authoritative en tête |
-| R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox + validateurs ; l'arbitre n'affine que le contextuel (doc 00 §9) |
+| R7 | Confiance excédentaire dans l'arbitre (jugement faillible pris pour un garde-fou dur) | Élevé | Sécurité dure = sandbox + validateurs ; l'arbitre n'affine que le contextuel ([doc 00](./00_VISION.md) §9) |
 | R8 | Arbitrage LLM par action : latence/coût dégradant l'UX collab | Moyen | Grain configurable (D25) avec défaut hybride ; chemin rapide mécanique pour les données sûres |
 | R9 | Flux mémoire saturant la bande passante ou rejouant des états obsolètes | Moyen | Delta/coalescence + plafond ; mesurer cadence et reliable/raw (D7) |
 | R10 | Undo d'un artefact écrasant un état concurrent | Accepté (D28) | Choix produit : restaure malgré tout (LWW) ; write-set ciblé, jamais snapshot global ; trace au journal D19 |
@@ -769,7 +769,7 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
 ## 4. Séquencement suggéré (non engageant)
 
 Le découpage technique détaillé, les fichiers d'ancrage et critères d'acceptation
-sont définis dans le doc 10, chantiers **M1→M13**.
+sont définis dans le [doc 10](./10_AUDIT_STACK_EXISTANTE.md), chantiers **M1→M13**.
 
 1. **Prototype sandbox QML** (R1, recentré par D26) : banc d'essai hors-process
    + confinement runtime — dé-risque D1 avant tout le reste.
@@ -778,7 +778,7 @@ sont définis dans le doc 10, chantiers **M1→M13**.
    proposition auditée.
 3. **Adaptateur agents** : supervision `claude -p`/Codex + skill générée au
    build + handshake arbitre (D24).
-4. **Vertical slice solo** (D30, doc 11) : S1/S2/S3 sur le mode éditeur solo.
+4. **Vertical slice solo** (D30, [doc 11](./11_VERTICAL_SLICE.md)) : S1/S2/S3 sur le mode éditeur solo.
 5. **Couche réseau V3** : ACK applicatif/retry/déduplication et transaction
    prepare/commit/rollback, avant de lui confier propositions et verdicts
    (prérequis du mode collaboratif, D23).

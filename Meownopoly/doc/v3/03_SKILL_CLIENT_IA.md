@@ -19,9 +19,9 @@ l'invocation pour qu'il suive les **workflows des skills internes** — la skill
 n'a pas besoin d'être installée dans la configuration de l'agent du joueur,
 elle est **injectée** par l'app.
 
-**La skill décrit le canal IA (doc 02), pas l'automation de test.** L'IA cliente
+**La skill décrit le canal IA ([doc 02](./02_CANAL_IA.md)), pas l'automation de test.** L'IA cliente
 n'a **aucun accès** au harnais d'automation (`automation_mcp/`, `AutomationServer`)
-— voir la frontière doc 02 §1. La skill est le **contrat du canal** : un catalogue
+— voir la frontière [doc 02](./02_CANAL_IA.md) §1. La skill est le **contrat du canal** : un catalogue
 **curé, orienté création de briques de gameplay**. Le MCP d'automation sert de
 **patron d'outillage** pour bâtir ce canal, et **certaines** de ses capacités y
 sont **portées** (§4), mais la skill n'expose jamais la surface de test.
@@ -42,13 +42,13 @@ Contenu cible :
    documenter port/handshake.
 2. **Catalogue de capacités** : porté par les **schémas de tools MCP** générés
    depuis le manifeste (D20) ; la skill n'en donne que l'usage (recettes), pas
-   les schémas — c'est la clé de l'économie de tokens (doc 02 §3).
+   les schémas — c'est la clé de l'économie de tokens ([doc 02](./02_CANAL_IA.md) §3).
 3. **La boucle perception→action** : comment observer l'état, agir, vérifier.
 4. **Les garde-fous** : ce que l'IA **ne peut pas** faire (allow-list),
-   contraintes du QML génératif (doc 04), tailles/quotas.
+   contraintes du QML génératif ([doc 04](./04_QML_GENERATIF_SANDBOX.md)), tailles/quotas.
 5. **Des recettes** : patrons de tâches fréquentes (« ajouter une rivière »,
    « donner un comportement à une case », « écrire l'espace mémoire »).
-6. **Conventions de l'espace mémoire** (doc 05) : forme recommandée des blobs, clés
+6. **Conventions de l'espace mémoire** ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) : forme recommandée des blobs, clés
    réservées éventuelles.
 
 ## 3. Format
@@ -70,7 +70,7 @@ pas une copie.
 ## 4. Génération : le manifeste du canal comme source de vérité
 
 La **source de vérité** de la skill est le **manifeste de capacités du canal IA**
-(son catalogue curé, doc 02 §4) — **pas** le MCP d'automation. La skill en est
+(son catalogue curé, [doc 02](./02_CANAL_IA.md) §4) — **pas** le MCP d'automation. La skill en est
 **dérivée mécaniquement** :
 
 ```
@@ -109,13 +109,13 @@ régénère, pas de dérive manuelle.
 - **Découvrabilité** : la skill doit être auto-suffisante — l'IA ne doit pas avoir
   besoin de lire le code du jeu pour l'utiliser.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
+## 6. Questions ouvertes (synthèse [doc 08](./08_DECISIONS_ET_QUESTIONS.md) ; questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - ~~Quels agents cibler en premier ?~~ **Tranché D17 : Codex + Claude Code.**
 - ~~La skill embarque-t-elle un client de connexion ?~~ **Tranché D20** :
   connecteur MCP natif des CLIs, config injectée au spawn — rien à embarquer
   dans la skill. Forme d'intégration tranchée **D21** : streamable HTTP
-  loopback intégré au jeu (doc 02 §2 bis).
+  loopback intégré au jeu ([doc 02](./02_CANAL_IA.md) §2 bis).
 - ~~Emplacement d'installation standardisé, multi-plateforme ?~~ **Caduc**
   (précision 2026-07-12, §1) : skill embarquée dans l'app, injectée en pré-prompt.
 - ~~Génération au build ou au packaging ?~~ **Tranché D17 : au build.**

@@ -3,8 +3,8 @@
 > **Statut : spécification (2026-07-12).** Définit l'unité d'échange auditée
 > du pivot : l'**enveloppe de proposition** (D11), son cycle de vie, le
 > **verdict**, le transport et le journal. Requise par le scénario S2 du
-> vertical slice (doc 11). Consommateurs : passerelle MCP (doc 02), arbitre
-> (D6/D25/D32), banc d'essai (doc 12), journal (D19), P2P (Q-F06).
+> vertical slice ([doc 11](./11_VERTICAL_SLICE.md)). Consommateurs : passerelle MCP ([doc 02](./02_CANAL_IA.md)), arbitre
+> (D6/D25/D32), banc d'essai ([doc 12](./12_BANC_ESSAI_R1.md)), journal (D19), P2P (Q-F06).
 
 ## 1. Rôle
 
@@ -112,7 +112,7 @@ Notes de conception :
   **En collab (précision 2026-07-13)** : le `requestType` qui fait foi est
   **recalculé par le P0 de l'hôte à réception** — jamais repris du champ
   porté par une enveloppe reçue d'un pair. Le P0 exécuté chez l'auteur
-  (fail-fast, doc 12 §3) n'est qu'un confort local.
+  (fail-fast, [doc 12](./12_BANC_ESSAI_R1.md) §3) n'est qu'un confort local.
   Catégories : `data_safe` (poses/écritures dans les quotas), `structure`
   (suppressions, resize, roster), `rules` (modification du règlement D12),
   `code` (au moins un artefact QML/JS).
@@ -124,7 +124,7 @@ Notes de conception :
   au passage collab.
 - **`writeSet` global** = union des write-sets des opérations et des
   `declaredWriteSet` des artefacts. Le banc vérifie les artefacts
-  (write-set observé, doc 12 §3) ; la validation mécanique vérifie les
+  (write-set observé, [doc 12](./12_BANC_ESSAI_R1.md) §3) ; la validation mécanique vérifie les
   opérations. Il alimente aussi l'undo ciblé (D15/D28) et la détection de
   cycles (D12).
 - **`requiresModules`** (ajout 2026-07-13, D41) : dépendances de l'artefact
@@ -132,7 +132,7 @@ Notes de conception :
   **mécanique** : P0 rejette `{code: "missing_module", retryable: true}` si un
   module requis n'est ni actif sur la map ni activé par une opération
   `module_config` **du même lot** ; le banc rejoue avec l'état des modules
-  porté par le snapshot (doc 12 §2.3). Jamais d'activation implicite par un
+  porté par le snapshot ([doc 12](./12_BANC_ESSAI_R1.md) §2.3). Jamais d'activation implicite par un
   appel de façade.
 - **Activation de module = opération** : `module_config(id, enabled, params?)`
   est un tool MCP du manifeste MVP (D41) qui produit une opération de
@@ -173,7 +173,7 @@ Notes de conception :
 - **`reasons` à deux audiences** : une phrase pour le **joueur** (affichée
   dans le tchat) et une entrée pour l'**IA** (code stable + consigne
   actionnable + `retryable`) — c'est la condition du scénario S3 (rejet →
-  itération). Les codes mécaniques sont ceux du banc (doc 12 §4) et de la
+  itération). Les codes mécaniques sont ceux du banc ([doc 12](./12_BANC_ESSAI_R1.md) §4) et de la
   validation ; les codes contextuels de l'arbitre sont libres mais
   journalisés.
 - **`amendment`** : patch, pas ré-enveloppe — l'original reste intact au
@@ -208,7 +208,7 @@ collab :
 - **La source d'un artefact atteint toujours l'hôte** (D16) — jamais
   broadcastée aux pairs par défaut. Si `executionPolicy =
   replicated_revalidated`, chaque pair télécharge par hash et **repasse le
-  banc localement** (cache de verdicts doc 12 §7 : coût nul si déjà validé
+  banc localement** (cache de verdicts [doc 12](./12_BANC_ESSAI_R1.md) §7 : coût nul si déjà validé
   ailleurs avec le même `benchVersion`).
 - **Hôte → auteur** : le verdict est un commit (mêmes garanties).
   **Hôte → tous** : l'application (effets) passe par le pipeline collab
@@ -227,13 +227,13 @@ métier, curseur Q-E06) :
 | `proposal.submitted` | enveloppe complète (source par hash si > seuil, source au store) |
 | `proposal.prefiltered` | requestType calculé, résultat P0 |
 | `proposal.verdict` | verdict complet, **original + amendement** si amendé |
-| `proposal.benched` | verdict du banc + metrics (doc 12 §4) |
+| `proposal.benched` | verdict du banc + metrics ([doc 12](./12_BANC_ESSAI_R1.md) §4) |
 | `proposal.applied` / `.rejected` / `.failed` | versions résultantes, raisons |
 
 Le couple (enveloppe, verdicts, versions) rend l'action **rejouable** — la
 condition posée par D19 pour le noyau non désactivable.
 
-## 8. Exemple — fil rouge du slice (doc 11)
+## 8. Exemple — fil rouge du slice ([doc 11](./11_VERTICAL_SLICE.md))
 
 Plaque piégée : une enveloppe `code` avec 2 opérations (`editor_place` zone,
 `memory_set` config du coût) + 1 artefact (JS embarqué qui écoute

@@ -25,11 +25,11 @@
 
 ## 1. Contexte
 
-- Cadrage V3 dans `Meownopoly/doc/v3/` (docs 00→13 + README + RECAP), branche **V3**.
-- Décisions D1→D39 déjà actées (registre : doc 08). Le travail ici est une **revue de
+- Cadrage V3 dans `Meownopoly/doc/v3/` (docs [00](./00_VISION.md)→[13](./13_ENVELOPPE_PROPOSITION.md) + README + RECAP), branche **V3**.
+- Décisions D1→D39 déjà actées (registre : [doc 08](./08_DECISIONS_ET_QUESTIONS.md)). Le travail ici est une **revue de
   vérification** : s'assurer que chaque brique est comprise, cohérente et validée par
   les deux devs avant le plan d'implémentation.
-- Les chantiers techniques M1→M13 sont décrits dans le doc 10 §9.
+- Les chantiers techniques M1→M13 sont décrits dans le [doc 10](./10_AUDIT_STACK_EXISTANTE.md) §9.
 
 ## 2. État d'avancement par document
 
@@ -39,25 +39,25 @@ Ordre de traitement = ordre de lecture du README (00 → 13). Statuts :
 | # | Document | Statut | Notes de session |
 |---|----------|--------|------------------|
 | — | `README.md` + `RECAP_CADRAGE.md` | lus (contexte) | pas de revue dédiée, servent d'index |
-| 00 | `00_VISION.md` | traité (S1 2026-07-13) | 4 questions arbitrées : IA commerciales d'abord (locaux à terme), coût 2 modèles assumé + extension « personnalité arbitre » (nouvelle idée, tracée doc 08), pas de revue humaine (D9 confirmé), prérequis onboarding explicité |
-| 01 | `01_ARCHITECTURE_CIBLE.md` | traité (S1 2026-07-13) | 4 questions arbitrées : briques §2.7/§2.8 ajoutées + doc 14 créé ; D40 (ProposalSession dédiée) ; P0 hôte + copie auteur ; D41 (requiresModules + module_config au MVP, variante A). 4 corrections de cohérence appliquées. Ancrages V2 vérifiés (GameplayModuleManager OK, hooks l.2634 OK) |
-| 02 | `02_CANAL_IA.md` | en cours (S1 2026-07-13) | passerelle MCP (M1) |
-| 03 | `03_SKILL_CLIENT_IA.md` | à traiter | skill générée au build (M12) |
-| 04 | `04_QML_GENERATIF_SANDBOX.md` | à traiter | sandbox 2 étages (M9) |
-| 05 | `05_ESPACE_MEMOIRE_SNAPABLE.md` | à traiter | memory config/state (M6) |
-| 06 | `06_MOTEUR_REGLES.md` | à traiter | règles arbitre (le moins cadré) |
-| 07 | `07_BIBLIOTHEQUE.md` | à traiter | bibliothèque GLB (M11) |
-| 08 | `08_DECISIONS_ET_QUESTIONS.md` | à traiter | registre D1→D39 + risques R1→R16 |
-| 09 | `09_QUESTIONNAIRE_CADRAGE.md` | à traiter | 6 questions ouvertes restantes |
-| 10 | `10_AUDIT_STACK_EXISTANTE.md` | à traiter | audit V2 + chantiers M1→M13 |
-| 11 | `11_VERTICAL_SLICE.md` | à traiter | slice solo S1/S2/S3 |
-| 12 | `12_BANC_ESSAI_R1.md` | à traiter | banc hors-process (meow_testbench) |
-| 13 | `13_ENVELOPPE_PROPOSITION.md` | à traiter | schéma enveloppe/verdict |
-| 14 | `14_ADAPTATEUR_AGENTS.md` | créé S1 (2026-07-13) | rédigé pendant la revue du doc 01 ; à relire par Antoine/Valou en fin de revue |
+| 00 | [`00_VISION.md`](./00_VISION.md) | traité (S1 2026-07-13) | 4 questions arbitrées : IA commerciales d'abord (locaux à terme), coût 2 modèles assumé + extension « personnalité arbitre » (nouvelle idée, tracée [doc 08](./08_DECISIONS_ET_QUESTIONS.md)), pas de revue humaine (D9 confirmé), prérequis onboarding explicité |
+| 01 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | traité (S1 2026-07-13) | 4 questions arbitrées : briques §2.7/§2.8 ajoutées + [doc 14](./14_ADAPTATEUR_AGENTS.md) créé ; D40 (ProposalSession dédiée) ; P0 hôte + copie auteur ; D41 (requiresModules + module_config au MVP, variante A). 4 corrections de cohérence appliquées. Ancrages V2 vérifiés (GameplayModuleManager OK, hooks l.2634 OK) |
+| 02 | [`02_CANAL_IA.md`](./02_CANAL_IA.md) | en cours (S1 2026-07-13) | passerelle MCP (M1) |
+| 03 | [`03_SKILL_CLIENT_IA.md`](./03_SKILL_CLIENT_IA.md) | à traiter | skill générée au build (M12) |
+| 04 | [`04_QML_GENERATIF_SANDBOX.md`](./04_QML_GENERATIF_SANDBOX.md) | à traiter | sandbox 2 étages (M9) |
+| 05 | [`05_ESPACE_MEMOIRE_SNAPABLE.md`](./05_ESPACE_MEMOIRE_SNAPABLE.md) | à traiter | memory config/state (M6) |
+| 06 | [`06_MOTEUR_REGLES.md`](./06_MOTEUR_REGLES.md) | à traiter | règles arbitre (le moins cadré) |
+| 07 | [`07_BIBLIOTHEQUE.md`](./07_BIBLIOTHEQUE.md) | à traiter | bibliothèque GLB (M11) |
+| 08 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | à traiter | registre D1→D39 + risques R1→R16 |
+| 09 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | à traiter | 6 questions ouvertes restantes |
+| 10 | [`10_AUDIT_STACK_EXISTANTE.md`](./10_AUDIT_STACK_EXISTANTE.md) | à traiter | audit V2 + chantiers M1→M13 |
+| 11 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | à traiter | slice solo S1/S2/S3 |
+| 12 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | à traiter | banc hors-process (meow_testbench) |
+| 13 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) | à traiter | schéma enveloppe/verdict |
+| 14 | [`14_ADAPTATEUR_AGENTS.md`](./14_ADAPTATEUR_AGENTS.md) | créé S1 (2026-07-13) | rédigé pendant la revue du [doc 01](./01_ARCHITECTURE_CIBLE.md) ; à relire par Antoine/Valou en fin de revue |
 
 ## 3. Inventaire des briques logicielles V3 (issu de la 1re lecture générale, 2026-07-13)
 
-Briques **à créer ou modifier**, croisées avec les chantiers M du doc 10 :
+Briques **à créer ou modifier**, croisées avec les chantiers M du [doc 10](./10_AUDIT_STACK_EXISTANTE.md) :
 
 | Brique | Nature | Chantier | Docs sources | Existe en V2 ? |
 |--------|--------|----------|--------------|----------------|
@@ -66,7 +66,7 @@ Briques **à créer ou modifier**, croisées avec les chantiers M du doc 10 :
 | Fiabilité applicative P2P (ACK/retry/dédup commits, séquence état supersedable, chunking réparé) | couche au-dessus de Catway | M3 | 05, 08 D35, 10 §2 | non (reliable.io ≠ retransmission) |
 | Transactions atomiques prepare/commit/rollback | évolution `Game`/`EditorOpBus` | M4 | 10 §3, 13 §3 | partiel (groupées, pas atomiques) |
 | Journal d'événements métier `GameplayEventBus` (curseur, audit D19, adaptateur événements IA) | nouveau C++ | M5 | 02 §4, 08 D19/D33, 09 Q-E06 | non |
-| Espace mémoire `memory.config/state` sur `ItemSnapable` + session + joueurs, signaux réactifs | évolution `ItemSnapable` + bus | M6 (Étape A/B/C doc 05) | 05, 08 D7/D15/D35 | non |
+| Espace mémoire `memory.config/state` sur `ItemSnapable` + session + joueurs, signaux réactifs | évolution `ItemSnapable` + bus | M6 (Étape A/B/C [doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) | 05, 08 D7/D15/D35 | non |
 | Bus d'état runtime (delta 30 Hz, snapshots réparation/structurel, resync, hash divergence D39) | nouveau protocole réseau | M6 | 05, 08 D35/D39 | non (PhysicsSession = inspiration) |
 | Sauvegarde de partie `GameSave` distincte de la map | nouveau format + I/O | M7 | 08 D27, 10 §5 | non |
 | Store d'artefacts par hash (refcount, GC au save, manifeste) | nouveau C++ | M8 | 08 D16/D36 | non |
@@ -81,10 +81,10 @@ Briques **à créer ou modifier**, croisées avec les chantiers M du doc 10 :
 | Capacités canal manquantes (introspection état, édition par uuid, enums, roster, runtime input) | extension hooks + tools | M1 | 02 §5.2 | partiel |
 
 **Prérequis bloquants identifiés** : assainir `ItemSnapable::toJSON` (concat manuelle
-de strings, R4 — bloque le snapshot du banc, doc 12 §10) ; installer `QtHttpServer`
-(D21) ; ordre doc 10 §10 : M9 → M3 → M4 → M1 → M2 → …
+de strings, R4 — bloque le snapshot du banc, [doc 12](./12_BANC_ESSAI_R1.md) §10) ; installer `QtHttpServer`
+(D21) ; ordre [doc 10](./10_AUDIT_STACK_EXISTANTE.md) §10 : M9 → M3 → M4 → M1 → M2 → …
 
-**Questions encore ouvertes (doc 09)** : Q-E06 (résumé d'événements/curseur),
+**Questions encore ouvertes ([doc 09](./09_QUESTIONNAIRE_CADRAGE.md))** : Q-E06 (résumé d'événements/curseur),
 Q-E08 (manifeste 10 tools), Q-J02 (données privées), Q-J04 (indicateurs arbitrage),
 Q-J06 (critères de repli D1), Q-J08 (responsables par famille Antoine/Valou).
 
@@ -93,36 +93,41 @@ Q-J06 (critères de repli D1), Q-J08 (responsables par famille Antoine/Valou).
 | Date | Session | Fichier | Lignes (~) | Modification |
 |------|---------|---------|------------|--------------|
 | 2026-07-13 | S1 | `SUIVI_REVUE_BRIQUES.md` | — | Création du document de suivi + inventaire initial des briques (1re lecture générale) |
-| 2026-07-13 | S1 | `00_VISION.md` | ~37 (§2 idée 1) | Précision : IA commerciales (`claude -p`/Codex) en priorité, agents locaux à terme hors premier jalon |
-| 2026-07-13 | S1 | `00_VISION.md` | ~130 (§4, avant Topologie) | Ajout note « Extension prévue » : personnalité de l'arbitre avec objectifs propres (divertissement, même solo) |
-| 2026-07-13 | S1 | `00_VISION.md` | ~225 (§6 tableau) | Correction incohérence : « Canal WS dédié » → « Canal MCP local dédié (D20) » |
-| 2026-07-13 | S1 | `00_VISION.md` | ~252 (§8) | Coût 2 modèles assumé tel quel (pas d'arbitre allégé) + renvoi note personnalité |
-| 2026-07-13 | S1 | `00_VISION.md` | ~256 (§8) | Prérequis d'onboarding explicité : compte fournisseur + CLI installé, le jeu guide mais ne fournit pas |
-| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~633 (§2 IA arbitre) | Nouvelle question ouverte : personnalité/objectifs propres de l'arbitre (au-delà du paramétrage D10) |
-| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~126 (fin §2) | Ajout briques §2.7 (adaptateur agents + tchat ingame, M2) et §2.8 (journal d'événements métier, M5) — Q1 doc 01, option A |
-| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~160 (§3 tableau) | Ajout lignes adaptateur agents (LauncherManager) et journal d'événements (signaux existants) |
-| 2026-07-13 | S1 | `14_ADAPTATEUR_AGENTS.md` | — | Création du doc 14 : adaptateur d'agents & tchat ingame (rôle, responsabilités, socle V2, questions ouvertes) |
-| 2026-07-13 | S1 | `README.md` (v3) | ~46 (table) | Ajout ligne doc 14 dans l'ordre de lecture |
-| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~109 (§2.5) | Q2 doc 01 tranchée : transport des propositions = session dédiée (D40), pas d'extension d'EditorSession |
-| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~578 (fin §1) | Nouvelle décision D40 : ProposalSession dédiée (patron COLLAB_SESSION_PATTERN, plage messages V3 propre, fiabilité M3) |
-| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~97 (§3) | Q3 doc 01 : P0 exécuté chez l'hôte (fait foi) + copie best-effort chez l'auteur (fail-fast), même code aux deux endroits |
-| 2026-07-13 | S1 | `13_ENVELOPPE_PROPOSITION.md` | ~109 (§3 notes) | requestType recalculé par le P0 de l'hôte à réception, jamais repris d'une enveloppe reçue |
-| 2026-07-13 | S1 | `13_ENVELOPPE_PROPOSITION.md` | ~97, ~126 (§3) | D41 : champ `requiresModules` dans artifacts[] + notes (vérif P0, erreur missing_module, module_config = op structure du même lot) |
-| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~67, ~95, ~101 | D41 : snapshot du job étendu à l'état des modules ; P0 vérifie requiresModules ; P1 recharge les modules |
-| 2026-07-13 | S1 | `09_QUESTIONNAIRE_CADRAGE.md` | ~105-120 (Q-E08) | Manifeste MVP passe à 11 tools : ajout `module_config(id, enabled, params?)` (D41) |
-| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~600 (fin §1) | Nouvelle décision D41 : dépendances requiresModules + tool module_config au MVP |
-| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~137 (§2.6) | Note D41 : modules gameplay pilotables par l'IA (module_config + requiresModules) |
-| 2026-07-13 | S1 | `11_VERTICAL_SLICE.md` | ~50, ~98 | S1 exerce module_config(stats) + requiresModules ; table §4 passe au manifeste 11 tools |
-| 2026-07-13 | S1 | `01_ARCHITECTURE_CIBLE.md` | ~40 (§1), ~77 (§2.3), ~90 (§2.4), ~185 (§4 ét.5) | 4 corrections de cohérence : pipeline P0→arbitre→banc figé (docs 12/13), sandbox 2 étages (D26), transport runtime tranché (D35) ×2 |
-| 2026-07-13 | S1 | `08_DECISIONS_ET_QUESTIONS.md` | ~625 (fin §1) | Nouvelle décision D42 : banc exposé à l'IA cliente — artifact_dryrun (MVP, local, quota 10) + session atelier interactive (palier 2 tracé) |
-| 2026-07-13 | S1 | `09_QUESTIONNAIRE_CADRAGE.md` | ~105-122 (Q-E08) | Manifeste MVP passe à 12 tools : ajout `artifact_dryrun` (D42) |
-| 2026-07-13 | S1 | `12_BANC_ESSAI_R1.md` | ~200 (§6 bis), ~250 (§9), ~285 (§11) | Nouveau §6 bis mode atelier (D42) ; constante MEOW_BENCH_DRYRUN_QUOTA ; palier 2 (session interactive) tracé en §11 |
-| 2026-07-13 | S1 | `02_CANAL_IA.md` | ~180 (§5.2) | Ajout capacité artifact_dryrun (D42) au catalogue à créer |
-| 2026-07-13 | S1 | `11_VERTICAL_SLICE.md` | ~98 (§4) | Table tools : manifeste 12 tools, artifact_dryrun non requis par le slice |
+| 2026-07-13 | S1 | [`00_VISION.md`](./00_VISION.md) | ~37 (§2 idée 1) | Précision : IA commerciales (`claude -p`/Codex) en priorité, agents locaux à terme hors premier jalon |
+| 2026-07-13 | S1 | [`00_VISION.md`](./00_VISION.md) | ~130 (§4, avant Topologie) | Ajout note « Extension prévue » : personnalité de l'arbitre avec objectifs propres (divertissement, même solo) |
+| 2026-07-13 | S1 | [`00_VISION.md`](./00_VISION.md) | ~225 (§6 tableau) | Correction incohérence : « Canal WS dédié » → « Canal MCP local dédié (D20) » |
+| 2026-07-13 | S1 | [`00_VISION.md`](./00_VISION.md) | ~252 (§8) | Coût 2 modèles assumé tel quel (pas d'arbitre allégé) + renvoi note personnalité |
+| 2026-07-13 | S1 | [`00_VISION.md`](./00_VISION.md) | ~256 (§8) | Prérequis d'onboarding explicité : compte fournisseur + CLI installé, le jeu guide mais ne fournit pas |
+| 2026-07-13 | S1 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | ~633 (§2 IA arbitre) | Nouvelle question ouverte : personnalité/objectifs propres de l'arbitre (au-delà du paramétrage D10) |
+| 2026-07-13 | S1 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | ~126 (fin §2) | Ajout briques §2.7 (adaptateur agents + tchat ingame, M2) et §2.8 (journal d'événements métier, M5) — Q1 [doc 01](./01_ARCHITECTURE_CIBLE.md), option A |
+| 2026-07-13 | S1 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | ~160 (§3 tableau) | Ajout lignes adaptateur agents (LauncherManager) et journal d'événements (signaux existants) |
+| 2026-07-13 | S1 | [`14_ADAPTATEUR_AGENTS.md`](./14_ADAPTATEUR_AGENTS.md) | — | Création du [doc 14](./14_ADAPTATEUR_AGENTS.md) : adaptateur d'agents & tchat ingame (rôle, responsabilités, socle V2, questions ouvertes) |
+| 2026-07-13 | S1 | `README.md` (v3) | ~46 (table) | Ajout ligne [doc 14](./14_ADAPTATEUR_AGENTS.md) dans l'ordre de lecture |
+| 2026-07-13 | S1 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | ~109 (§2.5) | Q2 [doc 01](./01_ARCHITECTURE_CIBLE.md) tranchée : transport des propositions = session dédiée (D40), pas d'extension d'EditorSession |
+| 2026-07-13 | S1 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | ~578 (fin §1) | Nouvelle décision D40 : ProposalSession dédiée (patron COLLAB_SESSION_PATTERN, plage messages V3 propre, fiabilité M3) |
+| 2026-07-13 | S1 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | ~97 (§3) | Q3 [doc 01](./01_ARCHITECTURE_CIBLE.md) : P0 exécuté chez l'hôte (fait foi) + copie best-effort chez l'auteur (fail-fast), même code aux deux endroits |
+| 2026-07-13 | S1 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) | ~109 (§3 notes) | requestType recalculé par le P0 de l'hôte à réception, jamais repris d'une enveloppe reçue |
+| 2026-07-13 | S1 | [`13_ENVELOPPE_PROPOSITION.md`](./13_ENVELOPPE_PROPOSITION.md) | ~97, ~126 (§3) | D41 : champ `requiresModules` dans artifacts[] + notes (vérif P0, erreur missing_module, module_config = op structure du même lot) |
+| 2026-07-13 | S1 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | ~67, ~95, ~101 | D41 : snapshot du job étendu à l'état des modules ; P0 vérifie requiresModules ; P1 recharge les modules |
+| 2026-07-13 | S1 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | ~105-120 (Q-E08) | Manifeste MVP passe à 11 tools : ajout `module_config(id, enabled, params?)` (D41) |
+| 2026-07-13 | S1 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | ~600 (fin §1) | Nouvelle décision D41 : dépendances requiresModules + tool module_config au MVP |
+| 2026-07-13 | S1 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | ~137 (§2.6) | Note D41 : modules gameplay pilotables par l'IA (module_config + requiresModules) |
+| 2026-07-13 | S1 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | ~50, ~98 | S1 exerce module_config(stats) + requiresModules ; table §4 passe au manifeste 11 tools |
+| 2026-07-13 | S1 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | ~40 (§1), ~77 (§2.3), ~90 (§2.4), ~185 (§4 ét.5) | 4 corrections de cohérence : pipeline P0→arbitre→banc figé (docs [12](./12_BANC_ESSAI_R1.md)/[13](./13_ENVELOPPE_PROPOSITION.md)), sandbox 2 étages (D26), transport runtime tranché (D35) ×2 |
+| 2026-07-13 | S1 | [`08_DECISIONS_ET_QUESTIONS.md`](./08_DECISIONS_ET_QUESTIONS.md) | ~625 (fin §1) | Nouvelle décision D42 : banc exposé à l'IA cliente — artifact_dryrun (MVP, local, quota 10) + session atelier interactive (palier 2 tracé) |
+| 2026-07-13 | S1 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | ~105-122 (Q-E08) | Manifeste MVP passe à 12 tools : ajout `artifact_dryrun` (D42) |
+| 2026-07-13 | S1 | [`12_BANC_ESSAI_R1.md`](./12_BANC_ESSAI_R1.md) | ~200 (§6 bis), ~250 (§9), ~285 (§11) | Nouveau §6 bis mode atelier (D42) ; constante MEOW_BENCH_DRYRUN_QUOTA ; palier 2 (session interactive) tracé en §11 |
+| 2026-07-13 | S1 | [`02_CANAL_IA.md`](./02_CANAL_IA.md) | ~180 (§5.2) | Ajout capacité artifact_dryrun (D42) au catalogue à créer |
+| 2026-07-13 | S1 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | ~98 (§4) | Table tools : manifeste 12 tools, artifact_dryrun non requis par le slice |
+| 2026-07-17 | S2 | [`15_PLAN_IMPLEMENTATION.md`](./15_PLAN_IMPLEMENTATION.md) | — | Création du plan d'implémentation V3 (demande Antoine, **draft** : la revue docs [02](./02_CANAL_IA.md)→[13](./13_ENVELOPPE_PROPOSITION.md) n'est pas terminée — le plan référence ses docs sources pour amendement). Phases 0→5 + transversal Linux, fichiers impactés vérifiés contre le code, complexité par tâche, lots parallélisables |
 
 ## 5. Questions/réponses en attente (inter-sessions)
 
 *(Reporter ici les questions posées à Antoine/Valou non encore répondues en fin de
 session, pour que la session suivante les repose.)*
 
-- (vide)
+- **[Doc 02](./02_CANAL_IA.md), Q1 — validation de Q-E06** (schéma résumé d'événements + curseur) :
+  posée, en attente de réponse (valider → D43 / amender / laisser ouverte).
+  Suggestion associée : les verdicts de dry-run (D42) n'entrent pas au journal partagé.
+- **[Doc 02](./02_CANAL_IA.md), Q2 — frontière tools locaux vs proposition** : pas encore posée.
+- **[Doc 02](./02_CANAL_IA.md), Q3 — quotas du canal (chiffrer maintenant ou à l'implémentation)** : pas encore posée.

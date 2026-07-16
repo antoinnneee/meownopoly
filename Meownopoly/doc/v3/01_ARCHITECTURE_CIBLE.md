@@ -1,7 +1,7 @@
 # 01 — Architecture cible
 
 > **Statut : cadrage (draft).** Vue d'ensemble des briques V3 et de leurs flux.
-> Détail par brique dans les docs 02→05.
+> Détail par brique dans les docs [02](./02_CANAL_IA.md)→[05](./05_ESPACE_MEMOIRE_SNAPABLE.md).
 
 ## 1. Schéma d'ensemble
 
@@ -33,12 +33,12 @@ Passerelle IA locale (serveur MCP)         Passerelle IA locale (serveur MCP)
 Arbitre de l'hôte → validation mécanique → application autoritative.** Pour une
 proposition cliente, une **enveloppe** (auteur, intention, opérations, source ou
 hash d'artefact, version) doit donc atteindre l'hôte avant toute acceptation. Le
-mot « local-only » du doc 04 qualifie l'**exécution/réplication aux pairs**, pas
+mot « local-only » du [doc 04](./04_QML_GENERATIF_SANDBOX.md) qualifie l'**exécution/réplication aux pairs**, pas
 le fait de cacher la proposition à l'arbitre : sinon D6 serait impossible.
 
 Le sandbox reste une barrière de sécurité indépendante de l'arbitre. L'ordre
-est **figé depuis** (docs 12/13, mise à jour 2026-07-13) : **préfiltre P0**
-(chez l'hôte — copie best-effort chez l'auteur pour le fail-fast, doc 12 §3) →
+est **figé depuis** (docs [12](./12_BANC_ESSAI_R1.md)/[13](./13_ENVELOPPE_PROPOSITION.md), mise à jour 2026-07-13) : **préfiltre P0**
+(chez l'hôte — copie best-effort chez l'auteur pour le fail-fast, [doc 12](./12_BANC_ESSAI_R1.md) §3) →
 **arbitre** (selon le grain configuré D25) → **banc d'essai hors-process
 P1→P5** (D26) → application. Les propositions sans code ne passent pas par le
 sandbox QML, mais restent soumises aux validateurs de schéma, d'autorisation et
@@ -50,18 +50,18 @@ mais n'est pas ce canal.
 
 ## 2. Briques
 
-### 2.1 Le canal d'interaction IA↔jeu (doc 02)
+### 2.1 Le canal d'interaction IA↔jeu ([doc 02](./02_CANAL_IA.md))
 **Serveur MCP local** exposé par le jeu (D20, révise la forme WS initiale) :
 l'app spawne l'agent (tchat ingame, D10) et lui injecte config MCP + token +
 pré-prompt skill. Catalogue de **tools de haut niveau orienté gameplay**,
-**réduit et groupé** pour économiser les tokens (doc 02 §3), avec une boucle
+**réduit et groupé** pour économiser les tokens ([doc 02](./02_CANAL_IA.md) §3), avec une boucle
 **perception → action** (l'IA lit l'état, agit, observe) et des **événements
-injectés par invocation** + tool `events_poll` (doc 02 §4). Distinct de
+injectés par invocation** + tool `events_poll` ([doc 02](./02_CANAL_IA.md) §4). Distinct de
 l'automation pour isoler les responsabilités et pouvoir durcir la sécurité
 indépendamment. **D14 retient un seul canal multiplexé**, avec rôles/namespaces
 et une version globale du protocole.
 
-### 2.2 Le fichier de skill client (doc 03)
+### 2.2 Le fichier de skill client ([doc 03](./03_SKILL_CLIENT_IA.md))
 Embarqué avec l'application et **injecté en pré-prompt** à chaque invocation
 in-app d'un modèle (tchat ingame, D10/D17) — pas d'installation côté agent du
 joueur. Généré au build à partir du **manifeste versionné du canal IA**.
@@ -70,17 +70,17 @@ l'IA du joueur **les capacités disponibles** (catalogue de commandes, schémas
 d'I/O, exemples, garde-fous). C'est le contrat qui rend l'IA opérationnelle sans
 que le joueur ait à documenter le protocole.
 
-### 2.3 Le bac à sable QML (doc 04) — pièce critique
+### 2.3 Le bac à sable QML ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) — pièce critique
 Reçoit le QML généré par l'IA (D1), le **valide** et tente de le charger dans une
 frontière restreinte (pas d'accès disque/réseau/process, API allow-list, budget).
 Structure **à deux étages tranchée depuis** (D26, mise à jour 2026-07-13) :
-la **validation** est un banc d'essai hors-process (doc 12 — une boucle
+la **validation** est un banc d'essai hors-process ([doc 12](./12_BANC_ESSAI_R1.md) — une boucle
 infinie tue le process de test, jamais le jeu) ; l'**exécution en partie**
 reste un confinement in-process (D13, contenu arrêté par D34). Le prototype
 R1 est recentré sur ce second étage : masquage réel des singletons,
 allow-list, budgets runtime.
 
-### 2.4 L'espace mémoire par `snapableElement` (doc 05)
+### 2.4 L'espace mémoire par `snapableElement` ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md))
 Chaque `ItemSnapable` gagne un **set de variables sérialisables**. Le cadrage
 distingue désormais deux sémantiques : **configuration durable** (édition,
 persistance, undo) et **état runtime** (autorité hôte, dernier état, non undoable
@@ -95,11 +95,11 @@ commits/supersedable, plafonds chiffrés.
 c'est le **bus de variables** entre la donnée synchronisée et le JS embarqué.
 Support privilégié : les **zones**.
 
-### 2.5 L'IA arbitre / MJ (hôte uniquement, **obligatoire**) — cf. doc 00 §4, D6
+### 2.5 L'IA arbitre / MJ (hôte uniquement, **obligatoire**) — cf. [doc 00](./00_VISION.md) §4, D6
 Second rôle d'IA, **présent seulement chez l'hôte** et **requis** pour gouverner
 une partie partagée co-construite : héberger le mode IA **exige** un arbitre (pas de
 « host sans arbitre » ; à défaut, repli jeu classique). Il se place **en amont du
-bac à sable** (doc 04) : il s'interpose entre les propositions (locales à l'hôte
+bac à sable** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) : il s'interpose entre les propositions (locales à l'hôte
 **et** venues des clients par le réseau) et leur traitement, **juge la viabilité**
 (cohérence de règles, équilibre, faisabilité, abus) sur les données **et** la
 source QML, et **accepte / amende / rejette** — *avant* toute instanciation. Un
@@ -107,7 +107,7 @@ amendement peut être appliqué immédiatement, mais proposition originale, rais
 et version amendée doivent être journalisées. Le
 sandbox reste la barrière suivante (sécurité dure) pour les artefacts QML acceptés.
 C'est la couche de jugement *contextuel* au-dessus des garde-fous *mécaniques* du
-sandbox (doc 04). C'est aussi **lui qui gouverne les règles** (D8) : il accepte
+sandbox ([doc 04](./04_QML_GENERATIF_SANDBOX.md)). C'est aussi **lui qui gouverne les règles** (D8) : il accepte
 leur évolution, tandis que leur forme matérialisée est exécutée par les capacités
 du jeu. Le prompt seul n'est ni un état persistant ni un moteur runtime.
 Point d'ancrage réseau **tranché (D40, 2026-07-13)** : une **session dédiée**
@@ -121,25 +121,25 @@ mais **pas une validation sémantique générique** des ops : la passerelle
 d'arbitrage et ses validateurs sont donc une nouvelle responsabilité, pas un
 simple branchement sur un validateur existant. Sous-cadrage D6 depuis levé :
 nature tranchée (LLM externe, D10), grain configurable par UI (D25), verdict
-à deux audiences (D11, doc 13).
+à deux audiences (D11, [doc 13](./13_ENVELOPPE_PROPOSITION.md)).
 
-### 2.6 Règles (doc 06, gouvernées par l'arbitre) & Bibliothèque (doc 07)
+### 2.6 Règles ([doc 06](./06_MOTEUR_REGLES.md), gouvernées par l'arbitre) & Bibliothèque ([doc 07](./07_BIBLIOTHEQUE.md))
 > **Modules gameplay pilotables par l'IA (D41, 2026-07-13).** Les modules
 > (`GameplayModuleManager` : vie, inventaire, monnaie, stats, équipement,
 > niveau/XP) sont activables par l'IA via le tool `module_config` (manifeste
 > MVP) ; un artefact déclare ses dépendances `requiresModules`, vérifiées
-> mécaniquement (P0 + banc). Cf. doc 13 §3, doc 12 §2.3/§3.
+> mécaniquement (P0 + banc). Cf. [doc 13](./13_ENVELOPPE_PROPOSITION.md) §3, [doc 12](./12_BANC_ESSAI_R1.md) §2.3/§3.
 
 Les **règles sont gouvernées par l'arbitre** (D8, §2.5) — pas de moteur générique
 séparé acté ; leur forme acceptée doit être exécutable par le jeu. Il n'y
 a **pas de tour imposé** (il s'introduit par prompt ou proposition acceptée). Les
 **détails** (format d'une règle, mémorisation, réplication) sont différés. La
-**bibliothèque** (doc 07, différée) capitalisera les créations et/ou fournira des
+**bibliothèque** ([doc 07](./07_BIBLIOTHEQUE.md), différée) capitalisera les créations et/ou fournira des
 primitives réutilisables — dont une **bibliothèque d'assets 3D** (prévue au
 développement) qui **élargit le vocabulaire graphique** composable par l'IA,
-adossée au rendu World3D existant (doc 00 §2, doc 07 §1).
+adossée au rendu World3D existant ([doc 00](./00_VISION.md) §2, [doc 07](./07_BIBLIOTHEQUE.md) §1).
 
-### 2.7 L'adaptateur d'agents & le tchat ingame (doc 14) — nouvelle brique
+### 2.7 L'adaptateur d'agents & le tchat ingame ([doc 14](./14_ADAPTATEUR_AGENTS.md)) — nouvelle brique
 Le composant par lequel le joueur **entre** dans la V3 (ajouté à cette liste le
 2026-07-13 ; c'était jusqu'ici une mention en passant du flux §4). Il **lance et
 supervise** les CLIs (`claude -p`, Codex non interactif) via `QProcess` :
@@ -148,15 +148,15 @@ spawn la config MCP + le token de rôle (`proposer`/`arbiter`) + le pré-prompt
 skill (D10/D17/D20) ; il exécute le **handshake + challenge de l'arbitre** (D24)
 et pilote les états UX du lobby (D31) ; et il porte l'**UI du tchat ingame**,
 l'interface principale joueur↔IA. Aucun socle V2 : `LauncherManager` ne lance
-aucun processus (doc 10, B03). Chantier **M2**. Détail : doc 14.
+aucun processus ([doc 10](./10_AUDIT_STACK_EXISTANTE.md), B03). Chantier **M2**. Détail : [doc 14](./14_ADAPTATEUR_AGENTS.md).
 
 ### 2.8 Le journal d'événements métier (`GameplayEventBus`)
 Unifie les signaux existants (`Game`, `EditorOpBus`, `ItemSnapableEvents`,
 physique) en un **journal typé, séquencé, à curseur** (ajouté à cette liste le
 2026-07-13). Quatre consommateurs : le **résumé d'événements injecté** par
-invocation + le tool `events_poll` (doc 02 §4), le **noyau d'audit** (D19), le
+invocation + le tool `events_poll` ([doc 02](./02_CANAL_IA.md) §4), le **noyau d'audit** (D19), le
 **déclenchement des règles** avec ordre déterministe (D33), et la **détection de
-cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
+cycles/write-set** (D12). N'existe pas en V2 ([doc 10](./10_AUDIT_STACK_EXISTANTE.md), E05). Chantier **M5**.
 
 ## 3. Réutilisation du socle V2 (points d'ancrage réels)
 
@@ -173,7 +173,7 @@ cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
 | Partage des actions | Collab host-authoritative (traitement + broadcast) | `EditorOpBus`/`EditorSession` |
 | Runtime piloté | `PhysicsSession`, `World3D`, `InputController` | `cpp/game/physics/`, `qml/world3d/` |
 | Réseau/collab | Catway, `EditorSession` host-authoritative | `cpp/communication/`, `cpp/editor/network/` |
-| Adaptateur agents (doc 14) | `LauncherManager` (cycle d'opérations longues, statuts, erreurs — pas de lancement de process) | `cpp/launcher/launcher_manager.{h,cpp}` |
+| Adaptateur agents ([doc 14](./14_ADAPTATEUR_AGENTS.md)) | `LauncherManager` (cycle d'opérations longues, statuts, erreurs — pas de lancement de process) | `cpp/launcher/launcher_manager.{h,cpp}` |
 | Journal d'événements métier | signaux existants à adapter (pas de bus unifié en V2) | `cpp/game/game.*`, `cpp/editor/ops/`, `cpp/game/physics/item_snapable_events.*` |
 | Domaine réseau d'arbitrage (D6) | `EditorSession` (rate-limit, séquencement, rebroadcast ; validation sémantique à créer) | `cpp/editor/network/` |
 
@@ -183,19 +183,19 @@ cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
    l'application invoque le modèle et le pré-prompte avec la skill (D10/D17).
    Les premières intégrations ciblent `claude -p` et un mode non interactif
    équivalent de Codex, démarrés et supervisés par un adaptateur du launcher/jeu
-   (nouvelle brique, doc 10) — invisibles pour le joueur.
+   (nouvelle brique, [doc 10](./10_AUDIT_STACK_EXISTANTE.md)) — invisibles pour le joueur.
 2. L'IA cliente **génère un fichier QML** — l'élément et/ou son comportement — qui
    peut embarquer du **script QML/JS**. Ce script est écrit pour **lire et écrire
-   l'espace mémoire** (doc 05) des tuiles : c'est par là qu'il crée le gameplay
+   l'espace mémoire** ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) des tuiles : c'est par là qu'il crée le gameplay
    (variables, état, effets). L'IA émet ce fichier via les **tools MCP du
-   canal** (doc 02), éventuellement avec des commandes de pose (`editor_place`).
+   canal** ([doc 02](./02_CANAL_IA.md)), éventuellement avec des commandes de pose (`editor_place`).
 3. **D'abord l'arbitre.** Toute proposition (client ou hôte) passe par l'**IA
    arbitre** de l'hôte (§2.5, **obligatoire**, en amont du sandbox) : jugement de
    viabilité sur les données **et** la source QML/JS → accepte / amende / rejette.
    Un rejet remonte au proposant comme **erreur actionnable** ; un amendement peut
    être appliqué directement et revient dans le journal comme version effective.
 4. **Ensuite le sandbox.** Le fichier QML accepté passe par le **sandbox**
-   (doc 04) qui le valide et l'instancie dans un contexte restreint, rattaché à la
+   ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) qui le valide et l'instancie dans un contexte restreint, rattaché à la
    tuile ; son script n'accède qu'à la façade autorisée (dont l'espace mémoire).
    Une proposition sans QML (pose, écriture mémoire directe) saute cette étape.
 5. **Le script fait le gameplay via les capacités autorisées.** Les écritures de
@@ -206,7 +206,7 @@ cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
    La source cliente transite vers l'hôte pour arbitrage sans broadcast
    systématique. Une propriété de l'artefact choisit ensuite : exécution hôte
    seulement avec réplication des effets, ou exécution chez chaque pair après
-   revalidation (doc 04/08 D16).
+   revalidation (doc [04](./04_QML_GENERATIF_SANDBOX.md)/[08](./08_DECISIONS_ET_QUESTIONS.md) D16).
 6. L'IA cliente **observe** le résultat (état / screenshot via le canal) et itère.
 
 ## 5. Frontières & responsabilités
@@ -220,14 +220,14 @@ cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
   test/debug. Le canal ré-expose un **sous-ensemble curé** (certaines features
   portées + durcies) orienté création de briques de gameplay. Le tableau §3
   documente une réutilisation **de code** (patrons du serveur d'automation pour
-  bâtir le canal), **pas** un accès de l'IA à l'automation (doc 02 §1, doc 03).
+  bâtir le canal), **pas** un accès de l'IA à l'automation ([doc 02](./02_CANAL_IA.md) §1, [doc 03](./03_SKILL_CLIENT_IA.md)).
 - **Le sandbox ne fait pas confiance** : tout artefact QML est hostile par défaut.
 - **L'espace mémoire n'a pas de schéma imposé côté cœur** : c'est un blob libre ;
-  le sens des clés est une convention IA/règles (doc 05/06), pas du C++.
+  le sens des clés est une convention IA/règles (doc [05](./05_ESPACE_MEMOIRE_SNAPABLE.md)/[06](./06_MOTEUR_REGLES.md)), pas du C++.
 - **L'arbitre juge, il n'exécute pas.** Il rend un verdict (accepte/amende/rejette)
   sur une proposition ; l'application reste le pipeline de mutation existant. Et il
   ne porte **aucune** garantie de sécurité dure : celles-ci restent au sandbox
-  (doc 04) et aux validateurs de capacités. Voir doc 00 §9.
+  ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) et aux validateurs de capacités. Voir [doc 00](./00_VISION.md) §9.
 
 ## 6. Chantiers dérivés (aperçu, non planifiés ici)
 
@@ -237,4 +237,4 @@ cycles/write-set** (D12). N'existe pas en V2 (doc 10, E05). Chantier **M5**.
 - Ajouter **l'introspection d'état** (lister les tuiles par uuid/type/position,
   énumérer les enums valides) requise par une boucle perception→action.
 
-Ces manques sont documentés en détail dans le doc 02 (§capacités manquantes).
+Ces manques sont documentés en détail dans le [doc 02](./02_CANAL_IA.md) (§capacités manquantes).

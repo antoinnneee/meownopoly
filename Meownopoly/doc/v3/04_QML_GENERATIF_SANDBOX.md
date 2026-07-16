@@ -19,7 +19,7 @@ session courante, sans recompiler ni redéployer. Là où V2 exigeait un nouveau
 `TileType` C++ + recompilation, V3 laisse l'IA écrire du code.
 
 **Forme concrète visée : du JS embarqué dans les éléments, adossé aux briques
-préexistantes.** Le but V3 (doc 00 §2) est de **créer du gameplay**, pas seulement
+préexistantes.** Le but V3 ([doc 00](./00_VISION.md) §2) est de **créer du gameplay**, pas seulement
 du décor. Le mécanisme courant n'est donc pas « générer une scène entière de
 zéro » mais **composer les briques graphiques et gameplay déjà fournies** (éléments
 posables, modules activables) **et y injecter du code JS** qui porte le
@@ -46,7 +46,7 @@ n'est pas une option de confort, c'est la condition de viabilité de D1.
 ## 3. Le sandbox — principes de conception
 
 Le sandbox est le **point de passage obligatoire** de tout QML génératif entre le
-canal (doc 02) et la scène.
+canal ([doc 02](./02_CANAL_IA.md)) et la scène.
 
 **Deux étages depuis D26 (2026-07-12) :**
 
@@ -65,7 +65,7 @@ canal (doc 02) et la scène.
    considérée de confiance et les pairs réseau hostiles. Le prototype R1 se
    concentre désormais sur cet étage : masquage réel des singletons,
    allow-list d'imports, budgets — la stack V2 n'offre rien de tout ça
-   (doc 10).
+   ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 
 ### 3.1 Validation avant instanciation
 - **Allow-list d'imports** (arrêtée par **D34**) : `QtQuick`, `QtQuick.Shapes`,
@@ -94,14 +94,14 @@ canal (doc 02) et la scène.
 ### 3.3 Une « API de jeu » exposée à l'artefact (façade)
 Définir le **vocabulaire minimal** qu'un comportement généré a le droit
 d'utiliser : **lire et écrire les variables de l'espace mémoire** de sa tuile et
-**s'abonner à leur signal de changement** (`userMemoryChanged`, doc 05) — c'est le
+**s'abonner à leur signal de changement** (`userMemoryChanged`, [doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) — c'est le
 canal de communication normal entre le JS embarqué et l'état synchronisé —,
 demander une animation, émettre un événement de jeu, réagir à un trigger physique.
 Cette façade est l'équivalent, pour le QML génératif, de l'allow-list de commandes
 du canal. **Liste MVP arrêtée par D34** : `memory.get/set/onChanged`,
 `session.get`, `events.on/emit`, `player.position()`, `zone.playersInside()`,
 `stats.addModifier`, `dialogue.show`, `anim.play`, `fx.spawn`, `sound.play` —
-budgets associés dans D34 et doc 12 §9.
+budgets associés dans D34 et [doc 12](./12_BANC_ESSAI_R1.md) §9.
 
 ### 3.4 Budget de ressources
 - Timeouts/quotas CPU, plafond mémoire, limite du nombre d'objets instanciés,
@@ -116,13 +116,13 @@ budgets associés dans D34 et doc 12 §9.
 ### 3.5 Cycle de vie
 - **Instanciation** : canal → validation → contexte restreint → rattachement.
 - **Persistance** : l'artefact (source QML) peut vivre dans l'espace mémoire de la
-  tuile (doc 05) pour être rechargé au chargement de la map — **à condition** de
+  tuile ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) pour être rechargé au chargement de la map — **à condition** de
   re-valider à chaque chargement (ne jamais faire confiance au JSON sur disque).
 - **Destruction** : à la suppression de la tuile / fin de session / kill-switch.
 
 ## 4. Le nœud réseau : réplication du QML génératif
 
-C'est **la** question de sécurité à trancher (doc 08). Trois postures :
+C'est **la** question de sécurité à trancher ([doc 08](./08_DECISIONS_ET_QUESTIONS.md)). Trois postures :
 
 1. **Exécution locale, arbitrage hôte** : la source est envoyée à l'hôte dans
    l'enveloppe de proposition pour que l'arbitre puisse la juger, mais elle n'est
@@ -140,22 +140,22 @@ ensuite soit « exécution hôte uniquement + réplication des effets », soit
 « exécution chez chaque pair après revalidation ». La seconde politique ne peut
 être activée qu'après réussite complète de R1.
 
-## 5. Articulation avec l'espace mémoire (doc 05)
+## 5. Articulation avec l'espace mémoire ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md))
 
 Deux registres complémentaires :
 
 - **Espace mémoire = données** : `config` suit les ops d'édition/persistance ;
-  `state` suit le futur bus autoritatif runtime (doc 05). Une donnée reste soumise
+  `state` suit le futur bus autoritatif runtime ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)). Une donnée reste soumise
   à schéma, autorisation et quotas même si elle ne passe pas par le sandbox QML.
 - **Artefact QML = comportement** (code) : la logique qui *utilise* ces données.
   Passe par le sandbox ; réplication à trancher (§4).
 
 Beaucoup de personnalisations visées par le joueur (« loyer doublé », « bonus »)
 sont **de la donnée** et ne demandent **pas** de code : elles vivent dans l'espace
-mémoire + les capacités d'exécution des règles (doc 06). On garde donc la règle « donnée
+mémoire + les capacités d'exécution des règles ([doc 06](./06_MOTEUR_REGLES.md)). On garde donc la règle « donnée
 d'abord » : si l'effet s'exprime en données, pas de JS.
 
-Mais **créer du gameplay nouveau passe, lui, par du code JS** (doc 00 §2) : ce
+Mais **créer du gameplay nouveau passe, lui, par du code JS** ([doc 00](./00_VISION.md) §2) : ce
 chemin n'est **pas** marginal, c'est le levier central du pivot. La stratégie de
 réduction de risque n'est donc **pas** « éviter le code » mais **composer sur des
 briques pré-validées** plutôt que générer du QML libre de zéro :
@@ -163,16 +163,16 @@ briques pré-validées** plutôt que générer du QML libre de zéro :
 - le comportement s'écrit en **JS embarqué dans un élément** qui réutilise les
   briques graphiques/gameplay existantes (surface réduite au JS de glue, pas à une
   scène entière) ;
-- une **bibliothèque de primitives pré-validées** (doc 07) fournit les blocs que
+- une **bibliothèque de primitives pré-validées** ([doc 07](./07_BIBLIOTHEQUE.md)) fournit les blocs que
   l'IA assemble, réduisant d'autant ce que le sandbox doit valider à la volée ;
-- l'IA **arbitre** (doc 00 §4, obligatoire) juge la viabilité contextuelle par
+- l'IA **arbitre** ([doc 00](./00_VISION.md) §4, obligatoire) juge la viabilité contextuelle par
   dessus le sandbox.
 
 Le QML totalement libre (scène de zéro) reste possible mais devient le cas
 **extrême**, pas le cas courant — ce qui concentre le risque sur une fraction des
 usages.
 
-## 6. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
+## 6. Questions ouvertes (synthèse [doc 08](./08_DECISIONS_ET_QUESTIONS.md) ; questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - ~~Périmètre exact de l'API de jeu (façade §3.3)~~ **tranché D34** (liste MVP
   + budgets).
@@ -187,4 +187,4 @@ usages.
   négatifs ?
 - ~~Faut-il un mode revue humaine ?~~ **Tranché D9/D13 : non.**
 - Signature officielle : définir clés, rotation et révocation. Le SHA-256 actuel
-  du launcher vérifie l'intégrité, pas l'identité de l'éditeur (doc 10).
+  du launcher vérifie l'intégrité, pas l'identité de l'éditeur ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).

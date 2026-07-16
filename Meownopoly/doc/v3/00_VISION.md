@@ -37,8 +37,8 @@ Quatre idées portent le pivot :
    joueur branche son propre modèle — **en priorité les IA commerciales**
    ciblées par D10/D17 (`claude -p`, Codex) ; des **agents locaux** (type
    Ollama) sont envisagés **à terme**, hors périmètre du premier jalon. Le jeu ne
-   fournit pas l'IA ; il fournit le **point d'entrée** (canal MCP local, doc 02),
-   le **mode d'emploi** (skill embarquée, doc 03) et l'**interface** : un **tchat
+   fournit pas l'IA ; il fournit le **point d'entrée** (canal MCP local, [doc 02](./02_CANAL_IA.md)),
+   le **mode d'emploi** (skill embarquée, [doc 03](./03_SKILL_CLIENT_IA.md)) et l'**interface** : un **tchat
    ingame** depuis lequel les IA sont **invoquées directement par l'application**
    (D10/D17) — le joueur n'exécute jamais les features depuis un CLI à part.
    À chaque invocation, l'app **pré-prompte** le modèle avec les workflows des
@@ -53,13 +53,13 @@ Quatre idées portent le pivot :
    **compose les briques graphiques et gameplay déjà fournies** (éléments posables,
    modules de jeu activables) **et y injecte du code JS** pour le comportement
    nouveau. Elle produit du vrai code chargé en direct (décision **D1**, cf.
-   doc 04), mais adossé à un vocabulaire de briques validées plutôt que généré
-   intégralement de zéro (cf. bibliothèque, doc 07). Ce vocabulaire graphique a
+   [doc 04](./04_QML_GENERATIF_SANDBOX.md)), mais adossé à un vocabulaire de briques validées plutôt que généré
+   intégralement de zéro (cf. bibliothèque, [doc 07](./07_BIBLIOTHEQUE.md)). Ce vocabulaire graphique a
    vocation à s'**élargir massivement** : une **bibliothèque d'assets 3D** est
    **prévue au développement** pour offrir aux IA un **large éventail de
    possibilités** de matérialisation — modèles et objets 3D piochables et
    composables — sans que chaque forme visuelle ait à être générée de zéro
-   (cf. doc 07 §1).
+   (cf. [doc 07](./07_BIBLIOTHEQUE.md) §1).
 
 3. **Liberté par joueur, partie co-construite.** L'objectif final est que chaque
    joueur, à travers son IA, puisse **construire une partie selon ses propres
@@ -113,14 +113,14 @@ rôles**, répartis selon la topologie host-authoritative existante :
 - **L'IA cliente (proposante).** Présente chez **chaque** joueur, hôte compris —
   c'est le même rôle partout. À partir du langage naturel du joueur, elle
   **produit** des propositions : nouveaux éléments, événements, artefacts QML à
-  charger à la volée. Elle les émet sur le canal MCP local (doc 02).
+  charger à la volée. Elle les émet sur le canal MCP local ([doc 02](./02_CANAL_IA.md)).
 - **L'IA arbitre / MJ.** Présente **uniquement chez l'hôte**. Avant qu'une
   proposition ne touche la map partagée, elle en **vérifie la viabilité** :
   cohérence avec les règles en cours, respect des invariants, faisabilité,
   absence d'abus. Elle **accepte, amende ou rejette**. C'est le pendant
   « intelligent » du host-authoritative : l'hôte n'est pas un simple relais qui
   rebroadcaste, il **arbitre** le contenu, au sens d'un maître du jeu.
-  C'est aussi **elle qui porte les règles de la partie** (décision **D8**, doc 06) :
+  C'est aussi **elle qui porte les règles de la partie** (décision **D8**, [doc 06](./06_MOTEUR_REGLES.md)) :
   l'arbitre est l'autorité qui accepte l'évolution du règlement. Une règle
   acceptée est ensuite matérialisée dans une forme que le jeu sait exécuter
   (configuration, module, primitive ou QML/JS validé) : le prompt seul n'est pas
@@ -132,7 +132,7 @@ rôles**, répartis selon la topologie host-authoritative existante :
 > lui donnera des **objectifs propres** (à définir). But produit : faire de
 > l'arbitre un acteur de **divertissement** à part entière — ce qui justifie
 > notamment le coût du second modèle **même en solo**. Question ouverte tracée
-> au doc 08 (§2, IA arbitre).
+> au [doc 08](./08_DECISIONS_ET_QUESTIONS.md) (§2, IA arbitre).
 
 ### Topologie : 2 rôles isolés chez l'hôte, 1 chez le client
 
@@ -174,23 +174,23 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 - **Deux postures inconciliables dans un seul agent.** Le rôle proposant est
   créatif et permissif ; le rôle arbitre est conservateur, garant de l'intégrité
   de la partie. Les fondre dilue la garantie.
-- **Complément « souple » des garde-fous « durs ».** Le sandbox (doc 04) et les
+- **Complément « souple » des garde-fous « durs ».** Le sandbox ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) et les
   validateurs de capacités posent des invariants **mécaniques** et
   non-négociables. L'arbitre ajoute au-dessus un jugement **contextuel** (« ce
   pont est-il cohérent avec le thème et l'équilibre de cette partie ? ») que des
   règles statiques n'expriment pas. Il ne remplace pas le sandbox : une
   proposition doit passer **et** l'arbitre **et** les contrôles mécaniques. Un
   préfiltre statique peu coûteux peut précéder l'appel LLM ; la validation complète
-  et l'isolation précèdent toujours l'exécution (schéma doc 01).
+  et l'isolation précèdent toujours l'exécution (schéma [doc 01](./01_ARCHITECTURE_CIBLE.md)).
 - **Un point d'autorité unique.** Concentrer l'arbitrage chez l'hôte évite le
   split-brain (deux pairs validant différemment) et réutilise le modèle réseau
   existant (`EditorSession`/`PhysicsSession` host-authoritative).
 
-> **Sous-cadrage de D6 — depuis levé (doc 08).** La **nature** de l'arbitre est
+> **Sous-cadrage de D6 — depuis levé ([doc 08](./08_DECISIONS_ET_QUESTIONS.md)).** La **nature** de l'arbitre est
 > tranchée (LLM externe supervisé, D10), le **grain** est configurable par UI
 > avec plancher sur code/règles (D25), la **forme du verdict** est spécifiée
-> (D11 + doc 13 : verdict à deux audiences, actionnable pour itérer). Reste
-> l'articulation fine avec l'exécution des règles (doc 06 §4 : mémorisation,
+> (D11 + [doc 13](./13_ENVELOPPE_PROPOSITION.md) : verdict à deux audiences, actionnable pour itérer). Reste
+> l'articulation fine avec l'exécution des règles ([doc 06](./06_MOTEUR_REGLES.md) §4 : mémorisation,
 > réplication).
 
 ## 5. Principes directeurs
@@ -202,11 +202,11 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   d'automation actuels, les mutations structurelles de l'IA passent par les
   mêmes pipelines que l'humain (`Game.updateMap`, `EditorOpBus`) et conservent
   leurs propriétés d'undo/collab/persistance. L'état runtime haute fréquence
-  emprunte, lui, un flux distinct et non undoable (doc 05).
+  emprunte, lui, un flux distinct et non undoable ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)).
 - **Liberté bornée par des garde-fous non-négociables.** « Grande liberté » ne
   veut pas dire « exécution arbitraire non contrôlée ». Le JS embarqué / QML
-  génératif impose un **sandbox** (doc 04) ; l'arbitre (obligatoire, §4) juge la
-  viabilité ; les règles custom imposent, à terme, un **contrat** (doc 06). La
+  génératif impose un **sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) ; l'arbitre (obligatoire, §4) juge la
+  viabilité ; les règles custom imposent, à terme, un **contrat** ([doc 06](./06_MOTEUR_REGLES.md)). La
   liberté vit *au-dessus* d'invariants que l'IA ne peut pas violer.
 - **Local d'abord.** Le canal d'interaction est **local à la machine** (loopback).
   Il n'est qu'un point de contact jeu↔IA-du-joueur, pas un service exposé.
@@ -221,12 +221,12 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
 |---------|----|----|
 | Producteur de contenu | Humain via UI éditeur | Humain **+ son IA cliente** via canal MCP |
 | Validation du contenu | Règles C++ figées + host relais | + **IA arbitre / MJ** chez l'hôte (viabilité contextuelle) |
-| Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc 04/05) |
+| Extension d'un élément | Recompilation C++ (nouveau `TileType`, paramètre) | **Variables typées synchronisées** (espace mémoire réactif) + **JS embarqué** sur briques préexistantes (comportement) (doc [04](./04_QML_GENERATIF_SANDBOX.md)/[05](./05_ESPACE_MEMOIRE_SNAPABLE.md)) |
 | Auteur du gameplay | Développeurs (C++/QML compilé) | **IA + joueurs**, au fil des parties (JS embarqué, briques composées) |
-| Point d'entrée IA | Automation (debug/dev) | **Canal MCP local dédié** IA-joueur (D20, doc 02) |
-| Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gouvernées par l'arbitre**, matérialisées/exécutées par les capacités du jeu ; tour optionnel (doc 06, D8) |
-| Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations (doc 07, différé) |
-| Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** (doc 07) |
+| Point d'entrée IA | Automation (debug/dev) | **Canal MCP local dédié** IA-joueur (D20, [doc 02](./02_CANAL_IA.md)) |
+| Règles de partie | Pas de moteur de règles formel ni de système de tour | **Gouvernées par l'arbitre**, matérialisées/exécutées par les capacités du jeu ; tour optionnel ([doc 06](./06_MOTEUR_REGLES.md), D8) |
+| Partage de contenu | Fichiers map JSON | + **Bibliothèque** de primitives/créations ([doc 07](./07_BIBLIOTHEQUE.md), différé) |
+| Physique / rendu 3D | Pattounx v2 / World3D | Inchangé (piloté à terme par l'IA) ; **palette visuelle élargie par une bibliothèque d'assets 3D prévue** ([doc 07](./07_BIBLIOTHEQUE.md)) |
 | Réseau P2P / collab | Catway / EditorSession | Inchangé, socle réutilisé |
 
 ## 7. Transition et non-buts
@@ -239,12 +239,12 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   sa propre IA cliente.
 - Pas d'exposition réseau du canal hors de la machine locale à ce stade.
 - **Pas d'accès de l'IA à l'automation de test.** L'IA cliente dialogue uniquement
-  avec le **canal curé** (doc 02, appels d'API locaux) dont le but est de **créer
+  avec le **canal curé** ([doc 02](./02_CANAL_IA.md), appels d'API locaux) dont le but est de **créer
   des briques de gameplay avec logique** ; le harnais d'automation
   (`AutomationServer`, `automation_mcp/`) reste **test-only**. Certaines features
   de l'automation sont **portées** dans le canal, jamais exposées telles quelles.
-- Les **détails de représentation et d'exécution des règles** (doc 06) et
-  l'**architecture de la bibliothèque** (doc 07) sont explicitement reportés.
+- Les **détails de représentation et d'exécution des règles** ([doc 06](./06_MOTEUR_REGLES.md)) et
+  l'**architecture de la bibliothèque** ([doc 07](./07_BIBLIOTHEQUE.md)) sont explicitement reportés.
 
 ## 8. Périmètre produit validé
 
@@ -262,14 +262,14 @@ arbitre ; à défaut, le mode IA reste indisponible (repli sur le jeu classique,
   guide l'installation/configuration mais ne fournit ni modèle ni compte
   (cf. §7, « pas d'IA hébergée par le jeu »).
 - Plateformes visées : **Windows et Linux**. Linux demande encore packaging, CI
-  et qualification (doc 10).
+  et qualification ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)).
 
 ## 9. Risque central assumé
 
 Le choix **D1 (QML génératif complet)** offre la liberté maximale mais ouvre la
 **plus grande surface de sécurité du projet** : du code non fait-maison est
 chargé et exécuté dans le process du jeu. Tout le cadrage V3 est structuré pour
-que cette liberté soit **encadrée par un sandbox** (doc 04) plutôt que subie.
+que cette liberté soit **encadrée par un sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)) plutôt que subie.
 C'est le sujet le plus important à traiter avant toute implémentation.
 
 L'**IA arbitre** (§4) est une seconde ligne de défense, mais **de nature

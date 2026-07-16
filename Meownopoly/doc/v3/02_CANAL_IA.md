@@ -89,7 +89,7 @@ est conçu pour minimiser ce coût — c'est le rôle conjoint de la skill et du
 catalogue :
 
 - **La skill porte la connaissance, pas les schémas.** Le pré-prompt injecté
-  (doc 03) contient les workflows, recettes et conventions — compact, stable,
+  ([doc 03](./03_SKILL_CLIENT_IA.md)) contient les workflows, recettes et conventions — compact, stable,
   donc **caché** (prompt caching) entre les invocations d'une même session. Les
   détails d'usage vivent dans la skill, pas dans des descriptions de tools
   verbeuses.
@@ -150,13 +150,13 @@ Identifiées lors de la cartographie du socle — ce sont les vrais chantiers :
 
 - **Introspection d'état structurée** : `state.listTiles()` → `[{uuid, tileType,
   gridX, gridY, w, h}]`, `state.getTile(uuid)` → JSON complet **incluant l'espace
-  mémoire** (doc 05). Aujourd'hui l'IA doit itérer `snapableTilesList` en
+  mémoire** ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)). Aujourd'hui l'IA doit itérer `snapableTilesList` en
   `qml_get`/`qml_invoke` bruts ; `_tileCount` ne donne qu'un compte.
 - **Édition ciblée par uuid** : `deleteTile(uuid)`, `moveTile(uuid, gx, gy)`,
   `resizeTile(uuid, …)`, `selectTile(uuid)`. Absents (seuls
   `setZoneTrigger`/`setNpcDialogue` éditent un existant).
 - **Espace mémoire** : `state.setMemory(uuid, blob)` / `state.getMemory(uuid)`
-  (doc 05).
+  ([doc 05](./05_ESPACE_MEMOIRE_SNAPABLE.md)).
 - **Énumération des enums** : `state.enum("CaseType")`, `enum("TriggerMode")`,
   `enum("PickMode")` — `placeCase` prend aujourd'hui un `caseType` numérique brut
   sans moyen d'en connaître les valeurs valides.
@@ -167,11 +167,11 @@ Identifiées lors de la cartographie du socle — ce sont les vrais chantiers :
   (`World3D.bodyStates`), déclencher saut/attaque. **Totalement absent** en V2 —
   requis pour « l'usage de modules liés au NPC/joueur ».
 - **QML génératif** : `qml.instantiate(artefact, attachToUuid?)` — passe par le
-  **sandbox** (doc 04). Nouvelle capacité centrale du pivot.
+  **sandbox** ([doc 04](./04_QML_GENERATIF_SANDBOX.md)). Nouvelle capacité centrale du pivot.
 - **Dry-run d'artefact** (D42, 2026-07-13) : `artifact_dryrun(source,
   targetUuid?)` — itération pré-soumission sur le **banc d'essai local**
   (verdict + métriques complets, quota par invocation ; *pass local ≠
-  acceptation*). Cf. doc 12 §6 bis.
+  acceptation*). Cf. [doc 12](./12_BANC_ESSAI_R1.md) §6 bis.
 - **Événements** : `events_poll(cursor)` sur le journal métier (§4).
 - **Screenshot** : réutiliser `grabWindow` (déjà dans l'automation) pour donner à
   l'IA un retour visuel — MCP supporte les résultats image nativement. Politique
@@ -212,7 +212,7 @@ IA** (message clair, code stable, `retryable`), pas juste un échec opaque.
   automation. Le canal n'expose que le catalogue gameplay (§5).
 - **Le QML génératif ne transite pas directement vers la scène** : il est placé
   dans une enveloppe de proposition (D11), soumis à l'autorité de l'hôte puis aux
-  contrôles mécaniques (doc 04). En multi-joueurs, la source d'un client doit au
+  contrôles mécaniques ([doc 04](./04_QML_GENERATIF_SANDBOX.md)). En multi-joueurs, la source d'un client doit au
   minimum atteindre l'hôte pour que l'arbitre puisse la juger.
 - **Budget / quotas** : rate-limit par session d'agent, taille max des artefacts
   QML (cf. seuils réseau existants : batch 30 KB, chunking 20 KB dans
@@ -220,9 +220,9 @@ IA** (message clair, code stable, `retryable`), pas juste un échec opaque.
 - **Garanties applicatives explicites** côté P2P (inchangé) : toute
   proposition/commit/verdict transitant entre pairs porte ID, ACK applicatif,
   retry et déduplication ; le transport Catway `reliable` ne retransmet pas
-  (doc 10, R13).
+  ([doc 10](./10_AUDIT_STACK_EXISTANTE.md), R13).
 
-## 8. Questions ouvertes (synthèse doc 08 ; questions ouvertes : doc 09)
+## 8. Questions ouvertes (synthèse [doc 08](./08_DECISIONS_ET_QUESTIONS.md) ; questions ouvertes : [doc 09](./09_QUESTIONNAIRE_CADRAGE.md))
 
 - ~~Forme d'intégration MCP (Q-E11)~~ **tranchée D21** : streamable HTTP
   loopback intégré au jeu (§2 bis).
@@ -233,7 +233,7 @@ IA** (message clair, code stable, `retryable`), pas juste un échec opaque.
 - Politique multi-joueurs : quelles commandes restent purement locales et quelles
   propositions passent obligatoirement par l'autorité de l'hôte ? Toute mutation
   de l'état partagé doit passer par l'hôte ; la frontière exacte reste à lister.
-- **Point d'insertion de l'IA arbitre** (doc 00 §4, D6) : une proposition cliente
+- **Point d'insertion de l'IA arbitre** ([doc 00](./00_VISION.md) §4, D6) : une proposition cliente
   arrivant à l'hôte doit être soumise à l'arbitre avant rebroadcast. Sous quelle
   forme le verdict revient-il au proposant (résultat de tool, événement injecté
   au tour suivant) ?
