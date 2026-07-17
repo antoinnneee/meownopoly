@@ -73,6 +73,30 @@ target_link_libraries(tst_snapshot_codec PRIVATE
     Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml)
 add_test(NAME tst_snapshot_codec COMMAND tst_snapshot_codec)
 
+# ============================================================================
+# Test : GameplayEventBus (journal d'événements métier, V3 piste D)
+# ============================================================================
+# Compile le bus SEUL (aucune dépendance jeu/réseau — garantie de
+# linkabilité headless). Bornes réduites via -D pour tester le recyclage
+# du ring, le débordement d'audit et la garde de cascade à faible coût.
+qt_add_executable(tst_gameplay_event_bus EXCLUDE_FROM_ALL
+    tst_gameplay_event_bus.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/game/events/gameplay_event_bus.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/game/events/gameplay_event_bus.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/game/events/event_types.h"
+)
+target_compile_definitions(tst_gameplay_event_bus PRIVATE
+    MEOW_EVENTBUS_CAPACITY=16
+    MEOW_EVENTBUS_AUDIT_MAX=32
+    MEOW_EVENTBUS_MAX_CASCADE=4
+)
+target_include_directories(tst_gameplay_event_bus PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+)
+target_link_libraries(tst_gameplay_event_bus PRIVATE
+    Qt6::Core Qt6::Test Qt6::Qml)
+add_test(NAME tst_gameplay_event_bus COMMAND tst_gameplay_event_bus)
+
 # Cible agrégée demandée par le plan : pattounx_tests
 add_custom_target(pattounx_tests
     DEPENDS tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
@@ -217,7 +241,7 @@ endif()
 #   cmake --build build --config Release --target tst_collision2d     (un seul)
 set(MEOWNOPOLY_ALL_TEST_TARGETS
     tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
-    tst_mapinfo)
+    tst_gameplay_event_bus tst_mapinfo)
 if (TARGET Qt6::CanvasPainter)
     list(APPEND MEOWNOPOLY_ALL_TEST_TARGETS
         tst_zone_render_perf tst_grid_render_perf tst_combined_render_perf)

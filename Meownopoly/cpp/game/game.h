@@ -93,6 +93,10 @@ public:
     Q_INVOKABLE double tickLamport();
     Q_INVOKABLE void   syncLamport(double remote);
     Q_INVOKABLE void   resetLamport();
+    // Lecture seule du compteur logique (SANS tick). Consommé par le
+    // GameplayEventBus (V3 piste D) comme horloge externe : le bus garantit
+    // sa propre monotonie et ne doit pas faire churner les zOrder/previews.
+    qint64 lamportClock() const { return m_lamportClock; }
     double previewZOrder() const;
     // Scanne une Map et sync le compteur au max des zOrder trouvés. Appelé
     // après loadMap pour qu'une nouvelle création ne collisionne pas avec

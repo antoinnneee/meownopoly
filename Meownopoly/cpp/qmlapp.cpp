@@ -71,6 +71,8 @@
 #include "editor/network/editor_session.h"
 #include "editor/ops/editor_op_bus.h"
 #include "game/modules/gameplay_module_manager.h"
+#include "game/events/gameplay_event_bus.h"
+#include "game/events/gameplay_event_ingest.h"
 
 #include <QImageWriter>
 
@@ -113,6 +115,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     EditorSession::registerQml();
     EditorOpBus::registerQml();
     GameplayModuleManager::registerQml();
+    GameplayEventBus::registerQml();
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
@@ -212,6 +215,15 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     addImportPath("qrc:/qml/editor/configPanel");  // Contains: caseConfigPanel, connectionConfigPanel, visualEffectPanel, zoneConfigPanel
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
+
+    // Journal d'événements métier (V3 piste D). Horloge Lamport branchée en
+    // LECTURE sur celle de Game (pas de tick — cf. gameplay_event_bus.h),
+    // puis ingestion des signaux existants (ItemSnapableEvents / Game /
+    // PhysicsSession). Après load() : ItemSnapableEvents et la map courante
+    // éventuelle existent déjà, l'ingest capte les mutations suivantes.
+    GameplayEventBus::instance()->setLamportProvider(
+        []() { return Game::instance()->lamportClock(); });
+    new GameplayEventIngest(GameplayEventBus::instance(), this);
 
     Logger* loggerInstance = Logger::instance();
     Catway* catwayInstance = Catway::instance();
