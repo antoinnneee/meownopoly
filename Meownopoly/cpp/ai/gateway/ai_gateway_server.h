@@ -19,6 +19,7 @@
 class QHttpServer;
 class QTcpServer;
 class QQuickWindow;
+namespace meow::bench { class BenchPool; }
 
 /**
  * AiGatewayServer — passerelle MCP (Model Context Protocol) locale du canal IA.
@@ -100,7 +101,8 @@ public:
     QString arbiterToken() const { return m_arbiterToken; }
 
     /// Régénère les tokens de session (nouvelle session IA) et purge l'état de
-    /// quota associé. Les anciens tokens deviennent immédiatement invalides.
+    /// quota associé (dont les budgets de captures et de dry-run). Les anciens
+    /// tokens deviennent immédiatement invalides.
     void rotateSessionTokens();
 
     /// D4 — Bloc résumé injecté au pré-prompt d'un tour d'IA (Q-E06
@@ -183,6 +185,17 @@ private:
     /// events_poll(cursor) : différentiel du journal projeté au schéma canal,
     /// filtré par l'audience du rôle (D20). Délègue à GameplayEventBus::canalPoll.
     QJsonObject toolEventsPoll(const QJsonValue &id, const QJsonObject &arguments, Role role);
+    // — A9 : artifact_dryrun (banc d'essai local, D42) —
+    /// artifact_dryrun(source, targetUuid?) : P0 statique puis exécution one-shot
+    /// du banc via le pool. Verdict + métriques complets ; quota par session ;
+    /// non journalisé au journal partagé (D44).
+    QJsonObject toolArtifactDryrun(const QJsonValue &id, const QJsonObject &arguments);
+    /// Projette un verdict de banc (ou de P0) au schéma retourné à l'IA, avec le
+    /// stage ("P0"|"bench") et le rappel « pass local ≠ acceptation » (D42).
+    QJsonObject makeDryrunResult(const QJsonValue &id, const QJsonObject &verdict,
+                                 const QString &stage);
+    /// Pool de dry-run partagé, créé à la première demande (lazy).
+    meow::bench::BenchPool *ensureBenchPool();
 
     // — Fabriques de résultats de tool (MCP) —
     /// Enveloppe un résultat de hook `{ ok, ... }` en résultat MCP :
@@ -222,6 +235,9 @@ private:
     /// plafond MEOW_AI_GATEWAY_SCREENSHOT_CAP est atteint. Réinitialisé à la
     /// rotation des tokens (nouvelle session IA).
     bool consumeScreenshotBudget(const QString &token);
+    /// Consomme une unité du budget de dry-run (D42) pour `token`. Faux si le
+    /// plafond MEOW_BENCH_DRYRUN_QUOTA est atteint. Réinitialisé à la rotation.
+    bool consumeDryrunBudget(const QString &token);
     /// Extrait le token d'un en-tête « Bearer <token> » (vide si mal formé).
     static QString extractBearer(const QString &authHeaderValue);
 
@@ -243,6 +259,7 @@ private:
         Role role = Role::Proposer;
         QList<qint64> recentRequestsMs; // ms depuis epoch, purgés hors fenêtre
         int screenshotsTaken = 0;       // budget captures D22, remis à 0 à la rotation
+        int dryrunsUsed = 0;            // budget dry-run D42, remis à 0 à la rotation
     };
     QHash<QString, TokenState> m_tokens;
     QString m_proposerToken;
@@ -252,6 +269,10 @@ private:
     // le lambda de route avant handleRpc, utilisé par les tools à budget par
     // token (ex. screenshot D22) sans threader le token dans chaque signature.
     QString m_currentToken;
+
+    // A9 — pool de dry-run (banc d'essai local), créé à la première demande.
+    // Partagé par les deux identités ; sérialise les jobs (un slot au MVP).
+    meow::bench::BenchPool *m_benchPool = nullptr;
 
 #if MEOW_HAS_HTTP_SERVER
     QHttpServer *m_httpServer = nullptr;

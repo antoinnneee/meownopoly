@@ -31,6 +31,15 @@
 
 // D4 : branchement du canal sur le journal métier (events_poll + résumé injecté).
 #include "game/events/gameplay_event_bus.h"
+// A9 : dry-run local via le banc d'essai (pool + P0 statique).
+#include "ai/bench/bench_pool.h"
+#include "ai/bench/bench_protocol.h"
+#include "ai/bench/bench_supervisor.h"   // MEOW_BENCH_TIMEOUT_MS
+#include "ai/sandbox/static_validator.h"
+#include <QCryptographicHash>
+#include <QUuid>
+#include <QEventLoop>
+#include <QTimer>
 
 #if MEOW_HAS_HTTP_SERVER
 #  include <QHttpServer>
@@ -66,6 +75,12 @@
 // budget est simplement remis à 0 à la rotation des tokens (nouvelle session).
 #ifndef MEOW_AI_GATEWAY_SCREENSHOT_CAP
 #  define MEOW_AI_GATEWAY_SCREENSHOT_CAP 5
+#endif
+// Quota de dry-run (artifact_dryrun, D42) par session d'IA. Déclaré au manifeste
+// (quotas.perInvocation.artifact_dryrun, défaut 10). Comme le budget de captures
+// (D22), il est porté par le token et remis à 0 à la rotation (nouvelle session).
+#ifndef MEOW_BENCH_DRYRUN_QUOTA
+#  define MEOW_BENCH_DRYRUN_QUOTA 10
 #endif
 
 // ============================================================================
@@ -103,6 +118,9 @@ constexpr auto kAppToolFailed = "tool_failed";           // hook exécuté mais 
 // C4 — capacités manquantes.
 constexpr auto kAppUnknownEnum = "unknown_enum";         // state.enum : nom hors catalogue
 constexpr auto kAppScreenshotQuota = "screenshot_quota"; // plafond D22 atteint
+// A9 — dry-run local.
+constexpr auto kAppDryrunQuota = "dryrun_quota";         // quota artifact_dryrun (D42) atteint
+constexpr auto kAppBenchUnavailable = "bench_unavailable"; // banc n'a pas rendu de verdict
 } // namespace
 
 // ============================================================================
@@ -656,6 +674,10 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
     // fixe l'audience (proposant = public ; arbitre = public + réservé, D20).
     if (name == QLatin1String("events_poll"))
         return toolEventsPoll(id, arguments, role);
+    // A9 — dry-run local sur le banc d'essai (D42). Verdict + métriques complets ;
+    // pass local ≠ acceptation ; non journalisé au journal partagé (D44).
+    if (name == QLatin1String("artifact_dryrun"))
+        return toolArtifactDryrun(id, arguments);
 
     // Tools du manifeste dont la capacité côté hôte n'est pas encore livrée.
     // Chaque renvoi cite la tâche du plan qui la câblera (traçabilité).
@@ -663,8 +685,6 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
         return toolNotImplemented(id, name, QStringLiteral("S-3 (espace mémoire snapable, D15)"));
     if (name == QLatin1String("artifact_submit"))
         return toolNotImplemented(id, name, QStringLiteral("S-1/S-2 (enveloppe de proposition, D11)"));
-    if (name == QLatin1String("artifact_dryrun"))
-        return toolNotImplemented(id, name, QStringLiteral("A9 (banc d'essai, D42)"));
     if (name == QLatin1String("arbiter_verdict"))
         return toolNotImplemented(id, name, QStringLiteral("S-2 (verdict 2 audiences, D32)"));
 
@@ -1097,6 +1117,163 @@ QString AiGatewayServer::injectedEventSummary(Role role, quint64 cursor) const
     const QVariantMap summary =
         GameplayEventBus::instance()->canalSummary(cursor, audience);
     return summary.value(QStringLiteral("text")).toString();
+}
+
+// ============================================================================
+// A9 — artifact_dryrun : dry-run local sur le banc d'essai (D42)
+// ============================================================================
+
+meow::bench::BenchPool *AiGatewayServer::ensureBenchPool()
+{
+    // Instancié à la première demande (aucun coût si l'IA ne fait pas de dry-run).
+    // Un seul pool partagé : au MVP la file transactionnelle sérialise déjà les
+    // propositions (le pool sérialise les jobs de dry-run des deux identités).
+    if (!m_benchPool)
+        m_benchPool = new meow::bench::BenchPool(this);
+    return m_benchPool;
+}
+
+QJsonObject AiGatewayServer::makeDryrunResult(const QJsonValue &id, const QJsonObject &verdict,
+                                              const QString &stage)
+{
+    // Schéma retourné à l'IA (manifeste : { verdict, metrics }), enrichi du stage
+    // (P0 ou banc) et du rappel D42. `ok=true` : le dry-run s'est EXÉCUTÉ — un
+    // échec de banc n'est pas une erreur de tool, c'est un résultat exploitable.
+    QJsonObject out;
+    const QString v = verdict.value(QStringLiteral("verdict")).toString();
+    out[QStringLiteral("verdict")] = v.isEmpty() ? QStringLiteral("fail") : v;
+    out[QStringLiteral("pass")] = (v == QLatin1String("pass"));
+    out[QStringLiteral("stage")] = stage;
+    out[QStringLiteral("failures")] = verdict.value(QStringLiteral("failures"));
+    out[QStringLiteral("metrics")] = verdict.value(QStringLiteral("metrics"));
+    if (verdict.contains(QStringLiteral("durationMs")))
+        out[QStringLiteral("durationMs")] = verdict.value(QStringLiteral("durationMs"));
+    // Rappel D42 : le dry-run est une aide d'itération, pas une garantie.
+    out[QStringLiteral("note")] = QStringLiteral(
+        "Dry-run local (D42) : un pass local ne vaut PAS acceptation. À la "
+        "soumission, la proposition repasse au P0 de l'hôte, au banc, puis à "
+        "l'arbitre. Ce dry-run n'est pas inscrit au journal partagé.");
+    out[QStringLiteral("ok")] = true;
+    return makeToolResult(id, out);
+}
+
+QJsonObject AiGatewayServer::toolArtifactDryrun(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString source = arguments.value(QStringLiteral("source")).toString();
+    if (source.trimmed().isEmpty())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("artifact_dryrun: 'source' requis"),
+                            /*retryable=*/false);
+
+    // Quota par session (D42). Comme le budget de captures, porté par le token et
+    // remis à 0 à la rotation. Consommé AVANT tout travail (P0 + spawn).
+    if (!consumeDryrunBudget(m_currentToken))
+        return makeAppError(
+            id, kInvalidParams, kAppDryrunQuota,
+            QStringLiteral("Quota de dry-run atteint (%1 / session, D42).")
+                .arg(MEOW_BENCH_DRYRUN_QUOTA),
+            /*retryable=*/false);
+
+    const QString targetUuid = arguments.value(QStringLiteral("targetUuid")).toString();
+
+    // Préfiltre P0 statique d'abord — même ORDRE que le pipeline réel (doc 12 §3 :
+    // « inutile de payer un process pour un import interdit »). Un échec P0 rend un
+    // verdict immédiat, sans spawner le banc.
+    meow::sandbox::StaticValidationInput sin;
+    sin.source = source;
+    const meow::sandbox::StaticValidationResult p0 =
+        meow::sandbox::StaticValidator::validate(sin);
+    if (!p0.passed()) {
+        QJsonObject verdict;
+        verdict[QStringLiteral("verdict")] = QStringLiteral("fail");
+        QJsonArray fs;
+        for (const meow::sandbox::StaticFinding &f : p0.findings)
+            fs.append(f.toJson());
+        verdict[QStringLiteral("failures")] = fs;
+        QJsonObject metrics;
+        metrics[QStringLiteral("imports")] = QJsonArray::fromStringList(p0.imports);
+        verdict[QStringLiteral("metrics")] = metrics;
+        return makeDryrunResult(id, verdict, QStringLiteral("P0"));
+    }
+
+    // Job du banc (contrat bench_protocol). Snapshot MINIMAL au MVP : la
+    // reconstruction sur la carte courante réelle passera par le pipeline de
+    // proposition (Phase 2) ; ici on valide le comportement de l'artefact à vide.
+    const QString jobId =
+        QStringLiteral("dryrun_") + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QJsonObject artifact;
+    artifact[QStringLiteral("source")] = source;
+    if (!targetUuid.isEmpty())
+        artifact[QStringLiteral("targetUuid")] = targetUuid;
+    // contentHash : sert aussi de clé de cache de verdicts (A8) → un dry-run
+    // répété d'une source identique est servi sans re-spawn.
+    artifact[QStringLiteral("contentHash")] = QString::fromLatin1(
+        QCryptographicHash::hash(source.toUtf8(), QCryptographicHash::Sha256).toHex());
+
+    QJsonObject snapshot;
+    snapshot[QStringLiteral("map")] = QJsonObject{};
+    snapshot[QStringLiteral("memory")] = QJsonObject{};
+    snapshot[QStringLiteral("modules")] = QJsonObject{};
+
+    QJsonObject job;
+    job[QStringLiteral("jobId")] = jobId;
+    job[QStringLiteral("benchVersion")] = meow::bench::kBenchVersion;
+    job[QStringLiteral("snapshot")] = snapshot;
+    job[QStringLiteral("artifact")] = artifact;
+    job[QStringLiteral("budgets")] = QJsonObject{};   // le banc applique ses défauts
+    job[QStringLiteral("stimuli")] = QJsonArray{};
+    job[QStringLiteral("seed")] = 0;
+
+    // Exécution one-shot via le pool (A8). Le pool est 100 % asynchrone
+    // (verdictReady) ; le tool MCP est synchrone → on attend le verdict dans un
+    // event loop imbriqué. Le GUI reste vivant (l'event loop continue de traiter
+    // les événements — invariant doc 12 §1, comme l'attente bloquante de
+    // artifact_submit). Filet de sécurité si le pool ne répond jamais.
+    meow::bench::BenchPool *pool = ensureBenchPool();
+
+    QJsonObject verdict;
+    bool got = false;
+    QEventLoop loop;
+    const QMetaObject::Connection conn = connect(
+        pool, &meow::bench::BenchPool::verdictReady, &loop,
+        [&](const QString &vid, const QJsonObject &v) {
+            if (vid != jobId)
+                return;   // verdict d'un autre job (dry-run concurrent) : ignorer
+            verdict = v;
+            got = true;
+            loop.quit();
+        });
+
+    QTimer safety;
+    safety.setSingleShot(true);
+    connect(&safety, &QTimer::timeout, &loop, &QEventLoop::quit);
+    // Le superviseur a son propre timeout dur (MEOW_BENCH_TIMEOUT_MS) et rend un
+    // verdict synthétique ; ce filet ne couvre qu'un blocage du pool lui-même.
+    safety.start(MEOW_BENCH_TIMEOUT_MS + 5000);
+
+    pool->submit(job);
+    if (!got)
+        loop.exec();
+    disconnect(conn);
+
+    if (!got)
+        return makeAppError(id, kInvalidParams, kAppBenchUnavailable,
+                            QStringLiteral("Le banc n'a pas rendu de verdict de "
+                                           "dry-run dans le délai imparti"),
+                            /*retryable=*/true);
+
+    return makeDryrunResult(id, verdict, QStringLiteral("bench"));
+}
+
+bool AiGatewayServer::consumeDryrunBudget(const QString &token)
+{
+    const auto it = m_tokens.find(token);
+    if (it == m_tokens.end())
+        return false; // token inconnu = pas de budget (défense en profondeur)
+    if (it->dryrunsUsed >= MEOW_BENCH_DRYRUN_QUOTA)
+        return false;
+    ++it->dryrunsUsed;
+    return true;
 }
 
 // ============================================================================
