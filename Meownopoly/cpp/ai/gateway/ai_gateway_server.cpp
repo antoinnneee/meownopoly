@@ -16,7 +16,18 @@
 #include <QQuickItem>
 #include <QMetaObject>
 #include <QMetaMethod>
+#include <QMetaEnum>
 #include <QJSValue>
+#include <QImage>
+#include <QBuffer>
+
+// C4 : énumération des enums exposés (state.enum) via QMetaEnum — recopie
+// directe du Q_ENUM, aucune dérive. Les dossiers cpp/game/{case,map,item_snapable}
+// sont dans les include dirs de la cible (CMakeLists.txt).
+#include "Case.h"
+#include "ItemSnapable.h"
+#include "playerprofile.h"
+#include "npcparameter.h"
 
 #if MEOW_HAS_HTTP_SERVER
 #  include <QHttpServer>
@@ -46,6 +57,12 @@
 // Entropie du token éphémère (octets bruts avant hexadécimal). 32 → 64 chars.
 #ifndef MEOW_AI_GATEWAY_TOKEN_BYTES
 #  define MEOW_AI_GATEWAY_TOKEN_BYTES 32
+#endif
+// Plafond de captures d'écran par session d'IA (D22, 2026-07-12). Défaut 5,
+// affinable au build. Rétention éphémère hors périmètre de la passerelle : le
+// budget est simplement remis à 0 à la rotation des tokens (nouvelle session).
+#ifndef MEOW_AI_GATEWAY_SCREENSHOT_CAP
+#  define MEOW_AI_GATEWAY_SCREENSHOT_CAP 5
 #endif
 
 // ============================================================================
@@ -80,6 +97,9 @@ constexpr auto kAppForbiddenRole = "forbidden_role";     // tool hors allow-list
 constexpr auto kAppNotImplemented = "not_implemented";   // capacité hôte à venir (C4/S-*)
 constexpr auto kAppSceneUnavailable = "scene_unavailable"; // éditeur non chargé
 constexpr auto kAppToolFailed = "tool_failed";           // hook exécuté mais en échec
+// C4 — capacités manquantes.
+constexpr auto kAppUnknownEnum = "unknown_enum";         // state.enum : nom hors catalogue
+constexpr auto kAppScreenshotQuota = "screenshot_quota"; // plafond D22 atteint
 } // namespace
 
 // ============================================================================
@@ -143,6 +163,11 @@ AiGatewayServer::AiGatewayServer(quint16 port, QObject *parent)
                                  /*retryable=*/false),
                     QHttpServerResponse::StatusCode::Unauthorized);
             }
+
+            // Token de la requête en cours : exploité par les tools à budget
+            // par token (screenshot D22). GUI thread mono-fil, requête
+            // synchrone → pas de réentrance à craindre.
+            m_currentToken = token;
 
             // QUOTA (débit) : rate-limit fenêtre glissante par token.
             if (!consumeRateBudget(token)) {
@@ -619,23 +644,24 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
         return toolEditorEdit(id, arguments);
     if (name == QLatin1String("module_config"))
         return toolModuleConfig(id, arguments);
+    // C4 — capacités manquantes (doc 02 §5.2).
+    if (name == QLatin1String("state_query"))
+        return toolStateQuery(id, arguments);
+    if (name == QLatin1String("roster_edit"))
+        return toolRosterEdit(id, arguments);
+    if (name == QLatin1String("screenshot"))
+        return toolScreenshot(id, arguments);
 
     // Tools du manifeste dont la capacité côté hôte n'est pas encore livrée.
     // Chaque renvoi cite la tâche du plan qui la câblera (traçabilité).
-    if (name == QLatin1String("state_query"))
-        return toolNotImplemented(id, name, QStringLiteral("C4 (state.listTiles/getTile/enum/roster)"));
     if (name == QLatin1String("memory_set"))
         return toolNotImplemented(id, name, QStringLiteral("S-3 (espace mémoire snapable, D15)"));
-    if (name == QLatin1String("roster_edit"))
-        return toolNotImplemented(id, name, QStringLiteral("C4 (hooks roster PlayerProfile/MapInfo)"));
     if (name == QLatin1String("artifact_submit"))
         return toolNotImplemented(id, name, QStringLiteral("S-1/S-2 (enveloppe de proposition, D11)"));
     if (name == QLatin1String("artifact_dryrun"))
         return toolNotImplemented(id, name, QStringLiteral("A9 (banc d'essai, D42)"));
     if (name == QLatin1String("events_poll"))
         return toolNotImplemented(id, name, QStringLiteral("D4 (journal d'événements, Q-E06)"));
-    if (name == QLatin1String("screenshot"))
-        return toolNotImplemented(id, name, QStringLiteral("C4 (capture D22, plafond #define)"));
     if (name == QLatin1String("arbiter_verdict"))
         return toolNotImplemented(id, name, QStringLiteral("S-2 (verdict 2 audiences, D32)"));
 
@@ -751,12 +777,34 @@ QJsonObject AiGatewayServer::toolEditorEdit(const QJsonValue &id, const QJsonObj
     } else if (op == QLatin1String("set_dialogue")) {
         hook = QStringLiteral("setNpcDialogue");
         args = { uuid, p.value(QStringLiteral("lines")).toVariant() };
+    } else if (op == QLatin1String("move")) {
+        // C4 : déplacement par uuid (coords grille absolues).
+        hook = QStringLiteral("moveTile");
+        args = { uuid, p.value(QStringLiteral("gridX")).toVariant(),
+                 p.value(QStringLiteral("gridY")).toVariant() };
+    } else if (op == QLatin1String("resize")) {
+        hook = QStringLiteral("resizeTile");
+        args = { uuid, p.value(QStringLiteral("w")).toVariant(),
+                 p.value(QStringLiteral("h")).toVariant() };
+    } else if (op == QLatin1String("delete")) {
+        hook = QStringLiteral("deleteTile");
+        args = { uuid };
+    } else if (op == QLatin1String("link")) {
+        // uuid = source ; params.target = cible ; params.kind = next|previous.
+        hook = QStringLiteral("linkTiles");
+        args = { uuid, p.value(QStringLiteral("target")).toVariant(),
+                 p.value(QStringLiteral("kind")).toVariant() };
+    } else if (op == QLatin1String("unlink")) {
+        hook = QStringLiteral("unlinkTiles");
+        args = { uuid, p.value(QStringLiteral("target")).toVariant(),
+                 p.value(QStringLiteral("kind")).toVariant() };
     } else {
-        // move/resize/delete/link/unlink/set_param : hooks à ajouter en C4
-        // (editor_edit par uuid via EditorOpBus). Non câblés au MVP.
+        // set_param : le paramétrage typé par sous-objet (case/npc/enemy/zone…)
+        // passe déjà par set_trigger/set_dialogue ou par des ops dédiées ;
+        // la voie générique par uuid reste à cadrer (S-3/S-5). Non câblé.
         return toolNotImplemented(
             id, QStringLiteral("editor_edit(%1)").arg(op),
-            QStringLiteral("C4 (move/resize/delete/link/unlink/set_param par uuid)"));
+            QStringLiteral("S-3/S-5 (set_param générique par uuid)"));
     }
 
     bool ok = false;
@@ -789,6 +837,205 @@ QJsonObject AiGatewayServer::toolModuleConfig(const QJsonValue &id, const QJsonO
     return toolNotImplemented(
         id, QStringLiteral("module_config(%1)").arg(moduleId),
         QStringLiteral("S-5 (généralisation module_config, D41)"));
+}
+
+// ============================================================================
+// C4 — Introspection d'état, roster, énumérations, capture (doc 02 §5.2)
+// ============================================================================
+
+QJsonObject AiGatewayServer::enumValues(const QString &enumName, bool &known)
+{
+    known = true;
+    const auto fromMeta = [&](const QString &name, const QMetaEnum &me) {
+        QJsonObject values;
+        for (int i = 0; i < me.keyCount(); ++i)
+            values[QString::fromLatin1(me.key(i))] = me.value(i);
+        QJsonObject o;
+        o[QStringLiteral("name")] = name;
+        o[QStringLiteral("values")] = values;
+        return o;
+    };
+
+    if (enumName == QLatin1String("CaseType"))
+        return fromMeta(enumName, QMetaEnum::fromType<Case::CaseType>());
+    if (enumName == QLatin1String("TileType"))
+        return fromMeta(enumName, QMetaEnum::fromType<ItemSnapable::TileType>());
+    if (enumName == QLatin1String("PickMode"))
+        return fromMeta(enumName, QMetaEnum::fromType<PlayerProfile::PickMode>());
+    // TriggerMode : par défaut celui des PNJ (Q_ENUM Proximity/Click/Always).
+    if (enumName == QLatin1String("TriggerMode")
+        || enumName == QLatin1String("NpcTriggerMode"))
+        return fromMeta(QStringLiteral("TriggerMode"),
+                        QMetaEnum::fromType<NPCParameter::TriggerMode>());
+    // Déclenchement de zone : entier libre (pas de Q_ENUM), table figée.
+    if (enumName == QLatin1String("ZoneTriggerMode")) {
+        QJsonObject values;
+        values[QStringLiteral("None")] = 0;
+        values[QStringLiteral("PressurePlate")] = 1;
+        QJsonObject o;
+        o[QStringLiteral("name")] = enumName;
+        o[QStringLiteral("values")] = values;
+        return o;
+    }
+
+    known = false;
+    return {};
+}
+
+QJsonObject AiGatewayServer::toolStateQuery(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString what = arguments.value(QStringLiteral("what")).toString();
+    const QJsonObject filter = arguments.value(QStringLiteral("filter")).toObject();
+
+    if (what.isEmpty())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("state_query: champ 'what' requis"),
+                            /*retryable=*/false);
+
+    // Énumérations : résolues en C++ (QMetaEnum), sans la scène QML.
+    if (what == QLatin1String("enums")) {
+        const QString enumName = filter.value(QStringLiteral("name")).toString();
+        if (enumName.isEmpty())
+            return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                                QStringLiteral("state_query(enums): filter.name requis "
+                                               "(ex. CaseType, TileType, PickMode, TriggerMode)"),
+                                /*retryable=*/false);
+        bool known = false;
+        const QJsonObject e = enumValues(enumName, known);
+        if (!known) {
+            QJsonObject details;
+            details[QStringLiteral("requested")] = enumName;
+            details[QStringLiteral("known")] = QJsonArray{
+                QStringLiteral("CaseType"), QStringLiteral("TileType"),
+                QStringLiteral("PickMode"), QStringLiteral("TriggerMode"),
+                QStringLiteral("ZoneTriggerMode") };
+            return makeAppError(id, kInvalidParams, kAppUnknownEnum,
+                                QStringLiteral("Enum inconnu au catalogue: %1").arg(enumName),
+                                /*retryable=*/false, details);
+        }
+        QJsonObject res = e;
+        res[QStringLiteral("ok")] = true;
+        return makeToolResult(id, res);
+    }
+
+    // Le reste s'appuie sur les hooks de la scène (éditeur chargé requis).
+    QString hook;
+    QVariantList args;
+    if (what == QLatin1String("tiles")) {
+        hook = QStringLiteral("listTiles");
+        args = { filter.toVariantMap() };
+    } else if (what == QLatin1String("tile")) {
+        const QString uuid = filter.value(QStringLiteral("uuid")).toString();
+        if (uuid.isEmpty())
+            return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                                QStringLiteral("state_query(tile): filter.uuid requis"),
+                                /*retryable=*/false);
+        hook = QStringLiteral("getTile");
+        args = { uuid };
+    } else if (what == QLatin1String("roster") || what == QLatin1String("players")) {
+        hook = QStringLiteral("listRoster");
+        args = {};
+    } else {
+        // memory → S-3, rules → T4-4, proposals → S-1 : capacités à venir.
+        return toolNotImplemented(
+            id, QStringLiteral("state_query(%1)").arg(what),
+            QStringLiteral("S-3/S-1/T4-4 (memory/proposals/rules)"));
+    }
+
+    bool ok = false;
+    QString err;
+    const QJsonObject res = invokeHook(hook, args, ok, err);
+    if (!ok)
+        return makeAppError(id, kInvalidParams, kAppSceneUnavailable, err,
+                            /*retryable=*/true);
+    return makeToolResult(id, res);
+}
+
+QJsonObject AiGatewayServer::toolRosterEdit(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString op = arguments.value(QStringLiteral("op")).toString();
+    const QJsonObject p = arguments.value(QStringLiteral("params")).toObject();
+
+    QString hook;
+    QVariantList args;
+    if (op == QLatin1String("add_profile")) {
+        hook = QStringLiteral("addPlayerProfile");
+        // params.profile facultatif : objet de champs ({} = profil par défaut).
+        args = { p.value(QStringLiteral("profile")).toObject().toVariantMap() };
+    } else if (op == QLatin1String("remove_profile")) {
+        hook = QStringLiteral("removePlayerProfile");
+        args = { p.value(QStringLiteral("id")).toVariant() };
+    } else if (op == QLatin1String("update_profile")) {
+        hook = QStringLiteral("updatePlayerProfile");
+        args = { p.value(QStringLiteral("id")).toVariant(),
+                 p.value(QStringLiteral("fields")).toObject().toVariantMap() };
+    } else if (op == QLatin1String("reorder_profile")) {
+        hook = QStringLiteral("reorderPlayerProfile");
+        args = { p.value(QStringLiteral("id")).toVariant(),
+                 p.value(QStringLiteral("newIndex")).toVariant() };
+    } else if (op == QLatin1String("set_limits")) {
+        hook = QStringLiteral("setMapPlayerLimits");
+        args = { p.toVariantMap() };
+    } else {
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("roster_edit: op invalide '%1'").arg(op),
+                            /*retryable=*/false);
+    }
+
+    bool ok = false;
+    QString err;
+    const QJsonObject res = invokeHook(hook, args, ok, err);
+    if (!ok)
+        return makeAppError(id, kInvalidParams, kAppSceneUnavailable, err,
+                            /*retryable=*/true);
+    return makeToolResult(id, res);
+}
+
+QJsonObject AiGatewayServer::toolScreenshot(const QJsonValue &id, const QJsonObject &arguments)
+{
+    Q_UNUSED(arguments);
+
+    // Plafond par session d'IA (D22) : consomme une unité du budget du token.
+    if (!consumeScreenshotBudget(m_currentToken))
+        return makeAppError(
+            id, kInvalidParams, kAppScreenshotQuota,
+            QStringLiteral("Plafond de captures atteint (%1 / session, D22).")
+                .arg(MEOW_AI_GATEWAY_SCREENSHOT_CAP),
+            /*retryable=*/false);
+
+    QQuickWindow *win = primaryQuickWindow();
+    if (!win)
+        return makeAppError(id, kInvalidParams, kAppSceneUnavailable,
+                            QStringLiteral("Aucune fenêtre de jeu à capturer"),
+                            /*retryable=*/true);
+
+    // grabWindow() est synchrone sur le GUI thread (où tourne la passerelle).
+    const QImage img = win->grabWindow();
+    if (img.isNull())
+        return makeAppError(id, kInvalidParams, kAppToolFailed,
+                            QStringLiteral("grabWindow() a renvoyé une image vide"),
+                            /*retryable=*/true);
+
+    QByteArray png;
+    QBuffer buffer(&png);
+    buffer.open(QIODevice::WriteOnly);
+    if (!img.save(&buffer, "PNG")) {
+        buffer.close();
+        return makeAppError(id, kInvalidParams, kAppToolFailed,
+                            QStringLiteral("Échec de l'encodage PNG de la capture"),
+                            /*retryable=*/true);
+    }
+    buffer.close();
+
+    // Résultat MCP image (content type "image", data base64, mimeType).
+    QJsonObject imageItem;
+    imageItem[QStringLiteral("type")] = QStringLiteral("image");
+    imageItem[QStringLiteral("data")] = QString::fromLatin1(png.toBase64());
+    imageItem[QStringLiteral("mimeType")] = QStringLiteral("image/png");
+    QJsonObject result;
+    result[QStringLiteral("content")] = QJsonArray{ imageItem };
+    result[QStringLiteral("isError")] = false;
+    return makeResult(id, result);
 }
 
 QJsonObject AiGatewayServer::toolNotImplemented(const QJsonValue &id, const QString &name,
@@ -869,6 +1116,23 @@ QObject *AiGatewayServer::findEditorHooks() const
             return hit;
     }
     return nullptr;
+}
+
+QQuickWindow *AiGatewayServer::primaryQuickWindow() const
+{
+    const QList<QWindow *> tops = QGuiApplication::topLevelWindows();
+    // Priorité à une fenêtre visible ; à défaut, la première QQuickWindow.
+    QQuickWindow *fallback = nullptr;
+    for (QWindow *w : tops) {
+        auto *qw = qobject_cast<QQuickWindow *>(w);
+        if (!qw)
+            continue;
+        if (qw->isVisible())
+            return qw;
+        if (!fallback)
+            fallback = qw;
+    }
+    return fallback;
 }
 
 QJsonObject AiGatewayServer::invokeHook(const QString &fn, const QVariantList &args,
@@ -1043,6 +1307,17 @@ bool AiGatewayServer::consumeRateBudget(const QString &token)
     if (stamps.size() >= MEOW_AI_GATEWAY_RATE_LIMIT_REQUESTS)
         return false;
     stamps.append(now);
+    return true;
+}
+
+bool AiGatewayServer::consumeScreenshotBudget(const QString &token)
+{
+    const auto it = m_tokens.find(token);
+    if (it == m_tokens.end())
+        return false; // token inconnu = pas de budget (défense en profondeur)
+    if (it->screenshotsTaken >= MEOW_AI_GATEWAY_SCREENSHOT_CAP)
+        return false;
+    ++it->screenshotsTaken;
     return true;
 }
 

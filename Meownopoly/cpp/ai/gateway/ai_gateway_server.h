@@ -154,6 +154,19 @@ private:
     QJsonObject toolEditorPlace(const QJsonValue &id, const QJsonObject &arguments);
     QJsonObject toolEditorEdit(const QJsonValue &id, const QJsonObject &arguments);
     QJsonObject toolModuleConfig(const QJsonValue &id, const QJsonObject &arguments);
+    // — C4 : capacités manquantes (doc 02 §5.2) —
+    /// state_query(what, filter) : lecture d'état structurée et compacte.
+    /// tiles/tile/roster/players → hooks scène ; enums → QMetaEnum (C++).
+    QJsonObject toolStateQuery(const QJsonValue &id, const QJsonObject &arguments);
+    /// roster_edit(op, params) : profils joueurs + limites map (ops collab 12-16).
+    QJsonObject toolRosterEdit(const QJsonValue &id, const QJsonObject &arguments);
+    /// screenshot() : capture de l'écran de jeu (D22), plafond par token via
+    /// MEOW_AI_GATEWAY_SCREENSHOT_CAP. Résultat MCP image (base64 PNG).
+    QJsonObject toolScreenshot(const QJsonValue &id, const QJsonObject &arguments);
+    /// Table des enums exposés (state.enum) : { name, values:{clé:valeur} }.
+    /// `known` = false si l'enum n'est pas au catalogue. Source : QMetaEnum
+    /// (pas de dérive : recopie du Q_ENUM du type).
+    static QJsonObject enumValues(const QString &enumName, bool &known);
     /// Tool présent au manifeste mais dont la capacité hôte arrive en C4/S-* :
     /// erreur structurée `not_implemented` non-retryable pointant la suite.
     QJsonObject toolNotImplemented(const QJsonValue &id, const QString &name,
@@ -170,6 +183,8 @@ private:
     /// l'éditeur n'est pas chargé).
     QObject *findEditorHooks() const;
     static QObject *findByObjectName(QObject *root, const QString &name);
+    /// Première fenêtre QQuickWindow visible (cible de la capture D22).
+    QQuickWindow *primaryQuickWindow() const;
     /**
      * Invoque une fonction JS d'`editorAutomationHooks` (params + retour QVariant,
      * voie identique à AutomationServer::cmdInvoke). Renvoie l'objet JSON résultat
@@ -191,6 +206,10 @@ private:
     bool validateToken(const QString &token, Role &outRole) const;
     /// Consomme une unité de budget rate-limit pour `token`. Faux si dépassé.
     bool consumeRateBudget(const QString &token);
+    /// Consomme une unité du budget de captures (D22) pour `token`. Faux si le
+    /// plafond MEOW_AI_GATEWAY_SCREENSHOT_CAP est atteint. Réinitialisé à la
+    /// rotation des tokens (nouvelle session IA).
+    bool consumeScreenshotBudget(const QString &token);
     /// Extrait le token d'un en-tête « Bearer <token> » (vide si mal formé).
     static QString extractBearer(const QString &authHeaderValue);
 
@@ -211,10 +230,16 @@ private:
     struct TokenState {
         Role role = Role::Proposer;
         QList<qint64> recentRequestsMs; // ms depuis epoch, purgés hors fenêtre
+        int screenshotsTaken = 0;       // budget captures D22, remis à 0 à la rotation
     };
     QHash<QString, TokenState> m_tokens;
     QString m_proposerToken;
     QString m_arbiterToken;
+
+    // Token de la requête en cours (transitoire, GUI thread mono-fil). Posé par
+    // le lambda de route avant handleRpc, utilisé par les tools à budget par
+    // token (ex. screenshot D22) sans threader le token dans chaque signature.
+    QString m_currentToken;
 
 #if MEOW_HAS_HTTP_SERVER
     QHttpServer *m_httpServer = nullptr;
