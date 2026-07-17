@@ -2,6 +2,7 @@
 #define DECORATIONPARAMETER_H
 
 #include <QObject>
+#include <QJsonObject>
 #include <qdebug.h>
 
 class DecorationParameter : public QObject
@@ -16,6 +17,7 @@ public:
 
 
     QString toJSON();
+    QJsonObject toJsonObject() const;
     void applyJson(const QJsonObject &json);
 
     Q_PROPERTY(QString decorationCategory READ decorationCategory WRITE setDecorationCategory NOTIFY decorationCategoryChanged)

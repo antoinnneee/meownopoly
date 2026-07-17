@@ -50,6 +50,7 @@ public:
     void setGrabbable(bool v);
 
     QString toJSON() const;
+    QJsonObject toJsonObject() const;
     void applyJson(const QJsonObject &json);
 
     bool operator==(const PhysicalObjectParameter &other) const {

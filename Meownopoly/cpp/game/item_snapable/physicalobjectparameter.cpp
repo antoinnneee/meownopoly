@@ -1,6 +1,7 @@
 #include "physicalobjectparameter.h"
 
 #include <QJsonObject>
+#include <QJsonDocument>
 
 PhysicalObjectParameter::PhysicalObjectParameter(QObject *parent)
     : QObject{parent}
@@ -59,17 +60,21 @@ void PhysicalObjectParameter::setGrabbable(bool v)
     emit grabbableChanged();
 }
 
+QJsonObject PhysicalObjectParameter::toJsonObject() const
+{
+    return QJsonObject{
+        { "mass",             m_mass },
+        { "bounceFactor",     m_bounceFactor },
+        { "frictionStrength", m_frictionStrength },
+        { "linearDamping",    m_linearDamping },
+        { "grabbable",        m_grabbable },
+    };
+}
+
 QString PhysicalObjectParameter::toJSON() const
 {
-    QString json;
-    json += "{\n";
-    json += "    \"mass\": "             + QString::number(m_mass, 'f', 4)            + ",\n";
-    json += "    \"bounceFactor\": "     + QString::number(m_bounceFactor, 'f', 4)    + ",\n";
-    json += "    \"frictionStrength\": " + QString::number(m_frictionStrength, 'f', 4) + ",\n";
-    json += "    \"linearDamping\": "    + QString::number(m_linearDamping, 'f', 4)   + ",\n";
-    json += "    \"grabbable\": "        + QString(m_grabbable ? "true" : "false")    + "\n";
-    json += "}";
-    return json;
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Compact));
 }
 
 void PhysicalObjectParameter::applyJson(const QJsonObject &json)

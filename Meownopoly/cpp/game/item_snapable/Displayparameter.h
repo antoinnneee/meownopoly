@@ -64,6 +64,7 @@ public:
 
 
     QString toJSON();
+    QJsonObject toJsonObject() const;
     void applyJson(const QJsonObject &json);
 
 

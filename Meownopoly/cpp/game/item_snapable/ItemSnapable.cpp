@@ -234,45 +234,61 @@ void ItemSnapable::setPhysicalObjectParameter(PhysicalObjectParameter * physical
 
 QString ItemSnapable::toJSON()
 {
-    QString json;
-    json += "{\n";
-    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\",\n";
-    json += "    \"tileType\": " + QString::number(m_tileType) + ",\n";
+    // R4 (plan V3 P0-2) : sérialisation intégralement via QJsonObject /
+    // QJsonDocument. L'ancienne concaténation manuelle de chaînes cassait le
+    // round-trip fromJson(toJSON()) dès qu'un champ texte libre (zoneName,
+    // rewardItemName, dialogueLines…) contenait un guillemet, un backslash ou
+    // un saut de ligne. Chaque sous-paramètre expose maintenant toJsonObject().
+    QJsonObject root;
+    root["uniqueId"] = m_uniqueId.toString();
+    root["tileType"] = int(m_tileType);
+
     if (m_caseData != nullptr) {
-        json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
+        // Case (hors périmètre P0-2) sérialise encore en chaîne : on la reparse
+        // pour l'insérer comme objet. En cas d'échec, on préserve la donnée en
+        // journalisant plutôt que de produire un tile globalement invalide.
+        QJsonParseError caseErr;
+        const QJsonDocument caseDoc =
+            QJsonDocument::fromJson(m_caseData->toJSON().toUtf8(), &caseErr);
+        if (caseErr.error == QJsonParseError::NoError && caseDoc.isObject()) {
+            root["caseData"] = caseDoc.object();
+        } else {
+            qWarning() << "ITEM_SNAPABLE: caseData->toJSON() illisible pour tile"
+                       << m_uniqueId.toString() << "-" << caseErr.errorString();
+        }
     }
     if (m_decorationParameter != nullptr) {
-        json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
+        root["decorationParameter"] = m_decorationParameter->toJsonObject();
     }
     if (m_zoneParameter != nullptr && m_tileType == PhysicZoneTile) {
-        json += "    \"zoneParameter\": " + m_zoneParameter->toJSON() + ",\n";
+        root["zoneParameter"] = m_zoneParameter->toJsonObject();
     }
     if (m_npcParameter != nullptr && m_tileType == NPCTile) {
-        // toJSON() de NPCParameter est déjà un objet JSON valide (échappement
-        // via QJsonDocument), la concat reste sûre ici.
-        json += "    \"npcParameter\": " + m_npcParameter->toJSON() + ",\n";
+        root["npcParameter"] = m_npcParameter->toJsonObject();
     }
     if (m_enemyParameter != nullptr && m_tileType == EnemyTile) {
-        // toJSON() de EnemyParameter est déjà un objet JSON valide (échappement
-        // via QJsonDocument), la concat reste sûre ici.
-        json += "    \"enemyParameter\": " + m_enemyParameter->toJSON() + ",\n";
+        root["enemyParameter"] = m_enemyParameter->toJsonObject();
     }
     if (m_physicalObjectParameter != nullptr && m_tileType == PhysicalObjectTile) {
-        json += "    \"physicalObjectParameter\": " + m_physicalObjectParameter->toJSON() + ",\n";
+        root["physicalObjectParameter"] = m_physicalObjectParameter->toJsonObject();
     }
-    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
-    json += "    \"next\": [ ";
-    for (int i = 0; i < next.size(); i++) {
-        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
+    if (m_displayParameter != nullptr) {
+        root["displayParameter"] = m_displayParameter->toJsonObject();
     }
-    json += "],\n";
-    json += "    \"prev\": [ ";
-    for (int i = 0; i < prev.size(); i++) {
-        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
+
+    QJsonArray nextArray;
+    for (ItemSnapable *n : std::as_const(next)) {
+        if (n) nextArray.append(n->uniqueId().toString());
     }
-    json += "]\n";
-    json += "}";
-    return json;
+    root["next"] = nextArray;
+
+    QJsonArray prevArray;
+    for (ItemSnapable *p : std::as_const(prev)) {
+        if (p) prevArray.append(p->uniqueId().toString());
+    }
+    root["prev"] = prevArray;
+
+    return QString::fromUtf8(QJsonDocument(root).toJson(QJsonDocument::Compact));
 }
 
 
