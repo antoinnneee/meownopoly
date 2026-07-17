@@ -259,8 +259,12 @@ endif()
 # endif()
 
 # ============================================================================
-# Target de test P2P dual-instance
+# Target de test P2P dual-instance (portable Windows / Linux)
 # ============================================================================
+# Lance deux instances du jeu (Instance 1 + Instance 2 avec `--instance 2`).
+# Windows : `cmd /c start` ouvre chaque instance dans sa propre console détachée.
+# Linux/macOS : un petit script shell (scripts/dual_test_p2p.sh) lance les deux
+# processus en arrière-plan (`&`) — équivalent portable sans dépendance à `start`.
 if(WIN32)
     add_custom_target(dual_test_p2p
         COMMAND cmd /c start "Meownopoly - Instance 1" "$<TARGET_FILE:${PROJECT_NAME}>"
@@ -269,6 +273,16 @@ if(WIN32)
         DEPENDS ${PROJECT_NAME}
         COMMENT "Lancement du test P2P dual-instance..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+else()
+    add_custom_target(dual_test_p2p
+        COMMAND ${CMAKE_COMMAND} -E env bash
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/dual_test_p2p.sh"
+            "$<TARGET_FILE:${PROJECT_NAME}>"
+        DEPENDS ${PROJECT_NAME}
+        COMMENT "Lancement du test P2P dual-instance..."
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        VERBATIM
     )
 endif()
 
