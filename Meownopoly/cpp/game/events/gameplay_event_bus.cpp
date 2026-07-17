@@ -3,6 +3,7 @@
 #include <utility>
 
 #include <QDateTime>
+#include <QTimeZone>
 #include <QJsonObject>
 #include <QThread>
 #include <QTimer>
@@ -396,6 +397,250 @@ QVariantList GameplayEventBus::auditLog(quint64 sinceSeq, int max) const
     return out;
 }
 
+// ---- D4 : projection au schéma canal IA (Q-E06) ---------------------------
+//
+// Le canal expose au proposant/arbitre une vue CURÉE du journal, distincte de
+// la projection brute toVariantMap() : une taxonomie de types orientée gameplay
+// ("tile.placed", "proposal.verdict"…), une phrase courte, les uuids touchés, et
+// un horodatage ISO-8601. Le schéma est figé par le manifeste (eventSummary).
+
+QString GameplayEventBus::canalTypeName(meow::EventType type)
+{
+    switch (type) {
+    case meow::EventType::GameStarted:          return QStringLiteral("game.started");
+    case meow::EventType::MapLoaded:            return QStringLiteral("map.loaded");
+    case meow::EventType::MapCleared:           return QStringLiteral("map.cleared");
+    case meow::EventType::TileRemovedGame:      return QStringLiteral("tile.removed");
+    case meow::EventType::MapRestored:          return QStringLiteral("map.restored");
+    case meow::EventType::EditorOpLocal:        return QStringLiteral("editor.op");
+    case meow::EventType::EditorOpRemote:       return QStringLiteral("editor.op");
+    case meow::EventType::TileCreated:          return QStringLiteral("tile.placed");
+    case meow::EventType::TileDeleted:          return QStringLiteral("tile.removed");
+    case meow::EventType::TileMoved:            return QStringLiteral("tile.moved");
+    case meow::EventType::ZoneParameterChanged: return QStringLiteral("zone.changed");
+    case meow::EventType::CombatRequest:        return QStringLiteral("combat.request");
+    case meow::EventType::CombatResolved:       return QStringLiteral("combat.resolved");
+    case meow::EventType::Unknown:              break;
+    }
+    return QStringLiteral("unknown");
+}
+
+bool GameplayEventBus::canalVisibleTo(const QString &canalType, int audience)
+{
+    // Types réservés à l'arbitre (propositions en file, amendements) : non
+    // encore émis avant la couche proposition (Phase 2), mais le filtre existe
+    // pour que le proposant ne les voie jamais quand ils apparaîtront (Q-E06).
+    static const QSet<QString> arbiterOnly = {
+        QStringLiteral("proposal.queued"),
+        QStringLiteral("proposal.amended"),
+    };
+    if (audience == AudienceArbiter)
+        return true;                       // l'arbitre voit tout (public + réservé)
+    return !arbiterOnly.contains(canalType); // le proposant ne voit que le public
+}
+
+bool GameplayEventBus::canalRelevant(const QString &canalType)
+{
+    // Types pertinents du résumé injecté (manifeste eventSummary.relevantTypes,
+    // D44). proposal.verdict / memory.changed / rules.changed n'existent pas
+    // encore (Phase 2) — inclus par anticipation pour ne pas re-toucher ce point.
+    static const QSet<QString> relevant = {
+        QStringLiteral("tile.placed"),
+        QStringLiteral("proposal.verdict"),
+        QStringLiteral("memory.changed"),
+        QStringLiteral("rules.changed"),
+    };
+    return relevant.contains(canalType);
+}
+
+QStringList GameplayEventBus::canalRefsOf(const meow::GameplayEvent &ev)
+{
+    QStringList refs;
+    for (const char *k : { "tileId", "target", "uuid" }) {
+        const QString key = QString::fromLatin1(k);
+        if (ev.payload.contains(key)) {
+            const QString v = ev.payload.value(key).toString();
+            if (!v.isEmpty() && !refs.contains(v))
+                refs.append(v);
+        }
+    }
+    return refs;
+}
+
+QString GameplayEventBus::canalPhraseOf(const meow::GameplayEvent &ev)
+{
+    switch (ev.type) {
+    case meow::EventType::GameStarted:          return QStringLiteral("partie démarrée");
+    case meow::EventType::MapLoaded:            return QStringLiteral("carte chargée");
+    case meow::EventType::MapCleared:           return QStringLiteral("carte vidée");
+    case meow::EventType::TileRemovedGame:      return QStringLiteral("tuile retirée");
+    case meow::EventType::MapRestored: {
+        const int n = ev.payload.value(QStringLiteral("count")).toInt();
+        return QStringLiteral("carte restaurée (%1 tuiles)").arg(n);
+    }
+    case meow::EventType::EditorOpLocal:
+    case meow::EventType::EditorOpRemote: {
+        // Le payload porte l'op sous "op" ; on tente d'en extraire le type.
+        const QVariantMap op = ev.payload.value(QStringLiteral("op")).toMap();
+        const QString opType = op.value(QStringLiteral("type")).toString();
+        return opType.isEmpty() ? QStringLiteral("opération d'éditeur")
+                                : QStringLiteral("op d'éditeur : %1").arg(opType);
+    }
+    case meow::EventType::TileCreated:          return QStringLiteral("tuile posée");
+    case meow::EventType::TileDeleted:          return QStringLiteral("tuile supprimée");
+    case meow::EventType::TileMoved:            return QStringLiteral("tuile déplacée");
+    case meow::EventType::ZoneParameterChanged: return QStringLiteral("paramètre de zone modifié");
+    case meow::EventType::CombatRequest:        return QStringLiteral("demande de combat");
+    case meow::EventType::CombatResolved:       return QStringLiteral("combat résolu");
+    case meow::EventType::Unknown:              break;
+    }
+    return meow::eventTypeName(ev.type);
+}
+
+QVariantMap GameplayEventBus::canalEntryOf(const meow::GameplayEvent &ev)
+{
+    QVariantMap e;
+    e.insert(QStringLiteral("seq"), ev.seq);
+    e.insert(QStringLiteral("ts"),
+             ev.wallTs > 0
+                 ? QDateTime::fromMSecsSinceEpoch(ev.wallTs, QTimeZone::UTC)
+                       .toString(Qt::ISODateWithMs)
+                 : QString());
+    e.insert(QStringLiteral("type"), canalTypeName(ev.type));
+    e.insert(QStringLiteral("actor"), ev.author);
+    e.insert(QStringLiteral("summary"), canalPhraseOf(ev));
+    const QStringList refs = canalRefsOf(ev);
+    e.insert(QStringLiteral("refs"), QVariant(refs));
+    return e;
+}
+
+QVariantMap GameplayEventBus::canalPoll(quint64 cursor, int audience, int max) const
+{
+    if (max <= 0) max = 256;
+
+    const quint64 oldest = oldestSeq();
+    // Décrochage : le curseur pointe avant le plus ancien encore conservé → le
+    // différentiel est incomplet, l'agent doit resynchroniser via state_query
+    // plutôt que rejouer l'historique (Q-E06).
+    const bool truncated = (cursor + 1 < oldest);
+
+    QVariantList entries;
+    quint64 nextCursor = cursor;
+    for (const meow::GameplayEvent &ev : m_journal) {
+        if (ev.seq <= cursor) continue;
+        const QString type = canalTypeName(ev.type);
+        if (!canalVisibleTo(type, audience)) {
+            nextCursor = ev.seq; // consommé (filtré), le curseur avance quand même
+            continue;
+        }
+        entries.append(canalEntryOf(ev));
+        nextCursor = ev.seq;
+        if (entries.size() >= max) break;
+    }
+
+    QVariantMap out;
+    out.insert(QStringLiteral("entries"), entries);
+    out.insert(QStringLiteral("count"), entries.size());
+    out.insert(QStringLiteral("nextCursor"), nextCursor);
+    out.insert(QStringLiteral("truncated"), truncated);
+    out.insert(QStringLiteral("oldestSeq"), oldest);
+    return out;
+}
+
+QVariantMap GameplayEventBus::canalSummary(quint64 cursor, int audience, int maxLines) const
+{
+    if (maxLines <= 0) maxLines = 250;
+
+    const quint64 head   = m_nextSeq - 1;
+    const quint64 oldest = oldestSeq();
+    const bool truncated = (cursor + 1 < oldest);
+
+    // Comptages par catégorie pertinente (manifeste injectedBlock.shape).
+    int tilesPlaced = 0;
+    QHash<QString, int> tilesByActor;
+    int verdicts = 0, verdictsAccepted = 0, verdictsRejected = 0;
+    int stateChanges = 0;
+    int matched = 0;
+    quint64 nextCursor = cursor;
+
+    QStringList lines; // lignes détaillées (une par événement pertinent)
+    for (const meow::GameplayEvent &ev : m_journal) {
+        if (ev.seq <= cursor) continue;
+        nextCursor = ev.seq;
+        const QString type = canalTypeName(ev.type);
+        if (!canalVisibleTo(type, audience)) continue;
+        if (!canalRelevant(type)) continue;
+
+        ++matched;
+        if (type == QLatin1String("tile.placed")) {
+            ++tilesPlaced;
+            tilesByActor[ev.author.isEmpty() ? QStringLiteral("?") : ev.author]++;
+        } else if (type == QLatin1String("proposal.verdict")) {
+            ++verdicts;
+            const QString v = ev.payload.value(QStringLiteral("verdict")).toString();
+            if (v == QLatin1String("accepted"))      ++verdictsAccepted;
+            else if (v == QLatin1String("rejected")) ++verdictsRejected;
+        } else { // memory.changed / rules.changed
+            ++stateChanges;
+        }
+
+        if (lines.size() < maxLines) {
+            const QStringList refs = canalRefsOf(ev);
+            QString line = QStringLiteral("  #%1 %2 · %3 · %4")
+                               .arg(ev.seq)
+                               .arg(type, ev.author, canalPhraseOf(ev));
+            if (!refs.isEmpty())
+                line += QStringLiteral(" [%1]").arg(refs.join(QStringLiteral(", ")));
+            lines.append(line);
+        }
+    }
+
+    const quint64 fromSeq = cursor + 1;
+    const int omitted = matched - lines.size();
+
+    // En-tête compact (manifeste injectedBlock.shape).
+    QString headline;
+    if (matched == 0) {
+        headline = QStringLiteral("Depuis ton dernier tour (seq %1→%2) : rien de notable.")
+                       .arg(fromSeq).arg(head);
+    } else {
+        QStringList byActor;
+        for (auto it = tilesByActor.cbegin(); it != tilesByActor.cend(); ++it)
+            byActor.append(QStringLiteral("%1×%2").arg(it.value()).arg(it.key()));
+        headline = QStringLiteral(
+            "Depuis ton dernier tour (seq %1→%2) : %3 tuiles posées%4, "
+            "%5 verdicts (%6 acceptés / %7 rejetés), %8 changements d'état pertinents.")
+            .arg(fromSeq).arg(head)
+            .arg(tilesPlaced)
+            .arg(byActor.isEmpty() ? QString()
+                                   : QStringLiteral(" (%1)").arg(byActor.join(QStringLiteral(", "))))
+            .arg(verdicts).arg(verdictsAccepted).arg(verdictsRejected)
+            .arg(stateChanges);
+    }
+
+    QString text = headline;
+    if (!lines.isEmpty())
+        text += QLatin1Char('\n') + lines.join(QLatin1Char('\n'));
+    if (omitted > 0)
+        text += QStringLiteral("\n  + %1 événements omis — events_poll(%2)")
+                    .arg(omitted).arg(cursor);
+    if (truncated)
+        text += QStringLiteral("\n  (journal tronqué en deçà du curseur — "
+                               "resynchronise via state_query)");
+
+    QVariantMap out;
+    out.insert(QStringLiteral("text"), text);
+    out.insert(QStringLiteral("fromSeq"), fromSeq);
+    out.insert(QStringLiteral("toSeq"), head);
+    out.insert(QStringLiteral("matched"), matched);
+    out.insert(QStringLiteral("listed"), lines.size());
+    out.insert(QStringLiteral("omitted"), omitted);
+    out.insert(QStringLiteral("nextCursor"), nextCursor);
+    out.insert(QStringLiteral("truncated"), truncated);
+    out.insert(QStringLiteral("oldestSeq"), oldest);
+    return out;
+}
+
 // ---- Ingestion : câblage des sources --------------------------------------
 
 void GameplayEventBus::connectSources()
@@ -532,22 +777,11 @@ void GameplayEventBus::connectPhysics()
     }, Qt::QueuedConnection);
 }
 
-// ==================== Bootstrap ====================
+// ==================== Enregistrement ====================
 //
-// D1 se limite strictement à cpp/game/events/. Pour que l'ingestion soit vive
-// sans toucher qmlapp.cpp (hors périmètre de cette tâche — l'enregistrement
-// formel du singleton y sera intégré en D4, au branchement du canal), le bus
-// s'auto-amorce : on enregistre le type QML au démarrage de l'application, et
-// on câble les sources une fois l'event loop lancée (les singletons Game /
-// EditorOpBus / ItemSnapableEvents / PhysicsSession sont alors instanciés).
-
-static void meowBootstrapGameplayEventBus()
-{
-    GameplayEventBus::registerQml();
-    // Déféré à l'event loop : connectSources() crée au besoin les singletons
-    // sources et pose les connexions à un moment sûr (après QmlApp).
-    QTimer::singleShot(0, []() {
-        GameplayEventBus::instance()->connectSources();
-    });
-}
-Q_COREAPP_STARTUP_FUNCTION(meowBootstrapGameplayEventBus)
+// D4 : l'enregistrement formel du singleton est désormais porté par
+// `qmlapp.cpp` (au branchement du canal IA), aux côtés des autres
+// `registerQml()`. Le bus n'utilise plus le bootstrap
+// `Q_COREAPP_STARTUP_FUNCTION` de D1 : `QmlApp` appelle `registerQml()` puis
+// diffère `connectSources()` à l'event loop (après instanciation des singletons
+// sources Game / EditorOpBus / ItemSnapableEvents / PhysicsSession).

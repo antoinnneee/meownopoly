@@ -103,6 +103,14 @@ public:
     /// quota associé. Les anciens tokens deviennent immédiatement invalides.
     void rotateSessionTokens();
 
+    /// D4 — Bloc résumé injecté au pré-prompt d'un tour d'IA (Q-E06
+    /// injectedBlock, plafonné 250 lignes/D44). Le rôle du token fixe l'audience
+    /// (D20) ; `cursor` = dernière seq du journal vue par l'agent. Délègue à
+    /// GameplayEventBus::canalSummary. Consommé par l'orchestration de tour
+    /// (C5/C7) au spawn / début d'invocation (le transport MCP n'injecte pas
+    /// lui-même le pré-prompt).
+    QString injectedEventSummary(Role role, quint64 cursor) const;
+
     /// true si l'add-on QtHttpServer était présent à la compilation (P0-1).
     static bool httpServerAvailable();
 
@@ -171,6 +179,10 @@ private:
     /// erreur structurée `not_implemented` non-retryable pointant la suite.
     QJsonObject toolNotImplemented(const QJsonValue &id, const QString &name,
                                    const QString &followUp);
+    // — D4 : events_poll (journal métier, Q-E06) —
+    /// events_poll(cursor) : différentiel du journal projeté au schéma canal,
+    /// filtré par l'audience du rôle (D20). Délègue à GameplayEventBus::canalPoll.
+    QJsonObject toolEventsPoll(const QJsonValue &id, const QJsonObject &arguments, Role role);
 
     // — Fabriques de résultats de tool (MCP) —
     /// Enveloppe un résultat de hook `{ ok, ... }` en résultat MCP :

@@ -29,6 +29,9 @@
 #include "playerprofile.h"
 #include "npcparameter.h"
 
+// D4 : branchement du canal sur le journal métier (events_poll + résumé injecté).
+#include "game/events/gameplay_event_bus.h"
+
 #if MEOW_HAS_HTTP_SERVER
 #  include <QHttpServer>
 #  include <QHttpServerRequest>
@@ -634,8 +637,6 @@ QJsonObject AiGatewayServer::toolDescriptor(const QString &name)
 QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &name,
                                           const QJsonObject &arguments, Role role)
 {
-    Q_UNUSED(role);
-
     if (name == QLatin1String("help"))
         return toolHelp(id, arguments);
     if (name == QLatin1String("editor_place"))
@@ -651,6 +652,10 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
         return toolRosterEdit(id, arguments);
     if (name == QLatin1String("screenshot"))
         return toolScreenshot(id, arguments);
+    // D4 — branchement du canal sur le journal métier (Q-E06). Le rôle du token
+    // fixe l'audience (proposant = public ; arbitre = public + réservé, D20).
+    if (name == QLatin1String("events_poll"))
+        return toolEventsPoll(id, arguments, role);
 
     // Tools du manifeste dont la capacité côté hôte n'est pas encore livrée.
     // Chaque renvoi cite la tâche du plan qui la câblera (traçabilité).
@@ -660,8 +665,6 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
         return toolNotImplemented(id, name, QStringLiteral("S-1/S-2 (enveloppe de proposition, D11)"));
     if (name == QLatin1String("artifact_dryrun"))
         return toolNotImplemented(id, name, QStringLiteral("A9 (banc d'essai, D42)"));
-    if (name == QLatin1String("events_poll"))
-        return toolNotImplemented(id, name, QStringLiteral("D4 (journal d'événements, Q-E06)"));
     if (name == QLatin1String("arbiter_verdict"))
         return toolNotImplemented(id, name, QStringLiteral("S-2 (verdict 2 audiences, D32)"));
 
@@ -1048,6 +1051,52 @@ QJsonObject AiGatewayServer::toolNotImplemented(const QJsonValue &id, const QStr
                         QStringLiteral("Tool '%1' déclaré au manifeste mais pas "
                                        "encore câblé (voir %2).").arg(name, followUp),
                         /*retryable=*/false, details);
+}
+
+// ============================================================================
+// D4 — events_poll : branchement du canal sur le journal métier (Q-E06)
+// ============================================================================
+
+QJsonObject AiGatewayServer::toolEventsPoll(const QJsonValue &id, const QJsonObject &arguments,
+                                            Role role)
+{
+    // `cursor` : entier requis = seq du journal métier hôte (D19). En JSON, tout
+    // nombre est un double ; on refuse un cursor absent ou non numérique.
+    const QJsonValue cv = arguments.value(QStringLiteral("cursor"));
+    if (!cv.isDouble())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("events_poll: 'cursor' (entier) requis"),
+                            /*retryable=*/false);
+    const double cd = cv.toDouble();
+    const quint64 cursor = cd > 0.0 ? static_cast<quint64>(cd) : 0;
+
+    // Filtrage par rôle appliqué CÔTÉ SERVEUR (D20) : le token porte le rôle,
+    // l'agent ne choisit pas son audience.
+    const int audience = (role == Role::Arbiter)
+                             ? GameplayEventBus::AudienceArbiter
+                             : GameplayEventBus::AudienceProposer;
+
+    // Projection au schéma canal (curée, D44) : { entries, nextCursor, truncated,
+    // oldestSeq, count }. Les verdicts de dry-run n'y figurent pas (non ingérés).
+    const QVariantMap poll =
+        GameplayEventBus::instance()->canalPoll(cursor, audience);
+
+    QJsonObject out = QJsonObject::fromVariantMap(poll);
+    out[QStringLiteral("ok")] = true;
+    return makeToolResult(id, out);
+}
+
+QString AiGatewayServer::injectedEventSummary(Role role, quint64 cursor) const
+{
+    // Bloc compact du résumé injecté au pré-prompt d'un tour d'IA (Q-E06
+    // injectedBlock, plafonné à 250 lignes, D44). Le rôle fixe l'audience (D20).
+    // Consommé par l'orchestration de tour (C5/C7) au spawn / début d'invocation.
+    const int audience = (role == Role::Arbiter)
+                             ? GameplayEventBus::AudienceArbiter
+                             : GameplayEventBus::AudienceProposer;
+    const QVariantMap summary =
+        GameplayEventBus::instance()->canalSummary(cursor, audience);
+    return summary.value(QStringLiteral("text")).toString();
 }
 
 // ============================================================================

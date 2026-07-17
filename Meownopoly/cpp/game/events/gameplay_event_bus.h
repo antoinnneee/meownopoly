@@ -122,6 +122,51 @@ public:
     // n'émet pas ces champs. Renvoie les entrées de seq > `sinceSeq`.
     Q_INVOKABLE QVariantList auditLog(quint64 sinceSeq = 0, int max = 256) const;
 
+    // --- D4 : branchement du canal IA (Q-E06, manifeste eventSummary) ---
+    // Portée de visibilité d'un rôle du canal sur le journal (D20/Q-E06) :
+    //   0 = proposer → événements PUBLICS de la partie ;
+    //   1 = arbiter  → en plus, propositions en file + amendements.
+    // (Aligné sur AiGatewayServer::Role, sans coupler les deux enums.)
+    enum CanalAudience { AudienceProposer = 0, AudienceArbiter = 1 };
+
+    // events_poll(cursor) : réponse au format Q-E06 `eventSummary.pollResponse`.
+    // Reprend le différentiel du journal métier depuis `cursor` (seq strictement
+    // supérieure), projeté dans le SCHÉMA CANAL (curé, distinct de la projection
+    // brute toVariantMap) : chaque entrée = { seq, ts (ISO-8601), type (nom canal
+    // ex. "tile.placed"), actor, summary (phrase courte), refs ([uuid]) }.
+    //   {
+    //     entries:    [ { seq, ts, type, actor, summary, refs } ],
+    //     nextCursor: integer,   // à repasser au prochain events_poll
+    //     truncated:  bool,      // cursor décroché (< oldestSeq) → resync state_query
+    //     oldestSeq:  integer,   // plus ancienne seq encore consultable
+    //     count:      integer,
+    //   }
+    // `audience` filtre les événements réservés à l'arbitre (D20).
+    Q_INVOKABLE QVariantMap canalPoll(quint64 cursor,
+                                      int audience = AudienceProposer,
+                                      int max = 256) const;
+
+    // Résumé injecté par invocation (Q-E06 `eventSummary.injectedBlock`). Bloc
+    // compact prêt à préfixer le prompt d'un tour d'IA (une invocation = un tour,
+    // D25). Ne retient que les types PERTINENTS (tile.placed, proposal.verdict,
+    // memory.changed, rules.changed) ; compte par catégorie et énumère au plus
+    // `maxLines` lignes (défaut 250, D44) avec marqueur de dépassement renvoyant
+    // vers events_poll. Retourne :
+    //   {
+    //     text:       string,    // bloc humain compact à injecter
+    //     fromSeq:    integer,   // cursor + 1
+    //     toSeq:      integer,   // cursorHead au moment de l'appel
+    //     matched:    integer,   // événements pertinents dans la fenêtre
+    //     listed:     integer,   // lignes réellement énumérées (≤ maxLines)
+    //     omitted:    integer,   // matched - listed
+    //     nextCursor: integer,
+    //     truncated:  bool,
+    //     oldestSeq:  integer,
+    //   }
+    Q_INVOKABLE QVariantMap canalSummary(quint64 cursor,
+                                         int audience = AudienceProposer,
+                                         int maxLines = 250) const;
+
 signals:
     // Émis pour chaque événement ingéré (durable ou éphémère). Les abonnés
     // filtrent par `source`/`type`/`durability` dans la charge projetée.
@@ -170,6 +215,24 @@ private:
     // Extraction du sous-objet d'audit (noyau D11) depuis le payload d'un
     // événement durable — proposition/verdict/raisons/amendement/version.
     static QVariantMap extractAuditCore(const meow::GameplayEvent &ev);
+
+    // --- D4 : projection au schéma canal (Q-E06) ---
+    // Nom canal stable d'un type d'événement ("tile.placed", "editor.op"…).
+    // Distinct de eventTypeName() (nom interne CamelCase) : le canal expose une
+    // taxonomie orientée gameplay, alignée sur le manifeste (relevantTypes).
+    static QString    canalTypeName(meow::EventType type);
+    // Vrai si un événement de ce type canal est visible pour l'audience donnée.
+    // Les propositions/amendements (arbitre-only) ne sont pas encore émis
+    // (Phase 2) → tout est public au MVP, mais le point de filtrage existe.
+    static bool       canalVisibleTo(const QString &canalType, int audience);
+    // Vrai si le type canal fait partie des types PERTINENTS du résumé injecté.
+    static bool       canalRelevant(const QString &canalType);
+    // Entrée canal curée d'un événement (schéma Q-E06 entry).
+    static QVariantMap canalEntryOf(const meow::GameplayEvent &ev);
+    // Phrase courte lisible décrivant un événement (champ `summary`).
+    static QString    canalPhraseOf(const meow::GameplayEvent &ev);
+    // uuids touchés par l'événement (champ `refs`).
+    static QStringList canalRefsOf(const meow::GameplayEvent &ev);
 
     bool    m_sourcesConnected = false;
     qint64  m_logicalClock     = 0;

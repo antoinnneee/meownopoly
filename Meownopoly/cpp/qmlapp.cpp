@@ -71,6 +71,7 @@
 #include "editor/network/editor_session.h"
 #include "editor/ops/editor_op_bus.h"
 #include "game/modules/gameplay_module_manager.h"
+#include "game/events/gameplay_event_bus.h"
 #include "ai/ai_process_supervisor.h"
 
 #include <QImageWriter>
@@ -114,6 +115,15 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     EditorSession::registerQml();
     EditorOpBus::registerQml();
     GameplayModuleManager::registerQml();
+    // Journal d'événements métier (M5, piste D). D4 : enregistrement formel du
+    // singleton ici (l'auto-bootstrap Q_COREAPP_STARTUP_FUNCTION de D1 est
+    // retiré). Les sources d'ingestion (Game / EditorOpBus / ItemSnapableEvents
+    // / PhysicsSession) sont câblées une fois l'event loop lancée, quand ces
+    // singletons existent — d'où le singleShot différé.
+    GameplayEventBus::registerQml();
+    QTimer::singleShot(0, []() {
+        GameplayEventBus::instance()->connectSources();
+    });
     // Superviseur des processus d'agents IA (M2, C5). Singleton QML : cycle de
     // vie des CLIs proposante/arbitre, aucun orphelin à la fermeture.
     AiProcessSupervisor::registerQml();
