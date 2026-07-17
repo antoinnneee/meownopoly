@@ -9,6 +9,7 @@
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/test/Test_Comp.qml</file>
         <file>qml/test/GameplayModulesTestPage.qml</file>
+        <file>qml/test/SliceScenariosTestPage.qml</file>
         <file>qml/test/qmldir</file>
         <file>qml/test/CatwayTest/CatwayTest.qml</file>
         <file>qml/test/CatwayTest/StunCard.qml</file>
