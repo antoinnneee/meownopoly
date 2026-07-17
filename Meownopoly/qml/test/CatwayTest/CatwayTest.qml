@@ -382,7 +382,6 @@ Rectangle {
                     spacing: Theme.spacingXL
                     V3TestTab {
                         Layout.fillWidth: true
-                        Layout.minimumHeight: 700
                         host: root
                     }
                 }

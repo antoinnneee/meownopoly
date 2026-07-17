@@ -69,9 +69,11 @@ int main(int argc, char *argv[])
     Q_UNUSED(automation);
 
     // Passerelle MCP du canal IA (D2/D20/D21) — surface distincte et durcie,
-    // sans rapport avec l'automation ci-dessus. Opt-in via --ai-gateway-port <N>
-    // ou MEOW_AI_GATEWAY_PORT ; écoute sur 127.0.0.1 strictement. Inerte tant que
-    // l'add-on QtHttpServer n'est pas installé (P0-1). Cf. cpp/ai/gateway/.
+    // sans rapport avec l'automation ci-dessus. TOUJOURS active par défaut
+    // (MEOW_AI_GATEWAY_ALWAYS_ON, port 7790 + instance-1) ; port explicite via
+    // --ai-gateway-port <N> ou MEOW_AI_GATEWAY_PORT (0 = opt-out). Écoute sur
+    // 127.0.0.1 strictement. Inerte tant que l'add-on QtHttpServer n'est pas
+    // installé (P0-1). Cf. cpp/ai/gateway/.
     AiGatewayServer *aiGateway = AiGatewayServer::maybeCreate(app.arguments(), &app);
     Q_UNUSED(aiGateway);
 

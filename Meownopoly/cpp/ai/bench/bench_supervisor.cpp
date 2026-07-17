@@ -190,7 +190,16 @@ void BenchSupervisor::finishWith(const QJsonObject &verdict)
         m_timer->stop();
 
     cleanup();
-    emit verdictReady(verdict);
+    // Émission TOUJOURS différée : les échecs pré-spawn (exe du banc absent,
+    // fichier de job illisible) arrivent ici synchrones depuis runJob(), donc
+    // à l'intérieur de BenchPool::submit → le verdict partirait AVANT que
+    // l'appelant (ex. SliceScenarioRunner::validateArtifact) n'ait retourné le
+    // jobId au QML, qui corrèle par jobId et perdrait le verdict (bouton
+    // « Validation… » bloqué à jamais). Le slot du pool reste `busy` jusqu'à la
+    // livraison → pas de re-dispatch intermédiaire, la corrélation tient.
+    QMetaObject::invokeMethod(
+        this, [this, verdict]() { emit verdictReady(verdict); },
+        Qt::QueuedConnection);
 }
 
 void BenchSupervisor::cleanup()

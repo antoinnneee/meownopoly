@@ -35,7 +35,10 @@ namespace meow::bench { class BenchPool; }
  *     `notifications/*` sans réponse). Cf. doc/v3/02_CANAL_IA.md §2 bis.
  *
  * SÉCURITÉ (patron `AutomationServer`) : écoute STRICTEMENT sur la loopback
- * (127.0.0.1), opt-in via `--ai-gateway-port <N>` ou `MEOW_AI_GATEWAY_PORT`.
+ * (127.0.0.1). Port via `--ai-gateway-port <N>` ou `MEOW_AI_GATEWAY_PORT` ;
+ * quand `MEOW_AI_GATEWAY_ALWAYS_ON` vaut 1 (défaut), la passerelle démarre
+ * même sans flag sur `MEOW_AI_GATEWAY_DEFAULT_PORT` (7790, +1 par instance) —
+ * opt-out explicite avec la valeur 0.
  * Chaque requête HTTP re-vérifie l'adresse source (double garde). Tout tourne
  * sur le GUI thread (les tools manipuleront la scène QML — C3).
  *
@@ -124,8 +127,10 @@ public:
 
     /**
      * Résout le port de la passerelle depuis les arguments CLI et l'environnement.
-     * Priorité : `--ai-gateway-port <N>` > `MEOW_AI_GATEWAY_PORT`.
-     * Retourne 0 si aucun port n'est demandé (→ pas de serveur).
+     * Priorité : `--ai-gateway-port <N>` > `MEOW_AI_GATEWAY_PORT` > défaut
+     * permanent (MEOW_AI_GATEWAY_ALWAYS_ON → 7790 + instance-1).
+     * Retourne 0 si la passerelle est désactivée (valeur 0 explicite, ou
+     * always-on compilé à 0 sans port demandé) → pas de serveur.
      */
     static quint16 resolvePort(const QStringList &args);
 

@@ -87,6 +87,16 @@
 #ifndef MEOW_BENCH_DRYRUN_QUOTA
 #  define MEOW_BENCH_DRYRUN_QUOTA 10
 #endif
+// Activation permanente du canal IA (opt-out) : à 1, la passerelle MCP démarre
+// même sans --ai-gateway-port / MEOW_AI_GATEWAY_PORT, sur le port par défaut
+// ci-dessous (+ instance-1 en dual-instance, patron 7700/7701 de l'automation).
+// Désactivation ponctuelle au runtime : --ai-gateway-port 0 (ou env =0).
+#ifndef MEOW_AI_GATEWAY_ALWAYS_ON
+#  define MEOW_AI_GATEWAY_ALWAYS_ON 1
+#endif
+#ifndef MEOW_AI_GATEWAY_DEFAULT_PORT
+#  define MEOW_AI_GATEWAY_DEFAULT_PORT 7790
+#endif
 
 // ============================================================================
 // Constantes du protocole
@@ -310,28 +320,43 @@ bool AiGatewayServer::httpServerAvailable()
 
 quint16 AiGatewayServer::resolvePort(const QStringList &args)
 {
-    // Priorité au flag CLI explicite.
+    // Priorité au flag CLI explicite. La valeur 0 est un opt-out explicite
+    // (désactive la passerelle même avec MEOW_AI_GATEWAY_ALWAYS_ON).
     const int idx = args.indexOf(QStringLiteral("--ai-gateway-port"));
     if (idx != -1 && idx + 1 < args.size()) {
         bool conv = false;
         const uint v = args.at(idx + 1).toUInt(&conv);
-        if (conv && v > 0 && v <= 65535)
+        if (conv && v <= 65535)
             return static_cast<quint16>(v);
         qWarning() << "[AiGateway] --ai-gateway-port avec valeur invalide :"
                    << args.value(idx + 1);
     }
 
-    // Sinon, variable d'environnement.
+    // Sinon, variable d'environnement (0 = opt-out explicite, comme le CLI).
     const QByteArray env = qgetenv("MEOW_AI_GATEWAY_PORT");
     if (!env.isEmpty()) {
         bool conv = false;
         const uint v = QString::fromUtf8(env).toUInt(&conv);
-        if (conv && v > 0 && v <= 65535)
+        if (conv && v <= 65535)
             return static_cast<quint16>(v);
         qWarning() << "[AiGateway] MEOW_AI_GATEWAY_PORT invalide :" << env;
     }
 
+#if MEOW_AI_GATEWAY_ALWAYS_ON
+    // Activation permanente : port par défaut, décalé par instance pour le
+    // dual-instance (7790 / 7791, patron des ports d'automation 7700/7701).
+    quint16 port = MEOW_AI_GATEWAY_DEFAULT_PORT;
+    const int instIdx = args.indexOf(QStringLiteral("--instance"));
+    if (instIdx != -1 && instIdx + 1 < args.size()) {
+        bool conv = false;
+        const uint inst = args.at(instIdx + 1).toUInt(&conv);
+        if (conv && inst >= 1)
+            port = static_cast<quint16>(port + inst - 1);
+    }
+    return port;
+#else
     return 0; // aucun port demandé → pas de serveur
+#endif
 }
 
 AiGatewayServer *AiGatewayServer::maybeCreate(const QStringList &args, QObject *parent)

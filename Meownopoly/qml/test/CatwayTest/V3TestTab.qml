@@ -19,8 +19,18 @@ Rectangle {
     required property var host
     color: "transparent"
 
+    // Hauteur implicite dérivée du contenu : indispensable pour que le
+    // ScrollView parent (CatwayTest.qml) calcule un contentHeight réel et que
+    // l'onglet scrolle. Avec anchors.fill l'implicitHeight restait à 0 → le
+    // contenu débordait sans scroll et les panneaux compressés se chevauchaient
+    // (clics volés par le voisin).
+    implicitHeight: contentColumn.implicitHeight + Theme.spacingS * 2
+
     ColumnLayout {
-        anchors.fill: parent
+        id: contentColumn
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
         anchors.margins: Theme.spacingS
         spacing: Theme.spacingXL
 
@@ -52,7 +62,5 @@ Rectangle {
             V3EventBusPanel   { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
             V3StateTxPanel    { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
         }
-
-        Item { Layout.fillHeight: true }
     }
 }
