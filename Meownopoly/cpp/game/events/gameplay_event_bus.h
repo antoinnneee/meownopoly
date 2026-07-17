@@ -23,8 +23,10 @@
 #ifndef GAMEPLAY_EVENT_BUS_H
 #define GAMEPLAY_EVENT_BUS_H
 
+#include <QHash>
 #include <QObject>
 #include <QQmlEngine>
+#include <QQueue>
 #include <QVariantList>
 #include <QVariantMap>
 #include <QVector>
@@ -53,6 +55,10 @@ class GameplayEventBus : public QObject
     // d'événements durables conservés en mémoire.
     Q_PROPERTY(int auditRetention READ auditRetention WRITE setAuditRetention
                    NOTIFY auditRetentionChanged)
+    // --- D3 : protections de cascade (D12) ---
+    // Nombre d'événements REJETÉS par un garde-fou depuis le démarrage
+    // (profondeur/budget/cycle dépassés). Monotone.
+    Q_PROPERTY(quint64 rejectedCount READ rejectedCount NOTIFY protectionTriggered)
 
 public:
     static void registerQml();
@@ -66,6 +72,7 @@ public:
     int     auditCount() const   { return m_auditLog.size(); }
     int     auditRetention() const { return m_auditRetention; }
     void    setAuditRetention(int cap);
+    quint64 rejectedCount() const { return m_rejectedCount; }
 
     // Publication programmatique d'un événement. Utilisée par l'ingestion des
     // sources et, à terme, par les artefacts/règles. Retourne l'id généré.
@@ -121,6 +128,9 @@ signals:
     void eventPublished(const QVariantMap &event);
     void eventCountChanged();
     void auditRetentionChanged();
+    // Émis quand un garde-fou D12 rejette un événement (non ingéré). `reason`
+    // ∈ {"depth", "budget", "cycle", "queue"} ; `event` est la charge rejetée.
+    void protectionTriggered(const QString &reason, const QVariantMap &event);
 
 private:
     explicit GameplayEventBus(QObject *parent = nullptr);
@@ -135,7 +145,21 @@ private:
 
     // Marshalling thread-safe puis archivage + diffusion.
     void dispatchIngest(const meow::GameplayEvent &ev);
+    // Point d'entrée d'ingestion : met en file et draine (D3 : file
+    // transactionnelle — une émission en cours ne ré-entre pas, elle empile).
     void ingest(meow::GameplayEvent ev);
+    // Draine la file `m_pending` en série. Chaque événement passe par admit()
+    // (garde-fous D12) puis, s'il est admis, par commit().
+    void drainQueue();
+    // Renseigne rootId/depth et applique les protections D12 (profondeur, budget
+    // de cascade, cycle/write-set). Retourne false si l'événement est rejeté
+    // (protectionTriggered émis, non ingéré).
+    bool admit(meow::GameplayEvent &ev);
+    // Archivage effectif : seq, Lamport, journaux, signaux.
+    void commit(meow::GameplayEvent ev);
+    // Cible d'écriture d'un événement pour la détection de cycle (tileId, sinon
+    // "target"/"key" du payload). Vide si aucune cible identifiable.
+    static QString writeTargetOf(const meow::GameplayEvent &ev);
 
     // Câblage par source (chacune tolère l'absence de son singleton).
     void connectGame();
@@ -166,6 +190,31 @@ private:
     // seq croissante comme m_journal.
     QVector<meow::GameplayEvent> m_auditLog;
     int m_auditRetention = 16384;
+
+    // --- D3 : file transactionnelle + garde-fous de cascade (D12) ---
+    // File sérialisant l'ingestion : si un abonné de eventPublished publie à son
+    // tour (cascade de règle), l'événement est empilé et traité après l'événement
+    // courant, jamais en ré-entrance. Bornée pour éviter l'emballement mémoire.
+    QQueue<meow::GameplayEvent> m_pending;
+    bool m_draining = false;
+
+    // État causal, vivant le temps d'une cascade (vidé quand la file se tarit) :
+    //   depthOf / rootOf : profondeur et racine par id d'événement admis ;
+    //   cascadeCount     : nb de descendants admis par racine (budget) ;
+    //   writeHits        : nb d'écritures par (racine → cible) (détection cycle).
+    QHash<QString, quint32> m_depthOf;
+    QHash<QString, QString> m_rootOf;
+    QHash<QString, int>     m_cascadeCount;
+    QHash<QString, QHash<QString, int>> m_writeHits;
+
+    quint64 m_rejectedCount = 0;
+
+    // Plafonds (D12). Un événement racine (sans causeId) n'est jamais rejeté par
+    // profondeur/budget/cycle : seule la borne de file le protège.
+    static constexpr quint32 k_maxDepth     = 32;    // profondeur causale max
+    static constexpr int     k_maxCascade   = 512;   // descendants max par racine
+    static constexpr int     k_maxWriteHits = 64;    // écritures max sur 1 cible / racine
+    static constexpr int     k_maxQueue     = 16384; // taille max de la file
 };
 
 #endif // GAMEPLAY_EVENT_BUS_H

@@ -1,5 +1,7 @@
 #include "gameplay_event_bus.h"
 
+#include <utility>
+
 #include <QDateTime>
 #include <QJsonObject>
 #include <QThread>
@@ -82,6 +84,8 @@ QVariantMap GameplayEvent::toVariantMap() const
     m.insert(QStringLiteral("durable"), durability == EventDurability::Durable);
     m.insert(QStringLiteral("wallTs"), wallTs);
     m.insert(QStringLiteral("seq"), seq);
+    m.insert(QStringLiteral("rootId"), rootId);
+    m.insert(QStringLiteral("depth"), depth);
     m.insert(QStringLiteral("payload"), payload);
     return m;
 }
@@ -176,7 +180,111 @@ void GameplayEventBus::dispatchIngest(const meow::GameplayEvent &ev)
     }
 }
 
+// ---- D3 : file transactionnelle + garde-fous de cascade (D12) --------------
+//
+// ingest() ne traite jamais un événement en ré-entrance. Il l'empile et, si un
+// drainage n'est pas déjà en cours, il draine la file en série. Ainsi, quand un
+// abonné de eventPublished re-publie (cascade de règle runtime, T4-4), le nouvel
+// événement est mis en file et traité APRÈS l'événement courant, pas au milieu
+// de son émission. La file est bornée (k_maxQueue) contre l'emballement.
+
 void GameplayEventBus::ingest(meow::GameplayEvent ev)
+{
+    if (m_pending.size() >= k_maxQueue) {
+        ++m_rejectedCount;
+        emit protectionTriggered(QStringLiteral("queue"), ev.toVariantMap());
+        return;
+    }
+    m_pending.enqueue(std::move(ev));
+    if (m_draining) return;   // le drainage courant prendra cet événement
+    drainQueue();
+}
+
+void GameplayEventBus::drainQueue()
+{
+    m_draining = true;
+    while (!m_pending.isEmpty()) {
+        meow::GameplayEvent ev = m_pending.dequeue();
+        if (admit(ev))
+            commit(std::move(ev));
+    }
+    m_draining = false;
+
+    // La file est tarie : la cascade est close. On purge l'état causal pour ne
+    // pas croître indéfiniment ni corréler des cascades indépendantes.
+    m_depthOf.clear();
+    m_rootOf.clear();
+    m_cascadeCount.clear();
+    m_writeHits.clear();
+}
+
+QString GameplayEventBus::writeTargetOf(const meow::GameplayEvent &ev)
+{
+    for (const char *k : { "tileId", "target", "key" }) {
+        const QString key = QString::fromLatin1(k);
+        if (ev.payload.contains(key)) {
+            const QString v = ev.payload.value(key).toString();
+            if (!v.isEmpty()) return v;
+        }
+    }
+    return {};
+}
+
+bool GameplayEventBus::admit(meow::GameplayEvent &ev)
+{
+    // Racine : événement sans cause (émis directement par une source). On le
+    // laisse toujours passer — les garde-fous ne visent que les cascades.
+    if (ev.causeId.isEmpty()) {
+        ev.rootId = ev.id;
+        ev.depth  = 0;
+        m_depthOf.insert(ev.id, 0);
+        m_rootOf.insert(ev.id, ev.id);
+        return true;
+    }
+
+    // Descendant : hérite racine + profondeur du parent. Si le parent est
+    // inconnu (évincé de l'état causal), on le traite comme une racine de
+    // secours pour éviter de bloquer indûment un causeId cross-cascade.
+    const QString rootId = m_rootOf.value(ev.causeId, ev.causeId);
+    const quint32 depth  = m_depthOf.value(ev.causeId, 0) + 1;
+    ev.rootId = rootId;
+    ev.depth  = depth;
+
+    // 1) Profondeur max de la chaîne causale.
+    if (depth > k_maxDepth) {
+        ++m_rejectedCount;
+        emit protectionTriggered(QStringLiteral("depth"), ev.toVariantMap());
+        return false;
+    }
+
+    // 2) Budget de cascade : nombre total de descendants admis par racine.
+    int &count = m_cascadeCount[rootId];
+    if (count >= k_maxCascade) {
+        ++m_rejectedCount;
+        emit protectionTriggered(QStringLiteral("budget"), ev.toVariantMap());
+        return false;
+    }
+
+    // 3) Détection de cycle via write-set : une même cible réécrite en boucle
+    //    dans la même cascade trahit une règle qui se re-déclenche elle-même.
+    const QString target = writeTargetOf(ev);
+    if (!target.isEmpty()) {
+        int &hits = m_writeHits[rootId][target];
+        if (hits >= k_maxWriteHits) {
+            ++m_rejectedCount;
+            emit protectionTriggered(QStringLiteral("cycle"), ev.toVariantMap());
+            return false;
+        }
+        ++hits;
+    }
+
+    ++count;
+    m_depthOf.insert(ev.id, depth);
+    m_rootOf.insert(ev.id, rootId);
+    return true;
+}
+
+void GameplayEventBus::commit(meow::GameplayEvent ev)
 {
     ev.logicalTs = tickLamport();
     ev.seq       = m_nextSeq++;   // séquence d'audit strictement monotone (D2)

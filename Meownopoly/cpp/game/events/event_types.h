@@ -106,6 +106,15 @@ struct GameplayEvent {
     // noyau d'audit. `seq == 0` = non encore ingéré.
     quint64         seq        = 0;
 
+    // --- D3 : traçage de cascade (protections D12) ---
+    // Renseignés à l'ingestion. `rootId` = id de l'événement racine de la
+    // cascade causale (un événement sans causeId est sa propre racine) ;
+    // `depth` = longueur de la chaîne de causalité (0 = racine). Servent aux
+    // garde-fous (profondeur max, budget par racine, détection de cycles) et à
+    // l'audit d'une cascade de règles runtime (T4-4).
+    QString         rootId;
+    quint32         depth      = 0;
+
     // Projection QVariantMap pour QML / journalisation / futur events_poll (D4).
     QVariantMap toVariantMap() const;
 };
