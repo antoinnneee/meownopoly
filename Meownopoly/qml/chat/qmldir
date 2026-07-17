@@ -1,5 +1,6 @@
 module chat
 ChatDrawer 1.0 ChatDrawer.qml
+AiChatDrawer 1.0 AiChatDrawer.qml
 ChatHeader 1.0 ChatHeader.qml
 ChatMessagesList 1.0 ChatMessagesList.qml
 ChatParticipantsPanel 1.0 ChatParticipantsPanel.qml
