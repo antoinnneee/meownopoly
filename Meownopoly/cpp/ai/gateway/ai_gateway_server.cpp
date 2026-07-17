@@ -29,6 +29,11 @@
 #include "playerprofile.h"
 #include "npcparameter.h"
 
+// S-5 : module_config (D41) — état des modules gameplay lu directement sur le
+// singleton C++ (source de vérité, GUI thread). Généralise l'ancien hook QML
+// `setStatsModuleEnabled` à tout module, et alimente `snapshot.modules` du banc.
+#include "game/modules/gameplay_module_manager.h"
+
 // D4 : branchement du canal sur le journal métier (events_poll + résumé injecté).
 #include "game/events/gameplay_event_bus.h"
 // A9 : dry-run local via le banc d'essai (pool + P0 statique).
@@ -841,25 +846,53 @@ QJsonObject AiGatewayServer::toolEditorEdit(const QJsonValue &id, const QJsonObj
 
 QJsonObject AiGatewayServer::toolModuleConfig(const QJsonValue &id, const QJsonObject &arguments)
 {
+    // S-5 (D41) — module_config généralisé à TOUT module gameplay. Le module est
+    // adressé sur le singleton C++ `GameplayModuleManager` (source de vérité,
+    // GUI thread), pas via un hook d'éditeur : l'activation d'un module n'est pas
+    // une mutation de tuile et doit fonctionner hors scène d'édition (banc, partie).
     const QString moduleId = arguments.value(QStringLiteral("id")).toString();
-    const bool enabled = arguments.value(QStringLiteral("enabled")).toBool();
+    if (moduleId.trimmed().isEmpty())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("module_config: 'id' (moduleId) requis"),
+                            /*retryable=*/false);
 
-    if (moduleId == QLatin1String("stats")) {
-        bool ok = false;
-        QString err;
-        const QJsonObject res =
-            invokeHook(QStringLiteral("setStatsModuleEnabled"), { enabled }, ok, err);
-        if (!ok)
-            return makeAppError(id, kInvalidParams, kAppSceneUnavailable, err,
-                                /*retryable=*/true);
-        return makeToolResult(id, res);
+    GameplayModuleManager *mgr = GameplayModuleManager::instance();
+    GameplayModule *mod = mgr->moduleById(moduleId);
+    if (!mod)
+        return makeAppError(
+            id, kInvalidParams, kAppInvalidParams,
+            QStringLiteral("module_config: module inconnu '%1'").arg(moduleId),
+            /*retryable=*/false);
+
+    const bool enabled = arguments.value(QStringLiteral("enabled")).toBool();
+    mgr->setModuleEnabled(moduleId, enabled);
+
+    // Résultat porté au schéma d'une **opération `structure`** (D41) : intégrable
+    // au lot atomique de l'enveloppe (D14) — l'IA active un module et pose dans la
+    // même proposition l'artefact qui en dépend, jugé d'un bloc par l'arbitre.
+    QJsonObject res;
+    res[QStringLiteral("ok")] = true;
+    res[QStringLiteral("requestType")] = QStringLiteral("structure");
+    res[QStringLiteral("id")] = moduleId;
+    res[QStringLiteral("enabled")] = mod->enabled();
+    res[QStringLiteral("effectiveEnabled")] = mod->effectiveEnabled();
+
+    // `params` (D41, optionnel) : aucun mécanisme générique de paramétrage de
+    // module n'existe au MVP — seule l'activation est appliquée. On le signale
+    // sans échouer (l'IA voit paramsApplied=false et peut passer par les tools
+    // dédiés, ex. stats.addModifier).
+    const QJsonObject params = arguments.value(QStringLiteral("params")).toObject();
+    if (!params.isEmpty()) {
+        res[QStringLiteral("paramsApplied")] = false;
+        res[QStringLiteral("note")] = QStringLiteral(
+            "params ignoré au MVP : pas de paramétrage générique de module "
+            "(seule l'activation est appliquée).");
     }
 
-    // Généralisation du module_config à tout module gameplay : S-5 (op
-    // 'structure', vérif requiresModules dans P0). Seul 'stats' est câblé au MVP.
-    return toolNotImplemented(
-        id, QStringLiteral("module_config(%1)").arg(moduleId),
-        QStringLiteral("S-5 (généralisation module_config, D41)"));
+    // État courant de tous les modules (satisfait la vérification requiresModules
+    // du même lot côté P0 / static_validator, D41).
+    res[QStringLiteral("modules")] = mgr->moduleStateJson();
+    return makeToolResult(id, res);
 }
 
 // ============================================================================
@@ -1213,7 +1246,12 @@ QJsonObject AiGatewayServer::toolArtifactDryrun(const QJsonValue &id, const QJso
     QJsonObject snapshot;
     snapshot[QStringLiteral("map")] = QJsonObject{};
     snapshot[QStringLiteral("memory")] = QJsonObject{};
-    snapshot[QStringLiteral("modules")] = QJsonObject{};
+    // S-5 (D41) : le snapshot du banc porte l'état des modules gameplay pour
+    // tester l'artefact dans les conditions réelles (doc 12 §2.3). La map/mémoire
+    // restent minimales au MVP (dry-run à vide) mais l'état des modules, lui, est
+    // global au jeu et disponible ici sans reconstruction.
+    snapshot[QStringLiteral("modules")] =
+        GameplayModuleManager::instance()->moduleStateJson();
 
     QJsonObject job;
     job[QStringLiteral("jobId")] = jobId;

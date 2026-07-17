@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QList>
+#include <QVariantMap>
+#include <QJsonObject>
 #include <QQmlEngine>
 
 // Types complets requis : les Q_PROPERTY renvoient des pointeurs typés
@@ -56,6 +58,17 @@ public:
 
     /// Réinitialise l'état de tous les modules (données par joueur).
     Q_INVOKABLE void resetAll();
+
+    // ── État d'activation agrégé (D41) ────────────────────────────────────
+    /// État d'activation de tous les modules (et sous-modules), sous la forme
+    /// `{ moduleId: enabled }`. Sert de source à la vérification `requiresModules`
+    /// (préfiltre P0 / static_validator) et est embarqué dans le snapshot du banc
+    /// d'essai (`snapshot.modules`, doc 12 §2.3). `enabled()` = flag propre du
+    /// module (pas l'état effectif : un sous-module reste « déclaré actif » même
+    /// si son parent est désactivé — c'est bien sa dépendance qui compte).
+    QJsonObject moduleStateJson() const;
+    /// Même contenu que `moduleStateJson`, exposé en QVariantMap pour QML.
+    Q_INVOKABLE QVariantMap moduleStates() const;
 
     // Accesseurs typés directs.
     HealthModule *healthModule() const { return m_health; }

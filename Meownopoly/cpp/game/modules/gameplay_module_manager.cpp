@@ -151,3 +151,27 @@ void GameplayModuleManager::resetAll()
     for (GameplayModule *m : m_modules)
         m->reset();
 }
+
+// Collecte récursive de l'état d'activation d'un module et de ses sous-modules
+// dans `out`. Chaque clé est le moduleId, chaque valeur le flag propre enabled().
+static void collectModuleStates(const GameplayModule *m, QJsonObject &out)
+{
+    if (!m)
+        return;
+    out.insert(m->moduleId(), m->enabled());
+    for (int i = 0; i < m->subModuleCount(); ++i)
+        collectModuleStates(m->subModuleAt(i), out);
+}
+
+QJsonObject GameplayModuleManager::moduleStateJson() const
+{
+    QJsonObject out;
+    for (const GameplayModule *m : m_modules)
+        collectModuleStates(m, out);
+    return out;
+}
+
+QVariantMap GameplayModuleManager::moduleStates() const
+{
+    return moduleStateJson().toVariantMap();
+}
