@@ -61,6 +61,13 @@ list(FILTER SOURCES EXCLUDE REGEX ".*/reliable/test\\.cpp$")
 # exclusion, le GLOB l'aspire dans l'exécutable principal → double `main`.
 list(FILTER SOURCES EXCLUDE REGEX ".*/ai/bench/meow_testbench_main\\.cpp$")
 
+# Exclure aussi le pipeline P1→P5 du banc (tâche A5) : il exécute du code
+# candidat (hostile par défaut) et n'a de sens QUE dans le process jetable —
+# le jeu ne doit jamais pouvoir instancier un artefact in-process par ce
+# chemin. Le contexte restreint et la façade (cpp/ai/sandbox/), eux, RESTENT
+# dans le jeu : code partagé banc/runtime (doc v3 12 §5, étage 2 D13).
+list(FILTER SOURCES EXCLUDE REGEX ".*/ai/bench/bench_runner\\.cpp$")
+
 # Headers C++
 file(GLOB_RECURSE HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/cpp/*.h"
@@ -257,6 +264,12 @@ set(MEOW_TESTBENCH_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/meow_testbench_main.cpp
     # Contrat job/verdict partagé avec le superviseur côté jeu (tâche A2)
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/bench_protocol.cpp
+    # Pipeline P1→P5 (tâche A5) — exclu du GLOB de l'exécutable principal
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/bench_runner.cpp
+    # Contexte restreint + façade Meow.GameApi (tâche A6) — code PARTAGÉ
+    # banc/jeu (doc 12 §5) : ces deux fichiers sont aussi dans le GLOB du jeu
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/sandbox/restricted_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/sandbox/meow_game_api.cpp
     # Sérialisation de map + gestionnaires de fichiers
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/map.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/mapfilemanager.cpp
