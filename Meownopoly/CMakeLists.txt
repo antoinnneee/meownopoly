@@ -215,6 +215,15 @@ if(WIN32)
 endif()
 
 # ============================================================================
+# Banc d'essai hors-process meow_testbench (V3, doc/v3/12_BANC_ESSAI_R1.md)
+# ============================================================================
+# Cible séparée avec sources listées explicitement (pas le GLOB ci-dessus) ;
+# son main.cpp vit dans bench/ (hors cpp/) pour ne pas être ramassé par le
+# GLOB_RECURSE du jeu. Le superviseur côté jeu (cpp/ai/bench/) est, lui,
+# volontairement ramassé par le GLOB : il fait partie du jeu.
+add_subdirectory(bench)
+
+# ============================================================================
 # Tests unitaires (PattounX)
 # ============================================================================
 option(MEOWNOPOLY_BUILD_TESTS "Build PattounX unit tests" ON)
