@@ -240,13 +240,39 @@ de sortie de cadrage sont produits ; la suite est l'**implémentation**
 ### Q-J08 — Qui valide définitivement chaque famille de décisions ? — **B1**
 
 À répartir entre les deux développeurs (Antoine / Valou) — proposer un
-responsable par famille, l'autre relisant :
+responsable par famille, l'autre relisant.
 
-- **Produit/vision :**
-- **Sécurité :**
-- **Réseau :**
-- **Gameplay/règles :**
-- **Bibliothèque/assets :**
+**Principe proposé (à valider).** Chaque famille a **un responsable** (valide
+définitivement, arbitre les compromis, garde la cohérence des décisions D-registre
+de son périmètre) et **un relecteur** (l'autre dev, qui doit avoir revu avant
+merge). Aucune décision de famille n'est actée sans l'accord explicite du
+responsable **et** relecture de l'autre. Le responsable n'exécute pas seul : il
+tranche.
+
+**Proposition de répartition — DÉCISION HUMAINE, NON FIGÉE (à trancher par
+Antoine et Valou ; les noms ci-dessous sont une suggestion argumentée, pas un
+acté).** La répartition s'appuie sur les zones de code déjà portées par chacun
+(cf. branches de travail `V2Antoine` / `V2_Valou`) ; **à confirmer ou permuter
+par les intéressés.**
+
+| Famille | Périmètre décisionnel (docs/chantiers) | Responsable proposé | Relecteur |
+|---|---|---|---|
+| **Produit/vision** | portée des 3 modes, jalons R1/go-no-go, priorités (docs 00/01/15, D9/D23/Q-J06) | *à trancher* | *l'autre* |
+| **Sécurité** | sandbox/banc, confinement runtime, allow-list, tokens/loopback, R1-R3/R11 (docs 04/12, D13/D26/D34, canal §7) | *à trancher* | *l'autre* |
+| **Réseau** | fiabilité M3, ProposalSession D40, bus d'état D35/D39, migration D37 (docs 02/05, M3/M6/M10, R13/R14/R15) | *à trancher* | *l'autre* |
+| **Gameplay/règles** | moteur de règles D8/D12/D33, mémoire D15/D28, modules D41, enveloppe/verdict (docs 05/06/11/13) | *à trancher* | *l'autre* |
+| **Bibliothèque/assets** | biblio GLB M11, package/manifeste D18/D29/D38, store artefacts D16/D36, skill D17/M12 (docs 03/07) | *à trancher* | *l'autre* |
+
+**Cases laissées vides intentionnellement** (`à trancher`) : l'attribution
+nominale est une décision humaine ; ce document ne la fige pas. Suggestion de
+méthode pour la trancher rapidement : chaque dev coche 2-3 familles préférées,
+on résout les collisions à l'oral, l'autre devient relecteur d'office.
+
+**Transversal (M13 Linux, CI, packaging)** : proposé en **co-responsabilité**
+(les deux valident), car il touche toutes les familles.
+
+- **Réponse :** *(en attente de l'arbitrage Antoine/Valou — reporter en décision
+D-registre une fois les responsables nommés, puis retirer la question.)*
 
 ---
 

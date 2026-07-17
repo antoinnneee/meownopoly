@@ -120,6 +120,9 @@ Q-J06 (critères de repli D1), Q-J08 (responsables par famille Antoine/Valou).
 | 2026-07-13 | S1 | [`02_CANAL_IA.md`](./02_CANAL_IA.md) | ~180 (§5.2) | Ajout capacité artifact_dryrun (D42) au catalogue à créer |
 | 2026-07-13 | S1 | [`11_VERTICAL_SLICE.md`](./11_VERTICAL_SLICE.md) | ~98 (§4) | Table tools : manifeste 12 tools, artifact_dryrun non requis par le slice |
 | 2026-07-17 | S2 | [`15_PLAN_IMPLEMENTATION.md`](./15_PLAN_IMPLEMENTATION.md) | — | Création du plan d'implémentation V3 (demande Antoine, **draft** : la revue docs [02](./02_CANAL_IA.md)→[13](./13_ENVELOPPE_PROPOSITION.md) n'est pas terminée — le plan référence ses docs sources pour amendement). Phases 0→5 + transversal Linux, fichiers impactés vérifiés contre le code, complexité par tâche, lots parallélisables |
+| 2026-07-17 | S3 | `cpp/ai/gateway/channel_manifest.json` (new) | — | **P0-4 (brouillon)** : proposition de manifeste versionné du canal (protocolVersion, 12 tools Q-E08 avec rôles/params/quotas, bloc `eventSummary` Q-E06, refs enveloppe/verdict doc 13). NON branché au build, NON ratifié — support de décision Antoine/Valou |
+| 2026-07-17 | S3 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Q-E06, Q-E08 | **P0-4 (brouillon)** : « Réponse » Q-E06 + « Sous-ensemble retenu » Q-E08 renseignées en *proposition consolidée à décider*, renvoyant au brouillon de manifeste. Aucune décision D-registre actée (questions non retirées) |
+| 2026-07-17 | S3 | [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CADRAGE.md) | Q-J08 | **P0-5 (brouillon)** : proposition de répartition de gouvernance (5 familles + transversal), principe responsable/relecteur, méthode de résolution. Attribution nominale **laissée vide** (décision humaine, non figée) — question non retirée |
 
 ## 5. Questions/réponses en attente (inter-sessions)
 
