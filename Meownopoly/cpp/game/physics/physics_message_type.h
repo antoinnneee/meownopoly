@@ -4,10 +4,12 @@
  * Plage 0x40+ pour cohabiter sur Catway avec :
  *  - GameMessageType   (0x01–0x1F)
  *  - EditorMessageType (0x20–0x3F)
- *  - PhysicsMessageType (0x40+)
+ *  - PhysicsMessageType (0x40–0x47)
+ *  - V3MessageType     (0x60+, cf. cpp/net/v3/v3_message_type.h)
  *
  * Toute nouvelle valeur doit être la plus haute pour ne pas être droppée par
- * `PhysicsProtocol::isPhysicsPacket` (filtre par plage).
+ * `PhysicsProtocol::isPhysicsPacket` (filtre par plage) — et rester sous 0x60
+ * (plage réservée à V3, P0-3).
  */
 #ifndef PHYSICS_MESSAGE_TYPE_H
 #define PHYSICS_MESSAGE_TYPE_H

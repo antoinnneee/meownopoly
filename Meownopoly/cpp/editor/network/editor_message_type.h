@@ -5,7 +5,9 @@
 
 /// Types de messages du protocole réseau de l'éditeur collaboratif.
 /// Le premier octet de chaque paquet fiable identifie le type.
-/// Plage 0x20+ pour ne pas entrer en collision avec GameMessageType (0x01–0x11).
+/// Plage 0x20–0x3F pour ne pas entrer en collision avec GameMessageType
+/// (0x01–0x11), PhysicsMessageType (0x40+) ni V3MessageType (0x60+, réservé
+/// P0-3, cf. cpp/net/v3/v3_message_type.h). Rester sous 0x40.
 namespace EditorMessageType {
 Q_NAMESPACE
 
