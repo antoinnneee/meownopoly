@@ -70,6 +70,10 @@ set(MEOW_BENCH_SUPPORT_SOURCES
     "${MEOW_CPP}/assetManager/asset_manager.cpp"
     "${MEOW_CPP}/tools/metadata_generator.cpp"
     "${MEOW_CPP}/tools/logger.cpp"
+    # Préfiltre P0 (tâche A4) : rejoué au banc en défense en profondeur —
+    # même code C++ que dans le jeu (QtCore uniquement, doc 12 §3).
+    "${MEOW_CPP}/ai/sandbox/static_validator.cpp"
+    "${MEOW_CPP}/ai/sandbox/static_validator.h"
 )
 
 qt_add_executable(meow_testbench

@@ -15,8 +15,11 @@
 #include "bench_verdict.h"
 #include "rss_watchdog.h"
 
+#include "ai/sandbox/static_validator.h"
+
 #include <QElapsedTimer>
 #include <QGuiApplication>
+#include <QJsonArray>
 
 namespace {
 
@@ -75,6 +78,28 @@ int main(int argc, char *argv[])
     // --- Auto-surveillance RSS (doc 12 §5) : auto-kill > 512 Mo avec
     // verdict runaway_alloc flushé avant l'arrêt ---
     RssWatchdog::start(job.jobId);
+
+    // --- Recheck P0 (défense en profondeur, doc 12 §3 / tâche A4) ---
+    // P0 tourne déjà dans le jeu avant de spawner le banc ; le banc le
+    // rejoue quand même — un job forgé à la main ou une divergence de
+    // version ne doit jamais atteindre P1 avec une source interdite.
+    {
+        StaticValidator validator;
+        QJsonObject p0Context;
+        p0Context.insert(QStringLiteral("requiresModules"),
+                         job.artifact.value(QStringLiteral("requiresModules"))
+                             .toArray());
+        p0Context.insert(QStringLiteral("modules"), job.snapshotModules);
+        const ValidationResult p0 = validator.validate(
+            job.artifact.value(QStringLiteral("source")).toString(), p0Context);
+        if (!p0.ok) {
+            const ValidationFailure &f = p0.failures.first();
+            return emitFailure(job.jobId, f.code, QStringLiteral("P0"),
+                               f.message + QStringLiteral(" — ") + f.details,
+                               f.retryable, QJsonObject{},
+                               totalTimer.elapsed());
+        }
+    }
 
     // --- Phases P1→P5 ---
     BenchPhases phases(job);

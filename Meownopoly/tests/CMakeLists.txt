@@ -97,6 +97,28 @@ target_link_libraries(tst_gameplay_event_bus PRIVATE
     Qt6::Core Qt6::Test Qt6::Qml)
 add_test(NAME tst_gameplay_event_bus COMMAND tst_gameplay_event_bus)
 
+# ============================================================================
+# Test : StaticValidator (préfiltre P0 des artefacts, V3 piste A — tâche A4)
+# ============================================================================
+# Compile le validateur SEUL (QtCore uniquement — garantie de linkabilité
+# jeu/banc/tests, aucune dépendance réseau/GUI/moteur QML). Le corpus
+# d'artefacts (doc/v3/12_BANC_ESSAI_R1.md §8) est lu depuis
+# bench/test_artifacts/ via MEOW_TEST_ARTIFACTS_DIR.
+qt_add_executable(tst_static_validator EXCLUDE_FROM_ALL
+    tst_static_validator.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/ai/sandbox/static_validator.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/ai/sandbox/static_validator.h"
+)
+target_compile_definitions(tst_static_validator PRIVATE
+    MEOW_TEST_ARTIFACTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../bench/test_artifacts"
+)
+target_include_directories(tst_static_validator PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+)
+target_link_libraries(tst_static_validator PRIVATE
+    Qt6::Core Qt6::Test)
+add_test(NAME tst_static_validator COMMAND tst_static_validator)
+
 # Cible agrégée demandée par le plan : pattounx_tests
 add_custom_target(pattounx_tests
     DEPENDS tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
@@ -241,7 +263,7 @@ endif()
 #   cmake --build build --config Release --target tst_collision2d     (un seul)
 set(MEOWNOPOLY_ALL_TEST_TARGETS
     tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
-    tst_gameplay_event_bus tst_mapinfo)
+    tst_gameplay_event_bus tst_mapinfo tst_static_validator)
 if (TARGET Qt6::CanvasPainter)
     list(APPEND MEOWNOPOLY_ALL_TEST_TARGETS
         tst_zone_render_perf tst_grid_render_perf tst_combined_render_perf)
