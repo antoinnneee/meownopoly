@@ -1,8 +1,10 @@
 #include "catway.h"
 #include "stun_manager.h"
 #include "reliable.h"
+#include "net/v3/v3_protocol.h"
 #include <QDateTime>
 #include <QSet>
+#include <utility>
 
 
 // ---------------------------------------------------------------------------
@@ -83,6 +85,16 @@ void CatwayWorker::setPlayerSnapshots(QList<PlayerSnapshot> snapshots)
     for (auto it = m_lastReliableSentMs.begin(); it != m_lastReliableSentMs.end(); ) {
         it = activeIds.contains(it.key()) ? ++it : m_lastReliableSentMs.erase(it);
     }
+    // B2 : purge du suivi V3 des joueurs disparus — leurs envois en attente
+    // sont des échecs définitifs à remonter au métier.
+    const QStringList trackedIds = m_v3Tracker.playersWithPending();
+    for (const QString &playerId : trackedIds) {
+        if (activeIds.contains(playerId))
+            continue;
+        const QList<V3PendingSend> orphans = m_v3Tracker.dropPlayer(playerId);
+        for (const V3PendingSend &o : orphans)
+            emit v3MessageFailed(playerId, o.messageId, QStringLiteral("peer-removed"));
+    }
     m_playerSnapshots = std::move(snapshots);
 }
 
@@ -153,8 +165,22 @@ void CatwayWorker::onReliableUpdate()
     for (const PlayerSnapshot &s : m_playerSnapshots) {
         if (!s.endpoint) continue;
         reliable_endpoint_update(s.endpoint, timeSeconds);
+        // B2 : capturer les ACKs AVANT clear_acks (cœur du problème E06/F06 —
+        // avant B2, ils étaient jetés sans être lus et aucune confirmation
+        // applicative n'existait). Les séquences ACKées confirment les
+        // messages V3 suivis ; le reste (keepalives, trafic V2) est ignoré.
+        int numAcks = 0;
+        const uint16_t *acks = reliable_endpoint_get_acks(s.endpoint, &numAcks);
+        if (numAcks > 0) {
+            const QStringList confirmed = m_v3Tracker.confirmAcks(s.playerId, acks, numAcks);
+            for (const QString &messageId : confirmed)
+                emit v3MessageAcked(s.playerId, messageId);
+        }
         reliable_endpoint_clear_acks(s.endpoint);
     }
+
+    // B2 : passe de retransmission des messages V3 non confirmés.
+    processV3Retransmissions(nowMs, timeSeconds);
 
     static const uint8_t kKeepalive[1] = { 0x00 };
 
@@ -330,6 +356,114 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
                                   toReliableBytes(data),
                                   data.size());
     m_lastReliableSentMs[playerId] = nowMs;
+}
+
+// ---------------------------------------------------------------------------
+// B2 — fiabilité applicative V3 : envoi suivi, retransmission, dédup
+// ---------------------------------------------------------------------------
+
+void CatwayWorker::sendV3Reliable(const QString &playerId, const QByteArray &packet,
+                                  const QString &messageId)
+{
+    if (packet.isEmpty() || messageId.isEmpty()) {
+        emit v3MessageFailed(playerId, messageId, QStringLiteral("invalid-arguments"));
+        return;
+    }
+    const PlayerSnapshot *snap = findSnapshot(playerId);
+    if (!snap || !snap->p2pConnected || !snap->endpoint) {
+        emit v3MessageFailed(playerId, messageId, QStringLiteral("not-connected"));
+        return;
+    }
+
+    const qint64 nowMs       = m_reliableClock.elapsed();
+    const double timeSeconds = nowMs / 1000.0;
+    const double rttMs       = reliable_endpoint_rtt(snap->endpoint);
+
+    // La séquence que send_packet va consommer — capturée AVANT l'envoi pour
+    // corréler l'ACK reliable au messageId applicatif.
+    const quint16 seq = reliable_endpoint_next_packet_sequence(snap->endpoint);
+    if (!m_v3Tracker.trackSend(playerId, messageId, packet, seq, nowMs, rttMs)) {
+        emit v3MessageFailed(playerId, messageId, QStringLiteral("queue-full"));
+        return;
+    }
+
+    reliable_endpoint_update(snap->endpoint, timeSeconds);
+    reliable_endpoint_send_packet(snap->endpoint, toReliableBytes(packet), packet.size());
+    m_lastReliableSentMs[playerId] = nowMs;
+}
+
+void CatwayWorker::broadcastV3Reliable(const QByteArray &packet, const QString &messageId)
+{
+    for (const PlayerSnapshot &s : std::as_const(m_playerSnapshots)) {
+        if (!s.p2pConnected || !s.endpoint)
+            continue; // pair non connecté : ignoré (le métier connaît le roster)
+        sendV3Reliable(s.playerId, packet, messageId);
+    }
+}
+
+void CatwayWorker::processV3Retransmissions(qint64 nowMs, double timeSeconds)
+{
+    const QStringList trackedIds = m_v3Tracker.playersWithPending();
+    for (const QString &playerId : trackedIds) {
+        QList<V3PendingSend> failed;
+        const QList<V3PendingSend *> due = m_v3Tracker.collectDue(playerId, nowMs, failed);
+
+        const PlayerSnapshot *snap = findSnapshot(playerId);
+        const bool sendable = snap && snap->p2pConnected && snap->endpoint;
+
+        for (V3PendingSend *entry : due) {
+            if (!sendable) {
+                // Pair présent mais lien coupé : échec définitif à l'échéance
+                // (le métier re-soumettra après reconnexion/migration).
+                failed.append(*entry);
+                m_v3Tracker.removePending(playerId, entry->messageId);
+                continue;
+            }
+            const quint16 newSeq = reliable_endpoint_next_packet_sequence(snap->endpoint);
+            reliable_endpoint_update(snap->endpoint, timeSeconds);
+            reliable_endpoint_send_packet(snap->endpoint,
+                                          toReliableBytes(entry->packet),
+                                          entry->packet.size());
+            m_lastReliableSentMs[playerId] = nowMs;
+            m_v3Tracker.markResent(entry, newSeq, nowMs,
+                                   reliable_endpoint_rtt(snap->endpoint));
+        }
+
+        for (const V3PendingSend &f : failed) {
+            const QString reason = sendable ? QStringLiteral("retries-exhausted")
+                                            : QStringLiteral("not-connected");
+            qWarning() << "[Catway][V3] Echec definitif message" << f.messageId
+                       << "vers" << playerId << "apres" << f.sendCount
+                       << "envois (" << reason << ")";
+            emit v3MessageFailed(playerId, f.messageId, reason);
+        }
+    }
+}
+
+bool CatwayWorker::allowIncomingV3(const QString &playerId, const uint8_t *data, int bytes)
+{
+    if (!data || bytes <= 1)
+        return true;
+    // fromRawData : pas de copie — le QByteArray ne survit pas à ce scope.
+    const QByteArray packet = QByteArray::fromRawData(
+        reinterpret_cast<const char *>(data), bytes);
+    if (!V3Protocol::isV3Packet(packet))
+        return true; // trafic V2 (game/editor/physics) : hors périmètre B2
+
+    V3MessageType::Value type;
+    V3Envelope envelope;
+    if (!V3Protocol::unpack(packet, type, envelope) || envelope.messageId.isEmpty())
+        return true; // malformé : livrer, le consommateur métier rejettera
+
+    if (!m_v3Tracker.registerIncoming(playerId, envelope.messageId)) {
+        // Doublon (retransmission d'un message déjà livré). Consommer sans
+        // livrer : le `return 1` du process callback fait ACKer ce paquet par
+        // reliable.io, ce qui stoppe les retransmissions de l'émetteur.
+        qDebug() << "[Catway][V3] Dedup: message" << envelope.messageId
+                 << "de" << playerId << "deja livre, drop silencieux";
+        return false;
+    }
+    return true;
 }
 
 void CatwayWorker::tearDown()

@@ -40,6 +40,13 @@ static int catway_process_packet(
     // Ne pas mettre à jour lastReliableReceivedMs pour éviter le ping-pong.
     if (packet_bytes == 1 && packet_data[0] == 0x00) return 1;
     ctx->worker->markReliableReceived(ctx->playerId);
+    // B2 : dédup applicative V3 (côté worker/thread réseau). Une
+    // retransmission arrive sous une NOUVELLE séquence reliable — seule la
+    // clé `messageId` de l'enveloppe permet de la reconnaître. `return 1`
+    // consomme le doublon : reliable.io l'ACKe, l'émetteur arrête de
+    // retransmettre, mais le métier ne le reçoit qu'une fois.
+    if (!ctx->worker->allowIncomingV3(ctx->playerId, packet_data, packet_bytes))
+        return 1;
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
     const QString senderId = ctx->playerId;
     QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {

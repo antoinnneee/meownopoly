@@ -80,6 +80,12 @@ Catway::Catway(QObject *parent)
         emit playerTimedOut(playerId);
     }, Qt::QueuedConnection);
 
+    // B2 : relais GUI des issues d'envoi V3 (ACK applicatif / échec définitif).
+    connect(m_worker, &CatwayWorker::v3MessageAcked,
+            this, &Catway::v3MessageAcked, Qt::QueuedConnection);
+    connect(m_worker, &CatwayWorker::v3MessageFailed,
+            this, &Catway::v3MessageFailed, Qt::QueuedConnection);
+
     auto *am = AccountManager::instance();
     connect(am, &AccountManager::stunServerChanged, this, &Catway::onAccountStunChanged);
     connect(am, &AccountManager::stunPortChanged, this, &Catway::onAccountStunChanged);
@@ -333,6 +339,24 @@ void Catway::broadcastReliable(const QByteArray &data)
 {
     QMetaObject::invokeMethod(m_worker, "broadcastReliable", Qt::QueuedConnection,
                               Q_ARG(QByteArray, data));
+}
+
+void Catway::sendV3Reliable(const QString &playerId, const QByteArray &packet,
+                            const QString &messageId)
+{
+    if (playerId.isEmpty() || packet.isEmpty() || messageId.isEmpty()) return;
+    QMetaObject::invokeMethod(m_worker, "sendV3Reliable", Qt::QueuedConnection,
+                              Q_ARG(QString, playerId),
+                              Q_ARG(QByteArray, packet),
+                              Q_ARG(QString, messageId));
+}
+
+void Catway::broadcastV3Reliable(const QByteArray &packet, const QString &messageId)
+{
+    if (packet.isEmpty() || messageId.isEmpty()) return;
+    QMetaObject::invokeMethod(m_worker, "broadcastV3Reliable", Qt::QueuedConnection,
+                              Q_ARG(QByteArray, packet),
+                              Q_ARG(QString, messageId));
 }
 
 void Catway::broadcastRaw(const QString &message)

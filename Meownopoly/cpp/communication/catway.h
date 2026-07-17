@@ -20,6 +20,7 @@ class CatwayWorker;
 struct reliable_endpoint_t;
 #include "udp_socket_info.h"
 #include "player_network.h"
+#include "net/v3/v3_reliable_tracker.h"
 
 // Copie thread-réseau des infos joueur (mise à jour depuis le GUI via setPlayerSnapshots).
 struct PlayerSnapshot {
@@ -49,6 +50,12 @@ public:
     /// Appelé depuis catway_process_packet (thread réseau) pour les paquets non-keepalive.
     void markReliableReceived(const QString &playerId);
 
+    /// Déduplication V3 (B2), appelée depuis catway_process_packet (thread
+    /// réseau) AVANT livraison. Retourne false si le paquet est un message V3
+    /// déjà vu (retransmission) : à consommer (return 1 → ACK reliable) sans
+    /// livrer. Tout paquet non-V3 ou non-décodable est livré tel quel.
+    bool allowIncomingV3(const QString &playerId, const uint8_t *data, int bytes);
+
 public slots:
     void initReliable();
     void startReliableTimer();
@@ -67,6 +74,17 @@ public slots:
     /// Envoie un paquet fiable à tous les joueurs P2P connectés.
     void broadcastReliable(const QByteArray &data);
 
+    /// Envoi V3 suivi (B2) : ACK applicatif + retransmission adaptative.
+    /// `packet` est un paquet fil V3 déjà packé (V3Protocol::pack) ;
+    /// `messageId` est le messageId de l'enveloppe (clé de confirmation).
+    /// Issue : v3MessageAcked ou v3MessageFailed (échec définitif).
+    void sendV3Reliable(const QString &playerId, const QByteArray &packet,
+                        const QString &messageId);
+
+    /// Variante broadcast : un suivi par pair P2P connecté (les pairs non
+    /// connectés sont ignorés — le métier connaît le roster).
+    void broadcastV3Reliable(const QByteArray &packet, const QString &messageId);
+
     /// Met à jour la copie locale des snapshots joueurs (appelé depuis le thread GUI via QueuedConnection).
     void setPlayerSnapshots(QList<PlayerSnapshot> snapshots);
 
@@ -81,6 +99,12 @@ signals:
     void datagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
     /// Émis quand un joueur P2P n'a pas répondu depuis trop longtemps.
     void playerTimedOut(QString playerId);
+    /// B2 : message V3 confirmé par ACK reliable (capturé avant clear_acks).
+    void v3MessageAcked(QString playerId, QString messageId);
+    /// B2 : échec définitif d'un message V3 (retries épuisés, file pleine,
+    /// pair déconnecté/supprimé). `reason` : "not-connected", "queue-full",
+    /// "retries-exhausted", "peer-removed", "invalid-arguments".
+    void v3MessageFailed(QString playerId, QString messageId, QString reason);
 
 private:
     StunManager *m_stunManager;
@@ -99,6 +123,12 @@ private:
     QHash<QString, qint64> m_lastReceivedByPlayer;
     /// Compteurs de retries HP:STRIKE persistés par playerId
     QHash<QString, int> m_strikeRetryByPlayer;
+
+    /// B2 : file de retransmission + dédup V3, côté worker (thread réseau).
+    V3ReliableTracker m_v3Tracker;
+
+    /// Passe de retransmission V3 (appelée à chaque tick d'update reliable).
+    void processV3Retransmissions(qint64 nowMs, double timeSeconds);
 };
 
 class Catway : public QObject
@@ -164,6 +194,18 @@ public:
     /// Envoie un paquet fiable à tous les joueurs P2P connectés.
     Q_INVOKABLE void broadcastReliable(const QByteArray &data);
 
+    /// B2 — envoi V3 suivi : ACK applicatif + retry côté worker + dédup à la
+    /// réception. `packet` = paquet fil V3 (V3Protocol::pack), `messageId` =
+    /// messageId de l'enveloppe B1. Issue garantie : v3MessageAcked OU
+    /// v3MessageFailed (jamais de message "en vol" silencieusement perdu).
+    Q_INVOKABLE void sendV3Reliable(const QString &playerId,
+                                    const QByteArray &packet,
+                                    const QString &messageId);
+
+    /// B2 — broadcast V3 suivi : un cycle ACK/retry par pair P2P connecté.
+    Q_INVOKABLE void broadcastV3Reliable(const QByteArray &packet,
+                                         const QString &messageId);
+
     /// Envoie un message UDP brut à tous les joueurs P2P connectés (lossy, minijeux).
     Q_INVOKABLE void broadcastRaw(const QString &message);
 
@@ -184,6 +226,11 @@ signals:
     /// relay du timeout depuis CatwayWorker (permet aux modules
     /// de niveau session — GameSession/EditorSession — de réagir sur le thread GUI).
     void playerTimedOut(QString playerId);
+    /// B2 — relais GUI : message V3 confirmé (ACK reliable capturé).
+    void v3MessageAcked(QString playerId, QString messageId);
+    /// B2 — relais GUI : échec définitif d'un message V3 (le métier décide de
+    /// la suite : re-soumission, resynchronisation, exclusion du pair…).
+    void v3MessageFailed(QString playerId, QString messageId, QString reason);
 
 private slots:
     void onAccountStunChanged();
