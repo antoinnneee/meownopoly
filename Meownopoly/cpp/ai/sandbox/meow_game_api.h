@@ -15,11 +15,19 @@
 // `player.position()`, `zone.playersInside()`, `stats.addModifier`,
 // `dialogue.show`, `anim.play`, `fx.spawn`, `sound.play`.
 //
-// Livrable A6 (« façade minimale ») : la surface est complète pour que tout
-// artefact conforme D34 **charge** sans erreur de référence, mais seuls
-// `memory`/`events` + l'enregistrement des appels (stats, présentation) sont
-// réellement fonctionnels — le branchement sur le vrai jeu (stats réelles,
-// dialogue UI, fx, sons, position joueur) arrive avec S-6 (plan doc 15).
+// Livrable A6 (« façade minimale ») : la surface charge sans erreur de
+// référence ; `memory`/`events` fonctionnels + enregistrement des appels.
+//
+// Livrable S-6 (« façade complète MVP », plan doc 15) — cette classe :
+//   - budgets RUNTIME derrière #define (handler ≤ 2 ms, tick ≤ 0,5 ms,
+//     ≤ 30 émissions/s) avec auto-police optionnelle (setRuntimeEnforcement) ;
+//   - lecture réelle `player.position()` / `zone.playersInside()` / `session`
+//     depuis les instantanés injectés (setPlayerSnapshot/setZoneOccupants) ;
+//   - `stats.addModifier` + `dialogue/anim/fx/sound` enregistrés en file
+//     DRAINABLE (takeRecordedCalls) que le consommateur runtime applique au
+//     vrai jeu — la façade reste découplée des singletons (invariant Core+Qml).
+// Le câblage du drain sur les vrais systèmes (UI dialogue, FX, stats, Pattounx)
+// est l'intégration S-7 / étage 2, hors de ce fichier.
 //
 // **Code partagé banc/jeu** (doc 12 §5) : le banc d'essai hors-process est le
 // premier consommateur (P2→P5) ; le runtime confiné (étage 2, D13) réutilisera
@@ -56,6 +64,21 @@
 #define MEOW_API_MEMORY_VALUE_MAX_BYTES 1024
 #endif
 
+// D34 — budgets RUNTIME (étage 2, en partie). Derrière #define (pattern D22),
+// alignés sur les seuils du banc (bench_runner.h) : au banc, ces budgets sont
+// mesurés DE L'EXTÉRIEUR (le harness observe les vraies durées/débits) et la
+// façade reste passive ; en partie, il n'y a pas de harness — la façade
+// s'auto-police quand `setRuntimeEnforcement(true)` est armé (voir plus bas).
+#ifndef MEOW_API_HANDLER_BUDGET_US
+#define MEOW_API_HANDLER_BUDGET_US 2000   // ≤ 2 ms / événement (D34)
+#endif
+#ifndef MEOW_API_TICK_BUDGET_US
+#define MEOW_API_TICK_BUDGET_US 500       // ≤ 0,5 ms / tick (D34)
+#endif
+#ifndef MEOW_API_EMIT_MAX_PER_SEC
+#define MEOW_API_EMIT_MAX_PER_SEC 30      // ≤ 30 émissions / s (D34)
+#endif
+
 // `emit` (macro Qt vide) doit céder la place à la méthode QML `events.emit`
 // (nom figé par D34). Utiliser Q_EMIT dans les unités qui incluent ce header.
 #ifdef emit
@@ -82,6 +105,17 @@ struct ApiHandlerRun {
 struct ApiViolation {
     QString code;        // aligné sur les codes du banc (bench_protocol)
     QString details;
+};
+
+// Un appel de présentation ou de stats émis par l'artefact (dialogue/anim/fx/
+// sound/stats). En partie (étage 2), le consommateur runtime draine cette file
+// (takeRecordedCalls) et l'applique au vrai jeu — UI de dialogue, animations,
+// particules, sons, stats réelles (S-7). La façade elle-même reste découplée
+// des singletons du jeu (invariant : Qt6::Core + Qt6::Qml seulement).
+struct ApiCall {
+    QString channel;     // "dialogue" | "anim" | "fx" | "sound" | "stats"
+    QString method;      // "show" | "play" | "spawn" | "addModifier"
+    QVariantList args;   // arguments dans l'ordre de la surface D34
 };
 
 // ─── Sous-objets de la façade ───────────────────────────────────────────────
@@ -119,7 +153,8 @@ private:
     MeowGameApi *m_owner;
 };
 
-// `GameApi.stats` — modificateurs de statistiques (S-6 : branchement réel).
+// `GameApi.stats` — modificateurs de statistiques. Enregistrés en file
+// drainable (takeRecordedCalls) ; l'application aux vraies stats est S-7.
 class MeowStatsApi : public QObject
 {
     Q_OBJECT
@@ -142,7 +177,7 @@ private:
     MeowGameApi *m_owner;
 };
 
-// `GameApi.player` — infos joueur (S-6 : position réelle).
+// `GameApi.player` — infos joueur ; position lue de l'instantané injecté.
 class MeowPlayerApi : public QObject
 {
     Q_OBJECT
@@ -153,7 +188,7 @@ private:
     MeowGameApi *m_owner;
 };
 
-// `GameApi.zone` — requêtes de zone (S-6 : lecture Pattounx réelle).
+// `GameApi.zone` — requêtes de zone ; occupants lus de l'instantané injecté.
 class MeowZoneApi : public QObject
 {
     Q_OBJECT
@@ -165,8 +200,9 @@ private:
 };
 
 // `GameApi.dialogue` / `.anim` / `.fx` / `.sound` — canaux de présentation.
-// MVP : chaque appel est enregistré (métriques + activité P5) ; le rendu réel
-// (UI dialogue, animations, particules, sons) est S-6. Une classe unique pour
+// Chaque appel est enregistré en file drainable (takeRecordedCalls) + compté
+// pour l'activité P5 ; le rendu réel (UI dialogue, animations, particules,
+// sons) est appliqué par le consommateur runtime (S-7). Une classe unique pour
 // les quatre canaux — le nom du canal discrimine à l'enregistrement.
 class MeowPresentationApi : public QObject
 {
@@ -214,6 +250,23 @@ public:
                    const QJsonObject &sessionSnapshot = QJsonObject(),
                    int memoryValueMaxBytes = 0);
 
+    // Instantané de présence injecté par l'appelant (job du banc, ou runtime).
+    // `player.position()` lit x/y de ce snapshot ; `zone.playersInside()` lit
+    // la liste d'occupants. Découple la façade de Pattounx (invariant Core+Qml).
+    void setPlayerSnapshot(const QJsonObject &playerSnapshot);
+    void setZoneOccupants(const QJsonArray &occupants);
+
+    // Auto-police des budgets runtime (D34). OFF par défaut : au banc, les
+    // budgets sont mesurés de l'extérieur et la façade ne doit rien altérer
+    // (émissions non droppées, débit vrai observé). En partie (étage 2), le
+    // runtime l'arme → la façade drope les émissions au-delà du plafond et
+    // journalise les dépassements handler/tick dans `runtimeViolations`.
+    // Seuils surchargeables (≤ 0 → défaut #define).
+    void setRuntimeEnforcement(bool on) { m_enforce = on; }
+    bool runtimeEnforcement() const { return m_enforce; }
+    void setRuntimeBudgets(int handlerBudgetUs, int tickBudgetUs,
+                           int emitMaxPerSec);
+
     // Moteur JS utilisé pour convertir les payloads QVariant → QJSValue lors
     // de l'invocation des callbacks (QJSValue::engine() n'existe plus en Qt6).
     // Renseigné par RestrictedContext à la création du contexte.
@@ -223,6 +276,11 @@ public:
     // Invoque tous les handlers `events.on(name)` ; chaque run est chronométré
     // et journalisé (takeHandlerRuns).
     void dispatchEvent(const QString &name, const QVariant &payload);
+    // Cadence de simulation (`events.on("tick")`) : même dispatch, mais sous
+    // enforcement runtime le dépassement est jugé au budget TICK (0,5 ms), pas
+    // au budget handler (2 ms). Le banc, lui, passe par dispatchEvent("tick")
+    // et mesure le coût de tick de l'extérieur (P3) — inchangé.
+    void dispatchTick(const QVariant &payload);
     // Change une clé mémoire « de l'extérieur » (stimulus, écriture distante) :
     // met à jour le backing et invoque les watchers `memory.onChanged(key)`.
     void touchMemory(const QString &key, const QVariant &value);
@@ -238,6 +296,16 @@ public:
     qint64 activityCounter() const { return m_activity; }
     QVector<ApiHandlerRun> takeHandlerRuns();
     QVector<ApiViolation> violations() const { return m_violations; }
+    // File des appels stats/présentation, dans l'ordre d'émission. Drainée par
+    // le consommateur runtime (S-7 / étage 2) qui les applique au vrai jeu.
+    QVector<ApiCall> takeRecordedCalls();
+    int recordedCallCount() const { return m_recordedCalls.size(); }
+    // Dépassements de budget runtime détectés SOUS enforcement (event_budget,
+    // tick_budget, event_flood). Distincts de `violations()` (memory_quota) —
+    // ne jamais fusionner : le banc lit `violations()` et les code toutes en
+    // memory_quota. Codes alignés sur bench_protocol.
+    QVector<ApiViolation> runtimeViolations() const { return m_runtimeViolations; }
+    QVector<ApiViolation> takeRuntimeViolations();
 
     // ── Accès internes (sous-objets) ──
     QVariant memoryGet(const QString &key) const;
@@ -248,6 +316,8 @@ public:
     void recordCall(const QString &channel, const QString &method,
                     const QVariantList &args);
     QVariant sessionGet(const QString &key) const;
+    QVariantMap playerPosition() const;
+    QVariantList zonePlayersInside() const;
 
     QObject *memoryApi() const   { return m_memory; }
     QObject *eventsApi() const   { return m_events; }
@@ -261,8 +331,11 @@ public:
     QObject *soundApi() const    { return m_sound; }
 
 private:
+    // `budgetUs` : plafond runtime appliqué à CE run sous enforcement (budget
+    // handler pour les événements, budget tick pour la cadence).
     void invokeHandler(const QString &handlerId, QJSValue &callback,
-                       const QJSValueList &args);
+                       const QJSValueList &args, qint64 budgetUs);
+    void dispatch(const QString &name, const QVariant &payload, qint64 budgetUs);
     void notifyMemoryWatchers(const QString &key, const QVariant &value);
     QString writeSetKey(const QString &key) const;
 
@@ -283,7 +356,17 @@ private:
     QString m_targetUuid;
     QVariantMap m_memoryValues;
     QVariantMap m_sessionValues;
+    QVariantMap m_playerValues;      // instantané joueur (player.position)
+    QVariantList m_zoneOccupants;    // occupants de zone (zone.playersInside)
     int m_memoryValueMaxBytes = MEOW_API_MEMORY_VALUE_MAX_BYTES;
+
+    // Budgets runtime (D34) — auto-police OFF par défaut (banc = observation
+    // externe). Voir setRuntimeEnforcement.
+    bool  m_enforce = false;
+    qint64 m_handlerBudgetUs = MEOW_API_HANDLER_BUDGET_US;
+    qint64 m_tickBudgetUs    = MEOW_API_TICK_BUDGET_US;
+    int    m_emitMaxPerSec   = MEOW_API_EMIT_MAX_PER_SEC;
+    QVector<qint64> m_emitTimestampsMs;  // fenêtre glissante 1 s (event_flood)
 
     // Abonnements
     QHash<QString, QList<QJSValue>> m_eventHandlers;   // nom → callbacks
@@ -294,7 +377,9 @@ private:
     int m_emitCount = 0;
     qint64 m_activity = 0;
     QVector<ApiHandlerRun> m_handlerRuns;
-    QVector<ApiViolation> m_violations;
+    QVector<ApiViolation> m_violations;         // memory_quota (lu par le banc)
+    QVector<ApiViolation> m_runtimeViolations;  // budgets runtime (enforcement)
+    QVector<ApiCall> m_recordedCalls;           // stats/présentation drainables
 };
 
 } // namespace meow::sandbox
