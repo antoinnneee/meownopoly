@@ -3206,6 +3206,234 @@ Base_Board {
             }
             return getCamera()
         }
+
+        // ── Introspection d'état (canal IA, C4 / doc 02 §5.2) ────────────
+        // Retrouve une tile par uuid dans la liste courante (null si absente).
+        function _findTileByUuid(uuid) {
+            const tiles = root.snapableTilesList || []
+            for (let i = 0; i < tiles.length; i++) {
+                const t = tiles[i]
+                if (t && t.snapableParameters
+                        && String(t.snapableParameters.uniqueId) === String(uuid))
+                    return t
+            }
+            return null
+        }
+
+        // Liste compacte des tiles (state.listTiles) : [{uuid, tileType, gridX,
+        // gridY, w, h}]. `filter` facultatif : { tileType, limit, offset }.
+        function listTiles(filter) {
+            const tiles = root.snapableTilesList || []
+            const f = filter || {}
+            const wantType = (f.tileType !== undefined && f.tileType !== null)
+                ? Number(f.tileType) : -1
+            const out = []
+            for (let i = 0; i < tiles.length; i++) {
+                const t = tiles[i]
+                if (!t || !t.snapableParameters) continue
+                const sp = t.snapableParameters
+                if (wantType >= 0 && sp.tileType !== wantType) continue
+                const dp = sp.displayParameter
+                out.push({
+                    uuid: sp.uniqueId ? String(sp.uniqueId) : null,
+                    tileType: sp.tileType,
+                    gridX: dp.gridRelativePositionX,
+                    gridY: dp.gridRelativePositionY,
+                    w: dp.unitSizeWidth,
+                    h: dp.unitSizeHeight
+                })
+            }
+            const offset = (f.offset !== undefined) ? Math.max(0, Number(f.offset)) : 0
+            const limit = (f.limit !== undefined) ? Number(f.limit) : 0
+            let page = out
+            if (offset > 0 || limit > 0) {
+                const end = limit > 0 ? offset + limit : out.length
+                page = out.slice(offset, end)
+            }
+            return { ok: true, total: out.length, count: page.length,
+                     offset: offset, tiles: page }
+        }
+
+        // JSON complet d'une tile par uuid (state.getTile) — inclut l'espace
+        // mémoire dès que toJSON le sérialise (clé "memory", doc 05 / S-3).
+        function getTile(uuid) {
+            if (!uuid) return { ok: false, error: "uuid requis" }
+            const t = _findTileByUuid(uuid)
+            if (!t || !t.snapableParameters)
+                return { ok: false, error: "tile introuvable: " + uuid }
+            let obj = null
+            try { obj = JSON.parse(t.snapableParameters.toJSON()) }
+            catch (e) { return { ok: false, error: "Échec de sérialisation JSON: " + e } }
+            return { ok: true, tile: obj }
+        }
+
+        // ── Édition ciblée par uuid (editor_edit, C4 / doc 02 §5.2) ──────
+        // Toutes ces opérations mutent la tile localement puis Game.updateMap
+        // (persistance + undo + broadcast collab via submitFromDelta).
+
+        // Déplace une tile (coords grille absolues).
+        function moveTile(uuid, gridX, gridY) {
+            const t = _findTileByUuid(uuid)
+            if (!t || !t.snapableParameters)
+                return { ok: false, error: "tile introuvable: " + uuid }
+            const dp = t.snapableParameters.displayParameter
+            dp.gridRelativePositionX = Number(gridX)
+            dp.gridRelativePositionY = Number(gridY)
+            if (t.snapToGridFromGridPos) t.snapToGridFromGridPos()
+            Game.updateMap(EditDelta.TileModified, t.snapableParameters)
+            return { ok: true, tile: _tileInfo(t) }
+        }
+
+        // Redimensionne une tile (unités de grille, min 1×1).
+        function resizeTile(uuid, w, h) {
+            const t = _findTileByUuid(uuid)
+            if (!t || !t.snapableParameters)
+                return { ok: false, error: "tile introuvable: " + uuid }
+            const dp = t.snapableParameters.displayParameter
+            dp.unitSizeWidth = Math.max(1, Math.round(Number(w)))
+            dp.unitSizeHeight = Math.max(1, Math.round(Number(h)))
+            Game.updateMap(EditDelta.TileModified, t.snapableParameters)
+            return { ok: true, tile: _tileInfo(t) }
+        }
+
+        // Supprime une tile (et ses connexions). Réplique le chemin
+        // _handleElementDeleted : delta TileDeleted AVANT destruction.
+        function deleteTile(uuid) {
+            const t = _findTileByUuid(uuid)
+            if (!t || !t.snapableParameters)
+                return { ok: false, error: "tile introuvable: " + uuid }
+            Game.updateMap(EditDelta.TileDeleted, t.snapableParameters)
+            logic.tileLogic.deleteElementsConnections(t)
+            if (t.connectionManager) t.connectionManager.deleteLinkedConnection()
+            logic.tileLogic.deleteElement(t)
+            return { ok: true, uuid: String(uuid) }
+        }
+
+        // Lie deux tiles (kind = "next" | "previous"). createSnapableLink gère
+        // le lien + Game.updateMap(TileModified) sur la source.
+        function linkTiles(sourceUuid, targetUuid, kind) {
+            const s = _findTileByUuid(sourceUuid)
+            const d = _findTileByUuid(targetUuid)
+            if (!s || !d)
+                return { ok: false, error: "source ou cible introuvable" }
+            const k = (kind === "previous") ? "previous" : "next"
+            logic.tileLogic.createSnapableLink(s, d, k)
+            return { ok: true, source: String(sourceUuid),
+                     target: String(targetUuid), kind: k }
+        }
+
+        // Défait un lien entre deux tiles (kind = "next" | "previous").
+        function unlinkTiles(sourceUuid, targetUuid, kind) {
+            const s = _findTileByUuid(sourceUuid)
+            const d = _findTileByUuid(targetUuid)
+            if (!s || !d || !s.connectionManager)
+                return { ok: false, error: "source ou cible introuvable" }
+            const k = (kind === "previous") ? "previous" : "next"
+            if (k === "next") s.connectionManager.removeNextElement(d)
+            else s.connectionManager.removePreviousElement(d)
+            if (s.snapableParameters)
+                Game.updateMap(EditDelta.TileModified, s.snapableParameters)
+            return { ok: true, source: String(sourceUuid),
+                     target: String(targetUuid), kind: k }
+        }
+
+        // ── Roster joueurs (roster_edit, C4 / doc 02 §5.2) ──────────────
+        // Chaque op : mutation mapInfo + Game.updateMapMetadata (persistance
+        // + undo) + EditorOpBus.submitOp(makeXxx) (broadcast collab, ops 12-16).
+
+        // Liste les profils joueurs et les limites min/max de la map.
+        function listRoster() {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            const profiles = []
+            const n = mapInfo.playerProfileCount()
+            for (let i = 0; i < n; i++) {
+                const p = mapInfo.playerProfileAt(i)
+                if (!p) continue
+                try { profiles.push(JSON.parse(p.toJsonString())) }
+                catch (e) { profiles.push({ id: p.id, name: p.name }) }
+            }
+            return { ok: true, minPlayers: mapInfo.minPlayers,
+                     maxPlayers: mapInfo.maxPlayers,
+                     count: profiles.length, profiles: profiles }
+        }
+
+        // Ajoute un profil (profile = objet de champs facultatifs ; vide =
+        // profil par défaut).
+        function addPlayerProfile(profile) {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            const before = mapInfo.toJSON()
+            let p = null
+            if (profile && Object.keys(profile).length)
+                p = mapInfo.addPlayerProfileFromJson(JSON.stringify(profile))
+            else
+                p = mapInfo.addPlayerProfile()
+            if (!p) return { ok: false, error: "Échec de création du profil" }
+            Game.updateMapMetadata(before, mapInfo.toJSON())
+            EditorOpBus.submitOp(EditorOpBus.makeAddPlayerProfileOp(
+                                     JSON.parse(p.toJsonString())))
+            return { ok: true, id: p.id, profile: JSON.parse(p.toJsonString()) }
+        }
+
+        // Supprime un profil par id.
+        function removePlayerProfile(id) {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            if (!id) return { ok: false, error: "id requis" }
+            if (!mapInfo.playerProfileById(id))
+                return { ok: false, error: "profil introuvable: " + id }
+            const before = mapInfo.toJSON()
+            mapInfo.removePlayerProfile(id)
+            Game.updateMapMetadata(before, mapInfo.toJSON())
+            EditorOpBus.submitOp(EditorOpBus.makeRemovePlayerProfileOp(String(id)))
+            return { ok: true, id: String(id) }
+        }
+
+        // Met à jour les champs partiels d'un profil.
+        function updatePlayerProfile(id, fields) {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            if (!id) return { ok: false, error: "id requis" }
+            const f = fields || {}
+            const before = mapInfo.toJSON()
+            if (!mapInfo.updatePlayerProfile(id, JSON.stringify(f)))
+                return { ok: false, error: "Échec (profil introuvable ?): " + id }
+            Game.updateMapMetadata(before, mapInfo.toJSON())
+            EditorOpBus.submitOp(EditorOpBus.makeUpdatePlayerProfileOp(String(id), f))
+            return { ok: true, id: String(id) }
+        }
+
+        // Réordonne un profil à newIndex.
+        function reorderPlayerProfile(id, newIndex) {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            if (!id) return { ok: false, error: "id requis" }
+            const before = mapInfo.toJSON()
+            if (!mapInfo.reorderPlayerProfile(id, Number(newIndex)))
+                return { ok: false, error: "Échec du reorder: " + id }
+            Game.updateMapMetadata(before, mapInfo.toJSON())
+            EditorOpBus.submitOp(EditorOpBus.makeReorderPlayerProfileOp(
+                                     String(id), Number(newIndex)))
+            return { ok: true, id: String(id), newIndex: Number(newIndex) }
+        }
+
+        // Fixe les limites min/max de joueurs (fields = { minPlayers?, maxPlayers? }).
+        function setMapPlayerLimits(fields) {
+            if (!mapInfo) return { ok: false, error: "mapInfo indisponible" }
+            const f = fields || {}
+            const before = mapInfo.toJSON()
+            const applied = {}
+            if (f.minPlayers !== undefined) {
+                mapInfo.minPlayers = Number(f.minPlayers)
+                applied.minPlayers = Number(f.minPlayers)
+            }
+            if (f.maxPlayers !== undefined) {
+                mapInfo.maxPlayers = Number(f.maxPlayers)
+                applied.maxPlayers = Number(f.maxPlayers)
+            }
+            if (Object.keys(applied).length === 0)
+                return { ok: false, error: "minPlayers et/ou maxPlayers requis" }
+            Game.updateMapMetadata(before, mapInfo.toJSON())
+            EditorOpBus.submitOp(EditorOpBus.makeSetMapPlayerLimitsOp(applied))
+            return { ok: true, minPlayers: mapInfo.minPlayers,
+                     maxPlayers: mapInfo.maxPlayers }
+        }
     }
 
     Component.onDestruction: {
