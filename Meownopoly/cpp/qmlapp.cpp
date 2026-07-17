@@ -71,6 +71,7 @@
 #include "editor/network/editor_session.h"
 #include "editor/ops/editor_op_bus.h"
 #include "game/modules/gameplay_module_manager.h"
+#include "ai/ai_process_supervisor.h"
 
 #include <QImageWriter>
 
@@ -113,6 +114,9 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     EditorSession::registerQml();
     EditorOpBus::registerQml();
     GameplayModuleManager::registerQml();
+    // Superviseur des processus d'agents IA (M2, C5). Singleton QML : cycle de
+    // vie des CLIs proposante/arbitre, aucun orphelin à la fermeture.
+    AiProcessSupervisor::registerQml();
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
