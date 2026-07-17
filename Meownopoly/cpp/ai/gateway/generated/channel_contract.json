@@ -1,0 +1,451 @@
+{
+  "_generated": {
+    "by": "scripts/generate_ai_skill.js",
+    "from": "channel_manifest.json",
+    "note": "Contrat machine dérivé du manifeste du canal IA (source de vérité, D17). Ne pas éditer à la main : régénérer via scripts/generate_ai_skill.js."
+  },
+  "protocolVersion": "1.0.0",
+  "envelopeVersion": 1,
+  "roles": {
+    "proposer": {
+      "description": "IA cliente proposante (D20). Produit des propositions ; ne rend aucun verdict.",
+      "tools": [
+        "help",
+        "state_query",
+        "editor_place",
+        "editor_edit",
+        "memory_set",
+        "roster_edit",
+        "module_config",
+        "artifact_submit",
+        "artifact_dryrun",
+        "events_poll",
+        "screenshot"
+      ],
+      "eventVisibility": "événements publics de la partie (Q-E06)"
+    },
+    "arbiter": {
+      "description": "IA arbitre (D6/D24/D31). Rend des verdicts, ne pose/soumet rien elle-même au MVP.",
+      "tools": [
+        "help",
+        "state_query",
+        "events_poll",
+        "screenshot",
+        "arbiter_verdict"
+      ],
+      "eventVisibility": "événements publics + propositions en file + amendements (Q-E06)"
+    }
+  },
+  "tools": [
+    {
+      "name": "help",
+      "roles": [
+        "proposer",
+        "arbiter"
+      ],
+      "summary": "Divulgation progressive de la doc détaillée d'une famille de commandes (doc 02 §3).",
+      "params": {
+        "topic": {
+          "type": "string",
+          "required": false,
+          "doc": "famille ou concept ; vide = sommaire"
+        }
+      },
+      "returns": "texte de documentation"
+    },
+    {
+      "name": "state_query",
+      "roles": [
+        "proposer",
+        "arbiter"
+      ],
+      "summary": "Lecture d'état structurée, résultats compacts et paginés.",
+      "params": {
+        "what": {
+          "type": "enum",
+          "values": [
+            "tiles",
+            "tile",
+            "enums",
+            "roster",
+            "players",
+            "rules",
+            "memory",
+            "proposals"
+          ],
+          "required": true
+        },
+        "filter": {
+          "type": "object",
+          "required": false,
+          "doc": "ex. { uuid } pour 'tile'/'memory', { type } pour 'enums', pagination { limit, offset }"
+        },
+        "cursor": {
+          "type": "string",
+          "required": false,
+          "doc": "pagination de listes longues"
+        }
+      },
+      "returns": "JSON compact (ids plutôt que dumps ; tile inclut l'espace mémoire, doc 05)"
+    },
+    {
+      "name": "editor_place",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Pose d'un élément posable via le chemin UI exact (compatible collab/undo).",
+      "params": {
+        "kind": {
+          "type": "enum",
+          "values": [
+            "asset",
+            "case",
+            "zone",
+            "npc",
+            "enemy",
+            "crate"
+          ],
+          "required": true
+        },
+        "params": {
+          "type": "object",
+          "required": true,
+          "doc": "params spécifiques au kind (position grille, type, dimensions…)"
+        }
+      },
+      "returns": "{ uuid } de la tuile créée"
+    },
+    {
+      "name": "editor_edit",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Édition d'un existant identifié par uuid.",
+      "params": {
+        "uuid": {
+          "type": "string",
+          "required": true
+        },
+        "op": {
+          "type": "enum",
+          "values": [
+            "move",
+            "resize",
+            "delete",
+            "link",
+            "unlink",
+            "set_param",
+            "set_trigger",
+            "set_dialogue"
+          ],
+          "required": true
+        },
+        "params": {
+          "type": "object",
+          "required": false,
+          "doc": "params spécifiques à l'op"
+        }
+      },
+      "returns": "état résultant de la tuile ou accusé"
+    },
+    {
+      "name": "memory_set",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Écriture dans l'espace mémoire 'config' (pipeline édition, doc 05 / D15).",
+      "params": {
+        "scope": {
+          "type": "enum",
+          "values": [
+            "tile",
+            "session",
+            "player"
+          ],
+          "required": true
+        },
+        "uuid": {
+          "type": "string",
+          "required": false,
+          "doc": "requis si scope=tile (ou id joueur si scope=player)"
+        },
+        "key": {
+          "type": "string",
+          "required": true,
+          "doc": "clé namespacée, ex. 'config/damage'"
+        },
+        "value": {
+          "type": "any",
+          "required": true
+        }
+      },
+      "returns": "accusé { scope, key, version }",
+      "notes": "Namespace 'config' uniquement. Le namespace 'state' (runtime) ne s'écrit pas par ce tool (bus d'état, D35)."
+    },
+    {
+      "name": "roster_edit",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Profils joueurs et limites min/max de la map (ops collab 12-16).",
+      "params": {
+        "op": {
+          "type": "enum",
+          "values": [
+            "add_profile",
+            "remove_profile",
+            "update_profile",
+            "reorder_profile",
+            "set_limits"
+          ],
+          "required": true
+        },
+        "params": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "returns": "roster résultant"
+    },
+    {
+      "name": "module_config",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Activation/config d'un module gameplay (D41). Produit une op 'structure' ; satisfait les requiresModules d'un artefact du même lot atomique.",
+      "params": {
+        "id": {
+          "type": "string",
+          "required": true,
+          "doc": "ex. 'stats'"
+        },
+        "enabled": {
+          "type": "bool",
+          "required": true
+        },
+        "params": {
+          "type": "object",
+          "required": false
+        }
+      },
+      "returns": "état du module",
+      "notes": "Jamais d'activation implicite par un appel de façade ; l'activation est une opération auditée."
+    },
+    {
+      "name": "artifact_submit",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Soumission d'un artefact QML/JS → enveloppe de proposition (D11). Bloquant par défaut jusqu'au verdict.",
+      "params": {
+        "source": {
+          "type": "string",
+          "required": true,
+          "doc": "QML/JS inline, ≤ 20 KB"
+        },
+        "target": {
+          "type": "string",
+          "required": false,
+          "doc": "uuid de la tuile porteuse"
+        },
+        "meta": {
+          "type": "object",
+          "required": false,
+          "doc": "aiSummary, requiresModules, declaredWriteSet, listensTo, executionPolicy…"
+        }
+      },
+      "returns": "verdict complet (accepted|rejected|amended) OU { status: 'pending', proposalId } au timeout MEOW_PROPOSAL_TIMEOUT_MS",
+      "notes": "requestType RECALCULÉ par le P0 de l'hôte, jamais déclaré (doc 13 §3)."
+    },
+    {
+      "name": "artifact_dryrun",
+      "roles": [
+        "proposer"
+      ],
+      "summary": "Itération pré-soumission sur le banc d'essai local (D42). Verdict + métriques complets. Quota par invocation. Pass local ≠ acceptation.",
+      "params": {
+        "source": {
+          "type": "string",
+          "required": true
+        },
+        "targetUuid": {
+          "type": "string",
+          "required": false
+        }
+      },
+      "returns": "{ verdict, metrics } — non journalisé au journal partagé (D44)",
+      "quota": {
+        "constant": "MEOW_BENCH_DRYRUN_QUOTA",
+        "default": 10,
+        "unit": "par invocation"
+      }
+    },
+    {
+      "name": "events_poll",
+      "roles": [
+        "proposer",
+        "arbiter"
+      ],
+      "summary": "Resynchronisation en cours de tâche sur le journal métier (Q-E06).",
+      "params": {
+        "cursor": {
+          "type": "integer",
+          "required": true,
+          "doc": "seq du journal métier hôte (D19)"
+        }
+      },
+      "returns": "voir eventSummary.pollResponse ci-dessous"
+    },
+    {
+      "name": "screenshot",
+      "roles": [
+        "proposer",
+        "arbiter"
+      ],
+      "summary": "Capture de l'écran de jeu à la demande (D22). Plafond par requête via #define.",
+      "params": {
+        "view": {
+          "type": "string",
+          "required": false,
+          "doc": "vue ciblée (défaut : écran de jeu)"
+        }
+      },
+      "returns": "résultat image MCP natif",
+      "quota": {
+        "constant": "défini via #define compile-time",
+        "default": 5,
+        "unit": "captures par requête d'IA",
+        "retention": "éphémère (quelques tours d'IA)"
+      }
+    },
+    {
+      "name": "arbiter_verdict",
+      "roles": [
+        "arbiter"
+      ],
+      "summary": "Rendu du verdict d'une proposition. TOKEN ARBITRE UNIQUEMENT.",
+      "params": {
+        "proposalId": {
+          "type": "string",
+          "required": true
+        },
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "accepted",
+            "rejected",
+            "amended"
+          ],
+          "required": true
+        },
+        "reasons": {
+          "type": "array",
+          "required": true,
+          "doc": "entrées { audience: player|ai, code?, text, retryable? }"
+        },
+        "amendment": {
+          "type": "object",
+          "required": false,
+          "doc": "patch (operationsPatch/artifactsPatch/note) ; un amendement de code repasse au banc (D32)"
+        }
+      },
+      "returns": "accusé ; l'application des effets reste sous autorité hôte"
+    }
+  ],
+  "quotas": {
+    "perInvocation": {
+      "maxToolCalls": 100,
+      "help": 20,
+      "state_query": 50,
+      "editor_place": 32,
+      "editor_edit": 32,
+      "memory_set": 32,
+      "roster_edit": 8,
+      "module_config": 4,
+      "artifact_submit": 4,
+      "artifact_dryrun": {
+        "constant": "MEOW_BENCH_DRYRUN_QUOTA",
+        "default": 10
+      },
+      "events_poll": 20,
+      "screenshot": {
+        "constant": "#define compile-time",
+        "default": 5
+      },
+      "arbiter_verdict": 16
+    },
+    "rateLimit": {
+      "requestsPerSecond": 10,
+      "burst": 20
+    },
+    "payload": {
+      "maxRequestBytes": 65536,
+      "maxArtifactSourceBytes": 20480,
+      "maxResponseBytes": 262144
+    }
+  },
+  "envelope": {
+    "envelopeVersion": 1,
+    "requestTypeCategories": [
+      "data_safe",
+      "structure",
+      "rules",
+      "code"
+    ],
+    "requestTypeAuthority": "calculé par le P0 de l'hôte à réception, jamais déclaré par l'IA (doc 13 §3)",
+    "constants": {
+      "MEOW_PROPOSAL_TIMEOUT_MS": {
+        "default": 60000,
+        "role": "attente bloquante du verdict côté tool"
+      },
+      "MEOW_PROPOSAL_MAX_OPS": {
+        "default": 32,
+        "role": "taille max du lot"
+      },
+      "MEOW_PROPOSAL_MAX_ARTIFACTS": {
+        "default": 4,
+        "role": "artefacts par enveloppe"
+      }
+    }
+  },
+  "eventSummary": {
+    "cursor": {
+      "kind": "séquence monotone du journal métier hôte (D19)",
+      "guarantees": "relecture idempotente depuis n'importe quel seq conservé",
+      "truncated": "si le journal est tronqué en deçà du curseur demandé : { truncated: true, oldestSeq } → l'agent resynchronise via state_query au lieu de rejouer l'historique"
+    },
+    "entry": {
+      "seq": "integer",
+      "ts": "ISO-8601",
+      "type": "string (ex. tile.placed, proposal.verdict, memory.changed)",
+      "actor": "id auteur",
+      "summary": "phrase courte",
+      "refs": "[uuid] touchés"
+    },
+    "injectedBlock": {
+      "shape": "« depuis ton dernier tour (seq N→M) : X tuiles posées (par qui), Y verdicts (accepté/rejeté + raison courte), Z changements d'état pertinents »",
+      "cap": {
+        "lines": 250,
+        "overflow": "+ K événements omis — events_poll(N)"
+      },
+      "relevantTypes": [
+        "tile.placed",
+        "proposal.verdict",
+        "memory.changed (publics)",
+        "rules.changed"
+      ],
+      "dryRunVerdicts": "exclus du journal partagé (D44)"
+    },
+    "pollResponse": {
+      "entries": "[entry]",
+      "nextCursor": "integer",
+      "truncated": "bool",
+      "oldestSeq": "integer (présent si truncated)"
+    },
+    "roleFiltering": {
+      "proposer": "événements publics de la partie",
+      "arbiter": "en plus : propositions en file + amendements",
+      "enforcedBy": "serveur MCP, d'après les capacités du token (D20)"
+    }
+  }
+}
