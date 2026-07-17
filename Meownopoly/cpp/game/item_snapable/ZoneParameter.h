@@ -63,6 +63,7 @@ public:
     explicit ZoneParameter(QObject *parent = nullptr);
     explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
     explicit ZoneParameter(const ZoneParameter &other, QObject *parent = nullptr);
+    QJsonObject toJsonObject() const;
     QString toJSON();
     void applyJson(const QJsonObject &json);
     

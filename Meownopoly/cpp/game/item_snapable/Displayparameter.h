@@ -63,6 +63,7 @@ public:
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
 
 
+    QJsonObject toJsonObject() const;
     QString toJSON();
     void applyJson(const QJsonObject &json);
 

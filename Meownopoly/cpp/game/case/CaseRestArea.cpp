@@ -128,22 +128,16 @@ void CaseRestArea::setRentPrice(const QList<int> &newRentPrice)
     emit rentPriceChanged();
 }
 
-QString CaseRestArea::toJSON()
+QJsonObject CaseRestArea::toJsonObject() const
 {
-    QString json;
-    json = CaseCatPerks::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json+= ",\n";
-    json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
-    json += "    \"family\": " + QString::number(m_family) + ",\n";
-    json += "    \"housePrice\": " + QString::number(m_housePrice) + ",\n";
-    json += "    \"hotelPrice\": " + QString::number(m_hotelPrice) + ",\n";
-    json += "    \"rentPrice\": [";
-    for (int i = 0; i < m_rentPrice.size(); i++) {
-        json += QString::number(m_rentPrice.at(i)) + (i < m_rentPrice.size() - 1 ? ", " : "");
-    }
-    json += "]\n";
-    json += "}";
-    return json;
+    QJsonObject obj = CaseCatPerks::toJsonObject();
+    obj["restQuality"] = static_cast<int>(m_restQuality);
+    obj["family"] = static_cast<int>(m_family);
+    obj["housePrice"] = m_housePrice;
+    obj["hotelPrice"] = m_hotelPrice;
+    QJsonArray rentArray;
+    for (int rent : m_rentPrice)
+        rentArray.append(rent);
+    obj["rentPrice"] = rentArray;
+    return obj;
 }

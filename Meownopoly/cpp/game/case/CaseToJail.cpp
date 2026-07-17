@@ -34,14 +34,3 @@ CaseToJail::CaseToJail(const QJsonObject &json, QObject *parent)
 void CaseToJail::setJailCase(CaseJail* jailCase) {
     m_jailCase = jailCase;
 }
-
-QString CaseToJail::toJSON()
-{
-    QString json;
-    json = Case::toJSON();
-    // json.removeLast();
-    // json.removeLast();
-    // json+= "\n";
-    // json += "}";
-    return json;
-}

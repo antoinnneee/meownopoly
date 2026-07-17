@@ -74,18 +74,13 @@ void CaseCatPerks::setOwner(Player *newOwner)
 }
 
 
-QString CaseCatPerks::toJSON()
+QJsonObject CaseCatPerks::toJsonObject() const
 {
-    QString json;
-    json = Case::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json+= ",\n";
-    json += "    \"price\": " + QString::number(price()) + ",\n";
-    json += "    \"sellPrice\": " + QString::number(sellPrice()) + ",\n";
-    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + "\n";
-    json += "}";
-    return json;
+    QJsonObject obj = Case::toJsonObject();
+    obj["price"] = m_price;
+    obj["sellPrice"] = m_sellPrice;
+    obj["morgagePrice"] = m_morgagePrice;
+    return obj;
 }
 
 CaseCatPerks::CaseCatPerks(const QJsonObject &json, QObject *parent)

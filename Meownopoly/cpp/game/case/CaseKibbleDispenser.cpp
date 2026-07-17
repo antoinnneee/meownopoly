@@ -38,14 +38,9 @@ void CaseKibbleDispenser::setReward(int newReward) {
 //     player->earnKibble(m_reward);
 // }
 
-QString CaseKibbleDispenser::toJSON()
+QJsonObject CaseKibbleDispenser::toJsonObject() const
 {
-    QString json;
-    json = Case::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json+= ",\n";
-    json += "    \"reward\": " + QString::number(m_reward) + "\n";
-    json += "}";
-    return json;
+    QJsonObject obj = Case::toJsonObject();
+    obj["reward"] = m_reward;
+    return obj;
 }

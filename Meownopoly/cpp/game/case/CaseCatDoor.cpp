@@ -69,14 +69,10 @@ void CaseCatDoor::setTravelPrice(int newTravelPrice)
     emit travelPriceChanged();
 }
 
-QString CaseCatDoor::toJSON()
+QJsonObject CaseCatDoor::toJsonObject() const
 {
-    QString json;
-    json = CaseCatPerks::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json += ",\n    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
-    json += "    \"travelPrice\": " + QString::number(m_travelPrice) + "\n";
-    json += "}";
-    return json;
+    QJsonObject obj = CaseCatPerks::toJsonObject();
+    obj["indexCatDoor"] = m_indexCatDoor;
+    obj["travelPrice"] = m_travelPrice;
+    return obj;
 }

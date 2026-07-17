@@ -20,16 +20,6 @@ CaseCatNip::CaseCatNip(const QJsonObject &json, QObject *parent)
     setType(Case::CS_CatNip);
 }
 
-QString CaseCatNip::toJSON()
-{
-    QString json;
-    json = Case::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json += "\n}";
-    return json;
-}
-
 
 // void CaseCatNip::onLand(Player* player)
 // {

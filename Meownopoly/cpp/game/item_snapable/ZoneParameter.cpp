@@ -101,42 +101,43 @@ void ZoneParameter::applyJson(const QJsonObject &json)
     setRewardItemQuantity(json.value("rewardItemQuantity").toInt(1));
 }
 
-QString ZoneParameter::toJSON()
+QJsonObject ZoneParameter::toJsonObject() const
 {
-    QString json;
-    json += "{\n";
-    json += "    \"polygonPoints\": [";
-    
-    for (int i = 0; i < m_polygonPoints.size(); ++i) {
-        QVariantMap point = m_polygonPoints[i].toMap();
-        json += QString("{ \"x\": %1, \"y\": %2 }")
-                    .arg(point["x"].toDouble())
-                    .arg(point["y"].toDouble());
-        if (i < m_polygonPoints.size() - 1) {
-            json += ", ";
-        }
+    QJsonArray pointsArray;
+    for (const QVariant &v : m_polygonPoints) {
+        const QVariantMap point = v.toMap();
+        pointsArray.append(QJsonObject{
+            { "x", point["x"].toDouble() },
+            { "y", point["y"].toDouble() },
+        });
     }
 
-    QString exclusionStr = (m_exclusion ? "true" : "false");
-    
-    json += "],\n";
-    json += "    \"zoneColor\": \"" + m_zoneColor + "\",\n";
-    json += "    \"zoneName\": \"" + m_zoneName + "\",\n";
-    json += "    \"velocityDirection\": { \"x\": " + QString::number(m_velocityDirection.x()) + ", \"y\": " + QString::number(m_velocityDirection.y()) + " },\n";
-    json += "    \"velocityStrength\": " + QString::number(m_velocityStrength) + ",\n";
-    json += "    \"frictionStrength\": " + QString::number(m_frictionStrength) + ",\n";
-    json += "    \"exclusion\": " + exclusionStr + ",\n";
-    json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + ",\n";
-    json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + ",\n";
-    json += "    \"screenEffectId\": \"" + m_screenEffectId + "\",\n";
-    json += "    \"triggerMode\": " + QString::number(m_triggerMode) + ",\n";
-    json += "    \"triggerOnce\": " + QString(m_triggerOnce ? "true" : "false") + ",\n";
-    json += "    \"rewardCurrency\": " + QString::number(m_rewardCurrency) + ",\n";
-    json += "    \"rewardItemName\": \"" + m_rewardItemName + "\",\n";
-    json += "    \"rewardItemQuantity\": " + QString::number(m_rewardItemQuantity) + "\n";
-    json += "}";
-    
-    return json;
+    QJsonObject obj;
+    obj["polygonPoints"] = pointsArray;
+    obj["zoneColor"] = m_zoneColor;
+    obj["zoneName"] = m_zoneName;
+    obj["velocityDirection"] = QJsonObject{
+        { "x", static_cast<double>(m_velocityDirection.x()) },
+        { "y", static_cast<double>(m_velocityDirection.y()) },
+    };
+    obj["velocityStrength"] = m_velocityStrength;
+    obj["frictionStrength"] = m_frictionStrength;
+    obj["exclusion"] = m_exclusion;
+    obj["speedMultiplier"] = m_speedMultiplier;
+    obj["accelerationMultiplier"] = m_accelerationMultiplier;
+    obj["screenEffectId"] = m_screenEffectId;
+    obj["triggerMode"] = m_triggerMode;
+    obj["triggerOnce"] = m_triggerOnce;
+    obj["rewardCurrency"] = m_rewardCurrency;
+    obj["rewardItemName"] = m_rewardItemName;
+    obj["rewardItemQuantity"] = m_rewardItemQuantity;
+    return obj;
+}
+
+QString ZoneParameter::toJSON()
+{
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Indented));
 }
 
 QVariantList ZoneParameter::polygonPoints() const

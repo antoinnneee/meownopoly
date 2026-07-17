@@ -67,14 +67,18 @@ void Case::onHover(Player* player)
     }
 }
 
+QJsonObject Case::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["name"] = m_name;
+    obj["type"] = static_cast<int>(type);
+    return obj;
+}
+
 QString Case::toJSON()
 {
-    QString json;
-    json += "{\n";
-    json += "    \"name\": \"" + name() + "\",\n";
-    json += "    \"type\": " + QString::number(type) + "\n";
-    json += "}";
-    return json;
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Indented));
 }
 
 void Case::addPlayer(Player *player)

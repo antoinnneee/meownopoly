@@ -1,5 +1,6 @@
 #include "decorationparameter.h"
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QFile>
 #include "tools/logger.h"
 #include "assetManager/asset_manager.h"
@@ -46,15 +47,19 @@ void DecorationParameter::applyJson(const QJsonObject &json)
     setDecorationId(json["decorationId"].toString());
 }
 
+QJsonObject DecorationParameter::toJsonObject() const
+{
+    return QJsonObject{
+        { "decorationCategory", m_decorationCategory },
+        { "decorationType",     m_decorationType },
+        { "decorationId",       m_decorationId },
+    };
+}
+
 QString DecorationParameter::toJSON()
 {
-    QString json;
-    json += "{\n";
-    json += "    \"decorationCategory\": \"" + m_decorationCategory + "\",\n";
-    json += "    \"decorationType\": \"" + m_decorationType + "\",\n";
-    json += "    \"decorationId\": \"" + m_decorationId + "\"\n";
-    json += "}";
-    return json;
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Indented));
 }
 
 QString DecorationParameter::decorationCategory() const

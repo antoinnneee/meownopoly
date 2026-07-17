@@ -50,13 +50,9 @@ void CaseCatDevice::setTaxe(int newTaxe)
     emit taxeChanged();
 }
 
-QString CaseCatDevice::toJSON()
+QJsonObject CaseCatDevice::toJsonObject() const
 {
-    QString json;
-    json = CaseCatPerks::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json += ",\n    \"taxe\": " + QString::number(m_taxe) + "\n";
-    json += "}";
-    return json;
+    QJsonObject obj = CaseCatPerks::toJsonObject();
+    obj["taxe"] = m_taxe;
+    return obj;
 }

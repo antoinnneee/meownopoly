@@ -232,47 +232,52 @@ void ItemSnapable::setPhysicalObjectParameter(PhysicalObjectParameter * physical
     m_physicalObjectParameter = physicalObjectParameter; emit physicalObjectParameterChanged();
 }
 
-QString ItemSnapable::toJSON()
+QJsonObject ItemSnapable::toJsonObject() const
 {
-    QString json;
-    json += "{\n";
-    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\",\n";
-    json += "    \"tileType\": " + QString::number(m_tileType) + ",\n";
+    QJsonObject obj;
+    obj["uniqueId"] = m_uniqueId.toString();
+    obj["tileType"] = static_cast<int>(m_tileType);
     if (m_caseData != nullptr) {
-        json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
+        obj["caseData"] = m_caseData->toJsonObject();
     }
     if (m_decorationParameter != nullptr) {
-        json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
+        obj["decorationParameter"] = m_decorationParameter->toJsonObject();
     }
     if (m_zoneParameter != nullptr && m_tileType == PhysicZoneTile) {
-        json += "    \"zoneParameter\": " + m_zoneParameter->toJSON() + ",\n";
+        obj["zoneParameter"] = m_zoneParameter->toJsonObject();
     }
     if (m_npcParameter != nullptr && m_tileType == NPCTile) {
-        // toJSON() de NPCParameter est déjà un objet JSON valide (échappement
-        // via QJsonDocument), la concat reste sûre ici.
-        json += "    \"npcParameter\": " + m_npcParameter->toJSON() + ",\n";
+        obj["npcParameter"] = m_npcParameter->toJsonObject();
     }
     if (m_enemyParameter != nullptr && m_tileType == EnemyTile) {
-        // toJSON() de EnemyParameter est déjà un objet JSON valide (échappement
-        // via QJsonDocument), la concat reste sûre ici.
-        json += "    \"enemyParameter\": " + m_enemyParameter->toJSON() + ",\n";
+        obj["enemyParameter"] = m_enemyParameter->toJsonObject();
     }
     if (m_physicalObjectParameter != nullptr && m_tileType == PhysicalObjectTile) {
-        json += "    \"physicalObjectParameter\": " + m_physicalObjectParameter->toJSON() + ",\n";
+        obj["physicalObjectParameter"] = m_physicalObjectParameter->toJsonObject();
     }
-    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
-    json += "    \"next\": [ ";
-    for (int i = 0; i < next.size(); i++) {
-        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
+    if (m_displayParameter != nullptr) {
+        obj["displayParameter"] = m_displayParameter->toJsonObject();
+    } else {
+        // L'ancienne concat déréférençait sans garde → crash. On garde la clé
+        // absente mais on trace : un tile sans displayParameter est anormal.
+        qWarning() << "ItemSnapable::toJsonObject: displayParameter null pour"
+                   << m_uniqueId.toString();
     }
-    json += "],\n";
-    json += "    \"prev\": [ ";
-    for (int i = 0; i < prev.size(); i++) {
-        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
-    }
-    json += "]\n";
-    json += "}";
-    return json;
+    QJsonArray nextArray;
+    for (const ItemSnapable *item : next)
+        nextArray.append(item->uniqueId().toString());
+    obj["next"] = nextArray;
+    QJsonArray prevArray;
+    for (const ItemSnapable *item : prev)
+        prevArray.append(item->uniqueId().toString());
+    obj["prev"] = prevArray;
+    return obj;
+}
+
+QString ItemSnapable::toJSON()
+{
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Indented));
 }
 
 

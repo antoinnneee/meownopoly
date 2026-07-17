@@ -100,37 +100,44 @@ void DisplayParameter::applyJson(const QJsonObject &json)
     setMirrorVertical(json["mirrorVertical"].toInt());
 }
 
+QJsonObject DisplayParameter::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["unitSizeWidth"] = m_unitSizeWidth;
+    obj["unitSizeHeight"] = m_unitSizeHeight;
+    obj["gridRelativePositionX"] = m_gridRelativePositionX;
+    obj["gridRelativePositionY"] = m_gridRelativePositionY;
+    obj["zLayer"] = m_zLayer;
+    obj["zOrder"] = static_cast<double>(m_zOrder);
+    obj["effectBrightness"] = m_effectBrightness;
+    obj["effectContrast"] = m_effectContrast;
+    obj["effectSaturation"] = m_effectSaturation;
+    obj["effectColorization"] = m_effectColorization;
+    obj["effectColorizationColor"] = m_effectColorizationColor.name();
+    // Les booléens sont sérialisés en 0/1 (int) : le chemin de lecture
+    // (ctor JSON / applyJson) utilise .toInt(), qui renverrait 0 sur un
+    // QJsonValue booléen — on préserve le format historique.
+    obj["effectBlurEnabled"] = m_effectBlurEnabled ? 1 : 0;
+    obj["effectBlur"] = m_effectBlur;
+    obj["effectBlurMax"] = m_effectBlurMax;
+    obj["effectBlurMultiplier"] = m_effectBlurMultiplier;
+    obj["effectShadowEnabled"] = m_effectShadowEnabled ? 1 : 0;
+    obj["effectShadowBlur"] = m_effectShadowBlur;
+    obj["effectShadowColor"] = m_effectShadowColor.name();
+    obj["effectShadowHorizontalOffset"] = m_effectShadowHorizontalOffset;
+    obj["effectShadowVerticalOffset"] = m_effectShadowVerticalOffset;
+    obj["effectShadowOpacity"] = m_effectShadowOpacity;
+    obj["effectShadowScale"] = m_effectShadowScale;
+    obj["rotationAngle"] = m_rotationAngle;
+    obj["mirrorHorizontal"] = m_mirrorHorizontal ? 1 : 0;
+    obj["mirrorVertical"] = m_mirrorVertical ? 1 : 0;
+    return obj;
+}
+
 QString DisplayParameter::toJSON()
 {
-    QString json;
-    json += "{\n";
-    json += "    \"unitSizeWidth\": " + QString::number(m_unitSizeWidth) + ",\n";
-    json += "    \"unitSizeHeight\": " + QString::number(m_unitSizeHeight) + ",\n";
-    json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
-    json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
-    json += "    \"zLayer\": " + QString::number(m_zLayer) + ",\n";
-    json += "    \"zOrder\": " + QString::number(m_zOrder) + ",\n";
-    json += "    \"effectBrightness\": " + QString::number(m_effectBrightness) + ",\n";
-    json += "    \"effectContrast\": " + QString::number(m_effectContrast) + ",\n";
-    json += "    \"effectSaturation\": " + QString::number(m_effectSaturation) + ",\n";
-    json += "    \"effectColorization\": " + QString::number(m_effectColorization) + ",\n";
-    json += "    \"effectColorizationColor\": \"" + m_effectColorizationColor.name() + "\",\n";
-    json += "    \"effectBlurEnabled\": " + QString::number(m_effectBlurEnabled) + ",\n";
-    json += "    \"effectBlur\": " + QString::number(m_effectBlur) + ",\n";
-    json += "    \"effectBlurMax\": " + QString::number(m_effectBlurMax) + ",\n";
-    json += "    \"effectBlurMultiplier\": " + QString::number(m_effectBlurMultiplier) + ",\n";
-    json += "    \"effectShadowEnabled\": " + QString::number(m_effectShadowEnabled) + ",\n";
-    json += "    \"effectShadowBlur\": " + QString::number(m_effectShadowBlur) + ",\n";
-    json += "    \"effectShadowColor\": \"" + m_effectShadowColor.name() + "\",\n";
-    json += "    \"effectShadowHorizontalOffset\": " + QString::number(m_effectShadowHorizontalOffset) + ",\n";
-    json += "    \"effectShadowVerticalOffset\": " + QString::number(m_effectShadowVerticalOffset) + ",\n";
-    json += "    \"effectShadowOpacity\": " + QString::number(m_effectShadowOpacity) + ",\n";
-    json += "    \"effectShadowScale\": " + QString::number(m_effectShadowScale) + ",\n";
-    json += "    \"rotationAngle\": " + QString::number(m_rotationAngle) + ",\n";
-    json += "    \"mirrorHorizontal\": " + QString::number(m_mirrorHorizontal) + ",\n";
-    json += "    \"mirrorVertical\": " + QString::number(m_mirrorVertical) + "\n";
-    json += "}";
-    return json;
+    return QString::fromUtf8(
+        QJsonDocument(toJsonObject()).toJson(QJsonDocument::Indented));
 }
 int DisplayParameter::unitSizeWidth() const
 {

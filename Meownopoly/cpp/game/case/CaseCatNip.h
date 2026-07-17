@@ -13,7 +13,7 @@ public:
     ~CaseCatNip() override = default;
 
     // void onLand(Player* player) override;
-    Q_INVOKABLE QString toJSON() override final;
+    // Pas de champs propres : toJsonObject()/toJSON() de Case suffisent.
 
 signals:
     void cardDrawn();

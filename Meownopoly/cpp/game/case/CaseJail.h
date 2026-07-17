@@ -15,7 +15,7 @@ public:
     bool isPlayerInJail(Player* player) const;
     void releasePlayer(Player* player);
 
-    Q_INVOKABLE QString toJSON() override final;
+    QJsonObject toJsonObject() const override final;
 
 private:
     QMap<Player*, int> m_playersInJail; // Map to track players and their turns in jail

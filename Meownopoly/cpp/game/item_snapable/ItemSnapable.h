@@ -69,6 +69,9 @@ public:
     PhysicalObjectParameter * physicalObjectParameter() const;
     void setPhysicalObjectParameter(PhysicalObjectParameter * physicalObjectParameter);
     static void registerQml();
+    // Construction JSON structurée (échappement garanti par QJsonObject) ;
+    // toJSON() n'est plus qu'un wrapper string (QJsonDocument).
+    QJsonObject toJsonObject() const;
     Q_INVOKABLE virtual QString toJSON();
     void applyJson(const QJsonObject &json);
 

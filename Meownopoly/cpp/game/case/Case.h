@@ -56,6 +56,10 @@ public:
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
 
+    // Construction JSON structurée (échappement garanti par QJsonObject).
+    // Les sous-classes overrident toJsonObject() ; toJSON() reste le point
+    // d'entrée string (wrapper QJsonDocument, virtualise via toJsonObject).
+    virtual QJsonObject toJsonObject() const;
     Q_INVOKABLE virtual QString toJSON();
 
 

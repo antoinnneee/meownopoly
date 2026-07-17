@@ -1,13 +1,14 @@
 /*
  *      PattounX v2 — types de messages réseau
  *
- * Plage 0x40+ pour cohabiter sur Catway avec :
+ * Plage 0x40–0x5F pour cohabiter sur Catway avec :
  *  - GameMessageType   (0x01–0x1F)
  *  - EditorMessageType (0x20–0x3F)
- *  - PhysicsMessageType (0x40+)
+ *  - PhysicsMessageType (0x40–0x5F)
+ *  - V3MessageType     (0x60–0x7F, réservée — cf. cpp/net/v3/v3_message_type.h)
  *
  * Toute nouvelle valeur doit être la plus haute pour ne pas être droppée par
- * `PhysicsProtocol::isPhysicsPacket` (filtre par plage).
+ * `PhysicsProtocol::isPhysicsPacket` (filtre par plage), sans dépasser 0x5F.
  */
 #ifndef PHYSICS_MESSAGE_TYPE_H
 #define PHYSICS_MESSAGE_TYPE_H

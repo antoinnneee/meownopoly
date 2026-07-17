@@ -49,6 +49,7 @@ public:
     bool grabbable() const { return m_grabbable; }
     void setGrabbable(bool v);
 
+    QJsonObject toJsonObject() const;
     QString toJSON() const;
     void applyJson(const QJsonObject &json);
 

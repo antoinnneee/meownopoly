@@ -19,13 +19,3 @@ CaseCardBoardBox::CaseCardBoardBox(const QJsonObject &json, QObject *parent)
 {
     setType(Case::CS_CardBoardBox);
 }
-
-QString CaseCardBoardBox::toJSON()
-{
-    QString json;
-    json = Case::toJSON();
-    json.removeLast();
-    json.removeLast();
-    json += "\n}";
-    return json;
-}

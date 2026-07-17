@@ -13,7 +13,7 @@ public:
 
     // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
-    Q_INVOKABLE QString toJSON() override final;
+    // Pas de champs propres : toJsonObject()/toJSON() de Case suffisent.
 
 private:
     CaseJail* m_jailCase = nullptr;
