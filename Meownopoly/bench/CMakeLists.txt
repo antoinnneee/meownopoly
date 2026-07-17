@@ -74,6 +74,14 @@ set(MEOW_BENCH_SUPPORT_SOURCES
     # même code C++ que dans le jeu (QtCore uniquement, doc 12 §3).
     "${MEOW_CPP}/ai/sandbox/static_validator.cpp"
     "${MEOW_CPP}/ai/sandbox/static_validator.h"
+    # Confinement A6 (code partagé banc/jeu, doc 12 §5) : contexte restreint
+    # + façade Meow.GameApi. QtQml uniquement ; la factory QNAM bloquante
+    # n'est compilée que là où QtNetwork est lié (le jeu) — ici, ABSENTE par
+    # construction (pas de Qt6::Network sur cette cible).
+    "${MEOW_CPP}/ai/sandbox/restricted_context.cpp"
+    "${MEOW_CPP}/ai/sandbox/restricted_context.h"
+    "${MEOW_CPP}/ai/sandbox/meow_game_api.cpp"
+    "${MEOW_CPP}/ai/sandbox/meow_game_api.h"
 )
 
 qt_add_executable(meow_testbench
@@ -86,6 +94,8 @@ qt_add_executable(meow_testbench
     bench_phases.cpp
     rss_watchdog.h
     rss_watchdog.cpp
+    deadline_watchdog.h
+    deadline_watchdog.cpp
     ${MEOW_BENCH_MAP_SOURCES}
     ${MEOW_BENCH_SNAPABLE_SOURCES}
     ${MEOW_BENCH_CASE_SOURCES}

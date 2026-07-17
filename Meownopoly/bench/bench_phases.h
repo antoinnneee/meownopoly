@@ -4,19 +4,30 @@
 // ============================================================================
 // Phases de test P1→P5 du banc (doc/v3/12_BANC_ESSAI_R1.md §3).
 //
-// Squelette M9.1 : P1 (reconstruction du snapshot + démarrage du moteur
-// physique) est réelle ; P2→P5 sont des stubs qui passent, structurés une
-// fonction par phase pour être remplis par la tâche A5 du plan (doc 15).
+// P1 : reconstruction du snapshot + démarrage du moteur physique.
+// P2 : instanciation de l'artefact dans le contexte restreint (A6) —
+//      load_failed / load_timeout (watchdog d'échéance + setInterrupted).
+// P3 : MEOW_BENCH_IDLE_TICKS ticks accélérés — tick_budget / object_quota
+//      (runaway_alloc est porté par le watchdog RSS, toutes phases).
+// P4 : stimuli génériques sur les hooks réellement abonnés en P2 —
+//      event_budget / event_flood / memory_quota / writeset_violation.
+// P5 : teardown — timers actifs et objets survivants → leak.
 // ============================================================================
 
 #include "bench_job.h"
 
 #include "game/physics/pattounx_engine_v2.h"
 
+#include "ai/sandbox/meow_game_api.h"
+
 #include <QJsonObject>
 #include <QRandomGenerator>
+#include <QVector>
 
 class Map;
+class QObject;
+class QQmlComponent;
+class RestrictedContext;
 
 struct PhaseResult
 {
@@ -40,41 +51,51 @@ public:
     explicit BenchPhases(const BenchJob &job);
     ~BenchPhases();
 
-    // P1 — Reconstruction : recharge le snapshot map (chemin de sérialisation
-    // existant, même format que le full-sync collab) + démarre le moteur
-    // physique à vide (quelques ticks). Échec → snapshot_invalid.
     PhaseResult runP1Reconstruction();
-
-    // P2 — Instanciation de l'artefact dans le contexte restreint.
-    // STUB : l'artefact n'est pas instancié au squelette (dépend de A6,
-    // contexte restreint + façade Meow.GameApi). Codes cibles : load_failed,
-    // load_timeout (> MEOW_BENCH_LOAD_TIMEOUT_MS).
     PhaseResult runP2Instantiation();
-
-    // P3 — Simulation à vide : MEOW_BENCH_IDLE_TICKS ticks accélérés.
-    // STUB : quelques ticks réels sont déjà faits en P1 ; la mesure
-    // tick_budget/runaway_alloc par tick viendra avec A5.
     PhaseResult runP3IdleSimulation();
-
-    // P4 — Stimulation : rejoue job.stimuli (event_budget, event_flood,
-    // memory_quota, writeset_violation). STUB au squelette.
     PhaseResult runP4Stimulation();
-
-    // P5 — Teardown : détruit l'artefact et vérifie la libération (leak).
-    // Au squelette : libère la carte reconstruite en P1.
     PhaseResult runP5Teardown();
 
-    // Métriques collectées (doc 12 §4) — partiel au squelette : loadMs,
-    // tileCount, idleTicks.
+    // Métriques collectées (doc 12 §4) : loadMs, tickUsP50/P95/Max,
+    // handlerUsP95 (par hook), objectCount, writeSet, emitRate, …
     QJsonObject metrics() const { return m_metrics; }
 
 private:
+    // Budgets effectifs : job.budgets (source de vérité côté jeu, doc 12
+    // §2.3) avec repli sur les #define D34 de bench_constants.h.
+    struct Budgets
+    {
+        double maxHandlerMs;
+        double maxTickMs;
+        double maxMemMB; // non appliqué au MVP (cf. bench_constants.h)
+        int maxObjects;
+        int maxEmitPerS;
+        int memValueKb;
+        int loadTimeoutMs;
+        int idleTicks;
+    };
+
+    Budgets effectiveBudgets() const;
+    int liveObjectCount() const; // racine + descendants QObject (poll)
+    qint64 runOneTick();         // step physique + processEvents borné, en ns
+    void recordHandlerCalls(const QVector<MeowHandlerCall> &calls);
+
     const BenchJob &m_job;
     Map *m_map = nullptr;
     pattounx::PattounX_engine m_engine;
     QRandomGenerator m_rng; // seedée par job.seed — toute source d'aléa du
                             // banc doit passer par elle (reproductibilité R1)
     QJsonObject m_metrics;
+
+    Budgets m_budgets{};
+    RestrictedContext *m_ctx = nullptr;
+    QQmlComponent *m_component = nullptr;
+    QObject *m_root = nullptr;
+
+    // ns par appel de handler, agrégés par nom ("on(zoneEntered)", …).
+    QHash<QString, QVector<qint64>> m_handlerNs;
+    QStringList m_handlerErrors;
 };
 
 #endif // BENCH_PHASES_H
