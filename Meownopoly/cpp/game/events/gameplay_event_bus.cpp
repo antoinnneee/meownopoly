@@ -81,6 +81,7 @@ QVariantMap GameplayEvent::toVariantMap() const
     m.insert(QStringLiteral("version"), static_cast<int>(version));
     m.insert(QStringLiteral("durable"), durability == EventDurability::Durable);
     m.insert(QStringLiteral("wallTs"), wallTs);
+    m.insert(QStringLiteral("seq"), seq);
     m.insert(QStringLiteral("payload"), payload);
     return m;
 }
@@ -178,14 +179,38 @@ void GameplayEventBus::dispatchIngest(const meow::GameplayEvent &ev)
 void GameplayEventBus::ingest(meow::GameplayEvent ev)
 {
     ev.logicalTs = tickLamport();
+    ev.seq       = m_nextSeq++;   // séquence d'audit strictement monotone (D2)
 
     m_journal.append(ev);
     if (m_journal.size() > k_journalCap)
         m_journal.remove(0, m_journal.size() - k_journalCap);
 
+    // Noyau d'audit non désactivable (D19) : seuls les durables, rétention
+    // configurable, indépendante du journal général.
+    if (ev.durability == meow::EventDurability::Durable) {
+        m_auditLog.append(ev);
+        if (m_auditRetention > 0 && m_auditLog.size() > m_auditRetention)
+            m_auditLog.remove(0, m_auditLog.size() - m_auditRetention);
+    }
+
     ++m_eventCount;
     emit eventCountChanged();
     emit eventPublished(ev.toVariantMap());
+}
+
+quint64 GameplayEventBus::oldestSeq() const
+{
+    return m_journal.isEmpty() ? m_nextSeq : m_journal.first().seq;
+}
+
+void GameplayEventBus::setAuditRetention(int cap)
+{
+    if (cap == m_auditRetention) return;
+    m_auditRetention = cap;
+    if (m_auditRetention > 0 && m_auditLog.size() > m_auditRetention)
+        m_auditLog.remove(0, m_auditLog.size() - m_auditRetention);
+    emit auditRetentionChanged();
+    emit eventCountChanged(); // rafraîchit auditCount
 }
 
 QVariantList GameplayEventBus::recentEvents(int max) const
@@ -197,6 +222,69 @@ QVariantList GameplayEventBus::recentEvents(int max) const
     out.reserve(n - start);
     for (int i = start; i < n; ++i)
         out.append(m_journal.at(i).toVariantMap());
+    return out;
+}
+
+// ---- D2 : curseur de reprise + noyau d'audit ------------------------------
+
+QVariantMap GameplayEventBus::eventsSince(quint64 cursor, int max) const
+{
+    if (max <= 0) max = 256;
+
+    const quint64 head   = m_nextSeq - 1;
+    const quint64 oldest = oldestSeq();
+
+    // Décrochage : le curseur pointe avant le plus ancien encore disponible →
+    // le différentiel est incomplet, le consommateur doit re-snapshoter (Q-E06).
+    const bool truncated = (cursor + 1 < oldest);
+
+    QVariantList events;
+    quint64 nextCursor = cursor;
+    for (const meow::GameplayEvent &ev : m_journal) {
+        if (ev.seq <= cursor) continue;
+        events.append(ev.toVariantMap());
+        nextCursor = ev.seq;
+        if (events.size() >= max) break;
+    }
+
+    QVariantMap out;
+    out.insert(QStringLiteral("events"), events);
+    out.insert(QStringLiteral("count"), events.size());
+    out.insert(QStringLiteral("nextCursor"), nextCursor);
+    out.insert(QStringLiteral("head"), head);
+    out.insert(QStringLiteral("oldestSeq"), oldest);
+    out.insert(QStringLiteral("truncated"), truncated);
+    return out;
+}
+
+QVariantMap GameplayEventBus::extractAuditCore(const meow::GameplayEvent &ev)
+{
+    // Champs du noyau d'audit D11, extraits du payload s'ils y figurent. Tant
+    // que la couche proposition/arbitrage (Phase 2) ne les émet pas, ils
+    // restent absents — la structure est prête sans invention de données.
+    static const char *const k_keys[] = {
+        "proposition", "verdict", "reasons", "amendment", "appliedVersion",
+    };
+    QVariantMap core;
+    for (const char *k : k_keys) {
+        const QString key = QString::fromLatin1(k);
+        if (ev.payload.contains(key))
+            core.insert(key, ev.payload.value(key));
+    }
+    return core;
+}
+
+QVariantList GameplayEventBus::auditLog(quint64 sinceSeq, int max) const
+{
+    QVariantList out;
+    if (max <= 0) max = 256;
+    for (const meow::GameplayEvent &ev : m_auditLog) {
+        if (ev.seq <= sinceSeq) continue;
+        QVariantMap m = ev.toVariantMap();
+        m.insert(QStringLiteral("audit"), extractAuditCore(ev));
+        out.append(m);
+        if (out.size() >= max) break;
+    }
     return out;
 }
 

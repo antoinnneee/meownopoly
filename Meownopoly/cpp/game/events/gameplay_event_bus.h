@@ -39,6 +39,20 @@ class GameplayEventBus : public QObject
     Q_PROPERTY(quint64 eventCount READ eventCount NOTIFY eventCountChanged)
     // Dernière valeur d'horloge de Lamport attribuée.
     Q_PROPERTY(qint64 logicalClock READ logicalClock NOTIFY eventCountChanged)
+    // --- D2 : curseur d'audit (D19) ---
+    // Prochaine séquence d'audit à attribuer (= curseur de tête ; un
+    // events_poll(cursor) avec cursor == cursorHead ne renvoie rien de nouveau).
+    Q_PROPERTY(quint64 cursorHead READ cursorHead NOTIFY eventCountChanged)
+    // Plus ancienne séquence encore consultable dans le journal borné. Si un
+    // curseur consommateur est < oldestSeq, il a « décroché » → re-snapshot.
+    Q_PROPERTY(quint64 oldestSeq READ oldestSeq NOTIFY eventCountChanged)
+    // Taille courante du noyau d'audit (durables retenus, non désactivable).
+    Q_PROPERTY(int auditCount READ auditCount NOTIFY eventCountChanged)
+    // Rétention configurable du noyau d'audit (D19 : durée/verbosité/export
+    // configurables ; le noyau lui-même reste non désactivable). Nombre max
+    // d'événements durables conservés en mémoire.
+    Q_PROPERTY(int auditRetention READ auditRetention WRITE setAuditRetention
+                   NOTIFY auditRetentionChanged)
 
 public:
     static void registerQml();
@@ -47,6 +61,11 @@ public:
 
     quint64 eventCount() const   { return m_eventCount; }
     qint64  logicalClock() const { return m_logicalClock; }
+    quint64 cursorHead() const   { return m_nextSeq - 1; }
+    quint64 oldestSeq() const;
+    int     auditCount() const   { return m_auditLog.size(); }
+    int     auditRetention() const { return m_auditRetention; }
+    void    setAuditRetention(int cap);
 
     // Publication programmatique d'un événement. Utilisée par l'ingestion des
     // sources et, à terme, par les artefacts/règles. Retourne l'id généré.
@@ -68,14 +87,40 @@ public:
     Q_INVOKABLE void syncLogicalClock(qint64 remoteTs);
 
     // Journal courant (borné) projeté en QVariantMap, du plus ancien au plus
-    // récent. Socle pour tests/debug ; D2 fournira curseur + snapshot robustes.
+    // récent. Socle pour tests/debug ; le curseur robuste est eventsSince().
     Q_INVOKABLE QVariantList recentEvents(int max = 100) const;
+
+    // --- D2 : curseur de reprise (D19 / Q-E06, socle de events_poll D4) ---
+    // Renvoie les événements de séquence STRICTEMENT supérieure à `cursor`, au
+    // plus `max`, du plus ancien au plus récent, sous la forme d'un snapshot :
+    //   {
+    //     events:     [ { …, seq }… ],   // charges projetées, ordonnées par seq
+    //     count:      int,               // events.size()
+    //     nextCursor: quint64,           // à repasser au prochain appel
+    //     head:       quint64,           // cursorHead au moment de l'appel
+    //     oldestSeq:  quint64,           // plus ancienne seq encore consultable
+    //     truncated:  bool,              // true si cursor < oldestSeq (décrochage)
+    //   }
+    // `truncated == true` signifie que des événements postérieurs au curseur ont
+    // déjà été évincés du journal borné : le consommateur doit re-synchroniser
+    // par un snapshot d'état plutôt que par différentiel (Q-E06).
+    Q_INVOKABLE QVariantMap eventsSince(quint64 cursor, int max = 256) const;
+
+    // --- D2 : noyau d'audit non désactivable (D19) ---
+    // Journal des seuls événements DURABLES (durabilityOf), retenu quoi qu'il
+    // arrive tant qu'une action reste undoable/rejouable. Chaque entrée porte,
+    // en plus de la charge, un sous-objet `audit` extrayant les champs du noyau
+    // D11 présents dans le payload (proposition, verdict, raisons, amendement,
+    // version appliquée) — vides tant que la couche proposition (Phase 2)
+    // n'émet pas ces champs. Renvoie les entrées de seq > `sinceSeq`.
+    Q_INVOKABLE QVariantList auditLog(quint64 sinceSeq = 0, int max = 256) const;
 
 signals:
     // Émis pour chaque événement ingéré (durable ou éphémère). Les abonnés
     // filtrent par `source`/`type`/`durability` dans la charge projetée.
     void eventPublished(const QVariantMap &event);
     void eventCountChanged();
+    void auditRetentionChanged();
 
 private:
     explicit GameplayEventBus(QObject *parent = nullptr);
@@ -98,14 +143,29 @@ private:
     void connectTiles();
     void connectPhysics();
 
+    // Extraction du sous-objet d'audit (noyau D11) depuis le payload d'un
+    // événement durable — proposition/verdict/raisons/amendement/version.
+    static QVariantMap extractAuditCore(const meow::GameplayEvent &ev);
+
     bool    m_sourcesConnected = false;
     qint64  m_logicalClock     = 0;
     quint64 m_eventCount       = 0;
 
-    // Journal en mémoire, borné (ring souple). Remplacé par curseur+snapshot
-    // durables en D2.
+    // --- D2 : curseur d'audit ---
+    // Séquence d'audit strictement monotone attribuée à l'ingestion. `m_nextSeq`
+    // est la prochaine valeur libre (curseur de tête = m_nextSeq - 1).
+    quint64 m_nextSeq = 1;
+
+    // Journal général en mémoire, borné (ring souple). Alimente recentEvents()
+    // et eventsSince() (events_poll). Chaque entrée porte sa `seq`.
     QVector<meow::GameplayEvent> m_journal;
     static constexpr int k_journalCap = 4096;
+
+    // Noyau d'audit non désactivable (D19) : seuls les événements DURABLES,
+    // retenus au-delà du journal général (rétention configurable). Ordonné par
+    // seq croissante comme m_journal.
+    QVector<meow::GameplayEvent> m_auditLog;
+    int m_auditRetention = 16384;
 };
 
 #endif // GAMEPLAY_EVENT_BUS_H

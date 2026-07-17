@@ -99,6 +99,13 @@ struct GameplayEvent {
     QVariantMap     payload;                                  // charge utile spécifique au type
     qint64          wallTs     = 0;                           // horodatage mur (ms epoch), audit humain
 
+    // --- D2 : curseur d'audit (D19) ---
+    // Séquence d'audit strictement monotone (+1 par événement ingéré, JAMAIS de
+    // saut — distincte de logicalTs/Lamport qui peut bondir à syncLogicalClock).
+    // C'est LA clé de reprise du curseur `events_poll` (D4) et de l'ordre du
+    // noyau d'audit. `seq == 0` = non encore ingéré.
+    quint64         seq        = 0;
+
     // Projection QVariantMap pour QML / journalisation / futur events_poll (D4).
     QVariantMap toVariantMap() const;
 };
