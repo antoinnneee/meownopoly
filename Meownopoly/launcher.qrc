@@ -18,5 +18,6 @@
     <file>qml/launcher/InlineColorPicker.qml</file>
     <file>qml/launcher/StyledCheckBox.qml</file>
     <file>qml/launcher/TrashIcon.qml</file>
+    <file>qml/launcher/AiHostLobby.qml</file>
     </qresource>
 </RCC>

@@ -9,6 +9,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QUuid>
 #include <QUrl>
 #include <QDebug>
@@ -48,6 +49,24 @@
 #  define MEOW_AI_OUTPUT_BUFFER_BYTES (64 * 1024)
 #endif
 
+// — Handshake arbitre (C6, D24/D31) —
+// Version de protocole du canal attendue. Co-versionnée AVEC le manifeste
+// (channel_manifest.json → protocolVersion, aujourd'hui 1.0.0) et le contrat
+// machine généré (D17) : à régénérer/re-synchroniser en M12/T5-2. Recopie
+// manuelle assumée au MVP, comme la table ToolDef de la passerelle.
+#ifndef MEOW_AI_PROTOCOL_VERSION
+#  define MEOW_AI_PROTOCOL_VERSION "1.0.0"
+#endif
+// Capacité (tool) que l'arbitre DOIT voir pour prouver son rôle (challenge D24).
+#ifndef MEOW_AI_ARBITER_CAPABILITY
+#  define MEOW_AI_ARBITER_CAPABILITY "arbiter_verdict"
+#endif
+// Borne d'un challenge de handshake (l'agent doit répondre vite). En deçà, on
+// considère l'arbitre indisponible (Erreur), pas un plantage à redémarrer.
+#ifndef MEOW_AI_HANDSHAKE_TIMEOUT_MS
+#  define MEOW_AI_HANDSHAKE_TIMEOUT_MS 25000
+#endif
+
 namespace {
 
 // Wrapper de QProcess::ExitStatus / ProcessError en int pour découplage header.
@@ -58,6 +77,11 @@ QString roleName(AiProcessSupervisor::Role r)
     return r == AiProcessSupervisor::Arbiter ? QStringLiteral("arbiter")
                                              : QStringLiteral("proposer");
 }
+
+// Marqueur machine que l'agent arbitre émet sur stdout au terme du challenge.
+// Format : `MEOW_ARBITER_HANDSHAKE:{"role":"arbiter","protocolVersion":"1.0.0",
+//           "capabilities":["arbiter_verdict", ...]}`.
+constexpr const char *kHandshakeMarker = "MEOW_ARBITER_HANDSHAKE:";
 
 } // namespace
 
@@ -154,6 +178,18 @@ int AiProcessSupervisor::stateOf(int role) const
 
 int AiProcessSupervisor::lobbyState(int role) const
 {
+    // Le résultat du handshake prime sur l'état brut du process : un arbitre
+    // challengé avec succès reste `Prêt` même une fois son process one-shot
+    // terminé (Stopped) ; un échec latche `Erreur` jusqu'au prochain test (D31).
+    const Agent *a = agentFor(role);
+    if (a) {
+        switch (a->handshakePhase) {
+        case HsInProgress: return Testing;
+        case HsPassed:     return Prete;
+        case HsFailed:     return Erreur;
+        default:           break; // HsNone → projection de l'état process
+        }
+    }
     switch (static_cast<State>(stateOf(role))) {
     case Stopped:    return Absent;
     case Starting:   return Testing;
@@ -162,6 +198,23 @@ int AiProcessSupervisor::lobbyState(int role) const
     case Failed:     return Erreur;
     }
     return Absent;
+}
+
+bool AiProcessSupervisor::arbiterReady() const
+{
+    const Agent *a = agentFor(Arbiter);
+    return a && a->handshakePhase == HsPassed;
+}
+
+QString AiProcessSupervisor::arbiterHandshakeReason() const
+{
+    const Agent *a = agentFor(Arbiter);
+    return a ? a->handshakeReason : QString();
+}
+
+QString AiProcessSupervisor::protocolVersion() const
+{
+    return QStringLiteral(MEOW_AI_PROTOCOL_VERSION);
 }
 
 bool AiProcessSupervisor::isRunning(int role) const
@@ -210,10 +263,14 @@ void AiProcessSupervisor::setState(Agent *a, State s, const QString &reason)
 
 void AiProcessSupervisor::emitStateFor(Role role)
 {
-    if (role == Proposer)
+    if (role == Proposer) {
         emit proposerStateChanged();
-    else
+    } else {
         emit arbiterStateChanged();
+        // La projection lobby de l'arbitre dépend de l'état process quand aucun
+        // handshake n'est en jeu (HsNone) : la garder synchrone.
+        emit arbiterLobbyStateChanged();
+    }
 }
 
 // ============================================================================
@@ -400,6 +457,13 @@ void AiProcessSupervisor::onFinished(Agent *a, int exitCode, int exitStatus)
     }
     cleanupMcpFileOnly(a);
 
+    // C6 — un challenge d'arbitre en cours court-circuite la politique normale
+    // (invocation/restart) : le résultat est décidé par la sortie du one-shot.
+    if (a->handshakePhase == HsInProgress) {
+        finishArbiterHandshake(a, output, crashed);
+        return;
+    }
+
     if (a->oneShot && !crashed && exitCode == 0) {
         // Invocation terminée normalement.
         emit invocationCompleted(a->role, exitCode, output);
@@ -446,6 +510,11 @@ void AiProcessSupervisor::onErrorOccurred(Agent *a, int processError)
         a->lastError = QStringLiteral("binaire introuvable ou non lançable");
         emit logMessage(QStringLiteral("[AiSupervisor] %1 échec de lancement")
                             .arg(roleName(a->role)));
+        // Un challenge d'arbitre qui n'a même pas pu démarrer = Erreur latchée.
+        if (a->handshakePhase == HsInProgress) {
+            finishArbiterHandshake(a, QString(), /*crashed*/ false);
+            return;
+        }
         // Échec de lancement = pas de redémarrage en boucle : Failed direct.
         setState(a, Failed, a->lastError);
     }
@@ -616,6 +685,155 @@ void AiProcessSupervisor::notifyHandshake(int role, bool ok, const QString &reas
         forceKill(a);
         setState(a, Failed, a->lastError);
     }
+}
+
+// ============================================================================
+// Handshake + challenge arbitre (C6, D24/D31)
+// ============================================================================
+
+QString AiProcessSupervisor::defaultChallengePrompt()
+{
+    // Prompt de challenge : demande à l'agent de se connecter au canal MCP, de
+    // vérifier qu'il voit le tool de verdict (challenge de capacité) et de
+    // renvoyer une ligne machine attestant rôle + version + capacités. L'agent
+    // ne peut renseigner honnêtement ces champs qu'après connexion au canal.
+    return QStringLiteral(
+        "Handshake d'arbitre (challenge). Connecte-toi au serveur MCP fourni "
+        "(mcpServers.meownopoly), liste les tools disponibles, puis réponds par "
+        "UNE SEULE ligne, sans autre texte, au format exact :\n"
+        "%1{\"role\":\"arbiter\",\"protocolVersion\":\"<version annoncée par le "
+        "serveur MCP>\",\"capabilities\":[<noms des tools que tu vois>]}\n"
+        "N'invente aucune valeur : recopie la version de protocole et les noms de "
+        "tools tels que le serveur MCP te les expose.")
+        .arg(QString::fromLatin1(kHandshakeMarker));
+}
+
+bool AiProcessSupervisor::testArbiter(const QVariantMap &opts)
+{
+    Agent *a = agentFor(Arbiter, /*create*/ true);
+    if (a->process) {
+        emit logMessage(QStringLiteral(
+            "[AiSupervisor] handshake arbitre ignoré — un process est déjà en cours"));
+        return false;
+    }
+
+    QVariantMap o = opts;
+    o.insert(QStringLiteral("oneShot"), true); // un challenge = une invocation
+    if (o.value(QStringLiteral("prompt")).toString().isEmpty())
+        o.insert(QStringLiteral("prompt"), defaultChallengePrompt());
+    // Borne dédiée : un arbitre qui ne répond pas au challenge est indisponible.
+    if (!o.contains(QStringLiteral("invocationTimeoutMs")))
+        o.insert(QStringLiteral("invocationTimeoutMs"), MEOW_AI_HANDSHAKE_TIMEOUT_MS);
+
+    // Entre en phase de test AVANT le lancement : l'indicateur passe à
+    // « Test en cours » (D31) et le résultat éventuel précédent est effacé.
+    a->handshakePhase = HsInProgress;
+    a->handshakeReason.clear();
+    a->lastError.clear(); // repart propre : finishArbiterHandshake lit lastError
+    emit handshakeStarted(Arbiter);
+    emit arbiterLobbyStateChanged();
+    emit logMessage(QStringLiteral("[AiSupervisor] handshake arbitre : challenge lancé"));
+
+    if (!startAgent(Arbiter, o)) {
+        // Lancement refusé (ex. rôle déjà en cours après coup) → Erreur latchée.
+        a->handshakePhase = HsFailed;
+        a->handshakeReason = QStringLiteral("impossible de lancer l'agent arbitre");
+        a->lastError = a->handshakeReason;
+        emit handshakeCompleted(Arbiter, false, a->handshakeReason);
+        emit arbiterLobbyStateChanged();
+        return false;
+    }
+    return true;
+}
+
+bool AiProcessSupervisor::evaluateHandshakeOutput(const QString &output, QString *reason)
+{
+    const auto fail = [reason](const QString &r) {
+        if (reason) *reason = r;
+        return false;
+    };
+
+    const int markerAt = output.lastIndexOf(QString::fromLatin1(kHandshakeMarker));
+    if (markerAt < 0)
+        return fail(QStringLiteral(
+            "l'arbitre n'a pas répondu au handshake (marqueur absent)"));
+
+    // Isole la charge JSON après le marqueur, jusqu'à la fin de ligne.
+    int start = markerAt + static_cast<int>(qstrlen(kHandshakeMarker));
+    int end = output.indexOf('\n', start);
+    if (end < 0) end = output.size();
+    const QString jsonText = output.mid(start, end - start).trimmed();
+
+    QJsonParseError perr {};
+    const QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &perr);
+    if (perr.error != QJsonParseError::NoError || !doc.isObject())
+        return fail(QStringLiteral("réponse de handshake illisible (JSON invalide)"));
+
+    const QJsonObject obj = doc.object();
+
+    // 1) Handshake de rôle : l'agent doit revendiquer `arbiter`.
+    if (obj.value(QStringLiteral("role")).toString() != QStringLiteral("arbiter"))
+        return fail(QStringLiteral("l'agent n'a pas revendiqué le rôle d'arbitre"));
+
+    // 2) Version de protocole : doit correspondre au manifeste (D17).
+    const QString proto = obj.value(QStringLiteral("protocolVersion")).toString();
+    if (proto != QStringLiteral(MEOW_AI_PROTOCOL_VERSION))
+        return fail(QStringLiteral("version de protocole incompatible (arbitre %1, jeu %2)")
+                        .arg(proto.isEmpty() ? QStringLiteral("?") : proto,
+                             QStringLiteral(MEOW_AI_PROTOCOL_VERSION)));
+
+    // 3) Challenge de capacité : le tool de verdict doit être visible (le
+    //    token/rôle ne l'expose qu'à un vrai arbitre, D20/C2).
+    const QJsonArray caps = obj.value(QStringLiteral("capabilities")).toArray();
+    bool hasVerdict = false;
+    for (const QJsonValue &c : caps) {
+        if (c.toString() == QStringLiteral(MEOW_AI_ARBITER_CAPABILITY)) {
+            hasVerdict = true;
+            break;
+        }
+    }
+    if (!hasVerdict)
+        return fail(QStringLiteral("l'arbitre n'accède pas au tool de verdict (%1)")
+                        .arg(QStringLiteral(MEOW_AI_ARBITER_CAPABILITY)));
+
+    if (reason) reason->clear();
+    return true;
+}
+
+void AiProcessSupervisor::finishArbiterHandshake(Agent *a, const QString &output,
+                                                 bool crashed)
+{
+    QString reason;
+    bool ok = false;
+    if (!a->lastError.isEmpty() && a->lastError.contains(QStringLiteral("timeout"))) {
+        // Timeout (démarrage/invocation) posé par le socle, qui kill le process :
+        // prime sur le CrashExit induit — l'arbitre n'a simplement pas répondu.
+        reason = QStringLiteral("l'arbitre n'a pas répondu au challenge (timeout)");
+    } else if (crashed) {
+        reason = QStringLiteral("l'agent arbitre a planté pendant le handshake");
+    } else if (output.isEmpty() && !a->lastError.isEmpty()) {
+        // Échec de lancement (binaire introuvable…) remonté par onErrorOccurred.
+        reason = a->lastError;
+    } else {
+        ok = evaluateHandshakeOutput(output, &reason);
+    }
+
+    a->handshakePhase = ok ? HsPassed : HsFailed;
+    a->handshakeReason = ok ? QString() : reason;
+    if (!ok)
+        a->lastError = reason;
+    a->intentionalStop = false; // le one-shot est fini normalement de notre POV
+    a->restartCount = 0;
+
+    // Le process one-shot est déjà terminé → état process Stopped ; la
+    // projection lobby lit handshakePhase et affiche Prêt/Erreur (latché).
+    setState(a, Stopped, ok ? QString() : reason);
+
+    emit logMessage(QStringLiteral("[AiSupervisor] handshake arbitre : %1%2")
+                        .arg(ok ? QStringLiteral("PRÊT") : QStringLiteral("ÉCHEC"),
+                             ok ? QString() : QStringLiteral(" — ") + reason));
+    emit handshakeCompleted(Arbiter, ok, reason);
+    emit arbiterLobbyStateChanged();
 }
 
 // ============================================================================

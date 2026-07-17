@@ -65,6 +65,21 @@ class AiProcessSupervisor : public QObject
     Q_PROPERTY(int proposerState READ proposerState NOTIFY proposerStateChanged)
     Q_PROPERTY(int arbiterState READ arbiterState NOTIFY arbiterStateChanged)
 
+    // — Handshake / challenge arbitre (C6, D24/D31) —
+    // Indicateur lobby 4-états DÉDIÉ à l'arbitre : intègre le résultat du
+    // handshake (Prêt uniquement si le challenge a réussi, même une fois le
+    // process one-shot terminé). C'est cette propriété que le lobby lie pour
+    // l'indicateur et pour griser « Héberger une partie IA ».
+    Q_PROPERTY(int arbiterLobbyState READ arbiterLobbyState NOTIFY arbiterLobbyStateChanged)
+    // Vrai ssi le dernier handshake arbitre a réussi (rôle + capacité + version
+    // de protocole vérifiés). Gate direct du bouton d'hébergement (D31).
+    Q_PROPERTY(bool arbiterReady READ arbiterReady NOTIFY arbiterLobbyStateChanged)
+    // Motif actionnable du dernier échec de handshake (vide si succès/non testé).
+    Q_PROPERTY(QString arbiterHandshakeReason READ arbiterHandshakeReason NOTIFY arbiterLobbyStateChanged)
+    // Version de protocole du canal attendue par le jeu (co-versionnée avec le
+    // manifeste, D17). Comparée à celle que revendique l'agent au handshake.
+    Q_PROPERTY(QString protocolVersion READ protocolVersion CONSTANT)
+
 public:
     /// Rôle (identité locale) de l'agent supervisé (D6/D10). Valeurs stables
     /// (exposées à QML) : ne pas réordonner.
@@ -101,6 +116,10 @@ public:
     // — Propriétés d'état —
     int proposerState() const { return stateOf(Proposer); }
     int arbiterState() const { return stateOf(Arbiter); }
+    int arbiterLobbyState() const { return lobbyState(Arbiter); }
+    bool arbiterReady() const;
+    QString arbiterHandshakeReason() const;
+    QString protocolVersion() const;
 
     /// État courant d'un rôle (valeur de State ; Stopped si aucun agent).
     Q_INVOKABLE int stateOf(int role) const;
@@ -154,6 +173,38 @@ public:
     /// dans un état où cela a du sens.
     Q_INVOKABLE void notifyHandshake(int role, bool ok, const QString &reason = QString());
 
+    /**
+     * C6 — Handshake + challenge de l'arbitre (D24/D31).
+     *
+     * Lance l'agent `arbiter` en **one-shot** avec un prompt de challenge (via le
+     * canal MCP, D2/D20) et vérifie AVANT d'ouvrir le mode IA que :
+     *   - l'agent **revendique le rôle** `arbiter` (handshake de rôle) ;
+     *   - il **accède aux tools de verdict** (challenge de capacité — le
+     *     token/rôle de la passerelle ne lui expose `arbiter_verdict` que s'il est
+     *     réellement arbitre, D20/C2) ;
+     *   - il annonce la **même version de protocole** que le manifeste (D17).
+     *
+     * L'agent prouve tout cela en émettant sur stdout une ligne machine
+     * `MEOW_ARBITER_HANDSHAKE:{json}` (rôle, protocolVersion, capabilities) —
+     * qu'il ne peut renseigner honnêtement qu'après s'être connecté au canal.
+     *
+     * Projette l'indicateur lobby 4-états (D31) : `Test en cours` pendant le
+     * challenge, puis `Prêt` (succès) ou `Erreur` + motif (échec). Le résultat est
+     * **latché** : il survit à la fin du process one-shot (le lobby reste `Prêt`).
+     *
+     * `opts` : mêmes clés que startAgent (program/token/gatewayUrl/skillPath…).
+     * Un `prompt` par défaut de challenge est injecté si absent. `oneShot` est
+     * forcé. Test **automatique** à l'ouverture du lobby ET re-test **manuel**
+     * (bouton) appellent tous deux cette méthode (D31).
+     *
+     * Retourne false si un handshake/agent arbitre est déjà en cours.
+     */
+    Q_INVOKABLE bool testArbiter(const QVariantMap &opts = QVariantMap());
+
+    /// Vrai ssi le mode IA peut être hébergé (arbitre challengé avec succès).
+    /// Le bouton « Héberger une partie IA » est grisé tant que c'est faux (D31).
+    Q_INVOKABLE bool canHostAiGame() const { return arbiterReady(); }
+
 signals:
     void proposerStateChanged();
     void arbiterStateChanged();
@@ -168,6 +219,14 @@ signals:
     void outputReceived(int role, const QString &chunk, bool isError);
     /// Journalisation (à connecter au Logger comme les autres managers).
     void logMessage(const QString &message);
+
+    // — Handshake arbitre (C6) —
+    /// Émis quand un challenge d'arbitre démarre (indicateur → Test en cours).
+    void handshakeStarted(int role);
+    /// Émis à la fin du challenge : `ok` = arbitre prêt, `reason` = motif si échec.
+    void handshakeCompleted(int role, bool ok, const QString &reason);
+    /// Projection lobby 4-états de l'arbitre (intègre le résultat du handshake).
+    void arbiterLobbyStateChanged();
 
 private:
     explicit AiProcessSupervisor(QObject *parent = nullptr);
@@ -190,7 +249,13 @@ private:
         QString lastError;
         QString mcpConfigPath;            // fichier temporaire (token) à purger
         QVariantMap lastOpts;             // pour redémarrer à l'identique
+
+        // Handshake / challenge (C6). 0 = jamais testé (Absent), 1 = en cours
+        // (Test), 2 = réussi (Prêt, latché), 3 = échec (Erreur, latché).
+        int handshakePhase = 0;
+        QString handshakeReason;          // motif actionnable si phase == 3
     };
+    enum HandshakePhase { HsNone = 0, HsInProgress = 1, HsPassed = 2, HsFailed = 3 };
 
     Agent *agentFor(int role, bool create);
     const Agent *agentFor(int role) const;
@@ -198,6 +263,15 @@ private:
     // — Machine à états —
     void setState(Agent *a, State s, const QString &reason = QString());
     void emitStateFor(Role role);
+
+    // — Handshake arbitre (C6) —
+    // Évalue la sortie one-shot du challenge (cherche le marqueur, valide rôle /
+    // version de protocole / capacité de verdict). Renseigne `reason` si échec.
+    static bool evaluateHandshakeOutput(const QString &output, QString *reason);
+    // Clôt un handshake arbitre en cours (latche phase 2/3, projette le lobby).
+    void finishArbiterHandshake(Agent *a, const QString &output, bool crashed);
+    // Prompt de challenge par défaut poussé à l'arbitre si opts n'en fournit pas.
+    static QString defaultChallengePrompt();
 
     // — Cycle de vie process —
     bool launch(Agent *a, const QVariantMap &opts);
