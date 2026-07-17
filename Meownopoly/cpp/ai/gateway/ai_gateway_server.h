@@ -90,6 +90,12 @@ public:
     explicit AiGatewayServer(quint16 port, QObject *parent = nullptr);
     ~AiGatewayServer() override;
 
+    /// Instance unique de la passerelle si elle a été créée (opt-in
+    /// `--ai-gateway-port`), sinon nullptr. Un seul serveur vit à la fois
+    /// (patron `AutomationServer`). Sert aux vues de diagnostic (harness V3) à
+    /// lire l'état de la passerelle même lorsqu'elle est absente.
+    static AiGatewayServer *instance();
+
     /// Port effectivement écouté (0 si l'écoute a échoué ou HTTP indisponible).
     quint16 port() const { return m_port; }
     bool isListening() const;
@@ -250,6 +256,10 @@ private:
     static QJsonObject makeAppError(const QJsonValue &id, int rpcCode,
                                     const QString &appCode, const QString &message,
                                     bool retryable, const QJsonValue &details = QJsonValue());
+
+    // Instance unique (voir instance()). Posée à la construction, effacée à la
+    // destruction. Non-owning : l'ownership reste au parent QObject (main.cpp).
+    static AiGatewayServer *s_instance;
 
     quint16 m_port = 0;
 

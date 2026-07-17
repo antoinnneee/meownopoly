@@ -132,9 +132,18 @@ constexpr auto kAppBenchUnavailable = "bench_unavailable"; // banc n'a pas rendu
 // Construction / cycle de vie
 // ============================================================================
 
+AiGatewayServer *AiGatewayServer::s_instance = nullptr;
+
+AiGatewayServer *AiGatewayServer::instance()
+{
+    return s_instance;
+}
+
 AiGatewayServer::AiGatewayServer(quint16 port, QObject *parent)
     : QObject(parent)
 {
+    s_instance = this;
+
     // Tokens éphémères de session (D20) — générés quel que soit l'état de l'add-on
     // HTTP, pour que proposerToken()/arbiterToken() soient exploitables au spawn.
     initSessionTokens();
@@ -271,7 +280,11 @@ AiGatewayServer::AiGatewayServer(quint16 port, QObject *parent)
 #endif
 }
 
-AiGatewayServer::~AiGatewayServer() = default;
+AiGatewayServer::~AiGatewayServer()
+{
+    if (s_instance == this)
+        s_instance = nullptr;
+}
 
 bool AiGatewayServer::isListening() const
 {

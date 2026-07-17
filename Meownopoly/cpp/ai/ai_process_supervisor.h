@@ -205,6 +205,25 @@ public:
     /// Le bouton « Héberger une partie IA » est grisé tant que c'est faux (D31).
     Q_INVOKABLE bool canHostAiGame() const { return arbiterReady(); }
 
+    // — Diagnostic passerelle IA (lecture seule, harness) —
+    // La passerelle `AiGatewayServer` est instanciée opt-in dans main.cpp
+    // (--ai-gateway-port) et n'est pas un singleton QML. Le superviseur — qui
+    // injecte déjà son URL/token aux agents au spawn — expose ici son état en
+    // lecture pour les vues de diagnostic (harness V3). Ces valeurs sont stables
+    // après le démarrage : à lire au chargement / sur bouton « rafraîchir ».
+    /// Vrai si la passerelle a été instanciée (port demandé au lancement).
+    Q_INVOKABLE bool gatewayPresent() const;
+    /// Vrai si la passerelle écoute effectivement (add-on HTTP présent + bind ok).
+    Q_INVOKABLE bool gatewayListening() const;
+    /// Port loopback écouté (0 si absente / écoute échouée).
+    Q_INVOKABLE int gatewayPort() const;
+    /// Vrai si l'add-on QtHttpServer était présent à la compilation (MEOW_HAS_HTTP_SERVER).
+    Q_INVOKABLE bool gatewayHttpAvailable() const;
+    /// Token éphémère de rôle (D20) pour affichage de diagnostic — secret : à ne
+    /// montrer que dans le harness loopback, jamais journalisé. Vide si absente.
+    Q_INVOKABLE QString gatewayProposerToken() const;
+    Q_INVOKABLE QString gatewayArbiterToken() const;
+
 signals:
     void proposerStateChanged();
     void arbiterStateChanged();

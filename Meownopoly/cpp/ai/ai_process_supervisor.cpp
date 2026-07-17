@@ -1,5 +1,7 @@
 #include "ai_process_supervisor.h"
 
+#include "gateway/ai_gateway_server.h"
+
 #include <QCoreApplication>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -215,6 +217,42 @@ QString AiProcessSupervisor::arbiterHandshakeReason() const
 QString AiProcessSupervisor::protocolVersion() const
 {
     return QStringLiteral(MEOW_AI_PROTOCOL_VERSION);
+}
+
+// — Diagnostic passerelle IA (lecture seule) ————————————————————————————————
+
+bool AiProcessSupervisor::gatewayPresent() const
+{
+    return AiGatewayServer::instance() != nullptr;
+}
+
+bool AiProcessSupervisor::gatewayListening() const
+{
+    const AiGatewayServer *g = AiGatewayServer::instance();
+    return g && g->isListening();
+}
+
+int AiProcessSupervisor::gatewayPort() const
+{
+    const AiGatewayServer *g = AiGatewayServer::instance();
+    return g ? int(g->port()) : 0;
+}
+
+bool AiProcessSupervisor::gatewayHttpAvailable() const
+{
+    return AiGatewayServer::httpServerAvailable();
+}
+
+QString AiProcessSupervisor::gatewayProposerToken() const
+{
+    const AiGatewayServer *g = AiGatewayServer::instance();
+    return g ? g->proposerToken() : QString();
+}
+
+QString AiProcessSupervisor::gatewayArbiterToken() const
+{
+    const AiGatewayServer *g = AiGatewayServer::instance();
+    return g ? g->arbiterToken() : QString();
 }
 
 bool AiProcessSupervisor::isRunning(int role) const

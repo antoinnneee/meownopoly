@@ -1,11 +1,17 @@
 #include "slice_scenarios.h"
 
+#include <QCryptographicHash>
 #include <QElapsedTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QTimer>
 #include <QUuid>
 
 #include "slice_instrumentation.h"
+
+#include "../bench/bench_pool.h"
+#include "../bench/bench_protocol.h"
+#include "../sandbox/static_validator.h"
 
 #include "../proposal/proposal_envelope.h"
 #include "../proposal/proposal_lifecycle.h"
@@ -390,4 +396,81 @@ QVariantMap SliceScenarioRunner::runAll()
     out.insert(QStringLiteral("scenarios"), scenarios);
     out.insert(QStringLiteral("report"), instr->report());
     return out;
+}
+
+// ---------------------------------------------------------------------------
+//  Validation d'un artefact au banc réel (harness V3)
+// ---------------------------------------------------------------------------
+
+meow::bench::BenchPool *SliceScenarioRunner::ensureBenchPool()
+{
+    if (!m_benchPool) {
+        m_benchPool = new meow::bench::BenchPool(this);
+        connect(m_benchPool, &meow::bench::BenchPool::verdictReady, this,
+                [this](const QString &jobId, const QJsonObject &verdict) {
+                    QVariantMap m = verdict.toVariantMap();
+                    if (!m.contains(QStringLiteral("stage")))
+                        m.insert(QStringLiteral("stage"), QStringLiteral("bench"));
+                    emit artifactVerdictReady(jobId, m);
+                });
+    }
+    return m_benchPool;
+}
+
+QString SliceScenarioRunner::validateArtifact(const QString &source, const QString &targetUuid)
+{
+    namespace sb = meow::sandbox;
+
+    const QString jobId =
+        QStringLiteral("harness_") + QUuid::createUuid().toString(QUuid::WithoutBraces);
+
+    // — P0 statique d'abord (même ordre que le canal réel, doc 12 §3). —
+    sb::StaticValidationInput sin;
+    sin.source = source;
+    const sb::StaticValidationResult p0 = sb::StaticValidator::validate(sin);
+    if (!p0.passed()) {
+        QJsonObject verdict;
+        verdict.insert(QStringLiteral("jobId"), jobId);
+        verdict.insert(QStringLiteral("verdict"), QStringLiteral("fail"));
+        verdict.insert(QStringLiteral("stage"), QStringLiteral("P0"));
+        QJsonArray fs;
+        for (const sb::StaticFinding &f : p0.findings)
+            fs.append(f.toJson());
+        verdict.insert(QStringLiteral("failures"), fs);
+        QJsonObject metrics;
+        metrics.insert(QStringLiteral("imports"), QJsonArray::fromStringList(p0.imports));
+        verdict.insert(QStringLiteral("metrics"), metrics);
+        // Émission asynchrone (cohérent avec le chemin banc : le verdict arrive
+        // toujours après le retour de validateArtifact).
+        QTimer::singleShot(0, this, [this, jobId, verdict]() {
+            emit artifactVerdictReady(jobId, verdict.toVariantMap());
+        });
+        return jobId;
+    }
+
+    // — P0 franchi : job du banc hors-process (contrat bench_protocol). —
+    QJsonObject artifact;
+    artifact.insert(QStringLiteral("source"), source);
+    if (!targetUuid.isEmpty())
+        artifact.insert(QStringLiteral("targetUuid"), targetUuid);
+    artifact.insert(QStringLiteral("contentHash"),
+                    QString::fromLatin1(QCryptographicHash::hash(
+                        source.toUtf8(), QCryptographicHash::Sha256).toHex()));
+
+    QJsonObject snapshot;
+    snapshot.insert(QStringLiteral("map"), QJsonObject{});
+    snapshot.insert(QStringLiteral("memory"), QJsonObject{});
+    snapshot.insert(QStringLiteral("modules"), QJsonObject{});
+
+    QJsonObject job;
+    job.insert(QStringLiteral("jobId"), jobId);
+    job.insert(QStringLiteral("benchVersion"), meow::bench::kBenchVersion);
+    job.insert(QStringLiteral("snapshot"), snapshot);
+    job.insert(QStringLiteral("artifact"), artifact);
+    job.insert(QStringLiteral("budgets"), QJsonObject{});   // défauts du banc
+    job.insert(QStringLiteral("stimuli"), QJsonArray{});
+    job.insert(QStringLiteral("seed"), qint64(0));
+
+    ensureBenchPool()->submit(job);
+    return jobId;
 }
