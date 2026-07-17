@@ -55,6 +55,12 @@ file(GLOB_RECURSE SOURCES
 # (test.cpp a son propre main() et requiert RELIABLE_ENABLE_TESTS=1)
 list(FILTER SOURCES EXCLUDE REGEX ".*/reliable/test\\.cpp$")
 
+# Exclure le main() du banc d'essai hors-process (meow_testbench, tâche A1) :
+# il a son propre point d'entrée et n'appartient qu'à la cible meow_testbench
+# (EXCLUDE_FROM_ALL, sources listées explicitement plus bas). Sans cette
+# exclusion, le GLOB l'aspire dans l'exécutable principal → double `main`.
+list(FILTER SOURCES EXCLUDE REGEX ".*/ai/bench/meow_testbench_main\\.cpp$")
+
 # Headers C++
 file(GLOB_RECURSE HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/cpp/*.h"
@@ -231,6 +237,92 @@ if(WIN32)
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
+
+# ============================================================================
+# Banc d'essai hors-process (meow_testbench, D26 / doc v3 12) — tâche A1
+# ============================================================================
+# Exécutable jetable HEADLESS (-platform offscreen) qui rejoue tout artefact
+# QML/JS candidat avant son introduction en partie. Il réutilise l'arbre
+# source du jeu mais avec des sources LISTÉES EXPLICITEMENT (pas le GLOB) :
+# sérialisation de map + ItemSnapableFactory + cœur physique Pattounx v2
+# (Qt-free) + les types QML nécessaires. AUCUN module réseau n'est lié
+# (pas de Catway/chat/PhysicsSession/automation) — ceinture et bretelles avec
+# le préfiltre P0 (doc 12 §5). Liste calculée par clôture des #include du
+# cluster map/case/item_snapable/game (aucune dépendance réseau).
+#
+# Construction à la demande (EXCLUDE_FROM_ALL — un build générique l'ignore) :
+#   cmake --build build --config Release --target meow_testbench
+set(MEOW_TESTBENCH_SOURCES
+    # Point d'entrée du banc
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/meow_testbench_main.cpp
+    # Sérialisation de map + gestionnaires de fichiers
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/map.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/mapfilemanager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/mapinfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/playerprofile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/screeneffect.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/templatefilemanager.cpp
+    # maptypes.h porte un Q_NAMESPACE (enum MapType) sans .cpp associé —
+    # listé explicitement pour qu'AUTOMOC génère son staticMetaObject.
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/maptypes.h
+    # ItemSnapable + fabrique + sous-paramètres
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/ItemSnapable.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/itemsnapablefactory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/Displayparameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/decorationparameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/ZoneParameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/npcparameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/enemyparameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable/physicalobjectparameter.cpp
+    # Joueur + hiérarchie de cases (le singleton Game n'est PAS lié : il est
+    # couplé au réseau via game_loader → EditorOpBus → EditorSession, alors que
+    # le cluster map/case/item_snapable ne le référence qu'en en-tête ; la
+    # reconstruction de snapshot passe par Map + ItemSnapableFactory, doc 12 §10)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/player.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/Case.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseFactory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseCardBoardBox.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseCatDevice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseCatDoor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseCatNip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseCatPerks.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseFreeNap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseJail.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseKibbleDispenser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseRestArea.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case/CaseToJail.cpp
+    # Cœur physique Pattounx v2 (Qt-free, sans worker ni PhysicsSession)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/physics/pattounx_engine_v2.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/physics/collision2d.cpp
+    # Gestion d'assets (référencée par decorationparameter) + son générateur de
+    # métadonnées + logger
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/assetManager/asset_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/tools/metadata_generator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/tools/logger.cpp
+)
+
+qt_add_executable(meow_testbench EXCLUDE_FROM_ALL
+    ${MEOW_TESTBENCH_SOURCES}
+)
+
+target_include_directories(meow_testbench PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/case
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/item_snapable
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/tools
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/assetManager
+)
+
+# Aucun module réseau : Core + Gui + Qml suffisent (types QObject, pas de
+# QQuickItem ni de Widgets dans le cluster ; offscreen forcé au runtime).
+target_link_libraries(meow_testbench PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+)
 
 # ============================================================================
 # Tests unitaires (PattounX)
