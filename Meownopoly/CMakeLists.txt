@@ -36,6 +36,13 @@ find_package(Qt6 QUIET COMPONENTS Test)
 # Quand présent, on compile le composant ZoneCanvasPainter (rendu GPU 2D
 # via QRhi) et on définit MEOW_HAS_CANVAS_PAINTER pour le code C++ et QML.
 find_package(Qt6 QUIET COMPONENTS CanvasPainter)
+
+# HttpServer : add-on optionnel (D21, P0-1). Support la passerelle MCP
+# streamable HTTP loopback intégrée au jeu (M1, AiGatewayServer). À installer
+# via la Maintenance Tool sur le kit Qt 6.11.0 ; tant qu'absent, on définit
+# MEOW_HAS_HTTP_SERVER=0 et le repli documenté est un pont stdio
+# @modelcontextprotocol/sdk (patron automation_mcp/).
+find_package(Qt6 QUIET COMPONENTS HttpServer)
 # ============================================================================
 # Collecter les fichiers sources
 # ============================================================================
@@ -145,6 +152,17 @@ if (TARGET Qt6::CanvasPainter)
     message(STATUS "Qt6::CanvasPainter trouvé — ZoneCanvasPainter activé.")
 else()
     message(STATUS "Qt6::CanvasPainter absent (nécessite Qt 6.11+) — ZoneCanvasPainter désactivé.")
+endif()
+
+# Lien + flag pour la passerelle MCP streamable HTTP (D21) quand l'add-on
+# QtHttpServer est installé. Absent = repli pont stdio documenté (P0-1).
+if (TARGET Qt6::HttpServer)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::HttpServer)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MEOW_HAS_HTTP_SERVER=1)
+    message(STATUS "Qt6::HttpServer trouvé — passerelle MCP streamable HTTP activée.")
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MEOW_HAS_HTTP_SERVER=0)
+    message(STATUS "Qt6::HttpServer absent (add-on à installer via Maintenance Tool) — repli pont stdio (automation_mcp/).")
 endif()
 
 # ============================================================================
