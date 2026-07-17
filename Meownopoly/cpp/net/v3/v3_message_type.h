@@ -40,13 +40,22 @@ enum Value : quint8 {
     /// `V3Protocol::isV3Packet` (plage `>= Base && <= <dernier type>`).
     Base = 0x60,
 
-    // ── À pourvoir (P0-3 réserve la plage, les tâches suivantes l'occupent) ──
-    // ProposalSession  (D40) : Hello / Welcome / Proposal / Ack / Reject / …
-    // StateBus         (D35) : mises à jour d'état supersédables (seq monotone).
-    // Transaction              : commit / rollback applicatifs.
-    // SessionMigration         : annonce de départ hôte, ré-élection V3.
+    /// Enveloppe commune V3 (B1). Aiguillage de transport unique : tout paquet
+    /// V3 est un `[0x60][enveloppe JSON]`, l'enveloppe porte le `kind`
+    /// applicatif (ProposalSession, StateBus, Transaction, migration…) dans
+    /// son propre champ. Les familles applicatives se distinguent par `kind`,
+    /// pas par un octet de tête distinct — un seul point d'entrée réseau.
+    Envelope = 0x60,
+
+    // ── À pourvoir (les tâches suivantes occupent la plage si un aiguillage ──
+    // ── de transport distinct s'avère nécessaire ; par défaut tout passe par ──
+    // ── `Envelope` et se discrimine sur `kind`) : ──
+    // ProposalSession  (D40) : kind "proposal.*".
+    // StateBus         (D35) : kind "state.*" (seq monotone dans l'enveloppe).
+    // Transaction              : kind "tx.*" (commit / rollback applicatifs).
+    // SessionMigration         : kind "session.*" (départ hôte, ré-élection).
     //
-    // Contrainte : chaque nouvelle valeur doit rester la plus haute de l'enum
+    // Contrainte : toute nouvelle valeur doit rester la plus haute de l'enum
     // (comme PhysicsMessageType) pour un filtrage par plage sûr.
 };
 Q_ENUM_NS(Value)
