@@ -1,23 +1,26 @@
 {
-  "$meow_draft": {
-    "status": "BROUILLON — proposition NON ratifiée. À décider par Antoine et Valou.",
-    "purpose": "Proposition de manifeste versionné du canal IA (D17). Source de vérité unique visée pour M1 (passerelle MCP) et M12 (skill générée). Ce fichier N'EST PAS branché au build : c'est le support de décision de la tâche P0-4 (Q-E08 tools MVP + Q-E06 résumé/curseur d'événements). Rien n'est figé tant qu'Antoine/Valou n'ont pas validé/amendé.",
-    "decisionOwners": "à trancher (cf. Q-J08 / P0-5)",
+  "$meow_status": {
+    "status": "RATIFIÉ — Q-E08 et Q-E06 tranchées par Antoine le 2026-07-17 (décisions D43/D44). Relecture Valou à faire au titre de Q-J08 (non encore répartie).",
+    "purpose": "Manifeste versionné du canal IA (D17). Source de vérité unique pour M1 (passerelle MCP, tâche C3) et M12 (skill générée, C8).",
+    "decisionOwners": "Q-J08 encore ouverte : attribution des familles non tranchée",
     "sourceDocs": [
       "doc/v3/02_CANAL_IA.md (catalogue §5, sécurité §7)",
       "doc/v3/09_QUESTIONNAIRE_CADRAGE.md (Q-E08, Q-E06)",
       "doc/v3/13_ENVELOPPE_PROPOSITION.md (enveloppe §3, verdict §4, constantes §9)",
-      "doc/v3/08_DECISIONS_ET_QUESTIONS.md (D11/D17/D20/D22/D25/D34/D41/D42)"
+      "doc/v3/08_DECISIONS_ET_QUESTIONS.md (D11/D17/D20/D22/D25/D34/D41/D42/D43/D44)"
     ],
-    "openPoints": [
-      "Groupement/paramétrage exact des tools : à mesurer sur les premiers workflows (tokens des schémas vs ambiguïté, doc 02 §3).",
-      "Plafond de lignes du résumé injecté (proposé 30) et sélection des types d'événements 'pertinents' (Q-E06).",
-      "Chiffrage définitif des quotas/rate-limits (doc 02 §7, doc 02 Q3 non posée).",
-      "Q-E06 verdict de dry-run (D42) : ne pas journaliser au journal partagé (suggestion SUIVI §5) — à confirmer."
+    "decided": [
+      "Liste des 12 tools MVP validée telle quelle ; runtime_input/save_map/tools caméra restent post-MVP.",
+      "Groupements de tools validés ; le compromis tokens/ambiguïté reste à mesurer sur les premiers workflows (doc 02 §3) sans bloquer l'implémentation.",
+      "Répartition des rôles proposer/arbiter confirmée (arbiter = lecture seule + arbiter_verdict).",
+      "Quotas : valeurs de départ actées dans le bloc 'quotas' ci-dessous — à recaler à l'usage (mesures Q-J04).",
+      "Résumé injecté plafonné à 250 lignes (amendé depuis la proposition à 30).",
+      "Types d'événements pertinents du résumé : tile.placed, proposal.verdict, memory.changed publics, rules.changed.",
+      "Les verdicts de dry-run (D42) n'entrent PAS au journal partagé."
     ]
   },
 
-  "protocolVersion": "0.1.0-draft",
+  "protocolVersion": "1.0.0",
   "envelopeVersion": 1,
   "generatedFrom": "proposition manuelle (pré-implémentation M1) — la version implémentée sera régénérée depuis la source de vérité au build (M12)",
 
@@ -157,7 +160,7 @@
         "source": { "type": "string", "required": true },
         "targetUuid": { "type": "string", "required": false }
       },
-      "returns": "{ verdict, metrics } — non journalisé au journal partagé (à confirmer, cf. openPoints)",
+      "returns": "{ verdict, metrics } — non journalisé au journal partagé (D44)",
       "groups": [],
       "quota": { "constant": "MEOW_BENCH_DRYRUN_QUOTA", "default": 10, "unit": "par invocation" }
     },
@@ -197,8 +200,30 @@
     }
   ],
 
+  "quotas": {
+    "$doc": "Valeurs de départ actées en D43 (2026-07-17) — 'valeur cohérente, on ajustera' : à recaler avec les mesures Q-J04 (tokens/latence) dès le vertical slice. Appliquées par la passerelle (C2), erreurs { code: 'quota_exceeded', retryable: true }.",
+    "perInvocation": {
+      "$doc": "une invocation = un tour d'IA (D25)",
+      "maxToolCalls": 100,
+      "help": 20,
+      "state_query": 50,
+      "editor_place": 32,
+      "editor_edit": 32,
+      "memory_set": 32,
+      "roster_edit": 8,
+      "module_config": 4,
+      "artifact_submit": 4,
+      "artifact_dryrun": { "constant": "MEOW_BENCH_DRYRUN_QUOTA", "default": 10 },
+      "events_poll": 20,
+      "screenshot": { "constant": "#define compile-time", "default": 5 },
+      "arbiter_verdict": 16
+    },
+    "rateLimit": { "requestsPerSecond": 10, "burst": 20 },
+    "payload": { "maxRequestBytes": 65536, "maxArtifactSourceBytes": 20480, "maxResponseBytes": 262144 }
+  },
+
   "eventSummary": {
-    "$doc": "Q-E06 — sémantique du résumé injecté et du curseur events_poll (PROPOSITION à valider).",
+    "$doc": "Q-E06 — sémantique du résumé injecté et du curseur events_poll — TRANCHÉE (D44, 2026-07-17).",
     "cursor": {
       "kind": "séquence monotone du journal métier hôte (D19)",
       "guarantees": "relecture idempotente depuis n'importe quel seq conservé",
@@ -215,7 +240,9 @@
     "injectedBlock": {
       "$doc": "bloc compact injecté à chaque invocation (une invocation = un tour)",
       "shape": "« depuis ton dernier tour (seq N→M) : X tuiles posées (par qui), Y verdicts (accepté/rejeté + raison courte), Z changements d'état pertinents »",
-      "cap": { "proposedLines": 30, "overflow": "+ K événements omis — events_poll(N)" }
+      "cap": { "lines": 250, "overflow": "+ K événements omis — events_poll(N)", "$decided": "D44 (2026-07-17), amendé depuis la proposition à 30" },
+      "relevantTypes": ["tile.placed", "proposal.verdict", "memory.changed (publics)", "rules.changed"],
+      "dryRunVerdicts": "exclus du journal partagé (D44)"
     },
     "pollResponse": {
       "entries": "[entry]",

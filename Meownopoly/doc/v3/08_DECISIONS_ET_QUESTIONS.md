@@ -644,6 +644,40 @@
   d'arbitrage (coût LLM), S3 facilité ; réutilise `meow_testbench` tel quel
   (~zéro architecture nouvelle au palier 1).
 
+### D43 — Manifeste du canal ratifié : 12 tools MVP, rôles, quotas de départ (Q-E08)
+- **Décision (2026-07-17, Antoine — relecture Valou à faire au titre de Q-J08).**
+  Le manifeste [`cpp/ai/gateway/channel_manifest.json`](../../cpp/ai/gateway/channel_manifest.json)
+  passe en **`protocolVersion 1.0.0`** et devient la **source de vérité unique**
+  de M1 (catalogue de la passerelle, C3) et M12 (skill générée, C8) :
+  - **12 tools validés tels quels** : `help`, `state_query`, `editor_place`,
+    `editor_edit`, `memory_set`, `roster_edit`, `module_config`,
+    `artifact_submit`, `artifact_dryrun`, `events_poll`, `screenshot`,
+    `arbiter_verdict`. `runtime_input`/`save_map`/tools caméra restent post-MVP.
+  - **Regroupements validés** ; le compromis tokens/ambiguïté sera mesuré sur
+    les premiers workflows ([doc 02](./02_CANAL_IA.md) §3) sans bloquer l'implémentation.
+  - **Rôles confirmés** : arbitre = lecture seule (`help`, `state_query`,
+    `events_poll`, `screenshot`) + `arbiter_verdict` ; proposant = tout le reste.
+  - **Quotas/rate-limits : valeurs de départ actées** (bloc `quotas` du
+    manifeste : plafonds par tool et par invocation, 10 req/s burst 20,
+    plafonds de payload) — explicitement **à recaler** avec les mesures Q-J04.
+- **Pourquoi.** P0-4 bloquait C3/C8 ; les propositions du doc 09 étaient prêtes
+  et cohérentes avec D11/D17/D20/D22/D25/D41/D42.
+
+### D44 — Résumé d'événements injecté + curseur `events_poll` (Q-E06)
+- **Décision (2026-07-17, Antoine — relecture Valou à faire au titre de Q-J08).**
+  Mécanique validée telle que proposée : **curseur = séquence monotone du
+  journal métier hôte** (D19), relecture idempotente, `{truncated, oldestSeq}`
+  si journal tronqué → resync par `state_query` ; résumé compact injecté à
+  chaque invocation ; filtrage par rôle côté serveur MCP (D20). Sous-points :
+  - Plafond du bloc injecté : **250 lignes** (amendé depuis la proposition à 30),
+    avec mention `+ K événements omis — events_poll(N)`.
+  - Types « pertinents » du résumé : `tile.placed`, `proposal.verdict`,
+    `memory.changed` publics, changements de règlement.
+  - Les verdicts de **dry-run (D42) n'entrent pas au journal partagé**.
+- **Pourquoi.** Débloquer D4 (branchement canal du `GameplayEventBus`) et C3 ;
+  le plafond à 250 privilégie la complétude du contexte injecté (le coût tokens
+  sera surveillé via Q-J04).
+
 ## 2. Questions ouvertes (par thème)
 
 Cette section reste le registre synthétique proche des décisions. Le questionnaire
@@ -672,12 +706,12 @@ reportés en D9→D39) est [`09_QUESTIONNAIRE_CADRAGE.md`](./09_QUESTIONNAIRE_CA
   intégré au jeu** (`QtHttpServer` à installer ; repli pont stdio documenté).
 - ~~Authentifier les deux clients locaux de l'hôte ?~~ **Tranché D20** :
   configs/tokens distincts injectés au spawn, capacités différentes par rôle.
-- Schéma du **résumé d'événements injecté** par tour + sémantique du curseur
-  `events_poll`, au-dessus de l'adaptateur `Game`/`EditorOpBus`/
-  `ItemSnapableEvents` et du journal (D14/D19/D20).
-- **Quel sous-ensemble de l'automation porter** dans le catalogue curé du canal
-  (pose, caméra, introspection d'état…) et lesquelles **rester** test-only ?
-  Granularité du **groupement de tools** à mesurer (économie de tokens, D20).
+- ~~Schéma du **résumé d'événements injecté** par tour + sémantique du curseur
+  `events_poll` ?~~ **Tranché D44** : curseur monotone du journal hôte, résumé
+  plafonné à 250 lignes, dry-runs hors journal partagé.
+- ~~**Quel sous-ensemble de l'automation porter** dans le catalogue curé du
+  canal ?~~ **Tranché D43** : 12 tools MVP au manifeste `protocolVersion 1.0.0` ;
+  granularité du groupement à mesurer sur les premiers workflows (sans bloquer).
 - ~~Échappatoire `automation.raw` ?~~ **Tranché D14 : build dev uniquement.**
 - ~~Garanties applicatives de livraison/retry/déduplication au-dessus du composant
   d'ACK `reliable.io` ?~~ **Tranché D35** : ACK/retry/dédup pour les commits,
