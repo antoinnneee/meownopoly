@@ -6,14 +6,19 @@
 #include <QStringList>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QJsonArray>
 #include <QHash>
 #include <QList>
+#include <QVector>
+#include <QVariant>
+#include <QVariantList>
 
 // Forward-declarations : les types QtHttpServer/QTcpServer ne sont utilisés
 // (et le module lié) que lorsque MEOW_HAS_HTTP_SERVER vaut 1. La déclaration
 // anticipée suffit au header — aucune inclusion du module ici.
 class QHttpServer;
 class QTcpServer;
+class QQuickWindow;
 
 /**
  * AiGatewayServer — passerelle MCP (Model Context Protocol) locale du canal IA.
@@ -37,6 +42,19 @@ class QTcpServer;
  *   - `initialize`  → capacités + serverInfo ;
  *   - `tools/list`  → catalogue (VIDE, peuplé en C3 depuis le manifeste) ;
  *   - `tools/call`  → erreur « tool inconnu » tant que le catalogue est vide.
+ *
+ * Périmètre C3 (cette tâche) : **catalogue de tools + traduction vers les hooks**
+ * (manifeste `channel_manifest.json`, P0-4 ratifié D43/D44). Les 12 tools MVP du
+ * manifeste sont exposés par `tools/list` (filtrés par l'allow-list du rôle du
+ * token, D20), et `tools/call` traduit chaque appel vers les hooks QML existants
+ * `editorAutomationHooks` (Editor.qml, chemin UI exact `placeSelectedAsset` +
+ * `Game.updateMap` → compatible collab/undo). Les tools dont la capacité
+ * sous-jacente n'existe pas encore côté hooks (state_query, memory_set,
+ * roster_edit, artifact_*, events_poll, screenshot, arbiter_verdict, et les op
+ * move/resize/delete/link de editor_edit) renvoient une erreur structurée
+ * `not_implemented` pointant sur la tâche de suite (C4/S-*). Les tools réellement
+ * câblés au MVP : `editor_place` (asset/case/zone/npc/enemy/crate), `editor_edit`
+ * (set_trigger/set_dialogue), `module_config` (stats), `help`.
  *
  * Périmètre C2 (cette tâche) : **authentification, rôles et quotas** (doc 02 §7,
  * D20). Chaque requête HTTP doit porter un `Authorization: Bearer <token>` valide :
@@ -110,6 +128,58 @@ private:
     QJsonObject handleInitialize(const QJsonValue &id, const QJsonObject &params);
     QJsonObject handleToolsList(const QJsonValue &id, const QJsonObject &params, Role role);
     QJsonObject handleToolsCall(const QJsonValue &id, const QJsonObject &params, Role role);
+
+    // — Catalogue de tools (C3) —
+    // Table statique dérivée du manifeste versionné (channel_manifest.json,
+    // P0-4/D43). Chaque entrée porte son nom et son autorisation par rôle. M12
+    // (C8) régénérera cette table depuis la source de vérité au build ; au MVP
+    // elle est recopiée à la main et co-versionnée avec le manifeste (D17).
+    struct ToolDef {
+        const char *name;
+        bool proposer; // exposé au token proposer ?
+        bool arbiter;  // exposé au token arbiter ?
+    };
+    static const QVector<ToolDef> &toolTable();
+    static bool toolExists(const QString &name);
+    static bool toolAllowedForRole(const QString &name, Role role);
+    /// Descripteur MCP { name, description, inputSchema } d'un tool du manifeste.
+    static QJsonObject toolDescriptor(const QString &name);
+
+    // — Dispatch d'un appel de tool vers les hooks éditeur (C3) —
+    // `arguments` = objet MCP `params.arguments`. Renvoie une réponse JSON-RPC
+    // complète (result MCP avec content/structuredContent, ou erreur structurée).
+    QJsonObject dispatchTool(const QJsonValue &id, const QString &name,
+                             const QJsonObject &arguments, Role role);
+    QJsonObject toolHelp(const QJsonValue &id, const QJsonObject &arguments);
+    QJsonObject toolEditorPlace(const QJsonValue &id, const QJsonObject &arguments);
+    QJsonObject toolEditorEdit(const QJsonValue &id, const QJsonObject &arguments);
+    QJsonObject toolModuleConfig(const QJsonValue &id, const QJsonObject &arguments);
+    /// Tool présent au manifeste mais dont la capacité hôte arrive en C4/S-* :
+    /// erreur structurée `not_implemented` non-retryable pointant la suite.
+    QJsonObject toolNotImplemented(const QJsonValue &id, const QString &name,
+                                   const QString &followUp);
+
+    // — Fabriques de résultats de tool (MCP) —
+    /// Enveloppe un résultat de hook `{ ok, ... }` en résultat MCP :
+    /// content[texte JSON] + structuredContent + isError (= !ok).
+    static QJsonObject makeToolResult(const QJsonValue &id, const QJsonObject &hookResult);
+    static QJsonObject makeToolTextResult(const QJsonValue &id, const QString &text);
+
+    // — Accès à la scène QML (GUI thread) pour invoquer les hooks —
+    /// Localise l'Item passif `objectName: "editorAutomationHooks"` (nullptr si
+    /// l'éditeur n'est pas chargé).
+    QObject *findEditorHooks() const;
+    static QObject *findByObjectName(QObject *root, const QString &name);
+    /**
+     * Invoque une fonction JS d'`editorAutomationHooks` (params + retour QVariant,
+     * voie identique à AutomationServer::cmdInvoke). Renvoie l'objet JSON résultat
+     * du hook (`{ ok, ... }`). `ok`=false si la scène/fonction est absente ou si
+     * l'invocation échoue (`error` renseigné).
+     */
+    QJsonObject invokeHook(const QString &fn, const QVariantList &args,
+                           bool &ok, QString &error);
+    static QJsonValue variantToJson(const QVariant &v);
+    static QVariant jsonToVariant(const QJsonValue &v);
 
     // — Authentification & quotas (C2) —
     // Toute la logique auth/quota est indépendante du transport (compilée même
