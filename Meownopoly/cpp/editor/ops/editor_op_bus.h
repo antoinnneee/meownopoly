@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QHash>
 #include <QUuid>
+#include <QStringList>
 #include <QQmlEngine>
 #include <QElapsedTimer>
 
@@ -154,6 +155,33 @@ public:
     /// ApplyStateBatch (liste d'ApplyState). Appelé par Game::commitTransaction.
     void flushGroup(const QUuid &groupId);
 
+    /// M4 (T3-1) — jette les ops accumulées pour `groupId` SANS les envoyer.
+    /// Appelé par Game::rollbackTransaction / commit en échec : aucun pair ne
+    /// doit voir un préfixe partiel d'un lot annulé. Troisième rôle du
+    /// groupId (clé de batch réseau) — voir map_transaction.h.
+    void discardGroup(const QUuid &groupId);
+
+    // ── D28 (T3-4) : undo ciblé d'une proposition durable ────────────────────
+
+    /// Enregistre le write-set DURABLE déclaré d'une proposition appliquée sous
+    /// `groupId` (le même QUuid que la transaction M4 qui l'a matérialisée).
+    /// Le write-set (`<uuid>/<seg>/…`) est la source de vérité pour un undo
+    /// ultérieur ciblé : seules ces clés seront restaurées, jamais un snapshot
+    /// global (D15/D28). À appeler après un commitTransaction réussi.
+    Q_INVOKABLE void registerProposalWriteSet(const QString &groupId,
+                                              const QStringList &writeSet);
+
+    /// Annulation CIBLÉE d'une proposition : restaure uniquement les clés du
+    /// write-set enregistré (LWW — restaure malgré une modif concurrente, D28),
+    /// puis, en collab, rediffuse les deltas résultants aux pairs. No-op si
+    /// aucun write-set n'a été enregistré pour `groupId` ou si le groupe est
+    /// absent de l'historique. Trace au journal (qInfo + `proposalReverted`).
+    Q_INVOKABLE bool undoProposal(const QString &groupId);
+
+    /// Refaire ciblé (comportement PROVISOIRE, doc 08 §8) : ré-applique les
+    /// valeurs `after` du write-set. Symétrique d'undoProposal.
+    Q_INVOKABLE bool redoProposal(const QString &groupId);
+
 signals:
     /// Émis pour chaque op enregistrée localement (utile pour logs/tests).
     void opRecorded(const QJsonObject &op);
@@ -169,6 +197,12 @@ signals:
     void remoteOpReceived(const QJsonObject &op);
 
     void isApplyingRemoteChanged();
+
+    /// D28 (T3-4) — émis après un undo/redo ciblé de proposition, pour le
+    /// noyau d'audit D19 (à brancher sur GameplayEventBus). `undone` = true
+    /// pour un undo, false pour un redo.
+    void proposalReverted(const QString &groupId, const QStringList &writeSet,
+                          bool undone);
 
 private:
     explicit EditorOpBus(QObject *parent = nullptr);
@@ -197,6 +231,10 @@ private:
     // Ops en attente, indexées par groupId de transaction (Game::beginTransaction).
     // Vidées en un seul batch via flushGroup(groupId) à commitTransaction.
     QHash<QUuid, QList<QJsonObject>> m_pendingGroups;
+
+    // D28 (T3-4) — write-sets durables déclarés par proposition, indexés par
+    // groupId de transaction. Alimente l'undo ciblé (undoProposal).
+    QHash<QUuid, QStringList> m_proposalWriteSets;
 
     // Rate-limit local (token bucket). Évite de noyer la file réseau quand
     // un script QML boucle sur submitOp.

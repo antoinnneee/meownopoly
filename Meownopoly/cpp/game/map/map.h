@@ -53,6 +53,34 @@ public:
     bool redo();
     bool canSave() const { return !m_isRestoringState; }
 
+    // ---- D28 (T3-4) : undo ciblé d'une proposition durable ----
+    //
+    // Contrairement à undo() (LIFO, restauration WHOLESALE du `before` de la
+    // tuile), l'undo ciblé adresse un groupe `groupId` OÙ QU'IL SOIT dans la
+    // pile et ne restaure QUE les clés déclarées par le write-set durable de
+    // la proposition (chemins "<uuid>/<seg>/…" pointant dans l'objet `memory`
+    // de la tuile). La restauration fusionne le `before` de la transaction
+    // dans l'état COURANT de la tuile : les clés du write-set sont écrasées
+    // (LWW, D28 « restaure malgré tout » une modif concurrente), les autres
+    // clés — potentiellement modifiées entre-temps par un pair — sont
+    // préservées. Les deltas STRUCTURELS du groupe (TileAdded/TileDeleted)
+    // sont eux inversés en totalité (l'artefact créé est retiré, D15).
+    //
+    // `appliedOut` (optionnel) reçoit les deltas RÉSULTANTS (état final par
+    // tuile) pour rediffusion aux pairs en collab. Le groupe est déplacé vers
+    // la pile de redo. Retourne false (avec `reasonOut`) si le groupe est
+    // absent de la pile d'undo.
+    //
+    // Comportement du redo : PROVISOIRE (doc 08 §8, « à trancher »). Le redo
+    // ré-applique les valeurs `after` du write-set (LWW à nouveau) — voir
+    // redoTargetedGroup.
+    bool undoTargetedGroup(const QUuid &groupId, const QStringList &writeSet,
+                           QList<EditDelta> *appliedOut = nullptr,
+                           QString *reasonOut = nullptr);
+    bool redoTargetedGroup(const QUuid &groupId, const QStringList &writeSet,
+                           QList<EditDelta> *appliedOut = nullptr,
+                           QString *reasonOut = nullptr);
+
     // Deltas traités lors du dernier undo()/redo(). Peuplés à chaque appel.
     // Utilisé par Game::askPreview/askNext pour broadcaster les ops inverses
     // (Pattern B en mode collab).
@@ -106,6 +134,13 @@ signals:
 
 private:
 
+    // D28 (T3-4) — cœur partagé undo/redo ciblé : applique un groupe de deltas
+    // en restauration ciblée. `useBefore` = sens (undo restaure `before`, redo
+    // ré-applique `after`). Structurels inversés en totalité, TileModified
+    // fusionnés clé-par-clé (write-set) dans l'état courant.
+    void applyTargetedGroup(const QList<EditDelta> &group, bool useBefore,
+                            const QStringList &writeSet,
+                            QList<EditDelta> *appliedOut, QSet<QUuid> &touched);
 
     QList<ItemSnapable*> m_tiles;
     QList<ItemSnapable*> m_pendingDestroy;

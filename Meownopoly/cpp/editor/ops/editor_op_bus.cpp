@@ -1,6 +1,8 @@
 #include "editor_op_bus.h"
 
 #include "editor/network/editor_session.h"
+#include "game/map/map.h"
+#include "game/map/mapfilemanager.h"
 
 #include <QDebug>
 #include <QJsonDocument>
@@ -389,4 +391,85 @@ void EditorOpBus::flushGroup(const QUuid &groupId)
         qWarning() << "[EditorOpBus] batch > 30KB — reliable.io may drop the packet";
     }
     submitOp(batch);
+}
+
+void EditorOpBus::discardGroup(const QUuid &groupId)
+{
+    if (groupId.isNull()) return;
+    const int dropped = m_pendingGroups.take(groupId).size();
+    if (dropped > 0) {
+        qDebug() << "[EditorOpBus] discardGroup" << groupId.toString()
+                 << "—" << dropped << "op(s) jetée(s) (transaction annulée)";
+    }
+}
+
+// ── D28 (T3-4) : undo ciblé d'une proposition durable ────────────────────────
+
+void EditorOpBus::registerProposalWriteSet(const QString &groupId,
+                                           const QStringList &writeSet)
+{
+    const QUuid gid(groupId);
+    if (gid.isNull()) {
+        qWarning() << "[EditorOpBus] registerProposalWriteSet — groupId invalide"
+                   << groupId;
+        return;
+    }
+    m_proposalWriteSets.insert(gid, writeSet);
+    qDebug() << "[EditorOpBus] registerProposalWriteSet" << gid.toString()
+             << "—" << writeSet.size() << "clé(s) durable(s)";
+}
+
+// Cœur commun undo/redo : délègue à Map, rediffuse les deltas résultants aux
+// pairs (Pattern B, comme submitFromDelta) et trace au journal.
+static bool revertProposalImpl(EditorOpBus *bus,
+                               QHash<QUuid, QStringList> &writeSets,
+                               const QString &groupId, bool undo)
+{
+    const QUuid gid(groupId);
+    if (gid.isNull()) {
+        qWarning() << "[EditorOpBus] revertProposal — groupId invalide" << groupId;
+        return false;
+    }
+    if (!writeSets.contains(gid)) {
+        qWarning() << "[EditorOpBus] revertProposal — aucun write-set enregistré"
+                      " pour" << gid.toString();
+        return false;
+    }
+    Map *map = MapFileManager::instance()->getCurrentMap();
+    if (!map) {
+        qWarning() << "[EditorOpBus] revertProposal — pas de map courante";
+        return false;
+    }
+
+    const QStringList ws = writeSets.value(gid);
+    QList<EditDelta> applied;
+    QString reason;
+    const bool ok = undo ? map->undoTargetedGroup(gid, ws, &applied, &reason)
+                         : map->redoTargetedGroup(gid, ws, &applied, &reason);
+    if (!ok) {
+        qWarning() << "[EditorOpBus] revertProposal" << gid.toString()
+                   << "échec :" << reason;
+        return false;
+    }
+
+    // Rediffusion aux pairs (no-op si EditorSession inactive). Les deltas
+    // résultants portent l'état final (after) — on les envoie forward.
+    for (const EditDelta &d : applied) {
+        bus->submitFromDelta(static_cast<int>(d.type), d.tileId, gid,
+                             d.before, d.after, /*applyBefore=*/false);
+    }
+    bus->flushGroup(gid);
+
+    emit bus->proposalReverted(groupId, ws, undo);
+    return true;
+}
+
+bool EditorOpBus::undoProposal(const QString &groupId)
+{
+    return revertProposalImpl(this, m_proposalWriteSets, groupId, /*undo=*/true);
+}
+
+bool EditorOpBus::redoProposal(const QString &groupId)
+{
+    return revertProposalImpl(this, m_proposalWriteSets, groupId, /*undo=*/false);
 }
