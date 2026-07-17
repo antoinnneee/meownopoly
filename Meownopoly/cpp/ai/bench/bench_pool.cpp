@@ -40,17 +40,14 @@ void BenchPool::setBenchExecutablePath(const QString &path)
 void BenchPool::setPoolSize(int n)
 {
     n = qMax(1, n);
-    // Rétrécissement : ne supprime que des slots LIBRES (un slot occupé finira
-    // son job puis ne sera plus réalimenté — mais au MVP on ne rétrécit pas à
-    // chaud, la file étant sérialisée). On (re)dimensionne simplement.
+    m_targetSize = n;
+    // Rétrécissement : ne supprime QUE des slots libres, depuis la queue (les
+    // connexions capturent l'index — on ne retire jamais un slot du milieu).
+    // Un slot occupé au-delà de la cible finit son job (son verdict est
+    // publié normalement) puis est retiré par trimSlots() via onSlotVerdict.
+    trimSlots();
     const int old = m_slots.size();
-    if (n < old) {
-        for (int i = old - 1; i >= n; --i) {
-            if (m_slots[i].sup)
-                m_slots[i].sup->deleteLater();
-        }
-        m_slots.resize(n);
-    } else {
+    if (n > old) {
         m_slots.resize(n);
         for (int i = old; i < n; ++i) {
             m_slots[i] = Slot{};
@@ -58,6 +55,20 @@ void BenchPool::setPoolSize(int n)
         }
     }
     dispatch();
+}
+
+void BenchPool::trimSlots()
+{
+    while (m_slots.size() > m_targetSize) {
+        Slot &last = m_slots.last();
+        if (last.busy)
+            break; // un job est en vol : on retirera ce slot après son verdict
+        if (last.sup) {
+            last.sup->disconnect(this);
+            last.sup->deleteLater();
+        }
+        m_slots.removeLast();
+    }
 }
 
 void BenchPool::setJobsPerProcess(int n)
@@ -168,7 +179,11 @@ void BenchPool::onSlotVerdict(int i, const QJsonObject &verdict)
     s.cacheKey.clear();
     emit verdictReady(jobId, verdict);
 
-    if (recycleForHygiene || recycleForQuota)
+    // Un rétrécissement du pool demandé pendant que ce slot travaillait est
+    // appliqué maintenant (retrait par la queue, jamais du milieu). Le slot i
+    // peut disparaître ici — ne le recycler que s'il existe encore.
+    trimSlots();
+    if (i < m_slots.size() && (recycleForHygiene || recycleForQuota))
         recycleSlot(i);
 
     // 4) Servir la file d'attente.

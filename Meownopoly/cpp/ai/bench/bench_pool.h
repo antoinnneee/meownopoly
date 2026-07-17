@@ -118,6 +118,7 @@ private:
 
     void ensureSlot(int i);          // (re)crée le BenchSupervisor du slot i
     void recycleSlot(int i);         // détruit + recrée (hygiène / seuil)
+    void trimSlots();                // applique m_targetSize (queue libre only)
     void dispatch();                 // distribue la file aux slots libres
     void onSlotVerdict(int i, const QJsonObject &verdict);
     void emitDeferred(const QString &jobId, const QJsonObject &verdict);
@@ -127,6 +128,7 @@ private:
     QQueue<QJsonObject> m_queue;
     QString m_benchExe;              // vide → défaut du superviseur
     int     m_jobsPerProcess = MEOW_BENCH_JOBS_PER_PROCESS;
+    int     m_targetSize = 1;        // taille demandée (rétrécissement différé)
 };
 
 } // namespace meow::bench

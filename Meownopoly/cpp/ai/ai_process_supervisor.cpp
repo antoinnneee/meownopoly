@@ -308,6 +308,11 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     a->invocationTimeoutMs =
         opts.value(QStringLiteral("invocationTimeoutMs"),
                    MEOW_AI_INVOCATION_TIMEOUT_MS).toInt();
+    // Chaque lancement repart d'un tampon de sortie vierge : un marqueur de
+    // handshake (ou toute sortie) résiduel d'un run précédent ne doit jamais
+    // être attribué au nouveau process (faux « Prêt » au challenge C6,
+    // invocationCompleted pollué par les runs passés).
+    a->outputBuf.clear();
 
     // Secret (token) → fichier MCP à permissions restreintes. JAMAIS l'argv.
     cleanupMcpFileOnly(a);
