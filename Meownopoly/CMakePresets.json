@@ -1,0 +1,80 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/../build-${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20"
+      }
+    },
+    {
+      "name": "windows-mingw",
+      "displayName": "Windows — Qt 6.11.0 MinGW (Ninja Multi-Config)",
+      "description": "Kit de développement Windows unifié (Qt 6.11.0 + MinGW 13.1). Chemins repris de CLAUDE.md.",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.11.0/mingw_64"
+      }
+    },
+    {
+      "name": "linux-gcc",
+      "displayName": "Linux — Qt 6.11+ gcc (Ninja Multi-Config)",
+      "description": "Kit Linux générique. Renseigner l'emplacement de Qt via la variable d'environnement CMAKE_PREFIX_PATH (ex: export CMAKE_PREFIX_PATH=/opt/Qt/6.11.0/gcc_64) ou -DCMAKE_PREFIX_PATH=... Le module Qt6::CanvasPainter (Tech Preview) peut être absent du kit : sa détection est optionnelle côté CMakeLists.txt.",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_PREFIX_PATH": "$env{CMAKE_PREFIX_PATH}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-mingw-release",
+      "displayName": "Windows Release",
+      "configurePreset": "windows-mingw",
+      "configuration": "Release",
+      "targets": ["Meownopoly"]
+    },
+    {
+      "name": "windows-mingw-debug",
+      "displayName": "Windows Debug",
+      "configurePreset": "windows-mingw",
+      "configuration": "Debug",
+      "targets": ["Meownopoly"]
+    },
+    {
+      "name": "linux-gcc-release",
+      "displayName": "Linux Release",
+      "configurePreset": "linux-gcc",
+      "configuration": "Release",
+      "targets": ["Meownopoly"]
+    },
+    {
+      "name": "linux-gcc-debug",
+      "displayName": "Linux Debug",
+      "configurePreset": "linux-gcc",
+      "configuration": "Debug",
+      "targets": ["Meownopoly"]
+    }
+  ]
+}

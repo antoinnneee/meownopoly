@@ -190,8 +190,17 @@ set(QML_IMPORT_PATH
 )
 
 # ============================================================================
-# Configuration de déploiement (portable Windows)
+# Configuration de déploiement (portable Windows / Linux)
 # ============================================================================
+# Le déploiement des plugins QML / Quick3D (+ CanvasPainter s'il est présent —
+# voir la détection optionnelle Qt6::CanvasPainter plus haut) est spécifique à
+# l'OS. Sous Windows on s'appuie sur windeployqt (fourni avec le kit). Sous
+# Linux, en développement, l'exécutable tourne directement contre le Qt installé
+# et aucun bundling n'est requis ; pour produire un paquet redistribuable on
+# passe un outil externe optionnel via -DMEOW_LINUX_DEPLOY_TOOL=...
+# L'absence de Qt6::CanvasPainter (kit Linux sans le module Tech Preview) est
+# gérée en amont (find_package QUIET + garde TARGET) et n'empêche ni le build ni
+# le déploiement des plugins QML/Quick3D standards.
 if(WIN32)
     find_program(WINDEPLOYQT windeployqt HINTS "${Qt6_DIR}/../../../bin")
     file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/deploy_$<CONFIG>.bat"
@@ -201,17 +210,35 @@ if(WIN32)
         COMMAND "${CMAKE_BINARY_DIR}/deploy_$<CONFIG>.bat"
         COMMENT "Running windeployqt (Release only)..."
     )
-endif()
-if (ANDROID)
-    set(OPENSSL_PATH_PRIMARY "C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/CMakeLists.txt")
-    set(OPENSSL_PATH_FALLBACK "C:/AndroidSetup/android_openssl/CMakeLists.txt")
-
-    if(EXISTS "${OPENSSL_PATH_PRIMARY}")
-        include(${OPENSSL_PATH_PRIMARY})
-    elseif(EXISTS "${OPENSSL_PATH_FALLBACK}")
-        include(${OPENSSL_PATH_FALLBACK})
+elseif(UNIX AND NOT APPLE)
+    set(MEOW_LINUX_DEPLOY_TOOL "" CACHE FILEPATH
+        "Outil de déploiement Linux optionnel (linuxdeployqt, cqtdeployer...). Vide = pas de bundling (exécution contre le Qt installé).")
+    if(MEOW_LINUX_DEPLOY_TOOL)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND "${MEOW_LINUX_DEPLOY_TOOL}" "$<TARGET_FILE:${PROJECT_NAME}>" "-qmldir=${CMAKE_CURRENT_SOURCE_DIR}/qml"
+            COMMENT "Déploiement Linux via ${MEOW_LINUX_DEPLOY_TOOL}..."
+            VERBATIM
+        )
     else()
-        message(WARNING "Android OpenSSL CMakeLists.txt not found at either path!")
+        message(STATUS "Déploiement Linux : aucun MEOW_LINUX_DEPLOY_TOOL défini — exécution contre le Qt installé (pas de bundling).")
+    endif()
+endif()
+
+# Android : le module android_openssl est fourni hors de l'arbre et son chemin
+# dépend de la machine. On le paramètre par variable CMake ou d'environnement
+# ANDROID_OPENSSL_ROOT (dossier contenant son CMakeLists.txt) — plus de chemin
+# utilisateur absolu en dur dans ce fichier.
+if (ANDROID)
+    set(ANDROID_OPENSSL_ROOT "" CACHE PATH
+        "Dossier du module android_openssl (contenant CMakeLists.txt). Réglable via -DANDROID_OPENSSL_ROOT=... ou la variable d'environnement du même nom.")
+    if(NOT ANDROID_OPENSSL_ROOT AND DEFINED ENV{ANDROID_OPENSSL_ROOT})
+        set(ANDROID_OPENSSL_ROOT "$ENV{ANDROID_OPENSSL_ROOT}")
+    endif()
+
+    if(ANDROID_OPENSSL_ROOT AND EXISTS "${ANDROID_OPENSSL_ROOT}/CMakeLists.txt")
+        include("${ANDROID_OPENSSL_ROOT}/CMakeLists.txt")
+    else()
+        message(WARNING "android_openssl introuvable : définissez ANDROID_OPENSSL_ROOT (variable CMake ou d'environnement) vers le dossier contenant son CMakeLists.txt.")
     endif()
 endif()
 
