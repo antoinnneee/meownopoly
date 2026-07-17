@@ -11,6 +11,7 @@ using meow::proposal::BenchOutcome;
 using meow::proposal::Envelope;
 using meow::proposal::ProposalState;
 using meow::proposal::RequestType;
+using meow::proposal::Verdict;
 using meow::proposal::VerdictOutcome;
 
 // ==================== Proposal ====================
@@ -25,6 +26,12 @@ Proposal::Proposal(Envelope envelope, QObject *parent)
 void Proposal::recomputeRequestType()
 {
     m_requestType = m_envelope.computeRequestType();
+}
+
+void Proposal::setVerdict(const Verdict &v)
+{
+    m_verdict    = v;
+    m_hasVerdict = true;
 }
 
 bool Proposal::canTransition(ProposalState from, ProposalState to)
@@ -104,6 +111,9 @@ QVariantMap Proposal::toVariantMap() const
     m.insert(QStringLiteral("envelope"),
              QJsonDocument(m_envelope.toJson()).toVariant());
     m.insert(QStringLiteral("history"), m_history);
+    if (m_hasVerdict)
+        m.insert(QStringLiteral("verdict"),
+                 QJsonDocument(m_verdict.toJson()).toVariant());
     return m;
 }
 
@@ -255,17 +265,9 @@ Proposal *ProposalLifecycle::submitJson(const QString &json)
     return p;
 }
 
-bool ProposalLifecycle::provideVerdict(const QString &proposalId, const QString &outcome,
-                                       const QString &reason)
+bool ProposalLifecycle::applyArbiterOutcome(Proposal *p, VerdictOutcome v,
+                                            const QString &reason)
 {
-    Proposal *p = proposalById(proposalId);
-    if (!p || p->state() != ProposalState::Arbitrating)
-        return false;
-
-    bool ok = false;
-    const VerdictOutcome v = meow::proposal::verdictOutcomeFromName(outcome, &ok);
-    if (!ok) return false;
-
     switch (v) {
     case VerdictOutcome::Rejected:
         return p->transitionTo(ProposalState::RejectedArbiter,
@@ -291,6 +293,72 @@ bool ProposalLifecycle::provideVerdict(const QString &proposalId, const QString 
                                QStringLiteral("amendement données → validation mécanique"));
     }
     return false;
+}
+
+bool ProposalLifecycle::provideVerdict(const QString &proposalId, const QString &outcome,
+                                       const QString &reason)
+{
+    Proposal *p = proposalById(proposalId);
+    if (!p || p->state() != ProposalState::Arbitrating)
+        return false;
+
+    bool ok = false;
+    const VerdictOutcome v = meow::proposal::verdictOutcomeFromName(outcome, &ok);
+    if (!ok) return false;
+
+    return applyArbiterOutcome(p, v, reason);
+}
+
+bool ProposalLifecycle::provideVerdictDoc(const QString &proposalId,
+                                          const QVariantMap &verdictJson,
+                                          const QString &callerRole)
+{
+    Verdict v;
+    QString err;
+    if (!Verdict::fromVariantMap(verdictJson, v, err))
+        return false;
+    return provideVerdictDoc(proposalId, v, callerRole, nullptr);
+}
+
+bool ProposalLifecycle::provideVerdictDoc(const QString &proposalId, const Verdict &verdict,
+                                          const QString &callerRole, QString *error)
+{
+    // Capacité `arbiter_verdict` réservée au rôle arbitre (D24/D31). Le contrôle
+    // de token réel (session, capacités) se branchera avec la passerelle MCP
+    // (piste C/C2) ; ici, garde de rôle par chaîne.
+    if (callerRole != QStringLiteral("arbiter")) {
+        if (error) *error = QStringLiteral("forbidden: rôle 'arbiter' requis");
+        return false;
+    }
+
+    Proposal *p = proposalById(proposalId);
+    if (!p) {
+        if (error) *error = QStringLiteral("unknown_proposal");
+        return false;
+    }
+    if (p->state() != ProposalState::Arbitrating) {
+        if (error) *error = QStringLiteral("invalid_state: proposition pas en arbitrage");
+        return false;
+    }
+
+    // Le proposalId qui fait foi est celui de la proposition ciblée (le verdict
+    // reçu peut l'avoir omis) — on aligne pour un journal cohérent.
+    Verdict stored = verdict;
+    stored.proposalId = proposalId;
+    p->setVerdict(stored);
+
+    // Raison journalisée = phrase joueur (audience=player) si présente, sinon la
+    // consigne IA. Le document complet reste accessible via proposal.verdict().
+    QString reason = stored.playerText();
+    if (reason.isEmpty())
+        reason = stored.aiReason().text;
+
+    const bool ok = applyArbiterOutcome(p, stored.outcome, reason);
+    if (ok)
+        emit proposalVerdictReady(proposalId);
+    else if (error)
+        *error = QStringLiteral("transition_refused");
+    return ok;
 }
 
 bool ProposalLifecycle::provideBenchResult(const QString &proposalId, bool pass,

@@ -34,6 +34,7 @@
 
 #include "proposal_envelope.h"
 #include "proposal_types.h"
+#include "proposal_verdict.h"
 
 // ---------------------------------------------------------------------------
 // Proposal — une enveloppe et son cycle de vie.
@@ -58,6 +59,11 @@ public:
     QString requestTypeName() const { return meow::proposal::requestTypeName(m_requestType); }
     bool    isTerminal() const   { return meow::proposal::isTerminalState(m_state); }
     bool    hasArtifacts() const { return !m_envelope.artifacts.isEmpty(); }
+
+    // Verdict de l'arbitre attaché à cette proposition (S-2). Vide tant que
+    // l'arbitre n'a pas statué (ou pour un rejet mécanique, jamais arbitré).
+    bool           hasVerdict() const { return m_hasVerdict; }
+    const meow::proposal::Verdict &verdict() const { return m_verdict; }
 
     // Journal des transitions (rejouable, D19). Chaque entrée :
     // { from, to, reason, code, seq, wallTs }.
@@ -85,12 +91,17 @@ private:
                       const QString &code = {});
     // Recalcule le requestType par le P0 (fait foi). Appelé au préfiltrage.
     void recomputeRequestType();
+    // Attache le document de verdict complet (S-2). N'entraîne PAS de
+    // transition — le manager pilote la machine séparément.
+    void setVerdict(const meow::proposal::Verdict &v);
 
     meow::proposal::Envelope     m_envelope;
     meow::proposal::ProposalState m_state = meow::proposal::ProposalState::Draft;
     meow::proposal::RequestType   m_requestType = meow::proposal::RequestType::DataSafe;
     QVariantList                  m_history;
     quint64                       m_stepSeq = 0; // pas de transition, monotone
+    meow::proposal::Verdict       m_verdict;     // rempli par S-2 (arbitre)
+    bool                          m_hasVerdict = false;
 };
 
 // ---------------------------------------------------------------------------
@@ -143,6 +154,21 @@ public:
     Q_INVOKABLE bool provideVerdict(const QString &proposalId, const QString &outcome,
                                     const QString &reason = {});
 
+    // Verdict COMPLET de l'arbitre (S-2, doc 13 §4) : document à deux audiences,
+    // amendement (patch, D32), benchReport. Réservé au rôle `arbiter`
+    // (`callerRole` — capacité MCP `arbiter_verdict`, D24/D31 ; le contrôle de
+    // token réel se branchera avec la passerelle, piste C/C2). Attache le
+    // document à la proposition, pilote la transition selon `verdict.outcome` et
+    // émet `proposalVerdictReady`. Retourne false si le rôle n'est pas arbitre,
+    // si l'id est inconnu, si l'état n'est pas `arbitrating`, ou si le document
+    // est mal formé. `error` (optionnel) porte le motif.
+    Q_INVOKABLE bool provideVerdictDoc(const QString &proposalId,
+                                       const QVariantMap &verdictJson,
+                                       const QString &callerRole = QStringLiteral("arbiter"));
+    bool provideVerdictDoc(const QString &proposalId,
+                           const meow::proposal::Verdict &verdict,
+                           const QString &callerRole, QString *error);
+
     // Résultat d'un passage au banc sur une proposition en `benching` (A5).
     // `pass` vrai → validated ; faux → rejected_bench.
     Q_INVOKABLE bool provideBenchResult(const QString &proposalId, bool pass,
@@ -166,6 +192,10 @@ signals:
     void proposalStateChanged(const QString &proposalId, const QString &state);
     // Émis quand une proposition entre dans un état terminal.
     void proposalSettled(const QString &proposalId, const QString &state);
+    // Émis quand un verdict d'arbitre complet est attaché à une proposition
+    // (S-2). Réveille le retour MCP bloquant (ProposalGateway) sans attendre
+    // l'application aval.
+    void proposalVerdictReady(const QString &proposalId);
 
 private:
     explicit ProposalLifecycle(QObject *parent = nullptr);
@@ -180,6 +210,11 @@ private:
     void route(Proposal *p);
     // Vrai si le requestType exige un arbitrage (plancher + config D25).
     bool requiresArbitration(meow::proposal::RequestType t) const;
+    // Pilote la machine à états depuis `arbitrating` selon l'issue d'arbitrage
+    // (accepted → benching/validated ; rejected → rejected_arbiter ; amended →
+    // amended → benching/validated). Facteur commun de provideVerdict[Doc].
+    bool applyArbiterOutcome(Proposal *p, meow::proposal::VerdictOutcome outcome,
+                             const QString &reason);
     // Branche le relais de signaux d'une Proposal vers le manager.
     void wire(Proposal *p);
 
