@@ -36,5 +36,12 @@
         <file>qml/test/CatwayTest/EditorNetworkTestTab.qml</file>
         <file>qml/test/CatwayTest/PhysicsTestTab.qml</file>
         <file>qml/test/CatwayTest/ZoneCanvasPainterTest.qml</file>
+        <file>qml/test/CatwayTest/V3TestTab.qml</file>
+        <file>qml/test/CatwayTest/V3BenchPanel.qml</file>
+        <file>qml/test/CatwayTest/V3SupervisorPanel.qml</file>
+        <file>qml/test/CatwayTest/V3GatewayPanel.qml</file>
+        <file>qml/test/CatwayTest/V3ProposalPanel.qml</file>
+        <file>qml/test/CatwayTest/V3EventBusPanel.qml</file>
+        <file>qml/test/CatwayTest/V3StateTxPanel.qml</file>
     </qresource>
 </RCC>

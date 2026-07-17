@@ -149,6 +149,22 @@ Rectangle {
                         border.width: 1
                     }
                 }
+                TabButton {
+                    text: "V3 IA"
+                    font.pixelSize: Theme.fontSizeMedium
+                    contentItem: Text {
+                        text: parent.text
+                        color: parent.checked ? root.accent : root.textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.checked ? root.cardBg : "transparent"
+                        radius: Theme.radiusL
+                        border.color: parent.checked ? root.accent : root.cardBorder
+                        border.width: 1
+                    }
+                }
             }
             Text {
                 text: "Test Catway"
@@ -348,6 +364,27 @@ Rectangle {
                 ZoneCanvasPainterTest {
                     anchors.fill: parent
                     anchors.margins: Theme.spacingXL
+                }
+            }
+
+            // Onglet V3 IA : harness des briques V3 (phases 0-3) — squelette.
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                contentWidth: availableWidth
+                contentHeight: v3Content.implicitHeight
+                ColumnLayout {
+                    id: v3Content
+                    width: root.width - 32
+                    spacing: Theme.spacingXL
+                    V3TestTab {
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 700
+                        host: root
+                    }
                 }
             }
         }

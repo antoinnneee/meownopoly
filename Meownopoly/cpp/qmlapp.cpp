@@ -74,6 +74,19 @@
 #include "game/events/gameplay_event_bus.h"
 #include "ai/ai_process_supervisor.h"
 
+// ── Briques V3 (phases 0-3) exposées à QML ──────────────────────────────────
+// Singletons livrés par les phases V3 mais jamais câblés à la scène. Tous
+// suivent le patron sibling registerQml()/qmlInstance() (lazy singletons —
+// aucune instance globale à créer, cf. GameplayEventBus/AiProcessSupervisor).
+#include "game/memory/state_bus.h"
+#include "game/memory/memory_store.h"
+#include "ai/network/proposal_session.h"
+#include "ai/network/proposal_collab_bridge.h"
+#include "ai/proposal/proposal_lifecycle.h"
+#include "ai/proposal/proposal_gateway.h"
+#include "ai/instrumentation/slice_instrumentation.h"
+#include "ai/instrumentation/slice_scenarios.h"
+
 #include <QImageWriter>
 
 QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
@@ -127,6 +140,29 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // Superviseur des processus d'agents IA (M2, C5). Singleton QML : cycle de
     // vie des CLIs proposante/arbitre, aucun orphelin à la fermeture.
     AiProcessSupervisor::registerQml();
+
+    // ── Briques V3 (phases 0-3) — câblage QML (étape 1 du harness de test) ───
+    // Ces singletons sont livrés mais n'étaient encore enregistrés nulle part.
+    // Même patron lazy que GameplayEventBus/AiProcessSupervisor : instanciés à
+    // la première résolution QML, aucune instance globale (contextProperty) à
+    // créer. Le câblage des sources/coutures inter-singletons (StateBus↔Catway,
+    // ProposalCollabBridge.attach…) est fait par les briques elles-mêmes à leur
+    // construction ; rien à différer ici.
+    //
+    // Modules exposés :
+    //   MeowMemory 1.0   — StateBus, MemoryStore (+ MemoryScope uncreatable)
+    //   ProposalSession 1.0 — ProposalSession
+    //   MeowProposal 1.0 — ProposalLifecycle (+ Proposal), ProposalGateway,
+    //                      ProposalCollabBridge
+    //   MeowSlice 1.0    — SliceInstrumentation, SliceScenarioRunner
+    StateBus::registerQml();               // MeowMemory 1.0 · StateBus
+    MemoryStore::registerQml();            // MeowMemory 1.0 · MemoryStore
+    ProposalSession::registerQml();        // ProposalSession 1.0 · ProposalSession
+    ProposalLifecycle::registerQml();      // MeowProposal 1.0 · ProposalLifecycle
+    ProposalGateway::registerQml();        // MeowProposal 1.0 · ProposalGateway
+    ProposalCollabBridge::registerQml();   // MeowProposal 1.0 · ProposalCollabBridge
+    SliceInstrumentation::registerQml();   // MeowSlice 1.0 · SliceInstrumentation
+    SliceScenarioRunner::registerQml();    // MeowSlice 1.0 · SliceScenarioRunner
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
