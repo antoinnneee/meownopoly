@@ -302,6 +302,23 @@ void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
     delta.before  = QJsonDocument::fromJson(tile->lastKnownJson().toUtf8()).object();
     delta.after   = QJsonDocument::fromJson(tile->toJSON().toUtf8()).object();
 
+    // M4 (T3-1) — le delta appartient-il à la transaction courante ?
+    // (les call sites passent le txId retourné par beginTransaction, ou
+    // laissent groupId nul → rattaché à m_currentTransaction ci-dessus).
+    const bool txManaged = m_tx && delta.groupId == m_tx->id();
+
+    // Phase prepare fil-de-l'eau : validation AVANT la mutation de m_tiles.
+    // Une op invalide au milieu du lot marque la transaction en échec
+    // (sticky) : le commit deviendra un rollback global — aucune mutation
+    // finale, conformément au critère d'acceptation M4.
+    if (txManaged) {
+        QString reason;
+        if (!MeowTx::MapTransaction::validateDelta(map, delta, &reason)) {
+            m_tx->markFailed(reason);
+            return;
+        }
+    }
+
     // Mutation de m_tiles et ajustement du delta selon le type
     switch (deltaType) {
     case EditDeltaType::TileAdded:
@@ -323,7 +340,13 @@ void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
         break;
     }
 
-    map->pushDelta(delta);
+    // M4 — en transaction, la matérialisation du groupe undo est différée au
+    // commit (sinon un rollback devrait dépiler Map::m_undoStack). Hors
+    // transaction, comportement historique : push immédiat.
+    if (txManaged)
+        m_tx->recordApplied(delta);
+    else
+        map->pushDelta(delta);
 
     if (deltaType != EditDeltaType::TileDeleted)
         tile->commitCurrentState();
@@ -361,7 +384,12 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     delta.before = QJsonDocument::fromJson(beforeJson.toUtf8()).object();
     delta.after  = QJsonDocument::fromJson(afterJson.toUtf8()).object();
     delta.groupId = m_currentTransaction;
-    map->pushDelta(delta);
+    // M4 — même différé que updateMap : en transaction, le delta est
+    // enregistré dans la MapTransaction (undo + rollback), sinon push direct.
+    if (m_tx && delta.groupId == m_tx->id())
+        m_tx->recordApplied(delta);
+    else
+        map->pushDelta(delta);
 
     // Level 1c : sync Map.mapInfo avec l'état "après". Avant ce fix,
     // l'UI mutait Base_Board.mapInfo (instance A) et on poussait juste un
@@ -382,26 +410,152 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     }
 }
 
+// ---- M4 (T3-1) : transactions atomiques prepare/commit/rollback ----
+//
+// Rappel du triple rôle du QUuid retourné (voir aussi map_transaction.h) :
+//  1. identité de transaction (m_currentTransaction / m_tx->id()) ;
+//  2. groupId d'undo — les deltas poussés au commit forment un batch contigu
+//     que Map::undo/redo dépile d'un bloc ;
+//  3. clé du batch réseau — EditorOpBus::m_pendingGroups, flushé en une
+//     unité au commit ou jeté (discardGroup) sur échec, de sorte qu'aucun
+//     pair ne voie jamais un préfixe partiel du lot.
+
 QUuid Game::beginTransaction()
 {
+    if (m_tx) {
+        // Transaction déjà ouverte (appel begin/begin sans commit) : on ne
+        // fusionne pas deux lots — rollback de l'ancienne pour repartir sain.
+        qWarning() << Q_FUNC_INFO << "transaction" << m_tx->id().toString()
+                   << "encore ouverte — rollback implicite";
+        rollbackTransaction();
+    }
     m_currentTransaction = QUuid::createUuid();
+    m_tx = new MeowTx::MapTransaction(m_currentTransaction);
     m_txDirty = false;
     return m_currentTransaction;
 }
 
-void Game::commitTransaction()
+QUuid Game::prepareTransaction(const QJsonArray &ops)
+{
+    Map *map = MapFileManager::instance()->getCurrentMap();
+    if (!map) {
+        qWarning() << Q_FUNC_INFO << "pas de map courante — prepare refusé";
+        return QUuid();
+    }
+
+    QList<EditDelta> deltas;
+    deltas.reserve(ops.size());
+    for (const QJsonValue &v : ops) {
+        const QJsonObject o = v.toObject();
+        EditDelta d;
+        d.type   = static_cast<EditDeltaType::Type>(o.value("type").toInt());
+        d.tileId = QUuid(o.value("tileId").toString());
+        d.before = o.value("before").toObject();
+        d.after  = o.value("after").toObject();
+        deltas.append(d);
+    }
+
+    // Prévalidation COMPLÈTE avant la première mutation : si une seule op du
+    // lot est invalide, aucune transaction n'est ouverte et rien n'est muté.
+    QString reason;
+    if (!MeowTx::MapTransaction::prevalidateBatch(map, deltas, &reason)) {
+        qWarning() << Q_FUNC_INFO << "prévalidation échouée :" << reason;
+        return QUuid();
+    }
+    return beginTransaction();
+}
+
+bool Game::commitTransaction()
 {
     const QUuid txId = m_currentTransaction;
     m_currentTransaction = QUuid();
+    MeowTx::MapTransaction *tx = m_tx;
+    m_tx = nullptr;
 
-    // Flush le batch accumulé pendant la transaction vers les peers (Pattern B).
-    if (!txId.isNull())
-        EditorOpBus::instance()->flushGroup(txId);
+    if (!tx) {
+        // Compat : commit sans begin (ou après rollback). Flush d'un éventuel
+        // batch réseau legacy accroché à l'ancien groupId.
+        if (!txId.isNull())
+            EditorOpBus::instance()->flushGroup(txId);
+        if (m_txDirty && saveOnEdit()) {
+            qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
+        }
+        m_txDirty = false;
+        return true;
+    }
+
+    Map *map = MapFileManager::instance()->getCurrentMap();
+
+    // Échec sticky (op invalide au milieu du lot) → rollback global.
+    if (tx->failed()) {
+        rollbackTxInternal(tx, txId, tx->failureReason());
+        return false;
+    }
+
+    // Write-set vérifié au commit : une mutation concurrente (op distante
+    // intercalée) sur une tuile du lot → conflit explicite, rollback, jamais
+    // d'écrasement silencieux.
+    QString conflict;
+    if (map && !tx->verifyWriteSet(map, &conflict)) {
+        rollbackTxInternal(tx, txId, conflict);
+        return false;
+    }
+
+    // Succès : matérialise le groupe undo d'un bloc (batch contigu même si
+    // des ops remote se sont intercalées — elles ne poussent pas de delta),
+    // puis flush le batch réseau comme une unité (Pattern B).
+    if (map) {
+        for (const EditDelta &d : tx->deltas())
+            map->pushDelta(d);
+    }
+    EditorOpBus::instance()->flushGroup(txId);
 
     if (m_txDirty && saveOnEdit()) {
         qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
     }
     m_txDirty = false;
+    delete tx;
+    emit transactionCommitted(txId);
+    return true;
+}
+
+void Game::rollbackTransaction()
+{
+    const QUuid txId = m_currentTransaction;
+    m_currentTransaction = QUuid();
+    MeowTx::MapTransaction *tx = m_tx;
+    m_tx = nullptr;
+
+    if (!tx) {
+        // Rien d'ouvert : purge défensive d'un éventuel batch réseau orphelin.
+        if (!txId.isNull())
+            EditorOpBus::instance()->discardGroup(txId);
+        m_txDirty = false;
+        return;
+    }
+    rollbackTxInternal(tx, txId, QStringLiteral("rollback explicite"));
+}
+
+void Game::rollbackTxInternal(MeowTx::MapTransaction *tx, const QUuid &txId,
+                              const QString &reason)
+{
+    Map *map = MapFileManager::instance()->getCurrentMap();
+    if (map && !tx->isEmpty()) {
+        QList<QUuid> touched;
+        tx->rollback(map, &touched);
+        // Même sortie que Map::undo : déselectionne et notifie QML pour
+        // resynchroniser les visuels des tuiles restaurées/retirées.
+        emit map->forceUnselectAll();
+        emit map->afterRestoration(touched);
+    }
+    // Rien ne part sur le réseau : le batch bufferisé est jeté — aucun pair
+    // ne voit de préfixe partiel du lot.
+    EditorOpBus::instance()->discardGroup(txId);
+    m_txDirty = false;
+    delete tx;
+    qWarning().noquote() << "[Game] transaction" << txId.toString()
+                         << "annulée :" << reason;
+    emit transactionRolledBack(txId, reason);
 }
 
 void Game::finalizeDeletedTile(const QUuid &tileId)

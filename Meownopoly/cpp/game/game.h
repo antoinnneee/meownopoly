@@ -17,6 +17,7 @@
 #include "map/map.h"
 #include "map/maptypes.h"
 #include "map/editdelta.h"
+#include "tx/map_transaction.h"
 
 
 class Game : public QObject
@@ -57,8 +58,27 @@ public:
     Q_INVOKABLE void updateMap(int type, ItemSnapable* tile, QUuid groupId = {});
     // Idem pour les métadonnées. Remplace updateEditMetadata.
     Q_INVOKABLE void updateMapMetadata(const QString& beforeJson, const QString& afterJson);
+    // M4 (T3-1) — transactions atomiques prepare/commit/rollback.
+    // beginTransaction ouvre une MapTransaction (voie fil-de-l'eau : les
+    // mutations passent par updateMap qui valide puis enregistre chaque
+    // delta ; la matérialisation undo + batch réseau est différée au commit).
+    // Le QUuid retourné cumule TROIS rôles : identité de transaction,
+    // groupId d'undo (Map::m_undoStack) et clé de batch réseau
+    // (EditorOpBus::m_pendingGroups) — tout chemin d'échec nettoie les trois.
     Q_INVOKABLE QUuid beginTransaction();
-    Q_INVOKABLE void  commitTransaction();
+    // Phase prepare (voie propositions V3) : prévalide le lot COMPLET avant
+    // toute mutation (simulation du write-set). Retourne l'id de la
+    // transaction ouverte, ou un QUuid nul si une op est invalide (aucune
+    // transaction ouverte dans ce cas). `ops` = liste d'objets
+    // { type:int, tileId:string, before:object, after:object }.
+    Q_INVOKABLE QUuid prepareTransaction(const QJsonArray &ops);
+    // Commit : write-set vérifié (conflit concurrent → rollback + false,
+    // jamais d'écrasement silencieux), puis groupe undo poussé d'un bloc,
+    // batch réseau flushé comme une unité, save-on-commit si saveOnEdit.
+    Q_INVOKABLE bool  commitTransaction();
+    // Abandon explicite : inverses `before` appliqués en ordre inverse,
+    // batch réseau jeté (discardGroup), rien sur la pile undo.
+    Q_INVOKABLE void  rollbackTransaction();
     // Libère le C++ ItemSnapable stashé par map->removeTile (appelé par QML
     // à la fin de l'animation de suppression).
     Q_INVOKABLE void  finalizeDeletedTile(const QUuid &tileId);
@@ -120,6 +140,12 @@ signals:
     // la Q_PROPERTY previewZOrder pour que les previews suivent.
     void lamportClockChanged();
 
+    // M4 (T3-1) — résultat global d'une transaction. `transactionRolledBack`
+    // couvre l'abandon explicite, l'op invalide en cours de lot et le
+    // conflit write-set au commit (raison humaine dans `reason`).
+    void transactionCommitted(const QUuid &txId);
+    void transactionRolledBack(const QUuid &txId, const QString &reason);
+
 
 private:
     explicit Game(QObject *parent = nullptr);
@@ -127,6 +153,16 @@ private:
 
     QUuid m_currentTransaction;
     bool  m_txDirty = false;
+
+    // M4 (T3-1) — transaction courante (nullptr hors transaction). Possédée
+    // par Game, créée par begin/prepareTransaction, détruite par
+    // commit/rollbackTransaction. m_tx->id() == m_currentTransaction.
+    MeowTx::MapTransaction *m_tx = nullptr;
+
+    // Chemin d'échec commun (commit en échec + rollback explicite) :
+    // inverses appliqués, batch réseau jeté, transaction détruite.
+    void rollbackTxInternal(MeowTx::MapTransaction *tx, const QUuid &txId,
+                            const QString &reason);
 
     // Phase 4 — coalesce les saveCurrentMap déclenchés par applyRemoteDelta
     // (ex. FullSync → N TileAdded d'affilée). start() restartable ; émet un
