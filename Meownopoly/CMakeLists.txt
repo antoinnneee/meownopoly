@@ -255,6 +255,8 @@ endif()
 set(MEOW_TESTBENCH_SOURCES
     # Point d'entrée du banc
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/meow_testbench_main.cpp
+    # Contrat job/verdict partagé avec le superviseur côté jeu (tâche A2)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/bench/bench_protocol.cpp
     # Sérialisation de map + gestionnaires de fichiers
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/map.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/mapfilemanager.cpp

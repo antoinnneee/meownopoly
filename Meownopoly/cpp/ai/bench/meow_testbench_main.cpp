@@ -5,33 +5,35 @@
 // Spécification : doc/v3/12_BANC_ESSAI_R1.md.
 //
 // Ce fichier est le POINT D'ENTRÉE de l'exécutable jetable `meow_testbench`.
-// Il constitue le livrable de la tâche A1 (« cible CMake headless ») : un
-// process Qt **offscreen**, sans aucun module réseau lié (pas de Catway, pas
-// de chat, pas de PhysicsSession), qui réutilise l'arbre source du jeu pour la
-// sérialisation de map, `ItemSnapableFactory` et le cœur physique Pattounx v2.
+// Il constitue le livrable des tâches A1 (« cible CMake headless ») et A2
+// (« protocole job/verdict ») : un process Qt **offscreen**, sans aucun module
+// réseau lié (pas de Catway, pas de chat, pas de PhysicsSession), qui réutilise
+// l'arbre source du jeu pour la sérialisation de map, `ItemSnapableFactory` et
+// le cœur physique Pattounx v2.
 //
-// Périmètre A1 : amener la cible à un build vert avec l'enregistrement des
-// types QML nécessaires prouvé (le moteur QML se crée sans réseau). Le
-// protocole job/verdict (A2), le superviseur (A3) et les phases P1→P5 (A5)
-// sont branchés dans les tâches suivantes — ici, un verdict de substitution
-// (`bench_not_implemented`) est émis sur la ligne `MEOWBENCH:` afin de figer
-// dès maintenant le contrat de sortie décrit au §2.2 / §4.
+// État actuel :
+//   - A1 : cible headless verte, types QML nécessaires enregistrés.
+//   - A2 : le fichier de job JSON (§2.3) est lu et validé via `bench_protocol` ;
+//     le verdict (§4) est émis sur une ligne unique `MEOWBENCH:`, échoue
+//     proprement sur job illisible/invalide, et échoit sur `bench_not_implemented`
+//     tant que le pipeline P1→P5 (A5) n'est pas branché.
 //
-// Entrée  : chemin d'un fichier de job JSON en argument (§2.3), optionnel à ce
-//           stade.
+// Entrée  : chemin d'un fichier de job JSON en argument (§2.3).
 // Sortie  : une ligne unique `MEOWBENCH:{…}` sur stdout ; code de sortie 0 =
 //           verdict rendu, ≠ 0 = crash du banc lui-même.
 // ============================================================================
 
 #include <QGuiApplication>
 #include <QQmlEngine>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
+#include <QElapsedTimer>
 #include <QString>
+#include <QStringList>
 #include <QByteArray>
+#include <QJsonObject>
 
 #include <cstdio>
+
+#include "bench_protocol.h"
 
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/itemsnapablefactory.h"
@@ -53,9 +55,9 @@
 #define MEOW_BENCH_MAX_RSS_MB 512
 #endif
 
-namespace {
+namespace mb = meow::bench;
 
-constexpr int kBenchVersion = 1;
+namespace {
 
 // Enregistre les types QML strictement nécessaires à la reconstruction d'un
 // snapshot de map (§11 : « ne lier que le nécessaire »). AUCUN type réseau.
@@ -78,8 +80,7 @@ void registerBenchQmlTypes()
 // Émet le verdict sur une ligne unique préfixée, puis flush (§2.2).
 void emitVerdict(const QJsonObject &verdict)
 {
-    const QByteArray line =
-        "MEOWBENCH:" + QJsonDocument(verdict).toJson(QJsonDocument::Compact);
+    const QByteArray line = mb::formatVerdictLine(verdict);
     std::fwrite(line.constData(), 1, static_cast<size_t>(line.size()), stdout);
     std::fputc('\n', stdout);
     std::fflush(stdout);
@@ -89,6 +90,9 @@ void emitVerdict(const QJsonObject &verdict)
 
 int main(int argc, char *argv[])
 {
+    QElapsedTimer wall;
+    wall.start();
+
     // Headless : forcer la plateforme offscreen si le superviseur ne l'a pas
     // déjà imposée via `-platform offscreen` (§2.1). Le rendu n'est jamais
     // évalué — on valide le comportement, pas les pixels.
@@ -101,7 +105,7 @@ int main(int argc, char *argv[])
     QQmlEngine engine;
     registerBenchQmlTypes();
 
-    // Chemin du fichier de job (§2.3) — parsé à partir de A2.
+    // Chemin du fichier de job (§2.3) : premier argument non-option.
     QString jobPath;
     const QStringList args = app.arguments();
     for (int i = 1; i < args.size(); ++i) {
@@ -111,21 +115,33 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Verdict de substitution : le pipeline P1→P5 arrive avec A2/A5. On rend
-    // dès maintenant un verdict bien formé pour que le superviseur (A3) puisse
-    // se brancher sur le contrat de sortie sans attendre l'implémentation.
-    QJsonObject verdict;
-    verdict.insert(QStringLiteral("benchVersion"), kBenchVersion);
-    verdict.insert(QStringLiteral("verdict"), QStringLiteral("fail"));
-    QJsonObject failure;
-    failure.insert(QStringLiteral("code"), QStringLiteral("bench_not_implemented"));
-    failure.insert(QStringLiteral("details"),
-                   jobPath.isEmpty()
-                       ? QStringLiteral("A1: cible headless prête, protocole job/verdict non implémenté (A2)")
-                       : QStringLiteral("A1: job reçu mais pipeline P1->P5 non implémenté (A2/A5)"));
-    failure.insert(QStringLiteral("retryable"), false);
-    verdict.insert(QStringLiteral("failures"), QJsonArray{failure});
-    emitVerdict(verdict);
+    // A2 : lecture + validation du job. Sur échec structurel (illisible, JSON
+    // cassé, champs manquants), on rend un verdict d'échec ciblé — le job n'a
+    // même pas atteint le pipeline.
+    const mb::BenchJob job = mb::parseJobFile(jobPath);
+    if (!job.ok) {
+        mb::BenchFailure f;
+        f.code = job.errorCode;
+        f.details = job.errorDetails;
+        f.retryable = false;
+        mb::BenchVerdict v = mb::BenchVerdict::fail(job.jobId, f);
+        v.durationMs = wall.elapsed();
+        emitVerdict(v.toJson());
+        return 0;
+    }
+
+    // Verdict de substitution : le pipeline P1→P5 arrive avec A5. On rend dès
+    // maintenant un verdict bien formé — job échoué, code `bench_not_implemented`
+    // — en échoant `jobId`, `benchVersion` et `durationMs` pour que le
+    // superviseur (A3) valide le contrat de sortie de bout en bout.
+    mb::BenchFailure f;
+    f.code = QString::fromLatin1(mb::failure::kNotImplemented);
+    f.details = QStringLiteral("A2 : job « %1 » lu et validé ; pipeline P1→P5 non implémenté (A5)")
+                    .arg(job.jobId);
+    f.retryable = false;
+    mb::BenchVerdict v = mb::BenchVerdict::fail(job.jobId, f);
+    v.durationMs = wall.elapsed();
+    emitVerdict(v.toJson());
 
     return 0;
 }
