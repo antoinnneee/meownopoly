@@ -1,0 +1,78 @@
+{
+  "_comment": "Corpus de test du banc d'essai R1 (doc v3 12 §8, tâche A7). run_corpus.ps1 assemble un job par artefact (source inline), lance meow_testbench 3 fois et vérifie le code de verdict attendu. La colonne 'expect' est le code d'échec attendu (ou 'pass').",
+  "benchVersion": 1,
+  "seed": 42,
+  "defaultBudgets": {
+    "loadTimeoutMs": 5000,
+    "idleTicks": 600,
+    "tickBudgetUs": 500,
+    "handlerBudgetUs": 2000,
+    "emitMaxPerSec": 30,
+    "objectMaxCount": 200,
+    "artifactMemMaxMB": 8,
+    "memoryValueMaxBytes": 1024,
+    "maxRssMB": 512
+  },
+  "artifacts": [
+    {
+      "file": "sain_plaque_piegee.qml",
+      "expect": "pass",
+      "targetUuid": "tile-plaque-01",
+      "writeSet": ["tile-plaque-01/state/score"],
+      "stimuli": [ { "type": "event", "name": "zoneEntered", "count": 1 } ],
+      "note": "Reference saine (critere R1 n5). Doit passer de facon stable."
+    },
+    {
+      "file": "boucle_infinie_onload.qml",
+      "expect": "load_timeout",
+      "targetUuid": "tile-loop-01",
+      "note": "while(true) au chargement. Tue par le watchdog P2, jeu jamais gele."
+    },
+    {
+      "file": "boucle_infinie_handler.qml",
+      "expect": ["event_budget", "bench_timeout"],
+      "targetUuid": "tile-loop-02",
+      "stimuli": [ { "type": "event", "name": "boom", "count": 1 } ],
+      "note": "Boucle dans un handler. Tue par le watchdog de dispatch P4."
+    },
+    {
+      "file": "timer_spam.qml",
+      "expect": "event_flood",
+      "targetUuid": "tile-spam-01",
+      "note": "Timer 1 ms + emit. Debit mesure dans la fenetre temps reel 500 ms."
+    },
+    {
+      "file": "alloc_massive.qml",
+      "expect": ["object_quota", "runaway_alloc"],
+      "targetUuid": "tile-alloc-01",
+      "note": "Repeater 3000 items. Franchit le plafond d'objets D34 (200)."
+    },
+    {
+      "file": "import_interdit.qml",
+      "expect": ["import_forbidden", "load_failed"],
+      "targetUuid": "tile-import-01",
+      "p0": true,
+      "note": "Rejete en P0 dans le pipeline reel (StaticValidator, hors banc). Passe au banc: load_failed (QtWebSockets non lie). Dans les deux cas, rien ne s'execute."
+    },
+    {
+      "file": "acces_singleton.qml",
+      "expect": "load_failed",
+      "targetUuid": "tile-singleton-01",
+      "note": "Preuve du masquage (critere R1 n4). Game./Catway. => TypeError."
+    },
+    {
+      "file": "writeset_hors_declaration.qml",
+      "expect": "writeset_violation",
+      "targetUuid": "tile-piege-02",
+      "writeSet": ["tile-piege-02/state/allowed"],
+      "stimuli": [ { "type": "event", "name": "poke", "count": 1 } ],
+      "note": "Ecrit une cle 'secret' hors write-set declare (D11)."
+    },
+    {
+      "file": "fuite_teardown.qml",
+      "expect": "leak",
+      "targetUuid": "tile-fuite-01",
+      "note": "Activite de facade au teardown. Detecte en P5."
+    }
+  ]
+}

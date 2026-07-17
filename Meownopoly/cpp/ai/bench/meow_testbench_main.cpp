@@ -30,15 +30,18 @@
 #include <QGuiApplication>
 #include <QQmlEngine>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QString>
 #include <QStringList>
 #include <QByteArray>
 #include <QJsonObject>
+#include <QJsonArray>
 
 #include <cstdio>
 
 #include "bench_protocol.h"
 #include "bench_runner.h"
+#include "ai/sandbox/static_validator.h"
 
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/itemsnapablefactory.h"
@@ -80,6 +83,53 @@ void emitVerdict(const QJsonObject &verdict)
     std::fflush(stdout);
 }
 
+// Mode `--static-check <fichier.qml>` : rejoue le préfiltre P0 (StaticValidator,
+// tâche A4) sur une source, sans spawner le pipeline P1→P5. Utilisé par le
+// harnais de corpus (test_artifacts/run_corpus.ps1) pour modéliser l'ORDRE réel
+// du pipeline (P0 avant le banc, doc 12 §3) : un import hors allow-list est
+// rejeté en P0 et le banc n'est jamais atteint. Le résultat sort sur le même
+// canal `MEOWBENCH:` (verdict pass = P0 franchi, fail = findings P0).
+int runStaticCheck(const QString &qmlPath)
+{
+    namespace sv = meow::sandbox;
+
+    mb::BenchVerdict v;
+    v.jobId = QStringLiteral("static_") + qmlPath;
+
+    QFile f(qmlPath);
+    if (!f.open(QIODevice::ReadOnly)) {
+        mb::BenchFailure fail;
+        fail.code = QString::fromLatin1(mb::failure::kJobReadError);
+        fail.phase = QStringLiteral("P0");
+        fail.details = QStringLiteral("ouverture impossible de « %1 » : %2")
+                           .arg(qmlPath, f.errorString());
+        v.failures.append(fail);
+        emitVerdict(v.toJson());
+        return 0;
+    }
+    const QString source = QString::fromUtf8(f.readAll());
+    f.close();
+
+    sv::StaticValidationInput in;
+    in.source = source;
+    // MVP : aucun module gameplay requis/actif dans le corpus R1.
+    const sv::StaticValidationResult res = sv::StaticValidator::validate(in);
+
+    for (const sv::StaticFinding &finding : res.findings) {
+        mb::BenchFailure fail;
+        fail.code = finding.code;
+        fail.phase = QStringLiteral("P0");
+        fail.details = finding.details;
+        fail.retryable = finding.retryable;
+        v.failures.append(fail);
+    }
+    v.metrics.insert(QStringLiteral("imports"),
+                     QJsonArray::fromStringList(res.imports));
+    v.pass = res.passed();
+    emitVerdict(v.toJson());
+    return 0;
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
@@ -95,19 +145,29 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    // Chemin du fichier de job (§2.3) : premier argument non-option. Le drapeau
+    // `--static-check <fichier>` bascule sur le préfiltre P0 seul (voir plus bas).
+    QString jobPath;
+    QString staticCheckPath;
+    const QStringList args = app.arguments();
+    for (int i = 1; i < args.size(); ++i) {
+        const QString &a = args.at(i);
+        if (a == QStringLiteral("--static-check")) {
+            if (i + 1 < args.size())
+                staticCheckPath = args.at(++i);
+            continue;
+        }
+        if (!a.startsWith('-') && jobPath.isEmpty())
+            jobPath = a;
+    }
+
+    // Mode P0 seul : pas besoin du moteur QML ni des types du banc.
+    if (!staticCheckPath.isEmpty())
+        return runStaticCheck(staticCheckPath);
+
     // Le moteur QML du banc est distinct de celui du jeu (process jetable).
     QQmlEngine engine;
     registerBenchQmlTypes();
-
-    // Chemin du fichier de job (§2.3) : premier argument non-option.
-    QString jobPath;
-    const QStringList args = app.arguments();
-    for (int i = 1; i < args.size(); ++i) {
-        if (!args.at(i).startsWith('-')) {
-            jobPath = args.at(i);
-            break;
-        }
-    }
 
     // A2 : lecture + validation du job. Sur échec structurel (illisible, JSON
     // cassé, champs manquants), on rend un verdict d'échec ciblé — le job n'a

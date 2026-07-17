@@ -270,6 +270,9 @@ set(MEOW_TESTBENCH_SOURCES
     # banc/jeu (doc 12 §5) : ces deux fichiers sont aussi dans le GLOB du jeu
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/sandbox/restricted_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/sandbox/meow_game_api.cpp
+    # Préfiltre statique P0 (tâche A4) — code PARTAGÉ banc/jeu : le mode
+    # `--static-check` du banc rejoue le P0 pour le harnais de corpus (A7)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ai/sandbox/static_validator.cpp
     # Sérialisation de map + gestionnaires de fichiers
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/map.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/map/mapfilemanager.cpp
