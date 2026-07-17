@@ -96,7 +96,17 @@ conservé ; si le journal est tronqué en deçà du curseur demandé, réponse
 - **Filtrage par rôle** : le proposant voit les événements « publics » de la
 partie ; l'arbitre voit en plus les propositions en file et les
 amendements. Filtrage fait côté serveur MCP (capacités du token, D20).
-- **Réponse :**
+- **Réponse :** *(proposition consolidée — **à décider par Antoine/Valou**, non figée
+tant que non actée en D-registre).* La proposition ci-dessus est reprise telle
+quelle dans le **brouillon de manifeste du canal**
+[`cpp/ai/gateway/channel_manifest.json`](../../cpp/ai/gateway/channel_manifest.json)
+(bloc `eventSummary`), qui sert de support de décision (tâche P0-4). Points
+laissés ouverts à l'arbitrage : (1) **plafond de lignes** du bloc injecté
+(proposé 30) ; (2) définition des types d'événements « pertinents » à inclure
+(reco : `tile.placed`, `proposal.verdict`, `memory.changed` publics, changements
+de règlement) ; (3) les verdicts de **dry-run** (D42) **n'entrent pas** au journal
+partagé (suggestion SUIVI §5, à confirmer). Une fois validée, reporter en décision
+(ex. **D43**) et retirer la question.
 
 
 
@@ -127,7 +137,19 @@ Familles retenues ([doc 02](./02_CANAL_IA.md) §5). **Proposition de manifeste M
 vertical slice.
 - Le groupement exact reste à **mesurer** sur les premiers workflows
 (tokens des schémas vs ambiguïté, [doc 02](./02_CANAL_IA.md) §3).
-- **Sous-ensemble retenu :**
+- **Sous-ensemble retenu :** *(proposition consolidée — **à décider par
+Antoine/Valou**, non figée tant que non actée en D-registre).* Les 12 tools
+ci-dessus sont matérialisés (rôles `proposer`/`arbiter`, schémas de paramètres,
+quotas, regroupements) dans le **brouillon de manifeste du canal**
+[`cpp/ai/gateway/channel_manifest.json`](../../cpp/ai/gateway/channel_manifest.json)
+(bloc `tools` + `roles`), support de décision de la tâche P0-4. Répartition par
+rôle proposée : `arbiter_verdict` **arbitre uniquement** ; l'arbitre a accès aux
+seuls tools de lecture (`help`, `state_query`, `events_poll`, `screenshot`) + son
+verdict ; le proposant a tout le reste. À arbitrer : (1) **granularité du
+groupement** (mesure tokens vs ambiguïté, doc 02 §3) — le manifeste garde la trace
+des hooks regroupés par tool ; (2) **chiffrage des quotas/rate-limits** (doc 02 §7,
+Q3 non posée). Une fois validé, ce manifeste devient la **source de vérité unique**
+de M1 (catalogue) et M12 (skill) — reporter la décision et retirer la question.
 
 ---
 
