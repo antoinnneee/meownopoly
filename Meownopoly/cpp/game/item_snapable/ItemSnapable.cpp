@@ -140,6 +140,19 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
             qWarning() << "ITEM_SNAPABLE: 'physicalObjectParameter' invalide pour tile" << m_uniqueId.toString();
         }
     }
+
+    // Espace mémoire (doc v3/05 Étape A). Aucun schéma de clés imposé : le blob
+    // est chargé tel quel depuis le disque. Le QML génératif référencé ne doit
+    // jamais être instancié sans le sandbox (doc 04) — le blob n'est pas de
+    // confiance.
+    if (m_json.contains("memory")) {
+        if (m_json["memory"].isObject()) {
+            m_userMemory = m_json["memory"].toObject().toVariantMap();
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'memory' n'est pas un objet JSON pour tile" << m_uniqueId.toString();
+        }
+    }
+
     commitCurrentState();
 }
 
@@ -276,6 +289,16 @@ QString ItemSnapable::toJSON()
         root["displayParameter"] = m_displayParameter->toJsonObject();
     }
 
+    // Espace mémoire (doc v3/05 Étape A). Piège n°1 : sérialiser via
+    // QJsonObject::fromVariantMap plutôt que par concaténation manuelle — sinon
+    // une valeur texte avec guillemets/backslash/newline casse l'échappement.
+    // N'insérer que si non vide pour garder un round-trip stable sur les tiles
+    // sans mémoire. Le blob voyage gratuitement dans EditDelta.before/after
+    // (persistance disque + inverse de configuration undoable).
+    if (!m_userMemory.isEmpty()) {
+        root["memory"] = QJsonObject::fromVariantMap(m_userMemory);
+    }
+
     QJsonArray nextArray;
     for (ItemSnapable *n : std::as_const(next)) {
         if (n) nextArray.append(n->uniqueId().toString());
@@ -309,6 +332,47 @@ void ItemSnapable::setUniqueId(const QUuid &newUniqueId)
         return;
     m_uniqueId = newUniqueId;
     emit uniqueIdChanged();
+}
+
+void ItemSnapable::setUserMemory(const QVariantMap &memory)
+{
+    // Garde anti-boucle : pas de ré-émission si la map est identique. QVariant
+    // supporte operator== pour les primitives, listes et maps imbriquées.
+    if (m_userMemory == memory)
+        return;
+    m_userMemory = memory;
+    ++m_memoryVersion;
+    emit userMemoryChanged();
+}
+
+void ItemSnapable::setMemoryValue(const QString &key, const QVariant &value)
+{
+    // Garde anti-boucle (D15) : pas d'émission si la valeur n'a pas réellement
+    // changé — c'est ce qui casse la cascade écriture→signal→ré-écriture d'une
+    // règle qui écrirait la même valeur en réaction.
+    if (m_userMemory.contains(key) && m_userMemory.value(key) == value)
+        return;
+
+    // Garde de réentrance : plafonne les cascades légitimes mais non
+    // convergentes (règle A écrit X → règle B écrit Y → règle A écrit X…).
+    if (m_memoryWriteDepth >= kMaxMemoryCascadeDepth) {
+        qWarning() << "ITEM_SNAPABLE: cascade mémoire trop profonde ("
+                   << m_memoryWriteDepth << ") sur la clé" << key
+                   << "pour la tile" << m_uniqueId.toString()
+                   << "- écriture ignorée pour éviter la boucle";
+        return;
+    }
+
+    ++m_memoryWriteDepth;
+    m_userMemory.insert(key, value);
+    ++m_memoryVersion;
+    // Réveil ciblé d'abord (les abonnés fins), puis réveil global (bindings QML
+    // sur la Q_PROPERTY userMemory). Le namespace reste vide à l'Étape A : la
+    // distinction config/state est portée par la convention IA (doc v3/05 §5),
+    // pas encore par le cœur.
+    emit memoryValueChanged(QString(), key, value, int(m_memoryVersion));
+    emit userMemoryChanged();
+    --m_memoryWriteDepth;
 }
 
 void ItemSnapable::changeCaseDataType(Case::CaseType caseType)
@@ -417,6 +481,13 @@ void ItemSnapable::applyJson(const QJsonObject &json)
         m_enemyParameter->applyJson(json["enemyParameter"].toObject());
     if (json.contains("physicalObjectParameter"))
         m_physicalObjectParameter->applyJson(json["physicalObjectParameter"].toObject());
+
+    // Espace mémoire (doc v3/05 Étape A). Sert au chargement disque et à
+    // l'application d'un inverse de configuration undoable (Étape C). Passe par
+    // setUserMemory qui émet userMemoryChanged → la restauration réveille aussi
+    // les comportements abonnés (usage 3).
+    if (json.contains("memory"))
+        setUserMemory(json["memory"].toObject().toVariantMap());
 
     // NB: uniqueId jamais override (identité de la tile) ;
     // next/prev gérés par Map::rewireLinks après applyJson.

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QUrl>
+#include <QVariantMap>
 #include "game/case/Case.h"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -32,6 +33,9 @@ class ItemSnapable : public QObject
     Q_PROPERTY(PhysicalObjectParameter * physicalObjectParameter READ physicalObjectParameter WRITE setPhysicalObjectParameter NOTIFY physicalObjectParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
+    // Espace mémoire par élément (doc v3/05, D15, Étape A). Blob de valeurs
+    // sérialisables opaques côté cœur ; le sens des clés est une convention IA.
+    Q_PROPERTY(QVariantMap userMemory READ userMemory WRITE setUserMemory NOTIFY userMemoryChanged FINAL)
 
 
 public:
@@ -83,6 +87,15 @@ public:
     QUuid uniqueId() const;
     void setUniqueId(const QUuid &newUniqueId);
 
+    // ---- Espace mémoire (doc v3/05 Étape A, D15) ----
+    // Conteneur typé QVariantMap (préserve int/real/string/bool côté QML).
+    QVariantMap userMemory() const { return m_userMemory; }
+    void setUserMemory(const QVariantMap &memory);
+    // Setter fin : écrit une clé et émet un réveil ciblé memoryValueChanged.
+    // Garde anti-boucle : aucune émission si la valeur est inchangée.
+    Q_INVOKABLE void setMemoryValue(const QString &key, const QVariant &value);
+    Q_INVOKABLE QVariant memoryValue(const QString &key) const { return m_userMemory.value(key); }
+
     Q_INVOKABLE void changeCaseDataType(Case::CaseType caseType);
 
     Q_INVOKABLE void addNext(ItemSnapable *newNext);
@@ -106,6 +119,11 @@ public:
     bool operator==(const ItemSnapable &other) const {
         qDebug() << "Comparing ItemSnapable with uniqueId:" << uniqueId() << "to ItemSnapable with uniqueId:" << other.uniqueId();
         if (m_tileType != other.m_tileType)
+            return false;
+        // L'espace mémoire fait partie de l'état de l'élément : sans ça, un
+        // no-op (before==after) qui ne diffère que par la mémoire passerait
+        // inaperçu dans la détection de changement.
+        if (m_userMemory != other.m_userMemory)
             return false;
         if (m_displayParameter && other.m_displayParameter) {
             if (!(*m_displayParameter == *other.m_displayParameter))
@@ -171,6 +189,14 @@ signals:
 
     void tileTypeChanged();
 
+    // Réveil global (toute la map a changé) — support de l'usage 3 (doc v3/05
+    // §1) : règles custom et comportements générés s'y abonnent.
+    void userMemoryChanged();
+    // Réveil ciblé sur une clé sans re-scanner la map. `version` est un compteur
+    // d'écriture monotone qui aide à ignorer les états obsolètes.
+    void memoryValueChanged(const QString &ns, const QString &key,
+                            const QVariant &value, int version);
+
 private :
     Case * m_caseData = nullptr;
     DisplayParameter * m_displayParameter = new DisplayParameter;
@@ -183,6 +209,16 @@ private :
     QString m_lastKnownJson;
     QUuid m_uniqueId;
     TileType m_tileType;
+
+    // Espace mémoire (doc v3/05 Étape A). QVariantMap pour préserver les types
+    // natifs et se convertir dans les deux sens avec QJsonObject.
+    QVariantMap m_userMemory;
+    // Compteur d'écriture monotone porté par memoryValueChanged.
+    quint32 m_memoryVersion = 0;
+    // Garde de réentrance : plafonne la cascade écriture→signal→écriture d'une
+    // règle qui, en réaction, ré-écrit la mémoire (doc v3/05 §4).
+    int m_memoryWriteDepth = 0;
+    static constexpr int kMaxMemoryCascadeDepth = 16;
 };
 
 #endif // ITEMSNAPABLE_H
