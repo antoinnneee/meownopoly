@@ -6,16 +6,50 @@
 #include "bench_protocol.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QLibraryInfo>
 #include <QTemporaryFile>
+#include <QTextStream>
 #include <QTimer>
 #include <QDebug>
 
 namespace mb = meow::bench;
+
+namespace {
+// ---------------------------------------------------------------------------
+// Journal de diagnostic du pipeline banc : chaque étape (résolution du chemin,
+// spawn, sortie du process, verdict) est tracée dans un fichier append-only
+// pour diagnostiquer les échecs environnementaux (exe introuvable, crash au
+// démarrage, DLLs manquantes) sans dépendre de la console de l'IDE.
+QString benchLogPath()
+{
+    return QDir::temp().absoluteFilePath(QStringLiteral("meow_bench_debug.log"));
+}
+
+void benchLog(const QString &line)
+{
+    qInfo().noquote() << "[BenchSupervisor]" << line;
+    QFile f(benchLogPath());
+    if (f.open(QIODevice::Append | QIODevice::Text)) {
+        QTextStream ts(&f);
+        ts << QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"))
+           << QStringLiteral("  ") << line << QChar(u'\n');
+    }
+}
+
+// Tronque une sortie de process pour le journal (dernières lignes utiles).
+QString tailForLog(const QByteArray &raw, int maxChars = 600)
+{
+    QString s = QString::fromUtf8(raw).trimmed();
+    if (s.size() > maxChars)
+        s = QStringLiteral("…") + s.right(maxChars);
+    return s.isEmpty() ? QStringLiteral("(vide)") : s;
+}
+} // namespace
 
 BenchSupervisor::BenchSupervisor(QObject *parent)
     : QObject(parent)
@@ -46,13 +80,45 @@ bool BenchSupervisor::busy() const
 
 QString BenchSupervisor::resolveDefaultBenchPath()
 {
-    // L'exécutable du banc est bâti à côté du jeu (même dossier de sortie).
-    QDir dir(QCoreApplication::applicationDirPath());
 #if defined(Q_OS_WIN)
-    return dir.absoluteFilePath(QStringLiteral("meow_testbench.exe"));
+    const QString exeName = QStringLiteral("meow_testbench.exe");
 #else
-    return dir.absoluteFilePath(QStringLiteral("meow_testbench"));
+    const QString exeName = QStringLiteral("meow_testbench");
 #endif
+
+    // Override explicite par l'environnement (debug / déploiement atypique).
+    const QString envExe = QString::fromUtf8(qgetenv("MEOW_BENCH_EXE"));
+    if (!envExe.isEmpty()) {
+        benchLog(QStringLiteral("résolution : MEOW_BENCH_EXE = %1 (exists=%2)")
+                     .arg(envExe).arg(QFileInfo::exists(envExe)));
+        return envExe;
+    }
+
+    // Le banc est bâti dans le même arbre de build que le jeu, mais le dossier
+    // exact varie : à côté de l'exe (Qt Creator single-config, exe racine
+    // déployé), ou dans un sous-dossier de configuration (Ninja Multi-Config :
+    // build/Release, build/Debug…). On sonde les candidats dans l'ordre.
+    const QDir appDir(QCoreApplication::applicationDirPath());
+    QStringList candidates;
+    candidates << appDir.absoluteFilePath(exeName);
+    for (const QString &config : { QStringLiteral("Release"), QStringLiteral("Debug"),
+                                   QStringLiteral("RelWithDebInfo"), QStringLiteral("MinSizeRel") }) {
+        candidates << appDir.absoluteFilePath(config + QLatin1Char('/') + exeName);
+        candidates << appDir.absoluteFilePath(QStringLiteral("../") + config + QLatin1Char('/') + exeName);
+    }
+
+    for (const QString &c : candidates) {
+        if (QFileInfo::exists(c)) {
+            benchLog(QStringLiteral("résolution : banc trouvé → %1").arg(QDir::cleanPath(c)));
+            return QDir::cleanPath(c);
+        }
+    }
+
+    benchLog(QStringLiteral("résolution : banc INTROUVABLE. Candidats sondés :\n  - %1")
+                 .arg(candidates.join(QStringLiteral("\n  - "))));
+    // On retourne quand même le candidat « à côté du jeu » : le message
+    // d'erreur du verdict citera ce chemin attendu.
+    return candidates.first();
 }
 
 QProcessEnvironment BenchSupervisor::benchEnvironment()
@@ -84,6 +150,10 @@ void BenchSupervisor::runJob(const QJsonObject &job)
 
     m_finished = false;
     m_jobId = job.value(QStringLiteral("jobId")).toString();
+    benchLog(QStringLiteral("runJob %1 : exe=%2 (exists=%3), timeout=%4 ms")
+                 .arg(m_jobId, m_benchExe)
+                 .arg(QFileInfo::exists(m_benchExe))
+                 .arg(m_timeoutMs));
 
     // 1) Sérialiser le job dans un fichier temporaire (entrée = fichier, §2.2).
     QTemporaryFile jobFile(QDir::tempPath() + QStringLiteral("/meowbench_job_XXXXXX.json"));
@@ -134,7 +204,13 @@ void BenchSupervisor::onFinished(int exitCode, QProcess::ExitStatus status)
         return;
 
     const QByteArray out = m_process ? m_process->readAllStandardOutput() : QByteArray();
+    const QByteArray err = m_process ? m_process->readAllStandardError() : QByteArray();
     const QJsonObject verdict = mb::extractVerdict(out);
+
+    benchLog(QStringLiteral("onFinished %1 : exitCode=%2 status=%3 (0=NormalExit)\n"
+                            "  stdout: %4\n  stderr: %5")
+                 .arg(m_jobId).arg(exitCode).arg(int(status))
+                 .arg(tailForLog(out), tailForLog(err)));
 
     if (status == QProcess::CrashExit) {
         // Crash dur du process : pas de verdict fiable, on synthétise.
@@ -157,6 +233,10 @@ void BenchSupervisor::onErrorOccurred(QProcess::ProcessError error)
     if (m_finished)
         return;
 
+    benchLog(QStringLiteral("onErrorOccurred %1 : error=%2 (%3)")
+                 .arg(m_jobId).arg(int(error))
+                 .arg(m_process ? m_process->errorString() : QStringLiteral("?")));
+
     // `finished` couvre les cas post-démarrage ; ici on ne synthétise que les
     // échecs de démarrage (les autres erreurs seront suivies d'un `finished`).
     if (error == QProcess::FailedToStart) {
@@ -171,6 +251,9 @@ void BenchSupervisor::onTimeout()
 {
     if (m_finished)
         return;
+
+    benchLog(QStringLiteral("onTimeout %1 : %2 ms dépassés, kill du banc")
+                 .arg(m_jobId).arg(m_timeoutMs));
 
     // Timeout dur : tuer le process (le `finished` qui suivra est ignoré par
     // le garde `m_finished`) et rendre le verdict synthétique.
@@ -188,6 +271,10 @@ void BenchSupervisor::finishWith(const QJsonObject &verdict)
 
     if (m_timer)
         m_timer->stop();
+
+    benchLog(QStringLiteral("verdict %1 : %2")
+                 .arg(m_jobId,
+                      QString::fromUtf8(QJsonDocument(verdict).toJson(QJsonDocument::Compact))));
 
     cleanup();
     // Émission TOUJOURS différée : les échecs pré-spawn (exe du banc absent,

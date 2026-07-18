@@ -383,6 +383,12 @@ target_link_libraries(meow_testbench PRIVATE
     Qt6::Qml
 )
 
+# Le jeu embarque le superviseur du banc (BenchSupervisor cherche
+# meow_testbench à côté de l'exe) : construire le jeu construit donc aussi le
+# banc, sinon tout build tree qui n'a jamais invoqué la cible à la main
+# (ex. Qt Creator) rend des verdicts « exécutable du banc introuvable ».
+add_dependencies(${PROJECT_NAME} meow_testbench)
+
 # ============================================================================
 # Tests unitaires (PattounX)
 # ============================================================================
