@@ -29,6 +29,11 @@ import EditorOpBus 1.0
 import GameplayModuleManager 1.0
 import Meownopoly.Account 1.0
 
+// V3 slice runtime (T4-5) : moteur de règles + substrat mémoire/proposition.
+import MeowRules 1.0
+import MeowMemory 1.0
+import ProposalSession 1.0
+
 import chat
 import world3d 1.0
 
@@ -132,8 +137,50 @@ Base_Board {
     signal reconnectRequested(string sessionId, string hostId)
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
+    // ── V3 slice runtime (T4-5) ────────────────────────────────────────────
+    // Aligne le cycle de vie des sessions runtime V3 (StateBus D35, ProposalSession
+    // D40) et l'autorité du RulesEngine (D33) sur celui d'EditorSession — la
+    // collab éditeur EST le substrat de partie V3. Idempotent, ne DÉMARRE que :
+    //  - hôte  : StateBus/ProposalSession en hôte, RulesEngine autorité ;
+    //  - client: StateBus/ProposalSession en client vers l'hôte courant, sans
+    //            autorité (copie passive du règlement).
+    // Ne force jamais l'arrêt : EditorSession pilote lui-même l'arrêt ordonné des
+    // sessions V3 (départ volontaire beginHostHandover, migration enterMigrationMode
+    // qui conserve le miroir StateBus). Pendant la suspension (migration en cours),
+    // on n'arme rien — la reprise (proposalsResumed → migrationStateChanged) rappelle
+    // cette fonction et relance alors le rôle courant : c'est ce qui recâble
+    // StateBus/ProposalSession du NOUVEL hôte élu comme des survivants reconnectés
+    // (le gap laissé par T4-3, où seul EditorSession reconnectait via p2pStateMachine).
+    function _syncV3Runtime() {
+        // Autorité D33 : hôte ou solo → vrai ; client → faux (le client reçoit les
+        // effets par réplication, il n'exécute jamais une règle localement).
+        RulesEngine.hostAuthority = (!EditorSession.active || EditorSession.isHost)
+
+        // Rien à armer tant que la collab n'est pas active ou que les propositions
+        // sont suspendues (fenêtre de migration).
+        if (!EditorSession.active || EditorSession.proposalsSuspended)
+            return
+
+        const sid  = EditorSession.sessionId
+        const me   = EditorSession.localPlayerId
+        if (EditorSession.isHost) {
+            if (!StateBus.active)        StateBus.startAsHost(sid, me)
+            if (!ProposalSession.active) ProposalSession.startAsHost(me, sid)
+        } else {
+            const host = EditorSession.hostPlayerId
+            if (!StateBus.active)        StateBus.startAsClient(sid, me, host)
+            if (!ProposalSession.active) ProposalSession.startAsClient(me, host, sid)
+        }
+    }
+
     Component.onCompleted: {
         initializeEditor()
+
+        // V3 (T4-5) : le moteur de règles se câble sur ses sources (bus
+        // d'événements + mémoire) dès le boot — les règles tournent en solo
+        // (autorité hôte par défaut) comme en collab. connectSources est idempotent.
+        RulesEngine.connectSources()
+        _syncV3Runtime()
 
         // Largeur persistée de l'inspecteur : ré-appliquée ici car le Loader
         // peut charger l'item AVANT que stUiConfig n'ait lu ses valeurs
@@ -929,6 +976,22 @@ Base_Board {
                     "assetPackHash": ""   // TODO: calculer
                 })
             }
+            // V3 (T4-5) : (re)aligne StateBus/ProposalSession/RulesEngine.
+            root._syncV3Runtime()
+        }
+
+        // Rôle changé (promotion hôte, bascule) → réaligne l'autorité et les
+        // sessions runtime V3 sur le nouveau rôle.
+        function onIsHostChanged() {
+            root._syncV3Runtime()
+        }
+
+        // Fin de suspension (checkpoint D37 appliqué + handshake arbitre, ou
+        // ACK 0x2B côté survivant) : relance le rôle courant. C'est le point qui
+        // recâble ProposalSession du nouvel hôte élu et des survivants reconnectés
+        // vers le nouvel hôte (StateBus repart de son miroir conservé).
+        function onMigrationStateChanged() {
+            root._syncV3Runtime()
         }
 
         function onEditorEventReceived(type, senderId, payload) {

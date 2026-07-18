@@ -1,12 +1,16 @@
 #include "proposal_collab_bridge.h"
 
+#include <QDebug>
 #include <QJsonObject>
 #include <QUuid>
 #include <QtQml>
 
 #include "proposal_session.h"
 #include "ai/proposal/proposal_lifecycle.h"
+#include "ai/proposal/proposal_envelope.h"
 #include "editor/ops/editor_op_bus.h"
+#include "editor/network/editor_session.h"
+#include "game/rules/rules_engine.h"
 
 // ==================== ProposalCollabBridge ====================
 
@@ -103,6 +107,18 @@ void ProposalCollabBridge::onProposalReceived(const QString &authorId,
                                               const QString &proposalId,
                                               const QVariantMap &envelopeJson)
 {
+    // T4-5 / D37 : pendant une migration d'hôte, l'hôte suspend le traitement des
+    // propositions (le checkpoint doit d'abord être appliqué + le handshake
+    // arbitre D24 rejoué). On notifie un rejet ACTIONNABLE (retryable) à l'auteur
+    // plutôt que d'entamer un cycle qui échouerait — le transport ProposalSession
+    // est lui aussi arrêté pendant la fenêtre, cette garde est la ceinture.
+    if (EditorSession::instance()->proposalsSuspended()) {
+        session()->notifyState(proposalId, QStringLiteral("rejected"),
+                               QStringLiteral("migration d'hôte en cours — réessayez"),
+                               QStringLiteral("migration_in_progress"));
+        return;
+    }
+
     // Mémorise le contexte AVANT de piloter la machine : submit() déclenche des
     // transitions synchrones (submitted → prefiltered → validated/…), et notre
     // handler onLifecycleStateChanged a besoin du write-set/enveloppe dès la
@@ -222,6 +238,11 @@ void ProposalCollabBridge::finishHostApply(const QString &proposalId, bool ok,
     const bool driven = lifecycle()->applyProposal(proposalId, ok, reason);
 
     if (ok && driven) {
+        // T4-5 : la proposition a atteint `applied` sous autorité hôte. Si c'est
+        // une enveloppe `rules`, on matérialise ses ops de règlement dans le
+        // RulesEngine (bump de version + publication `rules.changed`) — c'est ce
+        // qui rend les règles « déclenchées en partie » à partir d'ici.
+        applyRulesOps(proposalId, e.envelope, e.authorId);
         m_appliedGroup.insert(proposalId, e.groupId);
         emit proposalApplied(proposalId, e.groupId);
     } else {
@@ -242,4 +263,37 @@ bool ProposalCollabBridge::undoAppliedProposal(const QString &proposalId)
     if (groupId.isEmpty())
         return false;
     return EditorOpBus::instance()->undoProposal(groupId);
+}
+
+void ProposalCollabBridge::applyRulesOps(const QString &proposalId,
+                                         const QVariantMap &envelopeJson,
+                                         const QString &authorId)
+{
+    meow::proposal::Envelope env;
+    QString err;
+    if (!meow::proposal::Envelope::fromJson(
+            QJsonObject::fromVariantMap(envelopeJson), env, err))
+        return;
+
+    // Seules les enveloppes dont le P0 recalcule `requestType == rules` portent
+    // des ops de règlement (le champ déclaré ne fait jamais foi, doc 13 §3).
+    if (env.computeRequestType() != meow::proposal::RequestType::Rules)
+        return;
+
+    const QString author =
+        env.author.playerId.isEmpty() ? authorId : env.author.playerId;
+
+    RulesEngine *rules = RulesEngine::instance();
+    for (const meow::proposal::Operation &op : env.operations) {
+        if (op.op != QLatin1String("rulebook_set")
+            && op.op != QLatin1String("rules_set")
+            && op.op != QLatin1String("rules_edit"))
+            continue;
+        // L'objet brut d'origine porte { op, mode, rulebook|rule|ruleId } —
+        // applyRulebookOp lit `mode` et ignore le champ `op`.
+        if (!rules->applyRulebookOp(op.raw.toVariantMap(), author, proposalId)) {
+            qWarning() << "[ProposalCollabBridge] rulebook_set refusé pour"
+                       << proposalId << ":" << rules->lastError();
+        }
+    }
 }

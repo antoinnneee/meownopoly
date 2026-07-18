@@ -8,6 +8,7 @@
 #include "proposal_lifecycle.h"
 #include "proposal_types.h"
 #include "proposal_verdict.h"
+#include "editor/network/editor_session.h"
 
 using meow::proposal::isRejectedState;
 using meow::proposal::ProposalState;
@@ -93,6 +94,24 @@ QVariantMap ProposalGateway::buildDecidedReturn(const Proposal *p)
 
 QVariantMap ProposalGateway::artifactSubmit(const QVariantMap &envelopeJson)
 {
+    // T4-5 / D37 : la couche de soumission consulte l'état de migration avant
+    // d'engager quoi que ce soit. Propositions suspendues (migration d'hôte en
+    // cours, checkpoint pas encore appliqué / handshake arbitre pas rejoué) →
+    // rejet actionnable immédiat, sans nested event loop ni entrée dans le P0.
+    if (EditorSession::instance()->proposalsSuspended()) {
+        QVariantMap reason;
+        reason.insert(QStringLiteral("code"), QStringLiteral("migration_in_progress"));
+        reason.insert(QStringLiteral("text"),
+                      QStringLiteral("Migration d'hôte en cours (D37) — "
+                                     "propositions suspendues, réessayez."));
+        reason.insert(QStringLiteral("retryable"), true);
+        QVariantMap m;
+        m.insert(QStringLiteral("status"), QStringLiteral("decided"));
+        m.insert(QStringLiteral("verdict"), QStringLiteral("rejected"));
+        m.insert(QStringLiteral("reason"), reason);
+        return m;
+    }
+
     ProposalLifecycle *lc = ProposalLifecycle::instance();
     Proposal *p = lc->submit(envelopeJson); // jamais nullptr (contrat S-1)
 
