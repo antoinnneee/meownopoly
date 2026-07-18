@@ -358,6 +358,10 @@ set(MEOW_TESTBENCH_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/assetManager/asset_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/tools/metadata_generator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/tools/logger.cpp
+    # Store d'artefacts par hash (D16/D36, plan T4-1/M8) — Qt-free (Core seul),
+    # référencé par asset_manager.cpp (résolution/diagnostic d'artefact).
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/artifacts/artifact_store.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/artifacts/artifact_registry.cpp
 )
 
 qt_add_executable(meow_testbench EXCLUDE_FROM_ALL

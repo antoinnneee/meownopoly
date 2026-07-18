@@ -9,6 +9,7 @@
 #include <QRandomGenerator>
 #include <QUrl>
 #include "tools/metadata_generator.h"
+#include "artifacts/artifact_registry.h"
 
 AssetManager* AssetManager::m_pThis = nullptr;
 
@@ -771,6 +772,27 @@ QStringList AssetManager::availablePlayerModels() const
 QString AssetManager::getAppDataPath() const
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+}
+
+// ==================== Artefacts par hash (D16/D36, plan T4-1/M8) ==========
+
+bool AssetManager::isArtifactAvailable(const QString &contentHash) const
+{
+    return ArtifactRegistry::instance()->isAvailable(contentHash);
+}
+
+QString AssetManager::artifactBlobPath(const QString &contentHash) const
+{
+    // Chemin du blob dans le store adressé par hash (existe ou non).
+    return ArtifactStore().pathForHash(contentHash);
+}
+
+QVariantMap AssetManager::artifactManifest(const QString &contentHash) const
+{
+    const ArtifactManifest m = ArtifactRegistry::instance()->manifest(contentHash);
+    if (!m.isValid())
+        return QVariantMap();
+    return m.toJson().toVariantMap();
 }
 
 // ==================== Color ID Map (résolution runtime) ====================

@@ -268,6 +268,18 @@ public:
 
     Q_INVOKABLE QString getAppDataPath() const;
 
+    // ==================== Artefacts par hash (D16/D36, plan T4-1/M8) ==========
+    // Résolution/diagnostic d'un artefact référencé par une tuile. Délègue à
+    // ArtifactRegistry (store par hash). Permet à l'UI/éditeur de désactiver
+    // l'élément avec un diagnostic clair quand le blob est absent (D16).
+
+    // Vrai si le blob ET le manifeste de ce contentHash sont présents localement.
+    Q_INVOKABLE bool isArtifactAvailable(const QString &contentHash) const;
+    // Chemin disque absolu du blob (existe ou non) — "" si le hash est invalide.
+    Q_INVOKABLE QString artifactBlobPath(const QString &contentHash) const;
+    // Manifeste de l'artefact en QVariantMap (vide si inconnu).
+    Q_INVOKABLE QVariantMap artifactManifest(const QString &contentHash) const;
+
     // ==================== Color ID Map (résolution runtime) ====================
     // Lecture des ressources Color ID Map d'un modèle installé, par nom
     // (<AppData>/models/<name>/ prioritaire, QRC :/asset/models/<name>/ en
