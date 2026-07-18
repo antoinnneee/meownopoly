@@ -56,10 +56,12 @@ ApplicationWindow {
     onClosing: function(close) {
         if (closeDelayTimer.running) return
         if (EditorSession.active && EditorSession.isHost) {
-            console.log("[main] window closing — announce HostLeaving + delay close")
+            console.log("[main] window closing — handover hôte (checkpoint D37) + delay close")
             close.accepted = false
-            EditorSession.announceHostLeaving()
-            EditorSession.stop()
+            // T4-3 : point d'entrée unique consolidé — checkpoint D37 embarqué
+            // dans HostLeaving 0x2A, puis coordination 0x46 (physique) et arrêt
+            // ordonné ProposalSession/StateBus, puis stop.
+            EditorSession.beginHostHandover()
             closeDelayTimer.start()
         }
     }
@@ -144,16 +146,14 @@ ApplicationWindow {
                 // au pop de l'Editor sur le StackView.
                 function _doExit(keep) {
                     if (EditorSession.active) {
-                        // l'hôte annonce son départ AVANT de stopper Catway, pour
-                        // que les clients déclenchent l'élection immédiatement
-                        // (sans attendre le timeout ~10 s).
-                        if (EditorSession.isHost) {
-                            console.log("[main] host quits — announce HostLeaving")
-                            EditorSession.announceHostLeaving()
-                        }
-                        console.log("[main] EditorSession.stop (retour menu) — keep =", keep)
+                        // T4-3 : sortie consolidée en C++ (beginHostHandover).
+                        // Hôte : checkpoint D37 + HostLeaving 0x2A PUIS 0x46
+                        // physique (coordination anti double-autorité) + arrêt
+                        // ordonné des sessions V3, puis stop. Client : arrêt
+                        // ordonné de ses sessions V3 puis stop.
+                        console.log("[main] EditorSession.beginHostHandover (retour menu) — keep =", keep)
                         EditorOpBus.clearUndo()
-                        EditorSession.stop()
+                        EditorSession.beginHostHandover()
                     }
                     stackView.pop()
                 }
@@ -285,6 +285,10 @@ ApplicationWindow {
                 console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId,
                             "session =", rawSessionName,
                             "initialMap =", JSON.stringify(initialMap))
+                // T4-3 : entrée de session PROPRE — purge tout état de
+                // migration résiduel (checkpoint, suspension) d'une session
+                // précédente. Ne PAS purger sur le chemin reconnect.
+                EditorSession.clearMigrationState()
                 const ok = EditorSession.startAsHost(AccountManager.uniqueId)
                 if (!ok) {
                     console.warn("[main] EditorSession.startAsHost a échoué (GameSession active ?)")
@@ -336,6 +340,9 @@ ApplicationWindow {
                     console.log("[main] purge PlayerNetwork résiduel pour", hostId)
                     Catway.removePlayer(stale)
                 }
+                // T4-3 : entrée fraîche par le lobby (pas un reconnect
+                // post-migration) — purge de l'état de migration résiduel.
+                EditorSession.clearMigrationState()
                 p2pStateMachine.targetHostId = hostId
                 p2pStateMachine.state = "STUN"
                 p2pStateMachine.attempts = 0

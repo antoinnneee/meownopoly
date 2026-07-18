@@ -1132,6 +1132,99 @@ QString LauncherManager::installedModelDir(const QString &name) const
     return m_basePath + QStringLiteral("/models/") + safe;
 }
 
+// ===================================================================
+// Bibliothèque officielle V3 (M11, D18/D29/D38)
+// ===================================================================
+
+// Écrit installed.json atomiquement (.tmp + rename) = la commutation de manifeste.
+static bool writeInstalledManifest(const QString &baseDir, const QString &currentVersion,
+                                   const QString &rootHash, const QStringList &versions)
+{
+    QJsonObject obj;
+    obj[QStringLiteral("layout")]         = QStringLiteral("versioned");
+    obj[QStringLiteral("currentVersion")] = currentVersion;
+    obj[QStringLiteral("rootHash")]       = rootHash;
+    obj[QStringLiteral("versions")]       = QJsonArray::fromStringList(versions);
+
+    const QString finalPath = baseDir + QStringLiteral("/installed.json");
+    const QString tmpPath   = finalPath + QStringLiteral(".tmp");
+    QFile tmp(tmpPath);
+    if (!tmp.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    tmp.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
+    tmp.close();
+    QFile::remove(finalPath);              // rename ne remplace pas sous Windows
+    return QFile::rename(tmpPath, finalPath);
+}
+
+QVariantMap LauncherManager::installedPackageInfo(const QString &name) const
+{
+    const QString base = installedModelDir(name);
+    if (base.isEmpty()) return QVariantMap();
+    QFile f(base + QStringLiteral("/installed.json"));
+    if (!f.open(QIODevice::ReadOnly)) return QVariantMap();
+    const QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    f.close();
+    if (!doc.isObject()) return QVariantMap();
+    return doc.object().toVariantMap();
+}
+
+bool LauncherManager::installPackageVersion(const QString &name, const QString &version,
+                                            const QString &stagedDir, const QString &rootHash)
+{
+    const QString base = installedModelDir(name);
+    const QString safeVer = QFileInfo(version.trimmed()).fileName();
+    if (base.isEmpty() || safeVer.isEmpty()) {
+        emit logMessage("installPackageVersion: nom ou version invalide");
+        return false;
+    }
+    const QString cleanStaged = QUrl(stagedDir).isLocalFile()
+                                    ? QUrl(stagedDir).toLocalFile() : stagedDir;
+    QDir src(cleanStaged);
+    if (!src.exists()) {
+        emit logMessage("installPackageVersion: source absente " + cleanStaged);
+        return false;
+    }
+
+    const QString versionsRoot = base + QStringLiteral("/versions");
+    const QString target = versionsRoot + QStringLiteral("/") + safeVer;
+    QDir().mkpath(versionsRoot);
+
+    // Installation atomique du dossier : on retire une éventuelle version
+    // précédente puis on renomme (rename atomique sur même volume).
+    if (QDir(target).exists()) QDir(target).removeRecursively();
+    if (!QDir().rename(cleanStaged, target)) {
+        emit logMessage("installPackageVersion: échec du déplacement vers " + target);
+        return false;
+    }
+
+    // Liste des versions présentes après installation.
+    QStringList versions = QDir(versionsRoot).entryList(QDir::Dirs | QDir::NoDotAndDotDot,
+                                                        QDir::Name);
+    if (!writeInstalledManifest(base, safeVer, rootHash, versions)) {
+        emit logMessage("installPackageVersion: échec de commutation du manifeste");
+        return false;
+    }
+    emit logMessage(QStringLiteral("Package %1 v%2 installé (atomique)").arg(name, safeVer));
+    return true;
+}
+
+bool LauncherManager::switchModelVersion(const QString &name, const QString &version)
+{
+    const QString base = installedModelDir(name);
+    const QString safeVer = QFileInfo(version.trimmed()).fileName();
+    if (base.isEmpty() || safeVer.isEmpty()) return false;
+    if (!QDir(base + QStringLiteral("/versions/") + safeVer).exists()) {
+        emit logMessage("switchModelVersion: version absente " + safeVer);
+        return false;
+    }
+    const QVariantMap prev = installedPackageInfo(name);
+    const QStringList versions = QDir(base + QStringLiteral("/versions"))
+                                     .entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    return writeInstalledManifest(base, safeVer,
+                                  prev.value(QStringLiteral("rootHash")).toString(),
+                                  versions);
+}
+
 bool LauncherManager::deleteModel(const QString &name)
 {
     const QString safe = QFileInfo(name.trimmed()).fileName();

@@ -6,6 +6,22 @@
   },
   "protocolVersion": "1.0.0",
   "envelopeVersion": 1,
+  "versionNegotiation": {
+    "current": "1.0.0",
+    "minCompatible": "1.0.0",
+    "policy": "semver-major",
+    "rule": "Compatible ssi la version annoncée par l'agent a la même version majeure que `current` et est >= `minCompatible`. Un major différent est rejeté : l'hôte propose alors une régénération/mise à jour de la skill (doc 03 §5).",
+    "handshake": {
+      "marker": "MEOW_ARBITER_HANDSHAKE:",
+      "announceShape": "MEOW_ARBITER_HANDSHAKE:{\"role\":\"<proposer|arbiter>\",\"protocolVersion\":\"1.0.0\",\"capabilities\":[...]}",
+      "announces": [
+        "role",
+        "protocolVersion",
+        "capabilities"
+      ],
+      "note": "La version annoncée doit être celle réellement supportée par l'agent, pas recopiée aveuglément : c'est elle qui est négociée contre la fenêtre de compatibilité ci-dessus."
+    }
+  },
   "roles": {
     "proposer": {
       "description": "IA cliente proposante (D20). Produit des propositions ; ne rend aucun verdict.",

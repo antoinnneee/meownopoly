@@ -21,6 +21,13 @@ Node {
     property url colorMapUrl                     // skins/<skin>/colorMap.png
     property url skinUrl                         // .../skins/<skin>/  (pour résoudre textures/)
 
+    // --- Référence bibliothèque officielle V3 (M11, D18) ---
+    // Métadonnées de traçabilité : version semver + hash de contenu du package
+    // dont provient ce modèle. Informatif (diagnostic/outillage) — la résolution
+    // effective est faite en amont (SkinnedModel.resolveModelReference).
+    property string packageVersion: ""
+    property string contentHash: ""
+
     // Bibliothèque de textures du skin courant : [{ name, file }]
     property var textureLib: []
 

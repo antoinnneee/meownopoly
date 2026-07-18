@@ -8,7 +8,10 @@
 #include <QImageReader>
 #include <QRandomGenerator>
 #include <QUrl>
+#include <QCryptographicHash>
+#include <QRegularExpression>
 #include "tools/metadata_generator.h"
+#include "artifacts/artifact_registry.h"
 
 AssetManager* AssetManager::m_pThis = nullptr;
 
@@ -773,6 +776,27 @@ QString AssetManager::getAppDataPath() const
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 }
 
+// ==================== Artefacts par hash (D16/D36, plan T4-1/M8) ==========
+
+bool AssetManager::isArtifactAvailable(const QString &contentHash) const
+{
+    return ArtifactRegistry::instance()->isAvailable(contentHash);
+}
+
+QString AssetManager::artifactBlobPath(const QString &contentHash) const
+{
+    // Chemin du blob dans le store adressé par hash (existe ou non).
+    return ArtifactStore().pathForHash(contentHash);
+}
+
+QVariantMap AssetManager::artifactManifest(const QString &contentHash) const
+{
+    const ArtifactManifest m = ArtifactRegistry::instance()->manifest(contentHash);
+    if (!m.isValid())
+        return QVariantMap();
+    return m.toJson().toVariantMap();
+}
+
 // ==================== Color ID Map (résolution runtime) ====================
 
 // Garde lettres/chiffres/espace/-/_ (évite toute traversée de chemin).
@@ -787,12 +811,37 @@ static QString sanitizeColorIdName(const QString &name)
     return out.trimmed();
 }
 
+// Résout le dossier de version actif d'un package installé (M11). Si
+// <baseDir>/installed.json existe et déclare layout "versioned" pointant vers
+// une version présente sous versions/<v>/, renvoie ce sous-dossier. Sinon "".
+// Rétro-compat : les modèles à plat (sans installed.json) ne sont pas affectés.
+static QString activeVersionSubdir(const QString &baseDir)
+{
+    QFile f(baseDir + QStringLiteral("/installed.json"));
+    if (!f.open(QIODevice::ReadOnly)) return QString();
+    const QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    f.close();
+    if (!doc.isObject()) return QString();
+    const QJsonObject obj = doc.object();
+    if (obj.value(QStringLiteral("layout")).toString() != QStringLiteral("versioned"))
+        return QString();
+    const QString cur = obj.value(QStringLiteral("currentVersion")).toString();
+    if (cur.isEmpty()) return QString();
+    const QString sub = baseDir + QStringLiteral("/versions/") + cur;
+    return QDir(sub).exists() ? sub : QString();
+}
+
 QString AssetManager::modelDir(const QString &modelName) const
 {
     const QString safe = sanitizeColorIdName(modelName);
     if (safe.isEmpty()) return QString();
     const QString appData = getAppDataPath() + QStringLiteral("/models/") + safe;
-    if (QDir(appData).exists()) return appData;
+    if (QDir(appData).exists()) {
+        // Layout versionné M11 (installation atomique par dossier de version) —
+        // n'intervient que si installed.json est présent (aucun modèle legacy).
+        const QString versioned = activeVersionSubdir(appData);
+        return versioned.isEmpty() ? appData : versioned;
+    }
     const QString qrc = QStringLiteral(":/asset/models/") + safe;
     if (QDir(qrc).exists()) return qrc;
     return appData; // défaut (peut ne pas exister encore)
@@ -858,6 +907,196 @@ QString AssetManager::loadSkinVariant(const QString &modelName, const QString &s
     const QString s = QString::fromUtf8(f.readAll());
     f.close();
     return s;
+}
+
+// ==================== Bibliothèque officielle V3 (M11, D18/D29/D38) ==========
+
+// Vrai si `v` respecte un semver minimal MAJOR.MINOR.PATCH (préversion tolérée).
+static bool isSemver(const QString &v)
+{
+    static const QRegularExpression re(
+        QStringLiteral("^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$"));
+    return re.match(v).hasMatch();
+}
+
+QString AssetManager::computeFileHash(const QString &filePath) const
+{
+    QFile f(filePath);
+    if (!f.open(QIODevice::ReadOnly)) return QString();
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    if (!hash.addData(&f)) { f.close(); return QString(); }
+    f.close();
+    return QString::fromLatin1(hash.result().toHex());
+}
+
+QVariantMap AssetManager::readPackageManifest(const QString &modelName) const
+{
+    const QString dir = modelDir(modelName);
+    if (dir.isEmpty()) return QVariantMap();
+
+    // Format V3 natif.
+    QFile f(dir + QStringLiteral("/package_manifest.json"));
+    if (f.open(QIODevice::ReadOnly)) {
+        const QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+        f.close();
+        if (doc.isObject()) return doc.object().toVariantMap();
+    }
+
+    // Rétro-compat : synthèse minimale depuis model_manifest.json (kind=asset3d).
+    const QVariantMap legacy = readModelManifest(modelName);
+    if (legacy.isEmpty()) return QVariantMap();
+
+    QVariantMap out;
+    out.insert(QStringLiteral("manifestVersion"), kPackageManifestVersion);
+    out.insert(QStringLiteral("id"),
+               legacy.value(QStringLiteral("name"), sanitizeColorIdName(modelName)));
+    out.insert(QStringLiteral("version"),
+               legacy.value(QStringLiteral("version"), QStringLiteral("0.0.0")));
+    out.insert(QStringLiteral("kind"), QStringLiteral("asset3d"));
+    out.insert(QStringLiteral("name"), legacy.value(QStringLiteral("name"), modelName));
+    out.insert(QStringLiteral("synthesized"), true);
+    // Champs de confiance réservés (D38, non vérifiés — R16).
+    out.insert(QStringLiteral("signature"), QString());
+    out.insert(QStringLiteral("publisherKeyId"), QString());
+    return out;
+}
+
+QVariantMap AssetManager::validatePackageManifest(const QString &json) const
+{
+    QStringList errors;
+    QStringList warnings;
+
+    QJsonParseError perr{};
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &perr);
+    if (perr.error != QJsonParseError::NoError || !doc.isObject()) {
+        errors << QStringLiteral("JSON invalide : %1").arg(perr.errorString());
+        QVariantMap r;
+        r.insert(QStringLiteral("ok"), false);
+        r.insert(QStringLiteral("errors"), errors);
+        r.insert(QStringLiteral("warnings"), warnings);
+        return r;
+    }
+    const QJsonObject o = doc.object();
+
+    // --- Identité (obligatoire) ---
+    if (o.value(QStringLiteral("id")).toString().trimmed().isEmpty())
+        errors << QStringLiteral("champ requis manquant : id");
+    const QString ver = o.value(QStringLiteral("version")).toString();
+    if (ver.isEmpty())
+        errors << QStringLiteral("champ requis manquant : version");
+    else if (!isSemver(ver))
+        errors << QStringLiteral("version non semver : %1").arg(ver);
+
+    static const QStringList kinds = { QStringLiteral("asset3d"),
+                                       QStringLiteral("primitive"),
+                                       QStringLiteral("module"),
+                                       QStringLiteral("skin") };
+    const QString kind = o.value(QStringLiteral("kind")).toString();
+    if (kind.isEmpty())
+        errors << QStringLiteral("champ requis manquant : kind");
+    else if (!kinds.contains(kind))
+        errors << QStringLiteral("kind inconnu : %1 (attendu asset3d|primitive|module|skin)").arg(kind);
+
+    // --- Contenu : les primitives exigent un entryPoint ---
+    if (kind == QStringLiteral("primitive")
+        && o.value(QStringLiteral("entryPoint")).toString().trimmed().isEmpty())
+        errors << QStringLiteral("primitive sans entryPoint");
+
+    // --- Confiance : champs réservés, doivent exister (même vides) ---
+    if (!o.contains(QStringLiteral("signature")))
+        warnings << QStringLiteral("champ de confiance réservé absent : signature");
+    if (!o.contains(QStringLiteral("publisherKeyId")))
+        warnings << QStringLiteral("champ de confiance réservé absent : publisherKeyId");
+
+    // --- Compat ---
+    if (!o.contains(QStringLiteral("minGameVersion")))
+        warnings << QStringLiteral("compat.minGameVersion absent");
+
+    // --- Budgets provisoires (D38) — vérifiés au niveau du manifeste ---
+    const QJsonObject budgets = o.value(QStringLiteral("budgets")).toObject();
+    const double sizeMb = budgets.value(QStringLiteral("packageSizeBytes")).toDouble()
+                          / (1024.0 * 1024.0);
+    if (sizeMb > 20.0)
+        errors << QStringLiteral("budget dépassé : package %1 Mo > 20 Mo").arg(sizeMb, 0, 'f', 1);
+    const int tris = budgets.value(QStringLiteral("triangles")).toInt();
+    if (tris > 50000)
+        errors << QStringLiteral("budget dépassé : %1 triangles > 50000").arg(tris);
+    else if (tris > 10000)
+        warnings << QStringLiteral("%1 triangles > 10000 recommandé (posable en nombre)").arg(tris);
+    const int tex = budgets.value(QStringLiteral("maxTextureSize")).toInt();
+    if (tex > 2048)
+        errors << QStringLiteral("budget dépassé : texture %1² > 2048²").arg(tex);
+
+    QVariantMap r;
+    r.insert(QStringLiteral("ok"), errors.isEmpty());
+    r.insert(QStringLiteral("errors"), errors);
+    r.insert(QStringLiteral("warnings"), warnings);
+    return r;
+}
+
+QVariantMap AssetManager::resolveModelReference(const QString &modelName,
+                                                const QString &version,
+                                                const QString &contentHash) const
+{
+    QVariantMap r;
+    const QString dir = modelDir(modelName);
+    const QVariantMap manifest = readPackageManifest(modelName);
+    const QString installedVersion = manifest.value(QStringLiteral("version")).toString();
+    const QString installedHash =
+        manifest.value(QStringLiteral("contentHash")).toString();
+
+    const bool present = !dir.isEmpty() && QDir(dir).exists();
+    const bool versionMatch = version.isEmpty() || version == installedVersion;
+    const bool hashMatch = contentHash.isEmpty()
+                           || (!installedHash.isEmpty() && contentHash == installedHash);
+
+    QString diagnostic;
+    if (!present)
+        diagnostic = QStringLiteral("modèle absent : %1").arg(modelName);
+    else if (!versionMatch)
+        diagnostic = QStringLiteral("version %1 requise, installée %2")
+                         .arg(version, installedVersion);
+    else if (!hashMatch)
+        diagnostic = QStringLiteral("hash de contenu divergent pour %1").arg(modelName);
+
+    r.insert(QStringLiteral("available"), present && versionMatch && hashMatch);
+    r.insert(QStringLiteral("dir"), dir);
+    r.insert(QStringLiteral("installedVersion"), installedVersion);
+    r.insert(QStringLiteral("installedHash"), installedHash);
+    r.insert(QStringLiteral("versionMatch"), versionMatch);
+    r.insert(QStringLiteral("hashMatch"), hashMatch);
+    r.insert(QStringLiteral("diagnostic"), diagnostic);
+    return r;
+}
+
+QVariantMap AssetManager::verifyPackageIntegrity(const QString &modelName) const
+{
+    QVariantMap r;
+    QStringList mismatches;
+    QStringList missing;
+    int checked = 0;
+
+    const QString dir = modelDir(modelName);
+    const QVariantMap manifest = readPackageManifest(modelName);
+    // Le manifeste porte les hashes par fichier dans "files": { relPath: sha256 }.
+    const QVariantMap files = manifest.value(QStringLiteral("files")).toMap();
+
+    for (auto it = files.constBegin(); it != files.constEnd(); ++it) {
+        const QString rel = it.key();
+        const QString expected = it.value().toString();
+        const QString abs = dir + QStringLiteral("/") + rel;
+        if (!QFile::exists(abs)) { missing << rel; continue; }
+        ++checked;
+        const QString actual = computeFileHash(abs);
+        if (actual.compare(expected, Qt::CaseInsensitive) != 0)
+            mismatches << rel;
+    }
+
+    r.insert(QStringLiteral("ok"), mismatches.isEmpty() && missing.isEmpty());
+    r.insert(QStringLiteral("checked"), checked);
+    r.insert(QStringLiteral("mismatches"), mismatches);
+    r.insert(QStringLiteral("missing"), missing);
+    return r;
 }
 
 QStringList AssetManager::getAvailableTypes(const QString &category) const

@@ -1,0 +1,317 @@
+# ============================================================================
+# CI Meownopoly — Windows + Linux (tâche L3, doc v3 15 · M13 qualification Linux)
+# ============================================================================
+#
+# Objectif (doc v3 10 §M13, 15 L3) : exécuter sur les DEUX OS
+#   - les tests unitaires Pattounx (Qt6::Test, cible `pattounx_tests`) ;
+#   - le test de cycle de vie `MapInfo`/`MAP_FILE_PATH` (`tst_mapinfo`) ;
+#   - le corpus du banc d'essai R1 (`meow_testbench` + test_artifacts/) ;
+#   - un smoke des scénarios d'automation (serveur WebSocket embarqué) — best
+#     effort, car il dépend d'un contexte RHI/OpenGL headless fragile en CI.
+#
+# Points de portabilité validés au passage (doc 10 §M13) : `MAP_FILE_PATH`
+# ("./map/", casse/CWD) via tst_mapinfo + résolution CWD ; `AppDataLocation`
+# (QStandardPaths, exercé par le banc offscreen) ; sandbox R1 (corpus) sur les
+# deux OS. Les points restants (permissions du fichier token, GLB) sont notés
+# dans le job d'automation et restent à couvrir par un test dédié.
+#
+# CanvasPainter (Tech Preview) et QtHttpServer (add-on) ne sont pas distribués
+# par aqtinstall : ils sont détectés en `QUIET` côté CMakeLists.txt et leur
+# absence n'empêche ni le configure ni le build (les benchmarks de rendu perf,
+# gardés par `if(TARGET Qt6::CanvasPainter)`, ne sont simplement pas enregistrés).
+# ============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [V3, V3_early_dynamic, V2, V2Antoine, V2_Valou]
+  pull_request:
+    branches: [V3, V2]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: "6.11.0"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Tests unitaires Pattounx + cycle de vie map + corpus du banc — bloquant.
+  # --------------------------------------------------------------------------
+  tests:
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            qt_arch: linux_gcc_64
+          - os: windows-latest
+            qt_arch: win64_mingw
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Dépendances système Linux (OpenGL/xkb pour Qt Gui offscreen, jq pour le
+      # runner de corpus, ninja pour le générateur multi-config).
+      - name: Install Linux system deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build jq \
+            libgl1-mesa-dev libglu1-mesa-dev libegl1 libxkbcommon-dev \
+            libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 \
+            libvulkan-dev xvfb
+
+      # Ninja est préinstallé sur les runners Windows GitHub ; rien à faire.
+      - name: Setup Qt ${{ env.QT_VERSION }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          modules: qtquick3d qtwebsockets qtshadertools
+          cache: true
+
+      # Toolchain MinGW pour matcher le kit de dev Windows (Qt 6.11 + MinGW 13.1).
+      - name: Setup MinGW (Windows)
+        if: runner.os == 'Windows'
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          tools: tools_mingw1310
+          cache: true
+
+      - name: Add MinGW to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $mingw = Join-Path $env:IQTA_TOOLS "mingw1310_64\bin"
+          if (-not (Test-Path $mingw)) {
+            $mingw = (Get-ChildItem -Path $env:IQTA_TOOLS -Recurse -Directory -Filter bin |
+                      Where-Object { $_.FullName -match "mingw" } | Select-Object -First 1).FullName
+          }
+          Write-Host "MinGW bin: $mingw"
+          Add-Content $env:GITHUB_PATH $mingw
+
+      # --- Configure ------------------------------------------------------
+      # On configure directement (pas via CMakePresets, dont les chemins Qt/kit
+      # sont ceux du poste de dev) pour rester indépendant de l'environnement.
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S Meownopoly -B build -G "Ninja Multi-Config" \
+            -DCMAKE_CXX_COMPILER=g++
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S Meownopoly -B build -G "Ninja Multi-Config" `
+            -DCMAKE_CXX_COMPILER="g++.exe" `
+            -DCMAKE_MAKE_PROGRAM="ninja.exe"
+
+      # --- Build des cibles de test --------------------------------------
+      - name: Build unit tests + testbench
+        run: |
+          cmake --build build --config Release --target pattounx_tests
+          cmake --build build --config Release --target tst_mapinfo
+          cmake --build build --config Release --target meow_testbench
+
+      # --- Tests unitaires (ctest, hors benchmarks perf « manual ») ------
+      - name: Run unit tests (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          export QT_QPA_PLATFORM=offscreen
+          ctest --test-dir build -C Release --output-on-failure -LE manual
+
+      - name: Run unit tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          ctest --test-dir build -C Release --output-on-failure -LE manual
+
+      # --- Corpus du banc d'essai R1 -------------------------------------
+      - name: Run bench corpus (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          chmod +x Meownopoly/test_artifacts/run_corpus.sh
+          Meownopoly/test_artifacts/run_corpus.sh
+
+      - name: Run bench corpus (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $bench = Join-Path $PWD "build\Release\meow_testbench.exe"
+          & Meownopoly\test_artifacts\run_corpus.ps1 -BenchExe $bench
+
+  # --------------------------------------------------------------------------
+  # Smoke des scénarios d'automation — best effort (RHI/GL headless fragile).
+  # Build de l'app complète + lancement offscreen + ping/quit via le serveur
+  # d'automation WebSocket embarqué. Non bloquant : `continue-on-error`.
+  # --------------------------------------------------------------------------
+  automation-smoke:
+    name: automation smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            qt_arch: linux_gcc_64
+          - os: windows-latest
+            qt_arch: win64_mingw
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux system deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build \
+            libgl1-mesa-dev libglu1-mesa-dev libegl1 libxkbcommon-dev \
+            libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 \
+            libvulkan-dev xvfb
+
+      - name: Setup Qt ${{ env.QT_VERSION }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          modules: qtquick3d qtwebsockets qtshadertools
+          cache: true
+
+      - name: Setup MinGW (Windows)
+        if: runner.os == 'Windows'
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          tools: tools_mingw1310
+          cache: true
+
+      - name: Add MinGW to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $mingw = Join-Path $env:IQTA_TOOLS "mingw1310_64\bin"
+          if (-not (Test-Path $mingw)) {
+            $mingw = (Get-ChildItem -Path $env:IQTA_TOOLS -Recurse -Directory -Filter bin |
+                      Where-Object { $_.FullName -match "mingw" } | Select-Object -First 1).FullName
+          }
+          Add-Content $env:GITHUB_PATH $mingw
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S Meownopoly -B build -G "Ninja Multi-Config" -DCMAKE_CXX_COMPILER=g++
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S Meownopoly -B build -G "Ninja Multi-Config" `
+            -DCMAKE_CXX_COMPILER="g++.exe" -DCMAKE_MAKE_PROGRAM="ninja.exe"
+
+      - name: Build app
+        run: cmake --build build --config Release --target Meownopoly
+
+      - name: Install automation client deps
+        working-directory: automation_mcp
+        run: npm ci --omit=dev || npm install --omit=dev
+
+      # Script de smoke : lance l'app avec le serveur d'automation, attend
+      # qu'il réponde à `ping`, puis `quit`. Réutilise `ws` (dépendance de
+      # automation_mcp/). L'app est lancée offscreen ; sous Linux via xvfb-run
+      # pour fournir un contexte GL logiciel (llvmpipe) au pipeline RHI Quick3D.
+      - name: Write smoke client
+        shell: bash
+        run: |
+          cat > automation_mcp/smoke.mjs <<'EOF'
+          import { WebSocket } from "ws";
+          const port = Number(process.env.MEOW_AUTOMATION_PORT || 7700);
+          const deadline = Date.now() + 45000;
+          function once() {
+            return new Promise((resolve, reject) => {
+              const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+              let id = 1;
+              const pending = new Map();
+              const send = (cmd) => new Promise((res, rej) => {
+                const myId = id++;
+                pending.set(myId, { res, rej });
+                ws.send(JSON.stringify({ id: myId, cmd }));
+              });
+              ws.on("open", async () => {
+                try {
+                  const pong = await send("ping");
+                  console.log("ping ->", JSON.stringify(pong));
+                  await send("quit").catch(() => {});
+                  ws.close();
+                  resolve();
+                } catch (e) { ws.close(); reject(e); }
+              });
+              ws.on("message", (d) => {
+                let m; try { m = JSON.parse(d.toString()); } catch { return; }
+                const p = pending.get(m.id); if (!p) return;
+                pending.delete(m.id);
+                m.ok ? p.res(m.result) : p.rej(new Error(String(m.error)));
+              });
+              ws.on("error", reject);
+            });
+          }
+          (async () => {
+            let lastErr;
+            while (Date.now() < deadline) {
+              try { await once(); console.log("SMOKE OK"); process.exit(0); }
+              catch (e) { lastErr = e; await new Promise(r => setTimeout(r, 1500)); }
+            }
+            console.error("SMOKE FAIL:", lastErr && lastErr.message);
+            process.exit(1);
+          })();
+          EOF
+
+      - name: Run automation smoke (Linux)
+        if: runner.os == 'Linux'
+        env:
+          MEOW_AUTOMATION_PORT: "7700"
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          xvfb-run -a bash -c '
+            ./build/Release/Meownopoly --automation-port 7700 --ai-gateway-port 0 &
+            APP_PID=$!
+            node automation_mcp/smoke.mjs
+            RC=$?
+            kill $APP_PID 2>/dev/null || true
+            exit $RC
+          '
+
+      - name: Run automation smoke (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          MEOW_AUTOMATION_PORT: "7700"
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $app = Start-Process -PassThru -FilePath ".\build\Release\Meownopoly.exe" `
+            -ArgumentList "--automation-port","7700","--ai-gateway-port","0"
+          try {
+            node automation_mcp/smoke.mjs
+            if ($LASTEXITCODE -ne 0) { throw "smoke a échoué ($LASTEXITCODE)" }
+          } finally {
+            if (-not $app.HasExited) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }
+          }

@@ -299,6 +299,23 @@ QString ItemSnapable::toJSON()
         root["memory"] = QJsonObject::fromVariantMap(m_userMemory);
     }
 
+    // Références d'artefacts (doc v3 D16/D36, plan T4-1/M8). N'insérer que si non
+    // vide pour préserver un round-trip stable sur les tuiles sans artefact. On
+    // ne sérialise que les 3 champs de la référence — jamais le contenu, qui vit
+    // dans le store par hash (ArtifactStore).
+    if (!m_artifactRefs.isEmpty()) {
+        QJsonArray artifactsArray;
+        for (const QVariant &v : std::as_const(m_artifactRefs)) {
+            const QVariantMap ref = v.toMap();
+            QJsonObject entry;
+            entry["instanceId"] = ref.value("instanceId").toString();
+            entry["contentHash"] = ref.value("contentHash").toString();
+            entry["manifestVersion"] = ref.value("manifestVersion").toInt();
+            artifactsArray.append(entry);
+        }
+        root["artifacts"] = artifactsArray;
+    }
+
     QJsonArray nextArray;
     for (ItemSnapable *n : std::as_const(next)) {
         if (n) nextArray.append(n->uniqueId().toString());
@@ -373,6 +390,50 @@ void ItemSnapable::setMemoryValue(const QString &key, const QVariant &value)
     emit memoryValueChanged(QString(), key, value, int(m_memoryVersion));
     emit userMemoryChanged();
     --m_memoryWriteDepth;
+}
+
+void ItemSnapable::setArtifactRefs(const QVariantList &refs)
+{
+    // Garde anti-boucle (même motif que setUserMemory) : pas de ré-émission si
+    // la liste est identique.
+    if (m_artifactRefs == refs)
+        return;
+    m_artifactRefs = refs;
+    emit artifactRefsChanged();
+}
+
+void ItemSnapable::addArtifactRef(const QVariantMap &ref)
+{
+    const QString hash = ref.value("contentHash").toString();
+    if (hash.isEmpty())
+        return;
+    QVariantList updated = m_artifactRefs;
+    // Remplacement LWW grossier : une seule référence par contentHash.
+    for (int i = 0; i < updated.size(); ++i) {
+        if (updated.at(i).toMap().value("contentHash").toString() == hash) {
+            updated.replace(i, ref);
+            setArtifactRefs(updated);
+            return;
+        }
+    }
+    updated.append(ref);
+    setArtifactRefs(updated);
+}
+
+bool ItemSnapable::removeArtifactRef(const QString &contentHash)
+{
+    QVariantList updated;
+    bool removed = false;
+    for (const QVariant &v : std::as_const(m_artifactRefs)) {
+        if (v.toMap().value("contentHash").toString() == contentHash) {
+            removed = true;
+            continue;
+        }
+        updated.append(v);
+    }
+    if (removed)
+        setArtifactRefs(updated);
+    return removed;
 }
 
 void ItemSnapable::changeCaseDataType(Case::CaseType caseType)
@@ -488,6 +549,23 @@ void ItemSnapable::applyJson(const QJsonObject &json)
     // les comportements abonnés (usage 3).
     if (json.contains("memory"))
         setUserMemory(json["memory"].toObject().toVariantMap());
+
+    // Références d'artefacts (doc v3 D16/D36). Chargement disque + application
+    // d'un inverse de configuration undoable (le blob n'est pas rechargé ici :
+    // seule la référence voyage, le contenu se résout via ArtifactRegistry).
+    if (json.contains("artifacts")) {
+        QVariantList refs;
+        const QJsonArray arr = json["artifacts"].toArray();
+        for (const QJsonValue &v : arr) {
+            const QJsonObject entry = v.toObject();
+            QVariantMap ref;
+            ref["instanceId"] = entry.value("instanceId").toString();
+            ref["contentHash"] = entry.value("contentHash").toString();
+            ref["manifestVersion"] = entry.value("manifestVersion").toInt();
+            refs.append(ref);
+        }
+        setArtifactRefs(refs);
+    }
 
     // NB: uniqueId jamais override (identité de la tile) ;
     // next/prev gérés par Map::rewireLinks après applyJson.

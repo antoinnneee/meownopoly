@@ -13,6 +13,17 @@ cmake --build build --config Release --target meow_testbench
 .\Meownopoly\test_artifacts\run_corpus.ps1
 ```
 
+Sous **Linux** (mêmes verdicts attendus, portage L3 / doc v3 [15](../doc/v3/15_PLAN_IMPLEMENTATION.md)),
+l'équivalent est `run_corpus.sh` (dépend de `jq` + `sha256sum`) :
+
+```bash
+cmake --build build --config Release --target meow_testbench
+Meownopoly/test_artifacts/run_corpus.sh   # [chemin_du_banc] [runs] optionnels
+```
+
+Les deux runners sont joués automatiquement par la CI (`.github/workflows/ci.yml`,
+job `tests`) sur Windows et Linux.
+
 Le harnais assemble un job par artefact (source inline), respecte l'**ordre réel
 du pipeline** — préfiltre statique **P0** (`meow_testbench --static-check`,
 [StaticValidator](../cpp/ai/sandbox/static_validator.h)/A4) puis banc **P1→P5** —

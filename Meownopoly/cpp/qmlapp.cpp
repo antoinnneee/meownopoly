@@ -80,12 +80,15 @@
 // aucune instance globale à créer, cf. GameplayEventBus/AiProcessSupervisor).
 #include "game/memory/state_bus.h"
 #include "game/memory/memory_store.h"
+#include "game/rules/rules_engine.h"
 #include "ai/network/proposal_session.h"
 #include "ai/network/proposal_collab_bridge.h"
 #include "ai/proposal/proposal_lifecycle.h"
 #include "ai/proposal/proposal_gateway.h"
 #include "ai/instrumentation/slice_instrumentation.h"
 #include "ai/instrumentation/slice_scenarios.h"
+#include "artifacts/artifact_registry.h"
+#include "game/save/game_save.h"
 
 #include <QImageWriter>
 
@@ -157,12 +160,15 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     //   MeowSlice 1.0    — SliceInstrumentation, SliceScenarioRunner
     StateBus::registerQml();               // MeowMemory 1.0 · StateBus
     MemoryStore::registerQml();            // MeowMemory 1.0 · MemoryStore
+    RulesEngine::registerQml();            // MeowRules 1.0 · RulesEngine (T4-4)
     ProposalSession::registerQml();        // ProposalSession 1.0 · ProposalSession
     ProposalLifecycle::registerQml();      // MeowProposal 1.0 · ProposalLifecycle
     ProposalGateway::registerQml();        // MeowProposal 1.0 · ProposalGateway
     ProposalCollabBridge::registerQml();   // MeowProposal 1.0 · ProposalCollabBridge
     SliceInstrumentation::registerQml();   // MeowSlice 1.0 · SliceInstrumentation
     SliceScenarioRunner::registerQml();    // MeowSlice 1.0 · SliceScenarioRunner
+    ArtifactRegistry::registerQml();       // MeowArtifacts 1.0 · ArtifactRegistry (T4-1)
+    GameSave::registerQml();               // MeowSave 1.0 · GameSave (type instanciable, T4-2)
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER

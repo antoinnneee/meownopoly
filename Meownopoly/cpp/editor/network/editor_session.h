@@ -50,6 +50,19 @@ class EditorSession : public QObject
     /// quand l'hôte tombe. N'inclut PAS l'hôte lui-même.
     Q_PROPERTY(QStringList knownRoster READ knownRoster NOTIFY knownRosterChanged)
 
+    // ── V3 T4-3 · Migration d'hôte (checkpoint D37) ─────────────────────────
+    /// Vrai entre la réception/émission d'un `HostLeaving` et la reprise
+    /// post-checkpoint (promotion locale ou `MigrationCheckpointAck` reçu).
+    Q_PROPERTY(bool migrationInProgress READ migrationInProgress NOTIFY migrationStateChanged)
+    /// D37 : les propositions IA restent suspendues tant que le nouvel arbitre
+    /// n'a pas passé le handshake D24 ET que le checkpoint n'a pas été ACKé.
+    /// À consulter par la couche de soumission (gateway/ProposalSession).
+    Q_PROPERTY(bool proposalsSuspended READ proposalsSuspended NOTIFY migrationStateChanged)
+    /// Dernier checkpoint D37 émis (hôte sortant) ou reçu (survivants).
+    /// Vide hors migration ou sur le chemin timeout (départ brutal — les
+    /// volets bloquants sont alors reconstruits depuis l'état répliqué local).
+    Q_PROPERTY(QVariantMap migrationCheckpoint READ migrationCheckpoint NOTIFY migrationStateChanged)
+
 public:
     static void registerQml();
     static EditorSession *instance();
@@ -62,6 +75,9 @@ public:
     QString sessionId() const     { return m_sessionId; }
     QVariantMap remoteSelections() const { return m_remoteSelections; }
     QStringList knownRoster() const { return m_knownRoster; }
+    bool migrationInProgress() const { return m_migrationInProgress; }
+    bool proposalsSuspended() const  { return m_proposalsSuspended; }
+    QVariantMap migrationCheckpoint() const { return m_migrationCheckpoint; }
 
     /// détermine (déterministiquement) l'id du nouvel hôte parmi les
     /// survivants. Basé uniquement sur le roster cache + localPlayerId, en
@@ -79,7 +95,51 @@ public:
     /// À appeler AVANT `stop()` dans le flow de sortie volontaire. Les clients
     /// reçoivent `HostLeaving` et déclenchent l'élection immédiatement (sans
     /// attendre le timeout Catway ~10 s).
+    ///
+    /// V3 T4-3 (D37) : le payload embarque le checkpoint de migration
+    /// (règlement + hashes d'artefacts + hash du bus d'état + contexte
+    /// arbitre best-effort), et la méthode COORDONNE les deux `HostLeaving` :
+    /// l'annonce éditeur (0x2A) part D'ABORD, puis PhysicsSession::stop()
+    /// émet la sienne (0x46). Les survivants sont donc déjà en mode migration
+    /// quand la physique se coupe → jamais deux autorités simultanées (le
+    /// 0x46 reçu pendant une migration n'est qu'un repli local transitoire,
+    /// pas une bascule d'autorité).
     Q_INVOKABLE void announceHostLeaving();
+
+    // ── V3 T4-3 · Migration d'hôte (D37) ─────────────────────────────────────
+
+    /// Point d'entrée UNIQUE de sortie de session (consolidation de la logique
+    /// éclatée C++/QML) : hôte → announceHostLeaving() (checkpoint + 0x2A puis
+    /// 0x46) ; client → arrêt ordonné des sessions V3 dépendantes
+    /// (ProposalSession, StateBus, PhysicsSession client). Puis stop().
+    /// À appeler depuis QML à la place des paires announce+stop historiques.
+    Q_INVOKABLE void beginHostHandover();
+
+    /// (pair élu) applique les volets BLOQUANTS du checkpoint D37 avant la
+    /// promotion : 1) règlement versionné → RulesEngine ; 2) hashes des
+    /// artefacts actifs → diagnostic de disponibilité (D16) ; 3) hash du bus
+    /// d'état vs miroir répliqué local (StateBus conserve son miroir au stop).
+    /// Le volet 4 (contexte arbitre) est best-effort — exposé via
+    /// `migrationArbiterContext()` pour l'injection en pré-prompt du nouvel
+    /// arbitre. Retourne true si tous les volets bloquants passent (condition
+    /// nécessaire à la reprise des propositions). Sans checkpoint (timeout /
+    /// départ brutal), reconstruit best-effort depuis l'état répliqué local
+    /// et retourne true si le règlement local est exploitable.
+    Q_INVOKABLE bool applyMigrationCheckpoint();
+
+    /// Volet 4 du checkpoint (journal D19 + verdicts) — best-effort, à
+    /// injecter en pré-prompt du nouvel arbitre (D37). Vide si non transmis.
+    Q_INVOKABLE QVariantMap migrationArbiterContext() const;
+
+    /// (nouvel hôte) lève la suspension des propositions et broadcast
+    /// `MigrationCheckpointAck` (0x2B) aux survivants. Appelée automatiquement
+    /// quand checkpoint appliqué + arbitre D24 prêt ; exposée pour un pilotage
+    /// manuel (harness) ou un mode sans arbitre.
+    Q_INVOKABLE void resumeProposals();
+
+    /// Purge l'état de migration (nouvelle entrée de session PROPRE via le
+    /// lobby — à ne PAS appeler sur le chemin reconnect post-migration).
+    Q_INVOKABLE void clearMigrationState();
 
     // ── Initialisation ───────────────────────────────────────────────────────
 
@@ -153,6 +213,12 @@ signals:
 
     void knownRosterChanged();
 
+    // ── V3 T4-3 (D37) ────────────────────────────────────────────────────────
+    /// migrationInProgress / proposalsSuspended / migrationCheckpoint.
+    void migrationStateChanged();
+    /// La suspension D37 est levée (localement ou via MigrationCheckpointAck).
+    void proposalsResumed();
+
     /// un pair a quitté (timeout). Émis côté hôte. Les consumers QML
     /// doivent purger curseur/sélection associés au `playerId`.
     void peerLeft(const QString &playerId);
@@ -198,6 +264,21 @@ private:
     /// (hôte) construit et diffuse le roster courant à tous.
     void broadcastRoster();
 
+    // ── V3 T4-3 (D37) ────────────────────────────────────────────────────────
+    /// (hôte sortant) assemble le checkpoint D37 : règlement (bloquant),
+    /// hashes d'artefacts actifs (bloquant), hash+volume du bus d'état
+    /// (bloquant — l'état lui-même est déjà répliqué en continu par D35),
+    /// contexte arbitre (journal D19, best-effort).
+    QJsonObject buildCheckpointJson() const;
+    /// (survivant) marque la migration en cours + arrêt ordonné des sessions
+    /// V3 dépendantes (ProposalSession, StateBus — miroir conservé —,
+    /// PhysicsSession côté client). Idempotent.
+    void enterMigrationMode(const QJsonObject &checkpoint);
+    /// Arme la reprise D37 : si l'arbitre a déjà passé le handshake D24
+    /// (résultat latché), reprend immédiatement ; sinon s'abonne à
+    /// handshakeCompleted du superviseur IA.
+    void armProposalResume();
+
     bool    m_active        = false;
     bool    m_isHost        = false;
     QString m_localPlayerId;
@@ -205,6 +286,14 @@ private:
     QString m_sessionId;
     QVariantMap m_remoteSelections;  // playerId → QStringList d'uuids
     QStringList m_knownRoster;       // clients connus (hors hôte)
+
+    // ── V3 T4-3 · État de migration (D37) ───────────────────────────────────
+    bool        m_migrationInProgress = false;
+    bool        m_proposalsSuspended  = false;
+    QVariantMap m_migrationCheckpoint;      // checkpoint émis/reçu (D37)
+    bool        m_checkpointApplied   = false; // volets bloquants passés
+    bool        m_wasMigrated         = false; // ce pair est un hôte promu
+    QMetaObject::Connection m_arbiterHsConn;   // abonnement handshake D24
 
     QMetaObject::Connection m_reliableConn;
     QMetaObject::Connection m_udpConn;

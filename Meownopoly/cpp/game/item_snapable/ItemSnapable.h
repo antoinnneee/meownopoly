@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QUrl>
+#include <QVariantList>
 #include <QVariantMap>
 #include "game/case/Case.h"
 #include <QJsonDocument>
@@ -36,6 +37,12 @@ class ItemSnapable : public QObject
     // Espace mémoire par élément (doc v3/05, D15, Étape A). Blob de valeurs
     // sérialisables opaques côté cœur ; le sens des clés est une convention IA.
     Q_PROPERTY(QVariantMap userMemory READ userMemory WRITE setUserMemory NOTIFY userMemoryChanged FINAL)
+    // Références d'artefacts portées par la tuile (doc v3, D16/D36, plan T4-1/M8).
+    // Chaque entrée est un QVariantMap `{instanceId, contentHash, manifestVersion}`.
+    // La tuile ne porte QUE la référence ; le contenu vit dans le store par hash
+    // (ArtifactStore/ArtifactRegistry). Voyage dans EditDelta.before/after →
+    // persistance + undo de configuration, comme userMemory.
+    Q_PROPERTY(QVariantList artifactRefs READ artifactRefs WRITE setArtifactRefs NOTIFY artifactRefsChanged FINAL)
 
 
 public:
@@ -96,6 +103,14 @@ public:
     Q_INVOKABLE void setMemoryValue(const QString &key, const QVariant &value);
     Q_INVOKABLE QVariant memoryValue(const QString &key) const { return m_userMemory.value(key); }
 
+    // ---- Références d'artefacts (doc v3 D16/D36, plan T4-1/M8) ----
+    QVariantList artifactRefs() const { return m_artifactRefs; }
+    void setArtifactRefs(const QVariantList &refs);
+    // Ajoute/remplace une référence par contentHash (LWW grossier sur le hash).
+    Q_INVOKABLE void addArtifactRef(const QVariantMap &ref);
+    // Retire toute référence dont le contentHash correspond. Vrai si retiré.
+    Q_INVOKABLE bool removeArtifactRef(const QString &contentHash);
+
     Q_INVOKABLE void changeCaseDataType(Case::CaseType caseType);
 
     Q_INVOKABLE void addNext(ItemSnapable *newNext);
@@ -124,6 +139,10 @@ public:
         // no-op (before==after) qui ne diffère que par la mémoire passerait
         // inaperçu dans la détection de changement.
         if (m_userMemory != other.m_userMemory)
+            return false;
+        // Les références d'artefacts font partie de l'état de la tuile (D16/D36) :
+        // un no-op qui ne diffère que par une référence doit être détecté.
+        if (m_artifactRefs != other.m_artifactRefs)
             return false;
         if (m_displayParameter && other.m_displayParameter) {
             if (!(*m_displayParameter == *other.m_displayParameter))
@@ -197,6 +216,9 @@ signals:
     void memoryValueChanged(const QString &ns, const QString &key,
                             const QVariant &value, int version);
 
+    // Réveil sur changement de l'ensemble des références d'artefacts.
+    void artifactRefsChanged();
+
 private :
     Case * m_caseData = nullptr;
     DisplayParameter * m_displayParameter = new DisplayParameter;
@@ -213,6 +235,9 @@ private :
     // Espace mémoire (doc v3/05 Étape A). QVariantMap pour préserver les types
     // natifs et se convertir dans les deux sens avec QJsonObject.
     QVariantMap m_userMemory;
+    // Références d'artefacts (doc v3 D16/D36). Liste de QVariantMap
+    // `{instanceId, contentHash, manifestVersion}`.
+    QVariantList m_artifactRefs;
     // Compteur d'écriture monotone porté par memoryValueChanged.
     quint32 m_memoryVersion = 0;
     // Garde de réentrance : plafonne la cascade écriture→signal→écriture d'une

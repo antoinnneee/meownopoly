@@ -6,6 +6,15 @@
 #include "communication/player_network.h"
 #include "game/network/game_session.h"
 
+// V3 T4-3 (D37) — checkpoint de migration + coordination des sessions V3.
+#include "ai/ai_process_supervisor.h"
+#include "ai/network/proposal_session.h"
+#include "artifacts/artifact_registry.h"
+#include "game/events/gameplay_event_bus.h"
+#include "game/memory/state_bus.h"
+#include "game/physics/physics_session.h"
+#include "game/rules/rules_engine.h"
+
 #include <QDebug>
 #include <QStringList>
 #include <QJsonArray>
@@ -351,6 +360,13 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
             emit knownRosterChanged();
             broadcastRoster();
         }
+        // V3 T4-3 (D37) : un survivant qui reconnecte APRÈS la reprise a raté
+        // le broadcast MigrationCheckpointAck — le lui rejouer en point-à-point
+        // pour qu'il lève sa suspension locale.
+        if (m_isHost && m_wasMigrated && !m_proposalsSuspended && !senderId.isEmpty()) {
+            sendEventTo(senderId, EditorMessageType::MigrationCheckpointAck,
+                        QJsonObject{{ "sessionId", m_sessionId }});
+        }
         emit editorEventReceived(static_cast<int>(type), senderId, payload);
         break;
 
@@ -404,10 +420,27 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         emit opRejected(payload);
         break;
 
+    case EditorMessageType::MigrationCheckpointAck:
+        // V3 T4-3 (D37) : le nouvel hôte a appliqué le checkpoint ET son
+        // arbitre a passé le handshake D24 → fin de la suspension locale.
+        // Idempotent (un ACK redondant sur un pair non suspendu ne fait rien).
+        if (!m_isHost && senderId == m_hostPlayerId && m_proposalsSuspended) {
+            qDebug() << "[EditorSession] MigrationCheckpointAck reçu de"
+                     << senderId << "— reprise des propositions";
+            m_proposalsSuspended  = false;
+            m_migrationInProgress = false;
+            emit migrationStateChanged();
+            emit proposalsResumed();
+        }
+        break;
+
     case EditorMessageType::HostLeaving:
         // l'hôte annonce son départ volontaire → élection immédiate.
         // Même flow que onPlayerTimedOut sur l'hôte, sans attendre les ~10 s.
         if (!m_isHost && senderId == m_hostPlayerId) {
+            // V3 T4-3 (D37) : checkpoint embarqué + suspension des propositions
+            // + coordination 0x2A/0x46 (arrêt ordonné physique/proposal/state).
+            enterMigrationMode(payload.value("checkpoint").toObject());
             // Remplace le roster local par celui embarqué dans le message
             // (source de vérité autoritaire), pour que tous les clients
             // élisent le même successeur même si le dernier broadcastRoster
@@ -562,9 +595,283 @@ void EditorSession::announceHostLeaving()
     for (const QString &pid : m_knownRoster) arr.append(pid);
     QJsonObject payload;
     payload["roster"] = arr;
-    qDebug() << "[EditorSession] host leaving — broadcast HostLeaving, roster ="
-             << m_knownRoster;
+
+    // V3 T4-3 (D37) : embarquer le checkpoint de migration dans l'annonce.
+    // Le transport chunké (OpChunk) de sendReliableOrChunked absorbe un
+    // checkpoint volumineux (règlement + journal).
+    const QJsonObject checkpoint = buildCheckpointJson();
+    payload["checkpoint"] = checkpoint;
+    m_migrationCheckpoint = checkpoint.toVariantMap();
+    m_migrationInProgress = true;
+    m_proposalsSuspended  = true;
+    emit migrationStateChanged();
+
+    qDebug() << "[EditorSession] host leaving — broadcast HostLeaving (0x2A"
+             << "+ checkpoint D37), roster =" << m_knownRoster;
     broadcastEvent(EditorMessageType::HostLeaving, payload);
+
+    // Coordination des deux HostLeaving (T4-3) : l'annonce éditeur 0x2A part
+    // AVANT le 0x46 physique. PhysicsSession::stop() (hôte) broadcast son
+    // propre HostLeaving 0x46 — reçu APRÈS le 0x2A, les survivants sont déjà
+    // en mode migration et le repli en sim locale du client physique est un
+    // état transitoire, pas une seconde autorité (le pair élu re-promeut la
+    // physique à la reprise).
+    PhysicsSession *phys = PhysicsSession::instance();
+    if (phys->active() && phys->isHost()) {
+        qDebug() << "[EditorSession] coordination 0x2A→0x46 : arrêt PhysicsSession hôte";
+        phys->stop();
+    }
+    // Sessions V3 hôte : arrêt ordonné. ProposalSession (D40) cesse d'accepter
+    // des propositions (suspension côté transport) ; StateBus s'arrête en
+    // conservant son miroir (source du volet 3 chez les survivants).
+    ProposalSession *prop = ProposalSession::instance();
+    if (prop->active()) prop->stop();
+    StateBus *bus = StateBus::instance();
+    if (bus->active()) bus->stop();
+}
+
+// ── V3 T4-3 · Migration d'hôte (checkpoint D37) ──────────────────────────────
+
+// Assemble le checkpoint D37 côté hôte sortant, par priorité :
+//  1) règlement versionné (D12)                      — bloquant ;
+//  2) hashes des artefacts actifs (mécanique D16)    — bloquant ;
+//  3) hash + volume du bus d'état + repère de séquence — bloquant. L'état
+//     lui-même est déjà répliqué en continu chez les pairs (deltas/snapshots
+//     D35, miroir conservé par StateBus::stop()) : le checkpoint transporte le
+//     hash de divergence D39 pour VÉRIFIER le miroir de l'élu, pas les données ;
+//  4) contexte d'arbitre (journal D19 borné)          — best-effort.
+QJsonObject EditorSession::buildCheckpointJson() const
+{
+    QJsonObject checkpoint;
+    checkpoint["checkpointVersion"] = 1;
+    checkpoint["sessionId"]         = m_sessionId;
+    checkpoint["hostPlayerId"]      = m_localPlayerId;
+
+    // 1) Règlement versionné (bloquant).
+    checkpoint["rulebook"] = RulesEngine::instance()->toJson();
+
+    // 2) Hashes des artefacts actifs (bloquant). Le nouvel hôte vérifie leur
+    // disponibilité locale ; les sources manquantes se re-téléchargent auprès
+    // des pairs (mécanique D16 — transport de rattrapage hors périmètre T4-3).
+    QJsonArray artifacts;
+    ArtifactRegistry *reg = ArtifactRegistry::instance();
+    const QStringList hashes = reg->knownHashes();
+    // Seuls les artefacts encore référencés (refcount > 0) sont « actifs ».
+    // Si AUCUN refcount n'est chaud (store rechargé après relance : compteurs
+    // en mémoire froids), embarquer tout le store — sur-approximation sûre
+    // (le GC au save D36 fait foi, jamais le checkpoint).
+    bool anyRef = false;
+    for (const QString &h : hashes) {
+        if (reg->refCount(h) > 0) { anyRef = true; break; }
+    }
+    for (const QString &h : hashes) {
+        if (!anyRef || reg->refCount(h) > 0)
+            artifacts.append(h);
+    }
+    checkpoint["artifacts"] = artifacts;
+
+    // 3) Snapshot `state` : hash de divergence D39 + repère de volume.
+    StateBus *bus = StateBus::instance();
+    QJsonObject state;
+    state["hash"]           = bus->localStateHash();
+    state["namespaceCount"] = bus->namespaces().size();
+    checkpoint["state"] = state;
+
+    // 4) Contexte d'arbitre (best-effort) : journal métier D19 borné (verdicts
+    // inclus — événements durables du noyau d'audit), à injecter en pré-prompt
+    // du nouvel arbitre.
+    QJsonObject arbiterContext;
+    arbiterContext["journal"] =
+        QJsonArray::fromVariantList(GameplayEventBus::instance()->auditLog(0, 128));
+    checkpoint["arbiterContext"] = arbiterContext;
+
+    return checkpoint;
+}
+
+// Entrée en mode migration côté survivant : stocke le checkpoint (éventuellement
+// vide sur le chemin timeout), suspend les propositions (D37) et arrête les
+// sessions V3 dépendantes dans l'ordre. Idempotent.
+void EditorSession::enterMigrationMode(const QJsonObject &checkpoint)
+{
+    if (!checkpoint.isEmpty())
+        m_migrationCheckpoint = checkpoint.toVariantMap();
+    if (!m_migrationInProgress || !m_proposalsSuspended) {
+        m_migrationInProgress = true;
+        m_proposalsSuspended  = true;
+        emit migrationStateChanged();
+    }
+    m_checkpointApplied = false;
+
+    // Coordination 0x2A/0x46 côté survivant : couper la physique client TOUT DE
+    // SUITE (sans attendre le 0x46 de l'ancien hôte, qui peut ne jamais arriver
+    // sur le chemin timeout). PhysicsSession::stop() côté client repasse en sim
+    // locale — état transitoire assumé pendant la fenêtre de migration, PAS une
+    // autorité réseau (aucun snapshot broadcast tant qu'aucun startAsHost).
+    PhysicsSession *phys = PhysicsSession::instance();
+    if (phys->active() && !phys->isHost()) {
+        qDebug() << "[EditorSession] migration : arrêt PhysicsSession client (pré-0x46)";
+        phys->stop();
+    }
+    // ProposalSession : suspension au niveau transport (rien ne part vers un
+    // hôte mort) ; StateBus : stop() CONSERVE le miroir répliqué — c'est la
+    // source du volet 3 pour le pair élu.
+    ProposalSession *prop = ProposalSession::instance();
+    if (prop->active()) prop->stop();
+    StateBus *bus = StateBus::instance();
+    if (bus->active()) bus->stop();
+}
+
+void EditorSession::beginHostHandover()
+{
+    if (!m_active) return;
+    if (m_isHost) {
+        announceHostLeaving();
+    } else {
+        // Client qui quitte : pas d'annonce, mais arrêt ordonné de ses sessions
+        // V3 dépendantes (sans marquer de migration — il s'en va, c'est tout).
+        ProposalSession *prop = ProposalSession::instance();
+        if (prop->active()) prop->stop();
+        StateBus *bus = StateBus::instance();
+        if (bus->active()) bus->stop();
+        PhysicsSession *phys = PhysicsSession::instance();
+        if (phys->active() && !phys->isHost()) phys->stop();
+    }
+    stop();
+}
+
+bool EditorSession::applyMigrationCheckpoint()
+{
+    const QJsonObject checkpoint = QJsonObject::fromVariantMap(m_migrationCheckpoint);
+
+    // 1) Règlement versionné — BLOQUANT. Sans checkpoint (départ brutal), le
+    // règlement local répliqué fait foi (copie passive du client, doc 06).
+    if (checkpoint.contains(QStringLiteral("rulebook"))) {
+        QString error;
+        if (!RulesEngine::instance()->loadJson(
+                checkpoint.value(QStringLiteral("rulebook")).toObject(), &error)) {
+            qWarning() << "[EditorSession] checkpoint D37 : règlement inapplicable —"
+                       << error << "→ propositions maintenues suspendues";
+            m_checkpointApplied = false;
+            return false;
+        }
+        qDebug() << "[EditorSession] checkpoint D37 : règlement appliqué, version ="
+                 << RulesEngine::instance()->version();
+    } else {
+        qWarning() << "[EditorSession] checkpoint D37 absent (départ brutal ?) — "
+                      "reprise sur le règlement répliqué local, version ="
+                   << RulesEngine::instance()->version();
+    }
+
+    // 2) Hashes d'artefacts actifs — BLOQUANT : tout hash indisponible
+    // localement doit être re-téléchargé (mécanique D16) avant reprise.
+    QStringList missing;
+    const QJsonArray artifacts = checkpoint.value(QStringLiteral("artifacts")).toArray();
+    for (const QJsonValue &v : artifacts) {
+        const QString hash = v.toString();
+        if (!hash.isEmpty() && !ArtifactRegistry::instance()->isAvailable(hash))
+            missing.append(hash);
+    }
+    if (!missing.isEmpty()) {
+        qWarning() << "[EditorSession] checkpoint D37 :" << missing.size()
+                   << "artefact(s) indisponible(s) localement :" << missing
+                   << "— éléments à désactiver avec diagnostic (D16), "
+                      "propositions maintenues suspendues";
+        m_checkpointApplied = false;
+        return false;
+    }
+
+    // 3) Snapshot `state` : vérification du miroir répliqué local (D39). Le
+    // miroir survit à StateBus::stop() — c'est « le snapshot le plus récent »
+    // au sens D37 (répliqué en continu par D35). Une divergence est signalée
+    // mais n'invalide pas la promotion : le miroir local est la meilleure
+    // source survivante, et les pairs se réalignent sur le premier snapshot de
+    // réparation du nouvel hôte.
+    const QJsonObject state = checkpoint.value(QStringLiteral("state")).toObject();
+    const QString expectedHash = state.value(QStringLiteral("hash")).toString();
+    if (!expectedHash.isEmpty()) {
+        const QString localHash = StateBus::instance()->localStateHash();
+        if (localHash != expectedHash) {
+            qWarning() << "[EditorSession] checkpoint D37 : divergence d'état —"
+                       << "attendu" << expectedHash << "local" << localHash
+                       << "(miroir local conservé, réparation au premier snapshot)";
+        }
+    }
+
+    m_checkpointApplied = true;
+    return true;
+}
+
+QVariantMap EditorSession::migrationArbiterContext() const
+{
+    return m_migrationCheckpoint.value(QStringLiteral("arbiterContext")).toMap();
+}
+
+// Reprise D37 : checkpoint appliqué + handshake D24. Si l'arbitre est déjà
+// « Prêt » (résultat latché du challenge D31), reprise immédiate ; sinon on
+// s'abonne à handshakeCompleted et on reprend au premier succès.
+void EditorSession::armProposalResume()
+{
+    if (!m_proposalsSuspended) return;
+    AiProcessSupervisor *sup = AiProcessSupervisor::instance();
+    if (m_checkpointApplied && sup->arbiterReady()) {
+        resumeProposals();
+        return;
+    }
+    if (m_arbiterHsConn) disconnect(m_arbiterHsConn);
+    m_arbiterHsConn = connect(
+        sup, &AiProcessSupervisor::handshakeCompleted, this,
+        [this](int role, bool ok, const QString &reason) {
+            if (role != AiProcessSupervisor::Arbiter) return;
+            if (!ok) {
+                qWarning() << "[EditorSession] handshake arbitre D24 échoué —"
+                           << reason << "→ propositions toujours suspendues";
+                return;
+            }
+            if (m_checkpointApplied && m_proposalsSuspended)
+                resumeProposals();
+        });
+    qDebug() << "[EditorSession] reprise D37 armée — en attente du handshake "
+                "arbitre (checkpointApplied =" << m_checkpointApplied << ")";
+}
+
+void EditorSession::resumeProposals()
+{
+    if (m_arbiterHsConn) {
+        disconnect(m_arbiterHsConn);
+        m_arbiterHsConn = {};
+    }
+    const bool wasSuspended = m_proposalsSuspended;
+    m_proposalsSuspended  = false;
+    m_migrationInProgress = false;
+    emit migrationStateChanged();
+    if (wasSuspended) emit proposalsResumed();
+
+    // Le nouvel hôte notifie les survivants : checkpoint ACKé + arbitre prêt
+    // → chacun lève sa suspension locale (D37). Les pairs qui reconnectent
+    // APRÈS ce broadcast reçoivent l'ACK en point-à-point sur leur Hello.
+    if (m_active && m_isHost && m_wasMigrated) {
+        qDebug() << "[EditorSession] broadcast MigrationCheckpointAck (0x2B)";
+        broadcastEvent(EditorMessageType::MigrationCheckpointAck,
+                       QJsonObject{{ "sessionId", m_sessionId },
+                                   { "rulebookVersion",
+                                     double(RulesEngine::instance()->version()) }});
+    }
+}
+
+void EditorSession::clearMigrationState()
+{
+    if (m_arbiterHsConn) {
+        disconnect(m_arbiterHsConn);
+        m_arbiterHsConn = {};
+    }
+    const bool changed = m_migrationInProgress || m_proposalsSuspended
+                         || !m_migrationCheckpoint.isEmpty();
+    m_migrationInProgress = false;
+    m_proposalsSuspended  = false;
+    m_migrationCheckpoint.clear();
+    m_checkpointApplied = false;
+    m_wasMigrated       = false;
+    if (changed) emit migrationStateChanged();
 }
 
 // bascule du rôle client → hôte en préservant l'état local.
@@ -576,11 +883,34 @@ bool EditorSession::promoteToHost()
     }
     if (m_isHost) return true;
     const QString me = m_localPlayerId;
+    const QString sid = m_sessionId;
     qDebug() << "[EditorSession] promotion hôte — pair local =" << me;
+
+    // V3 T4-3 (D37) : appliquer les volets bloquants du checkpoint AVANT la
+    // bascule de rôle (le règlement/artefacts doivent être en place quand les
+    // survivants reconnectent). L'échec d'un volet bloquant n'empêche pas la
+    // promotion (l'éditeur doit continuer de vivre) mais maintient la
+    // suspension des propositions (armProposalResume ne reprendra pas).
+    const bool checkpointOk = applyMigrationCheckpoint();
+    if (!checkpointOk)
+        qWarning() << "[EditorSession] promotion avec checkpoint D37 incomplet — "
+                      "propositions maintenues suspendues";
+
     // On garde les tuiles locales (pas touché par stop/startAsHost).
     stop();
-    const bool ok = startAsHost(me);
-    if (ok) emit promotedToHost();
+    const bool ok = startAsHost(me, sid);
+    if (ok) {
+        m_wasMigrated = true;
+        // Autorité D33 : le nouvel hôte exécute les règles.
+        RulesEngine::instance()->setHostAuthority(true);
+        // Bus d'état : repartir en autorité depuis le miroir répliqué conservé
+        // (StateBus::stop() ne purge pas les valeurs — volet 3 du checkpoint).
+        StateBus *bus = StateBus::instance();
+        if (!bus->active()) bus->startAsHost(sid, me);
+        // Reprise D37 : handshake arbitre D24 + checkpoint ACKé.
+        armProposalResume();
+        emit promotedToHost();
+    }
     return ok;
 }
 
@@ -600,6 +930,12 @@ void EditorSession::onPlayerTimedOut(const QString &playerId)
         // (qui fait stop+startAsHost atomiquement), soit `stop()`. Si on
         // enchaînait `stop()` ici, il annulerait la promotion juste faite par
         // le handler → le client perdrait le rôle d'hôte.
+        // V3 T4-3 (D37) : départ BRUTAL — pas de checkpoint reçu. Le mode
+        // migration est déclenché quand même (suspension + arrêt ordonné des
+        // sessions V3) ; les volets bloquants seront reconstruits best-effort
+        // depuis l'état répliqué local (règlement passif, miroir StateBus,
+        // journal D19 répliqué) par applyMigrationCheckpoint().
+        enterMigrationMode(QJsonObject{});
         const QString elected = electNewHost();
         qWarning() << "[EditorSession] hôte perdu (timeout) — élection →" << elected;
         emit hostLost(elected);

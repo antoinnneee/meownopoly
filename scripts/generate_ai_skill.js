@@ -1,32 +1,48 @@
 #!/usr/bin/env node
 /*
- * generate_ai_skill.js — Générateur de skill du canal IA (V3, tâche C8 / M12 minimal, D17).
+ * generate_ai_skill.js — Générateur de skill du canal IA (V3, tâches C8 / M12, D17).
  *
  * Source de vérité UNIQUE : le manifeste versionné du canal
  *   Meownopoly/cpp/ai/gateway/channel_manifest.json  (P0-4, décisions D43/D44).
  *
- * Produit deux couches (doc/v3/03_SKILL_CLIENT_IA.md §3) :
- *   1. Couche lisible par un agent générique : SKILL.md
- *      (front-matter YAML name/description + corps procédural : boucle
- *       perception→action, catalogue par rôle, garde-fous, recettes).
- *      C'est le pré-prompt injecté au spawn de l'agent (D10/D17/D20).
- *   2. Couche machine : channel_contract.json — sous-ensemble curé, stable et
- *      machine-lisible du manifeste (rôles, tools, params, quotas, enveloppe),
- *      débarrassé des métadonnées de gouvernance ($meow_status, $doc, …).
+ * Produit trois familles de fichiers (doc/v3/03_SKILL_CLIENT_IA.md §3-5) :
+ *   1. Une couche machine partagée : channel_contract.json — sous-ensemble curé,
+ *      stable et machine-lisible du manifeste (rôles, tools, params, quotas,
+ *      enveloppe, **négociation de version**), débarrassé des métadonnées de
+ *      gouvernance ($meow_status, $doc, …).
+ *   2. Une **variante par CLI cible** (D17 : Codex + Claude Code) de la couche
+ *      lisible par l'agent :
+ *        - `claude/SKILL.md`  : front-matter YAML name/description (convention
+ *          `.agents/skills/`) + corps procédural. Consommé par `claude -p`.
+ *        - `codex/AGENTS.md`  : préambule Codex (pas de front-matter `.agents/`,
+ *          Codex lit AGENTS.md comme instructions projet) + même corps.
+ *      Le **corps** (rôles, boucle, garde-fous, catalogue, recettes, négociation
+ *      de version) est identique entre variantes : seul l'en-tête d'injection
+ *      diffère. C'est ce fichier qui est injecté en pré-prompt au spawn de
+ *      l'agent selon l'adaptateur choisi (D10/D17/D20 — `AiProcessSupervisor`).
  *
  * La skill est versionnée avec le protocolVersion global du manifeste (D17/§5).
- * La validation de dérive en CI (échec build si non régénéré) est un chantier
- * ultérieur (M12/T5-2) — hors périmètre de cette v1.
+ * Le contrat porte un bloc `versionNegotiation` (current + minCompatible +
+ * policy semver-major) : c'est la **source de vérité de la négociation de
+ * version au handshake** (doc 03 §5 « mode compatibilité négocié »). La logique
+ * de comparaison vit côté hôte (`AiProcessSupervisor::evaluateHandshakeOutput`)
+ * mais lit sa fenêtre de compatibilité ici.
+ *
+ * Validation de dérive en CI (M12/T5-2) : `--check` sort en code 1 si un fichier
+ * généré diffère de ce qui serait produit. Câblé dans .github/workflows/ (échec
+ * du job si la skill n'a pas été régénérée après une modif du manifeste).
  *
  * Aucune dépendance externe : Node built-ins uniquement (fs, path).
  *
  * Usage :
- *   node scripts/generate_ai_skill.js [--manifest <path>] [--out-dir <path>] [--check]
+ *   node scripts/generate_ai_skill.js [--manifest <path>] [--out-dir <path>]
+ *                                     [--variant all|claude|codex] [--check]
  *
  *   --manifest  chemin du manifeste (défaut : Meownopoly/cpp/ai/gateway/channel_manifest.json)
  *   --out-dir   dossier de sortie   (défaut : <dir(manifeste)>/generated)
+ *   --variant   variante(s) à produire (défaut : all) — voir VARIANTS.
  *   --check     ne rien écrire ; sortie code 1 si un fichier généré diffère de
- *               ce qui serait produit (préfiguration de la validation de dérive CI, M12).
+ *               ce qui serait produit (validation de dérive CI, M12/T5-2).
  */
 
 'use strict';
@@ -39,25 +55,50 @@ const path = require('path');
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const args = { manifest: null, outDir: null, check: false };
+  const args = { manifest: null, outDir: null, variant: 'all', check: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--manifest') args.manifest = argv[++i];
     else if (a === '--out-dir') args.outDir = argv[++i];
+    else if (a === '--variant') args.variant = argv[++i];
     else if (a === '--check') args.check = true;
     else if (a === '--help' || a === '-h') { printUsage(); process.exit(0); }
     else { console.error(`Argument inconnu : ${a}`); printUsage(); process.exit(2); }
+  }
+  if (!['all', 'claude', 'codex'].includes(args.variant)) {
+    console.error(`Variante inconnue : ${args.variant} (attendu : all|claude|codex)`);
+    printUsage();
+    process.exit(2);
   }
   return args;
 }
 
 function printUsage() {
-  console.log('Usage : node scripts/generate_ai_skill.js [--manifest <path>] [--out-dir <path>] [--check]');
+  console.log(
+    'Usage : node scripts/generate_ai_skill.js [--manifest <path>] [--out-dir <path>]\n' +
+    '                                          [--variant all|claude|codex] [--check]');
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_MANIFEST = path.join(
   REPO_ROOT, 'Meownopoly', 'cpp', 'ai', 'gateway', 'channel_manifest.json');
+
+// Marqueur de handshake émis par l'agent arbitre (cf.
+// AiProcessSupervisor::kHandshakeMarker). Reporté ici pour co-versionner la
+// consigne d'annonce avec le contrat — source de vérité unique côté skill.
+const HANDSHAKE_MARKER = 'MEOW_ARBITER_HANDSHAKE:';
+
+// ---------------------------------------------------------------------------
+// Variantes par CLI cible (D17 : Codex + Claude Code)
+// ---------------------------------------------------------------------------
+
+// Chaque variante décrit son fichier de sortie et son en-tête d'injection. Le
+// corps procédural (buildSkillBody) est partagé — seul l'en-tête diffère selon
+// la façon dont le CLI consomme son pré-prompt.
+const VARIANTS = {
+  claude: { file: path.join('claude', 'SKILL.md'), header: buildClaudeHeader },
+  codex: { file: path.join('codex', 'AGENTS.md'), header: buildCodexHeader },
+};
 
 // ---------------------------------------------------------------------------
 // Lecture / validation minimale du manifeste
@@ -82,6 +123,48 @@ function loadManifest(manifestPath) {
     }
   }
   return manifest;
+}
+
+// ---------------------------------------------------------------------------
+// Négociation de version (source de vérité côté skill, doc 03 §5)
+// ---------------------------------------------------------------------------
+
+// Parse une version semver "MAJOR.MINOR.PATCH" en triplet numérique.
+// Tolère un simple entier ("1" → 1.0.0) pour rester robuste.
+function parseSemver(version) {
+  const m = String(version).trim().match(/^(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
+  if (!m) throw new Error(`protocolVersion non semver : "${version}"`);
+  return { major: Number(m[1]), minor: Number(m[2] || 0), patch: Number(m[3] || 0) };
+}
+
+// Construit la fenêtre de compatibilité négociable au handshake. Politique MVP :
+// **semver-major** — un agent est compatible ssi il annonce la même version
+// majeure (borne basse `<major>.0.0`, borne haute = version courante). Un major
+// différent → incompatible → l'hôte propose une mise à jour de skill (doc 03 §5).
+function buildVersionNegotiation(manifest) {
+  const cur = parseSemver(manifest.protocolVersion);
+  return {
+    current: manifest.protocolVersion,
+    minCompatible: `${cur.major}.0.0`,
+    policy: 'semver-major',
+    rule:
+      'Compatible ssi la version annoncée par l\'agent a la même version majeure ' +
+      'que `current` et est >= `minCompatible`. Un major différent est rejeté : ' +
+      'l\'hôte propose alors une régénération/mise à jour de la skill (doc 03 §5).',
+    handshake: {
+      marker: HANDSHAKE_MARKER,
+      // Ligne machine que l'agent émet sur stdout pour prouver rôle + version +
+      // capacité (consommée par AiProcessSupervisor::evaluateHandshakeOutput).
+      announceShape:
+        `${HANDSHAKE_MARKER}{"role":"<proposer|arbiter>",` +
+        `"protocolVersion":"${manifest.protocolVersion}","capabilities":[...]}`,
+      announces: ['role', 'protocolVersion', 'capabilities'],
+      note:
+        'La version annoncée doit être celle réellement supportée par l\'agent, ' +
+        'pas recopiée aveuglément : c\'est elle qui est négociée contre la fenêtre ' +
+        'de compatibilité ci-dessus.',
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +207,7 @@ function formatParams(params) {
 }
 
 // ---------------------------------------------------------------------------
-// Génération du contrat machine (couche 2)
+// Génération du contrat machine (couche partagée)
 // ---------------------------------------------------------------------------
 
 function buildContract(manifest) {
@@ -157,6 +240,7 @@ function buildContract(manifest) {
     },
     protocolVersion: manifest.protocolVersion,
     envelopeVersion: manifest.envelopeVersion,
+    versionNegotiation: buildVersionNegotiation(manifest),
     roles,
     tools,
     quotas: stripMeta(manifest.quotas || {}),
@@ -166,15 +250,14 @@ function buildContract(manifest) {
 }
 
 // ---------------------------------------------------------------------------
-// Génération du SKILL.md (couche 1)
+// En-têtes d'injection par variante
 // ---------------------------------------------------------------------------
 
-function buildSkillMarkdown(manifest) {
+// Variante Claude Code : front-matter YAML (convention `.agents/skills/`).
+function buildClaudeHeader(manifest) {
   const pv = manifest.protocolVersion;
   const roleNames = Object.keys(manifest.roles);
   const out = [];
-
-  // --- Front-matter YAML (cohérent avec .agents/skills/, doc 03 §3) ---
   out.push('---');
   out.push('name: meownopoly-ai-channel');
   out.push(
@@ -186,15 +269,51 @@ function buildSkillMarkdown(manifest) {
     '  lire le code du jeu.');
   out.push(`protocolVersion: ${pv}`);
   out.push(`roles: [${roleNames.join(', ')}]`);
+  out.push('variant: claude');
   out.push('generatedBy: scripts/generate_ai_skill.js');
   out.push('---');
   out.push('');
-
-  // --- Avertissement généré ---
   out.push('<!-- FICHIER GÉNÉRÉ — ne pas éditer à la main.');
-  out.push(`     Source de vérité : ${path.basename(DEFAULT_MANIFEST)} (D17).`);
+  out.push(`     Variante : Claude Code (claude -p). Source : ${path.basename(DEFAULT_MANIFEST)} (D17).`);
   out.push('     Régénérer : node scripts/generate_ai_skill.js -->');
   out.push('');
+  return out.join('\n');
+}
+
+// Variante Codex : Codex non-interactif lit AGENTS.md comme instructions
+// projet — pas de front-matter `.agents/skills/`. Métadonnées en bloc lisible.
+function buildCodexHeader(manifest) {
+  const pv = manifest.protocolVersion;
+  const roleNames = Object.keys(manifest.roles);
+  const out = [];
+  out.push('<!-- FICHIER GÉNÉRÉ — ne pas éditer à la main.');
+  out.push(`     Variante : Codex (mode non interactif). Source : ${path.basename(DEFAULT_MANIFEST)} (D17).`);
+  out.push('     Régénérer : node scripts/generate_ai_skill.js -->');
+  out.push('');
+  out.push('# AGENTS.md — Canal IA de Meownopoly (Codex)');
+  out.push('');
+  out.push(
+    'Ce document est injecté en **pré-prompt** au lancement de l\'agent Codex',
+    'par l\'application (D10/D17) : il fait autorité sur ta façon d\'interagir',
+    'avec le jeu. Tu n\'as ni compte à configurer ni code du jeu à lire.');
+  out.push('');
+  out.push(`- **protocolVersion** : \`${pv}\``);
+  out.push(`- **rôles** : ${roleNames.map((r) => `\`${r}\``).join(', ')}`);
+  out.push('- **variante** : codex');
+  out.push('- **généré par** : scripts/generate_ai_skill.js');
+  out.push('');
+  return out.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Corps procédural partagé (identique entre variantes)
+// ---------------------------------------------------------------------------
+
+function buildSkillBody(manifest) {
+  const pv = manifest.protocolVersion;
+  const roleNames = Object.keys(manifest.roles);
+  const neg = buildVersionNegotiation(manifest);
+  const out = [];
 
   // --- Intro ---
   out.push('# Canal IA de Meownopoly');
@@ -246,6 +365,27 @@ function buildSkillMarkdown(manifest) {
     'Un résumé des événements survenus depuis ton dernier tour t\'est **injecté**',
     'à chaque invocation (une invocation = un tour). Utilise `events_poll` seulement',
     'si tu as besoin de plus que ce résumé.');
+  out.push('');
+
+  // --- Négociation de version (handshake) ---
+  out.push('## Négociation de version (handshake)');
+  out.push('');
+  out.push(
+    `Le canal est versionné \`${neg.current}\` (politique **${neg.policy}**). Au`,
+    'handshake, tu **annonces la version que tu supportes réellement** sur une ligne',
+    'machine de stdout :');
+  out.push('');
+  out.push('```');
+  out.push(neg.handshake.announceShape);
+  out.push('```');
+  out.push('');
+  out.push(
+    `- Compatible ssi ta version a la **même majeure** que \`${neg.current}\` et`,
+    `  est **>= \`${neg.minCompatible}\`**.`,
+    '- Une majeure différente est **rejetée** : l\'hôte régénère alors une skill à',
+    '  jour et te la ré-injecte (pas d\'action de ta part).',
+    '- N\'invente pas de version : annonce celle de cette skill si tu n\'as pas',
+    '  d\'information plus précise.');
   out.push('');
 
   // --- Garde-fous ---
@@ -360,6 +500,11 @@ function buildSkillMarkdown(manifest) {
   return out.join('\n');
 }
 
+// Assemble en-tête (spécifique variante) + corps (partagé).
+function buildSkillMarkdown(manifest, variant) {
+  return VARIANTS[variant].header(manifest) + buildSkillBody(manifest);
+}
+
 // ---------------------------------------------------------------------------
 // Écriture / comparaison (mode --check)
 // ---------------------------------------------------------------------------
@@ -397,14 +542,20 @@ function main() {
   const outDir = path.resolve(args.outDir || path.join(path.dirname(manifestPath), 'generated'));
 
   const manifest = loadManifest(manifestPath);
+  const selectedVariants =
+    args.variant === 'all' ? Object.keys(VARIANTS) : [args.variant];
 
-  const skillMd = buildSkillMarkdown(manifest);
   const contract = buildContract(manifest);
   const contractJson = JSON.stringify(contract, null, 2) + '\n';
 
   const results = [];
-  writeOrCheck(path.join(outDir, 'SKILL.md'), skillMd, args.check, results);
+  // Contrat machine partagé (indépendant de la variante).
   writeOrCheck(path.join(outDir, 'channel_contract.json'), contractJson, args.check, results);
+  // Une variante de skill par CLI cible.
+  for (const variant of selectedVariants) {
+    const md = buildSkillMarkdown(manifest, variant);
+    writeOrCheck(path.join(outDir, VARIANTS[variant].file), md, args.check, results);
+  }
 
   if (args.check) {
     const drifted = results.filter((r) => r.differs);
@@ -416,7 +567,7 @@ function main() {
       console.error('  node scripts/generate_ai_skill.js');
       process.exit(1);
     }
-    console.log(`[generate_ai_skill] OK — skill synchrone avec le manifeste (protocolVersion ${manifest.protocolVersion}).`);
+    console.log(`[generate_ai_skill] OK — skill synchrone avec le manifeste (protocolVersion ${manifest.protocolVersion}, variantes : ${selectedVariants.join(', ')}).`);
     return;
   }
 

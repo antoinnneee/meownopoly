@@ -172,6 +172,29 @@ public:
     // Dossier (clean, sans file://) d'un modèle installé : <AppData>/models/<name>.
     Q_INVOKABLE QString installedModelDir(const QString &name) const;
 
+    // ===================================================================
+    // Bibliothèque officielle V3 (M11, D18/D29/D38) — installation atomique
+    // par dossier de version + commutation de manifeste.
+    // Layout : <AppData>/models/<name>/versions/<version>/  (contenu)
+    //          <AppData>/models/<name>/installed.json       (pointeur actif)
+    // installed.json = { layout:"versioned", currentVersion, rootHash,
+    //                    versions:[...] }, écrit atomiquement (.tmp + rename)
+    // = la « commutation de manifeste ». AssetManager::modelDir résout la
+    // version active quand installed.json est présent (rétro-compat sinon).
+    // ===================================================================
+
+    // Installe atomiquement une version : déplace le contenu déjà extrait de
+    // `stagedDir` vers versions/<version>/ puis commute installed.json vers
+    // cette version. rootHash (hash racine du manifeste D38) mémorisé pour la
+    // résolution de référence. Retourne true au succès.
+    Q_INVOKABLE bool installPackageVersion(const QString &name, const QString &version,
+                                           const QString &stagedDir,
+                                           const QString &rootHash = QString());
+    // Commute atomiquement la version active d'un package déjà installé.
+    Q_INVOKABLE bool switchModelVersion(const QString &name, const QString &version);
+    // Lit installed.json → { layout, currentVersion, rootHash, versions[] }.
+    Q_INVOKABLE QVariantMap installedPackageInfo(const QString &name) const;
+
     // Supprime un modèle 3D téléchargé : efface récursivement
     // <AppData>/models/<name> et met à jour m_modelsList en place
     // (isInstalled=false, localVersion="0.0.0" pour cette entrée) +

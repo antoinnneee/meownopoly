@@ -205,6 +205,16 @@ private:
     /// stage ("P0"|"bench") et le rappel « pass local ≠ acceptation » (D42).
     QJsonObject makeDryrunResult(const QJsonValue &id, const QJsonObject &verdict,
                                  const QString &stage);
+    // — Pivot de proposition (S-1/S-2) et espace mémoire (S-3/S-4) —
+    /// memory_set(scope, uuid?, key, value) : écriture directe du namespace
+    /// `config` (session/joueur via MemoryStore, tuile via le hook de scène).
+    QJsonObject toolMemorySet(const QJsonValue &id, const QJsonObject &arguments);
+    /// artifact_submit(source, target?, meta?) : enveloppe de proposition puis
+    /// attente bloquante du verdict via ProposalGateway (timeout → pending).
+    QJsonObject toolArtifactSubmit(const QJsonValue &id, const QJsonObject &arguments);
+    /// arbiter_verdict(proposalId, verdict, reasons, amendment?) : document de
+    /// verdict 2 audiences transmis à ProposalLifecycle (rôle arbitre).
+    QJsonObject toolArbiterVerdict(const QJsonValue &id, const QJsonObject &arguments);
     /// Pool de dry-run partagé, créé à la première demande (lazy).
     meow::bench::BenchPool *ensureBenchPool();
 

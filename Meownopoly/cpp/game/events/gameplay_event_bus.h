@@ -167,6 +167,11 @@ public:
                                          int audience = AudienceProposer,
                                          int maxLines = 250) const;
 
+    // Nom canal stable d'un type d'événement ("tile.placed", "memory.changed"…).
+    // Public : c'est la taxonomie des `trigger` de règles (T4-4, doc v3/06 §5.2)
+    // en plus de la projection canal D4.
+    static QString canalTypeName(meow::EventType type);
+
 signals:
     // Émis pour chaque événement ingéré (durable ou éphémère). Les abonnés
     // filtrent par `source`/`type`/`durability` dans la charge projetée.
@@ -217,10 +222,8 @@ private:
     static QVariantMap extractAuditCore(const meow::GameplayEvent &ev);
 
     // --- D4 : projection au schéma canal (Q-E06) ---
-    // Nom canal stable d'un type d'événement ("tile.placed", "editor.op"…).
-    // Distinct de eventTypeName() (nom interne CamelCase) : le canal expose une
-    // taxonomie orientée gameplay, alignée sur le manifeste (relevantTypes).
-    static QString    canalTypeName(meow::EventType type);
+    // (canalTypeName est déclarée publique ci-dessus — taxonomie partagée avec
+    // les triggers de règles T4-4.)
     // Vrai si un événement de ce type canal est visible pour l'audience donnée.
     // Les propositions/amendements (arbitre-only) ne sont pas encore émis
     // (Phase 2) → tout est public au MVP, mais le point de filtrage existe.

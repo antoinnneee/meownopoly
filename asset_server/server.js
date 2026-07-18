@@ -358,12 +358,17 @@ app.get('/api/models/list', async (req, res) => {
                     packs[name] = [];
                 }
 
+                // Manifeste de package V3 (M11, D38) associé, si présent.
+                const manifestFile = `${name}_v${version}.manifest.json`;
+                const hasManifest = fs.existsSync(path.join(MODELS_DIR, manifestFile));
+
                 packs[name].push({
                     name: name,
                     version: version,
                     filename: file,
                     size: stats.size,
-                    uploadedAt: stats.mtime
+                    uploadedAt: stats.mtime,
+                    hasManifest: hasManifest
                 });
             }
         }
@@ -428,6 +433,25 @@ app.get('/api/models/download/:name/:version', async (req, res) => {
     }
 });
 
+// 2 bis. Servir le manifeste de package V3 (M11, D38) d'un pack
+app.get('/api/models/manifest/:name/:version', async (req, res) => {
+    const safeName = req.params.name.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeVersion = req.params.version.replace(/[^a-zA-Z0-9._-]/g, '');
+
+    const manifestPath = path.join(MODELS_DIR, `${safeName}_v${safeVersion}.manifest.json`);
+    if (!fs.existsSync(manifestPath)) {
+        return res.status(404).json({ error: 'Manifeste de package non trouvé' });
+    }
+    try {
+        const content = await fsp.readFile(manifestPath, 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.send(content);
+    } catch (error) {
+        console.error('Erreur lecture manifeste:', error);
+        res.status(500).json({ error: 'Erreur lors de la lecture du manifeste' });
+    }
+});
+
 // 3. Upload d'un pack de modèle spécifique (authentifié + rate limité)
 app.post('/api/models/upload', uploadLimiter, authUpload, upload.single('package'), async (req, res) => {
     if (!req.file) {
@@ -459,6 +483,19 @@ app.post('/api/models/upload', uploadLimiter, authUpload, upload.single('package
         const stats = await fsp.stat(finalPath);
         const checksum = await getFileChecksum(finalPath);
 
+        // Manifeste de package V3 (M11, D38) optionnel : stocké à côté du .meow.
+        let manifestStored = false;
+        if (req.body.manifest) {
+            try {
+                const parsed = JSON.parse(req.body.manifest); // valide le JSON
+                const manifestPath = path.join(MODELS_DIR, `${safeName}_v${safeVersion}.manifest.json`);
+                await fsp.writeFile(manifestPath, JSON.stringify(parsed, null, 2));
+                manifestStored = true;
+            } catch (e) {
+                console.warn(`Manifeste de package ignoré (JSON invalide): ${e.message}`);
+            }
+        }
+
         console.log(`Upload Modèle réussi: ${finalFileName} (${stats.size} bytes)`);
 
         res.json({
@@ -469,7 +506,8 @@ app.post('/api/models/upload', uploadLimiter, authUpload, upload.single('package
                 version: safeVersion,
                 filename: finalFileName,
                 size: stats.size,
-                checksum: checksum
+                checksum: checksum,
+                hasManifest: manifestStored
             }
         });
 
@@ -496,6 +534,11 @@ app.delete('/api/models/delete/:name/:version', authUpload, async (req, res) => 
 
     try {
         await fsp.unlink(filePath);
+        // Manifeste de package V3 associé (M11), si présent.
+        const manifestPath = path.join(MODELS_DIR, `${safeName}_v${safeVersion}.manifest.json`);
+        if (fs.existsSync(manifestPath)) {
+            await fsp.unlink(manifestPath).catch(() => {});
+        }
         console.log(`Suppression Modèle réussie: ${fileName}`);
         res.json({
             success: true,

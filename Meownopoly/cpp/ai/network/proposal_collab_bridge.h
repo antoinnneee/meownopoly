@@ -147,6 +147,13 @@ private:
     // Finalisation commune (optimiste ou via completeHostApply).
     void finishHostApply(const QString &proposalId, bool ok, const QString &reason);
 
+    // T4-5 / slice runtime (D8/D12/D33) : applique les opérations `rulebook_set`
+    // d'une enveloppe `rules` au RulesEngine (autorité hôte). Appelée au moment
+    // où la proposition atteint `applied`. No-op si l'enveloppe n'est pas de type
+    // `rules` ou ne porte aucune op de règlement.
+    void applyRulesOps(const QString &proposalId, const QVariantMap &envelopeJson,
+                       const QString &authorId);
+
     bool m_attached = false;
     bool m_deferHostApply = false;
 

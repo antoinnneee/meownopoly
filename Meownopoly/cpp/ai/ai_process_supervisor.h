@@ -136,8 +136,9 @@ public:
     /**
      * Lance l'agent d'un rôle. `opts` (tout optionnel sauf indiqué) :
      *   - `adapter`      : int Adapter (défaut ClaudeCli) ;
-     *   - `program`      : chemin/nom de l'exécutable CLI (défaut selon adapter,
-     *                      configurable — jamais codé en dur dans l'UI) ;
+     *   - `program`      : chemin/nom du CLI (défaut selon adapter). Les chemins
+     *                      absolus, le PATH, les shims npm .cmd/.bat/.ps1 et les
+     *                      emplacements utilisateur usuels sont résolus ;
      *   - `gatewayUrl`   : endpoint MCP loopback (défaut dérivé de
      *                      MEOW_AI_GATEWAY_PORT : http://127.0.0.1:<port>/mcp) ;
      *   - `token`        : token éphémère de rôle (D20) — **secret**, injecté
