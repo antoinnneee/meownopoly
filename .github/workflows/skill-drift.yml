@@ -1,0 +1,43 @@
+name: Skill drift check
+
+# Validation de dérive de la skill du canal IA (V3, M12 / T5-2, D17).
+#
+# La skill client-IA (SKILL.md Claude + AGENTS.md Codex + channel_contract.json)
+# est DÉRIVÉE mécaniquement du manifeste versionné du canal
+#   Meownopoly/cpp/ai/gateway/channel_manifest.json  (source de vérité, D17).
+#
+# Ce job ÉCHOUE si les fichiers générés committés ne correspondent plus à ce que
+# produirait le générateur — c.-à-d. si l'on a modifié le manifeste (ou le
+# générateur) sans régénérer la skill. Correctif attendu du contributeur :
+#   node scripts/generate_ai_skill.js
+# puis committer le dossier generated/.
+
+on:
+  push:
+    paths:
+      - 'Meownopoly/cpp/ai/gateway/channel_manifest.json'
+      - 'Meownopoly/cpp/ai/gateway/generated/**'
+      - 'scripts/generate_ai_skill.js'
+      - '.github/workflows/skill-drift.yml'
+  pull_request:
+    paths:
+      - 'Meownopoly/cpp/ai/gateway/channel_manifest.json'
+      - 'Meownopoly/cpp/ai/gateway/generated/**'
+      - 'scripts/generate_ai_skill.js'
+      - '.github/workflows/skill-drift.yml'
+  workflow_dispatch:
+
+jobs:
+  skill-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vérifier que la skill est synchrone avec le manifeste
+        run: node scripts/generate_ai_skill.js --check

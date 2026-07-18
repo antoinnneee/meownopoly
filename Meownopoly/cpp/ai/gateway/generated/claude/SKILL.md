@@ -8,13 +8,13 @@ description: >-
   lire le code du jeu.
 protocolVersion: 1.0.0
 roles: [proposer, arbiter]
+variant: claude
 generatedBy: scripts/generate_ai_skill.js
 ---
 
 <!-- FICHIER GÉNÉRÉ — ne pas éditer à la main.
-     Source de vérité : channel_manifest.json (D17).
+     Variante : Claude Code (claude -p). Source : channel_manifest.json (D17).
      Régénérer : node scripts/generate_ai_skill.js -->
-
 # Canal IA de Meownopoly
 
 Tu pilotes un jeu qui **tourne** : ce n'est pas une procédure de modification
@@ -60,6 +60,23 @@ IA arbitre (D6/D24/D31). Rend des verdicts, ne pose/soumet rien elle-même au MV
 Un résumé des événements survenus depuis ton dernier tour t'est **injecté**
 à chaque invocation (une invocation = un tour). Utilise `events_poll` seulement
 si tu as besoin de plus que ce résumé.
+
+## Négociation de version (handshake)
+
+Le canal est versionné `1.0.0` (politique **semver-major**). Au
+handshake, tu **annonces la version que tu supportes réellement** sur une ligne
+machine de stdout :
+
+```
+MEOW_ARBITER_HANDSHAKE:{"role":"<proposer|arbiter>","protocolVersion":"1.0.0","capabilities":[...]}
+```
+
+- Compatible ssi ta version a la **même majeure** que `1.0.0` et
+  est **>= `1.0.0`**.
+- Une majeure différente est **rejetée** : l'hôte régénère alors une skill à
+  jour et te la ré-injecte (pas d'action de ta part).
+- N'invente pas de version : annonce celle de cette skill si tu n'as pas
+  d'information plus précise.
 
 ## Garde-fous (non négociables)
 
