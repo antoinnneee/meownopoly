@@ -22,7 +22,8 @@ bool EditorProtocol::isEditorPacket(const QByteArray &data)
     // Plage éditeur : de Hello (0x20) au dernier type défini. Attention :
     // toute nouvelle valeur ajoutée dans editor_message_type.h doit ÊTRE
     // la plus haute, sinon elle serait droppée ici.
-    return rawType >= EditorMessageType::Hello && rawType <= EditorMessageType::HostLeaving;
+    return rawType >= EditorMessageType::Hello
+           && rawType <= EditorMessageType::MigrationCheckpointAck;
 }
 
 bool EditorProtocol::unpack(const QByteArray &data,

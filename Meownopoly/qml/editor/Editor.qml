@@ -972,7 +972,11 @@ Base_Board {
                 // `promoteToHost` fait stop+startAsHost en interne, préserve l'état.
                 // main.qml reçoit `promotedToHost` et renomme la session chat
                 // (MÊME sessionId) — aucun re-join nécessaire pour les autres.
-                console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
+                console.log("[EditorSession] Je suis le nouvel hôte — promotion.",
+                            "checkpoint D37 =",
+                            Object.keys(EditorSession.migrationCheckpoint).length > 0
+                                ? "reçu (départ volontaire)"
+                                : "absent (départ brutal — reconstruction best-effort)")
                 // Phase 3.6 : save forcé de l'état courant AVANT promotion,
                 // hors politique. Garantit qu'un crash pendant la fenêtre
                 // stop→startAsHost ne laisse pas le nouvel hôte avec un
@@ -1014,6 +1018,14 @@ Base_Board {
                 console.log("[EditorSession] Aucun candidat — monoposte.")
                 EditorSession.stop()
             }
+        }
+
+        // T4-3 (D37) : la suspension des propositions est levée — soit
+        // localement (nouvel hôte : checkpoint appliqué + handshake arbitre
+        // D24), soit à réception du MigrationCheckpointAck (0x2B) du nouvel
+        // hôte pour les survivants.
+        function onProposalsResumed() {
+            console.log("[EditorSession] propositions IA reprises (checkpoint D37 ACKé)")
         }
 
         // un pair a quitté → purge curseur/sélection locale.

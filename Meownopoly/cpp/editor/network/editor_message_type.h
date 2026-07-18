@@ -27,7 +27,15 @@ enum Value : quint8 {
     OpChunk           = 0x29,
     // hôte → tous : l'hôte quitte proprement. Permet aux clients de déclencher
     // l'élection d'un nouvel hôte immédiatement (sans attendre le timeout ~10 s).
+    // V3 T4-3 (D37) : le payload embarque aussi `checkpoint` (règlement versionné
+    // + hashes d'artefacts actifs + hash/état du bus d'état + contexte arbitre
+    // best-effort) — chunké via OpChunk si volumineux.
     HostLeaving       = 0x2A,
+    // V3 T4-3 (D37) : nouvel hôte → tous. Le checkpoint de migration a été
+    // appliqué ET l'arbitre a passé le handshake D24 → les propositions
+    // reprennent (fin de la suspension côté pairs). Doit rester la valeur la
+    // plus haute (filtre de plage isEditorPacket).
+    MigrationCheckpointAck = 0x2B,
 };
 Q_ENUM_NS(Value)
 
