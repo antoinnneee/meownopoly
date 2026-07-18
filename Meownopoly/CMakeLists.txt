@@ -389,6 +389,16 @@ target_link_libraries(meow_testbench PRIVATE
 # (ex. Qt Creator) rend des verdicts « exécutable du banc introuvable ».
 add_dependencies(${PROJECT_NAME} meow_testbench)
 
+# Cible de compilation quotidienne : application + banc d'essai uniquement.
+# Les exécutables de tests de tests/ restent disponibles via leurs cibles
+# dédiées (notamment `meownopoly_tests`), mais ne font pas partie de cette
+# dépendance. Cette cible explicite est pratique dans Qt Creator comme en CLI :
+#   cmake --build build --config Release --target meownopoly_app_testbench
+add_custom_target(meownopoly_app_testbench
+    DEPENDS ${PROJECT_NAME} meow_testbench
+    COMMENT "Build Meownopoly and meow_testbench (without unit/performance tests)"
+)
+
 # ============================================================================
 # Tests unitaires (PattounX)
 # ============================================================================
