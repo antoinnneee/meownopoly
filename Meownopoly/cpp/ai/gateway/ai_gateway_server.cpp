@@ -727,7 +727,7 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
     if (name == QLatin1String("memory_set"))
         return toolNotImplemented(id, name, QStringLiteral("S-3 (espace mémoire snapable, D15)"));
     if (name == QLatin1String("artifact_submit"))
-        return toolNotImplemented(id, name, QStringLiteral("S-2 (enveloppe de proposition, D11)"));
+        return toolNotImplemented(id, name, QStringLiteral("S-1/S-2 (enveloppe de proposition, D11)"));
     if (name == QLatin1String("arbiter_verdict"))
         return toolNotImplemented(id, name, QStringLiteral("S-2 (verdict 2 audiences, D32)"));
 
