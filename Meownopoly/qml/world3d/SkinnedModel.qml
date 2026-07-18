@@ -25,6 +25,17 @@ Node {
     property string colorVariant: ""             // JSON sérialisé du PlayerProfile
     property color  teamColorOverride: "transparent"  // imposé par la partie (équipes)
 
+    // Référence étendue bibliothèque officielle V3 (M11, D18) : version semver +
+    // hash de contenu attendus. Vides = pas de contrainte (résolution legacy).
+    property string modelVersion: ""
+    property string modelHash: ""
+
+    // Diagnostic de résolution (M11) : renseigné quand la version/hash attendus
+    // divergent de l'installé → l'appelant peut griser/signaler l'élément (D16).
+    readonly property bool available: root._available
+    property bool  _available: true
+    property string _diagnostic: ""
+
     readonly property bool isPrimitive: modelName === "Cube" || modelName === "Sphere"
 
     // --- Résolu ---
@@ -63,7 +74,13 @@ Node {
     function resolve() {
         if (modelName.length === 0 || isPrimitive) return
 
-        const dir = AssetManager.modelDir(modelName)
+        // Résolution de référence étendue (M11 D18) : version + hash. Sans
+        // contrainte, `dir` == AssetManager.modelDir(modelName) (comportement
+        // legacy inchangé) ; sinon on remonte le diagnostic pour l'appelant.
+        const ref = AssetManager.resolveModelReference(modelName, modelVersion, modelHash)
+        root._available  = ref.available !== undefined ? ref.available : true
+        root._diagnostic = ref.diagnostic || ""
+        const dir = (ref.dir && ref.dir.length) ? ref.dir : AssetManager.modelDir(modelName)
         const ub = _urlBase(dir)
         const manifest = AssetManager.readModelManifest(modelName) || {}
 
@@ -119,6 +136,8 @@ Node {
     onModelNameChanged:         Qt.callLater(root.resolve)
     onColorVariantChanged:      Qt.callLater(root.resolve)
     onTeamColorOverrideChanged: Qt.callLater(root.resolve)
+    onModelVersionChanged:      Qt.callLater(root.resolve)
+    onModelHashChanged:         Qt.callLater(root.resolve)
     Component.onCompleted:      root.resolve()
 
     // Primitives Cube/Sphere (pas de re-skin).

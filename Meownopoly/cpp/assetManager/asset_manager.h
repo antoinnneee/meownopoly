@@ -302,6 +302,45 @@ public:
     Q_INVOKABLE QString loadSkinVariant(const QString &modelName, const QString &skin,
                                         const QString &variant) const;
 
+    // ==================== Bibliothèque officielle V3 (M11, D18/D29/D38) =========
+    // Format de package étendu de l'AssetManager — source de vérité du format
+    // (D29) : identité (id/version semver/contentHash par fichier + hash racine/
+    // kind), métadonnées (name/description/author/tags/preview), contenu
+    // (glb/qml/json + entryPoint), dépendances {id,versionRange}, confiance
+    // RÉSERVÉE (signature/publisherKeyId — non vérifiée au MVP, D38/R16), compat
+    // (minGameVersion/channelVersion). Confiance différée : R16 assumé.
+    // Cf. doc/v3/07_BIBLIOTHEQUE.md.
+
+    // Version du schéma de manifeste de package produite/attendue par cette build.
+    static constexpr int kPackageManifestVersion = 1;
+
+    // SHA-256 hex d'un fichier ("" si illisible). Accepte chemins disque et QRC.
+    Q_INVOKABLE QString computeFileHash(const QString &filePath) const;
+
+    // Lit <model>/package_manifest.json (format V3 D38). Si absent, en synthétise
+    // un minimal (kind=asset3d) depuis model_manifest.json pour la rétro-compat
+    // des modèles pré-M11. Map vide si le modèle est introuvable.
+    Q_INVOKABLE QVariantMap readPackageManifest(const QString &modelName) const;
+
+    // Valide une string JSON de manifeste de package contre D38 : champs requis
+    // (identité/contenu/compat) + budgets provisoires (≤ 20 Mo/package,
+    // textures ≤ 2048², ≤ 50 k triangles — vérifs disponibles au niveau manifeste
+    // seulement). Retourne { ok:bool, errors:[...], warnings:[...] }.
+    Q_INVOKABLE QVariantMap validatePackageManifest(const QString &json) const;
+
+    // Résout une référence IA étendue `(category,type,id)`/`modelName` + version +
+    // hash (D18). version/contentHash vides = pas de contrainte. Retourne
+    // { available, dir, installedVersion, installedHash, versionMatch, hashMatch,
+    //   diagnostic }. Permet à l'UI de désactiver un élément avec diagnostic clair
+    // quand la version/hash attendus sont absents.
+    Q_INVOKABLE QVariantMap resolveModelReference(const QString &modelName,
+                                                  const QString &version = QString(),
+                                                  const QString &contentHash = QString()) const;
+
+    // Recalcule les hashes par fichier déclarés dans le package_manifest et
+    // compare. { ok, checked, mismatches:[...], missing:[...] }.
+    Q_INVOKABLE QVariantMap verifyPackageIntegrity(const QString &modelName) const;
+
 public slots:
 
 signals:
