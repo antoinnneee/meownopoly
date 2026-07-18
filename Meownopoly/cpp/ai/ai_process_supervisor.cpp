@@ -12,9 +12,14 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QSettings>
+#include <QStandardPaths>
 #include <QUuid>
 #include <QUrl>
 #include <QDebug>
+
+#include <string>
+#include <utility>
 
 #ifdef Q_OS_WIN
 #  include <windows.h>
@@ -84,6 +89,199 @@ QString roleName(AiProcessSupervisor::Role r)
 // Format : `MEOW_ARBITER_HANDSHAKE:{"role":"arbiter","protocolVersion":"1.0.0",
 //           "capabilities":["arbiter_verdict", ...]}`.
 constexpr const char *kHandshakeMarker = "MEOW_ARBITER_HANDSHAKE:";
+
+void appendUniquePath(QStringList *paths, const QString &path)
+{
+    if (!paths || path.trimmed().isEmpty())
+        return;
+
+    QString normalizedPath = path.trimmed();
+    if (normalizedPath.size() >= 2
+        && ((normalizedPath.front() == u'\"' && normalizedPath.back() == u'\"')
+            || (normalizedPath.front() == u'\'' && normalizedPath.back() == u'\''))) {
+        normalizedPath = normalizedPath.mid(1, normalizedPath.size() - 2);
+    }
+    const QString cleanPath = QDir::cleanPath(normalizedPath);
+#ifdef Q_OS_WIN
+    for (const QString &existing : std::as_const(*paths)) {
+        if (existing.compare(cleanPath, Qt::CaseInsensitive) == 0)
+            return;
+    }
+#else
+    if (paths->contains(cleanPath))
+        return;
+#endif
+    paths->append(cleanPath);
+}
+
+void appendPathList(QStringList *paths, const QString &pathList)
+{
+    for (const QString &path : pathList.split(QDir::listSeparator(), Qt::SkipEmptyParts))
+        appendUniquePath(paths, path);
+}
+
+#ifdef Q_OS_WIN
+QString expandWindowsEnvironment(const QString &value)
+{
+    const DWORD required = ExpandEnvironmentStringsW(
+        reinterpret_cast<LPCWSTR>(value.utf16()), nullptr, 0);
+    if (required == 0)
+        return value;
+
+    std::wstring expanded(required, L'\0');
+    if (ExpandEnvironmentStringsW(reinterpret_cast<LPCWSTR>(value.utf16()),
+                                  expanded.data(), required) == 0) {
+        return value;
+    }
+    if (!expanded.empty() && expanded.back() == L'\0')
+        expanded.pop_back();
+    return QString::fromStdWString(expanded);
+}
+#endif
+
+QStringList executableSearchPaths()
+{
+    const QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QStringList paths;
+
+    // Le PATH du process reste prioritaire. Il couvre notamment les installs
+    // système et les gestionnaires de versions actifs au lancement de l'app.
+    appendPathList(&paths, env.value(QStringLiteral("PATH")));
+    appendUniquePath(&paths, QCoreApplication::applicationDirPath());
+
+    const auto appendEnvPath = [&env, &paths](const char *name,
+                                              const QString &suffix = QString()) {
+        const QString base = env.value(QString::fromLatin1(name));
+        if (!base.isEmpty())
+            appendUniquePath(&paths, suffix.isEmpty() ? base : QDir(base).filePath(suffix));
+    };
+
+#ifdef Q_OS_WIN
+    // Une application ouverte depuis Explorer peut garder un PATH antérieur à
+    // l'installation du CLI. Relire les deux PATH persistés évite d'imposer une
+    // déconnexion/reconnexion ou un lancement depuis un terminal.
+    QSettings userEnvironment(QStringLiteral("HKEY_CURRENT_USER\\Environment"),
+                              QSettings::NativeFormat);
+    QSettings machineEnvironment(
+        QStringLiteral("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"),
+        QSettings::NativeFormat);
+    appendPathList(&paths, expandWindowsEnvironment(
+                               userEnvironment.value(QStringLiteral("Path")).toString()));
+    appendPathList(&paths, expandWindowsEnvironment(
+                               machineEnvironment.value(QStringLiteral("Path")).toString()));
+
+    // Emplacements standards des installateurs utilisateur qui ne mettent pas
+    // toujours à jour le PATH du processus déjà ouvert.
+    const QString home = QDir::homePath();
+    const QString appData = env.value(QStringLiteral("APPDATA"),
+                                      QDir(home).filePath(QStringLiteral("AppData/Roaming")));
+    const QString localAppData = env.value(
+        QStringLiteral("LOCALAPPDATA"),
+        QDir(home).filePath(QStringLiteral("AppData/Local")));
+    appendUniquePath(&paths, QDir(appData).filePath(QStringLiteral("npm")));
+    appendUniquePath(&paths,
+                     QDir(localAppData).filePath(QStringLiteral("Microsoft/WinGet/Links")));
+    appendUniquePath(&paths, QDir(home).filePath(QStringLiteral(".local/bin")));
+
+    appendEnvPath("PNPM_HOME");
+    appendEnvPath("NVM_SYMLINK");
+    appendEnvPath("VOLTA_HOME", QStringLiteral("bin"));
+    appendEnvPath("BUN_INSTALL", QStringLiteral("bin"));
+#else
+    const QString home = QDir::homePath();
+    appendUniquePath(&paths, QDir(home).filePath(QStringLiteral(".local/bin")));
+    appendUniquePath(&paths, QDir(home).filePath(QStringLiteral(".npm-global/bin")));
+    appendUniquePath(&paths, QDir(home).filePath(QStringLiteral(".cargo/bin")));
+    appendUniquePath(&paths, QStringLiteral("/opt/homebrew/bin"));
+    appendUniquePath(&paths, QStringLiteral("/usr/local/bin"));
+    appendUniquePath(&paths, QStringLiteral("/opt/local/bin"));
+
+    appendEnvPath("PNPM_HOME");
+    appendEnvPath("VOLTA_HOME", QStringLiteral("bin"));
+    appendEnvPath("BUN_INSTALL", QStringLiteral("bin"));
+    appendEnvPath("NPM_CONFIG_PREFIX", QStringLiteral("bin"));
+#endif
+    return paths;
+}
+
+QString resolveProgram(const QString &requestedProgram, const QStringList &searchPaths)
+{
+    QString requested = requestedProgram.trimmed();
+    // Accepte un chemin copié/collé depuis un terminal avec ses guillemets.
+    if (requested.size() >= 2
+        && ((requested.front() == u'\"' && requested.back() == u'\"')
+            || (requested.front() == u'\'' && requested.back() == u'\''))) {
+        requested = requested.mid(1, requested.size() - 2);
+    }
+    if (requested.isEmpty())
+        return QString();
+
+#ifdef Q_OS_WIN
+    // CreateProcess ne sait lancer que les exécutables natifs. Chercher les
+    // extensions dans cet ordre évite de sélectionner le shim POSIX sans
+    // extension que npm pose à côté de codex.cmd.
+    if (QFileInfo(requested).suffix().isEmpty()) {
+        static const QStringList suffixes = {
+            QStringLiteral(".exe"), QStringLiteral(".com"),
+            QStringLiteral(".cmd"), QStringLiteral(".bat"),
+            QStringLiteral(".ps1")
+        };
+        for (const QString &suffix : suffixes) {
+            const QString found = QStandardPaths::findExecutable(requested + suffix,
+                                                                 searchPaths);
+            if (!found.isEmpty())
+                return QDir::toNativeSeparators(found);
+        }
+    }
+#endif
+
+    const QString found = QStandardPaths::findExecutable(requested, searchPaths);
+    return found.isEmpty() ? QString() : QDir::toNativeSeparators(found);
+}
+
+#ifdef Q_OS_WIN
+QString quoteWindowsCommandArgument(const QString &argument)
+{
+    // Quoting compatible CommandLineToArgvW pour la commande placée derrière
+    // cmd.exe /C. Les arguments usuels des CLIs (chemins inclus) restent ainsi
+    // des tokens distincts ; le prompt, potentiellement arbitraire, passe par
+    // stdin et ne touche jamais cette ligne de commande.
+    QString quoted = QStringLiteral("\"");
+    int backslashes = 0;
+    for (const QChar ch : argument) {
+        if (ch == u'\\') {
+            ++backslashes;
+            continue;
+        }
+        if (ch == u'\"') {
+            quoted += QString(backslashes * 2 + 1, u'\\');
+            quoted += ch;
+            backslashes = 0;
+            continue;
+        }
+        quoted += QString(backslashes, u'\\');
+        backslashes = 0;
+        quoted += ch;
+    }
+    quoted += QString(backslashes * 2, u'\\');
+    quoted += u'\"';
+    return quoted;
+}
+
+QString cmdNativeArguments(const QString &script, const QStringList &arguments)
+{
+    QString command = quoteWindowsCommandArgument(script);
+    for (const QString &argument : arguments) {
+        command += u' ';
+        command += quoteWindowsCommandArgument(argument);
+    }
+
+    // /D neutralise les AutoRun utilisateur ; /S impose les règles stables de
+    // retrait des guillemets externes de /C. Le guillemetage doublé est celui
+    // requis par cmd.exe pour une commande dont le premier token est quoté.
+    return QStringLiteral("/D /S /C \"") + command + u'\"';
+}
+#endif
 
 } // namespace
 
@@ -337,9 +535,14 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
 {
     const Adapter adapter =
         static_cast<Adapter>(opts.value(QStringLiteral("adapter"), int(ClaudeCli)).toInt());
-    QString program = opts.value(QStringLiteral("program")).toString();
+    QString requestedProgram = opts.value(QStringLiteral("program")).toString().trimmed();
+    if (requestedProgram.isEmpty())
+        requestedProgram = defaultProgram(adapter);
+
+    const QStringList searchPaths = executableSearchPaths();
+    QString program = resolveProgram(requestedProgram, searchPaths);
     if (program.isEmpty())
-        program = defaultProgram(adapter);
+        program = requestedProgram; // laisse QProcess produire son diagnostic natif
 
     a->oneShot = opts.value(QStringLiteral("oneShot"), false).toBool();
     a->reachedReady = false;
@@ -366,6 +569,9 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     // l'argv). On expose l'URL de la passerelle et le chemin de config MCP par
     // env pour les adaptateurs qui préfèrent l'env au flag.
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    // Utiliser le même PATH enrichi que la résolution. C'est nécessaire pour
+    // les shims npm (.cmd), qui relancent généralement `node` par son nom.
+    env.insert(QStringLiteral("PATH"), searchPaths.join(QDir::listSeparator()));
     env.insert(QStringLiteral("MEOW_AI_GATEWAY_URL"), gatewayUrlFromOpts(opts));
     if (!a->mcpConfigPath.isEmpty())
         env.insert(QStringLiteral("MEOW_AI_MCP_CONFIG"), a->mcpConfigPath);
@@ -424,12 +630,37 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
         a->startupTimer->start(startupMs);
     }
 
+#ifdef Q_OS_WIN
+    const QString suffix = QFileInfo(program).suffix().toLower();
+    if (suffix == QStringLiteral("cmd") || suffix == QStringLiteral("bat")) {
+        QString commandInterpreter = env.value(QStringLiteral("COMSPEC"));
+        if (commandInterpreter.isEmpty())
+            commandInterpreter = resolveProgram(QStringLiteral("cmd.exe"), searchPaths);
+        p->setProgram(commandInterpreter.isEmpty() ? QStringLiteral("cmd.exe")
+                                                    : commandInterpreter);
+        p->setNativeArguments(cmdNativeArguments(program, args));
+        p->start();
+    } else if (suffix == QStringLiteral("ps1")) {
+        QString powershell = resolveProgram(QStringLiteral("powershell.exe"), searchPaths);
+        if (powershell.isEmpty())
+            powershell = QStringLiteral("powershell.exe");
+        QStringList powershellArgs{
+            QStringLiteral("-NoLogo"), QStringLiteral("-NoProfile"),
+            QStringLiteral("-NonInteractive"), QStringLiteral("-File"), program
+        };
+        powershellArgs += args;
+        p->start(powershell, powershellArgs);
+    } else {
+        p->start(program, args);
+    }
+#else
     p->start(program, args);
+#endif
 
     // Instantané synchrone : si le binaire est introuvable, errorOccurred
     // (FailedToStart) arrive de façon asynchrone — géré dans onErrorOccurred.
-    emit logMessage(QStringLiteral("[AiSupervisor] lancement %1 : %2 (%3 arg)")
-                        .arg(roleName(a->role), program)
+    emit logMessage(QStringLiteral("[AiSupervisor] lancement %1 : %2 → %3 (%4 arg)")
+                        .arg(roleName(a->role), requestedProgram, program)
                         .arg(args.size()));
 
     // Le prompt initial (opts["prompt"]) est poussé sur stdin dans onStarted(),
@@ -544,13 +775,17 @@ void AiProcessSupervisor::onErrorOccurred(Agent *a, int processError)
     if (processError == 0 /* FailedToStart */) {
         if (a->startupTimer) a->startupTimer->stop();
         QProcess *p = a->process;
+        const QString nativeError = p ? p->errorString() : QString();
         a->process = nullptr;
         if (p) {
             p->disconnect(this);
             p->deleteLater();
         }
         cleanupMcpFileOnly(a);
-        a->lastError = QStringLiteral("binaire introuvable ou non lançable");
+        a->lastError = nativeError.isEmpty()
+                           ? QStringLiteral("binaire introuvable ou non lançable")
+                           : QStringLiteral("binaire introuvable ou non lançable : %1")
+                                 .arg(nativeError);
         emit logMessage(QStringLiteral("[AiSupervisor] %1 échec de lancement")
                             .arg(roleName(a->role)));
         // Un challenge d'arbitre qui n'a même pas pu démarrer = Erreur latchée.
