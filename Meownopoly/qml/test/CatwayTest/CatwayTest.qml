@@ -367,7 +367,7 @@ Rectangle {
                 }
             }
 
-            // Onglet V3 IA : harness des briques V3 (phases 0-3) — squelette.
+            // Onglet V3 IA : harness interactif des briques V3 (phases 0-5).
             ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true

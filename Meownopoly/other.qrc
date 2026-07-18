@@ -43,5 +43,10 @@
         <file>qml/test/CatwayTest/V3ProposalPanel.qml</file>
         <file>qml/test/CatwayTest/V3EventBusPanel.qml</file>
         <file>qml/test/CatwayTest/V3StateTxPanel.qml</file>
+        <file>qml/test/CatwayTest/V3ArtifactPanel.qml</file>
+        <file>qml/test/CatwayTest/V3GameSavePanel.qml</file>
+        <file>qml/test/CatwayTest/V3MigrationPanel.qml</file>
+        <file>qml/test/CatwayTest/V3RulesPanel.qml</file>
+        <file>qml/test/CatwayTest/V3LibraryPanel.qml</file>
     </qresource>
 </RCC>

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 
-// Onglet « V3 IA » du harness CatwayTest (étape 1 : squelette).
+// Onglet « V3 IA » du harness CatwayTest (phases 0-5).
 //
 // Conteneur à sections des briques V3 livrées en phases 0-3, désormais câblées
 // à QML (cf. qmlapp.cpp). Chaque section est un fichier séparé, instancié
@@ -11,9 +11,7 @@ import theme
 // source = qrc:/… peut fail silencieusement » : les modules C++ sont déjà
 // importés dans la scène, donc l'instanciation directe est fiable).
 //
-// Les 6 panneaux sont des PLACEHOLDERS avec un smoke test réel (1-2 bindings
-// live sur le singleton correspondant) prouvant que le module s'importe et que
-// le singleton répond. Ils seront étoffés par des agents suivants.
+// Les panneaux couvrent le pipeline IA ainsi que les briques runtime T4/T5.
 Rectangle {
     id: root
     required property var host
@@ -35,14 +33,14 @@ Rectangle {
         spacing: Theme.spacingXL
 
         Text {
-            text: "V3 IA — briques câblées (phases 0-3)"
+            text: "V3 IA — canal, runtime et distribution (phases 0-5)"
             color: root.host.textPrimary
             font.bold: true
             font.pixelSize: Theme.fontSizeLarge
             Layout.fillWidth: true
         }
         Text {
-            text: "Squelette de test : 6 sections placeholder, un smoke test live par singleton."
+            text: "Banc interactif : pipeline IA, artefacts, saves, migration, règles et bibliothèque GLB."
             color: root.host.textSecondary
             font.pixelSize: Theme.fontSizeSmall
             font.italic: true
@@ -61,6 +59,11 @@ Rectangle {
             V3ProposalPanel   { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
             V3EventBusPanel   { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
             V3StateTxPanel    { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
+            V3ArtifactPanel   { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
+            V3GameSavePanel   { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
+            V3MigrationPanel  { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
+            V3RulesPanel      { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
+            V3LibraryPanel    { host: root.host; Layout.fillWidth: true; Layout.alignment: Qt.AlignTop }
         }
     }
 }

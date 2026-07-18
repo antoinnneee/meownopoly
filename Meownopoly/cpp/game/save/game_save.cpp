@@ -160,6 +160,16 @@ bool GameSave::loadFromFile(const QString &saveName)
     return loadJson(obj);
 }
 
+QStringList GameSave::availableSaveNames() const
+{
+    return availableSaves();
+}
+
+QString GameSave::saveFilePathFor(const QString &saveName) const
+{
+    return saveFilePath(saveName);
+}
+
 bool GameSave::writeSave(const QJsonObject &data, const QString &saveName)
 {
     const QString filePath = saveFilePath(saveName);

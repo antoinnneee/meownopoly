@@ -149,6 +149,9 @@ public:
     /// Recharge la sauvegarde de nom donné dans cette instance.
     Q_INVOKABLE bool loadFromFile(const QString &saveName);
 
+    Q_INVOKABLE QStringList availableSaveNames() const;
+    Q_INVOKABLE QString saveFilePathFor(const QString &saveName) const;
+
     // Utilitaires statiques (sans instance).
     static bool writeSave(const QJsonObject &data, const QString &saveName);
     static QJsonObject readSave(const QString &saveName);

@@ -211,6 +211,26 @@ T4-3 après T4-1+T4-2 ; T4-4 cadrable en parallèle dès la Phase 2.
 T5-1 ∥ T5-2, et T5-1 peut même démarrer plus tôt ([doc 07](./07_BIBLIOTHEQUE.md) §4 : le versant assets 3D ne dépend
 pas du sandbox — instructible dès la Phase 1 si des bras sont libres).
 
+### État d'implémentation — observabilité UI T4/T5 (2026-07-18)
+
+L'onglet **Test Catway → V3 IA** couvre désormais les phases 0 à 5. Les
+fonctionnalités livrées depuis T4-1 ne sont plus limitées aux API C++/hooks MCP :
+
+- `V3ArtifactPanel.qml` : enregistrement texte, manifeste, contenu, refcount et
+  GC explicite du store T4-1 ;
+- `V3GameSavePanel.qml` : capture runtime, écriture/lecture atomique, catalogue
+  et aperçu JSON des `GameSave` T4-2 ;
+- `V3MigrationPanel.qml` : rôle, roster, suspension, checkpoint D37 et actions
+  de reprise T4-3 ;
+- `V3RulesPanel.qml` : règlement live, ajout d'une règle DSL de démonstration,
+  tick, compteurs et journal des règles T4-4/T4-5 ;
+- `V3LibraryPanel.qml` : scan des modèles, manifeste installé, résolution,
+  intégrité et validation des budgets T5-1.
+
+Écart assumé : T5-2 reste visible par les panneaux superviseur/passerelle et
+par la CI, car la génération de skill et la détection de dérive n'ont pas
+d'état runtime supplémentaire à administrer dans l'application.
+
 ## Transversal — M13 · Qualification Linux (démarre en Phase 1)
 
 | Tâche | Détail | Complexité |
