@@ -41,6 +41,11 @@
 #include "ai/bench/bench_protocol.h"
 #include "ai/bench/bench_supervisor.h"   // MEOW_BENCH_TIMEOUT_MS
 #include "ai/sandbox/static_validator.h"
+#include "ai/proposal/proposal_gateway.h"
+#include "ai/proposal/proposal_lifecycle.h"
+#include "game/memory/memory_store.h"
+#include "game/rules/rules_engine.h"
+#include "game/save/game_save.h"
 #include <QCryptographicHash>
 #include <QUuid>
 #include <QEventLoop>
@@ -722,14 +727,14 @@ QJsonObject AiGatewayServer::dispatchTool(const QJsonValue &id, const QString &n
     if (name == QLatin1String("artifact_dryrun"))
         return toolArtifactDryrun(id, arguments);
 
-    // Tools du manifeste dont la capacité côté hôte n'est pas encore livrée.
-    // Chaque renvoi cite la tâche du plan qui la câblera (traçabilité).
+    // Pivot de proposition (S-1/S-2) et espace mémoire (S-3/S-4). Le contrôle
+    // de rôle est déjà fait par toolAllowedForRole (arbiter_verdict = arbitre).
     if (name == QLatin1String("memory_set"))
-        return toolNotImplemented(id, name, QStringLiteral("S-3 (espace mémoire snapable, D15)"));
+        return toolMemorySet(id, arguments);
     if (name == QLatin1String("artifact_submit"))
-        return toolNotImplemented(id, name, QStringLiteral("S-1/S-2 (enveloppe de proposition, D11)"));
+        return toolArtifactSubmit(id, arguments);
     if (name == QLatin1String("arbiter_verdict"))
-        return toolNotImplemented(id, name, QStringLiteral("S-2 (verdict 2 audiences, D32)"));
+        return toolArbiterVerdict(id, arguments);
 
     // Ne devrait pas arriver : toolExists a filtré en amont.
     return makeAppError(id, kInvalidParams, kAppUnknownTool,
@@ -1012,6 +1017,37 @@ QJsonObject AiGatewayServer::toolStateQuery(const QJsonValue &id, const QJsonObj
         return makeToolResult(id, res);
     }
 
+    // Règlement courant (T4-4) : lu sur le singleton C++, sans la scène QML.
+    if (what == QLatin1String("rules")) {
+        RulesEngine *engine = RulesEngine::instance();
+        QJsonObject res = engine->toJson();
+        res[QStringLiteral("hostAuthority")] = engine->hostAuthority();
+        res[QStringLiteral("ok")] = true;
+        return makeToolResult(id, res);
+    }
+
+    // Espace mémoire (S-3/S-4) : blob session+joueurs, secrets D20 retirés
+    // (même liste conservatrice que la persistance GameSave).
+    if (what == QLatin1String("memory")) {
+        QJsonObject res;
+        res[QStringLiteral("memory")] =
+            GameSave::sanitizeSecrets(MemoryStore::instance()->toJson());
+        res[QStringLiteral("ok")] = true;
+        return makeToolResult(id, res);
+    }
+
+    // Propositions (S-1) : projections du cycle de vie, du + ancien au + récent.
+    if (what == QLatin1String("proposals")) {
+        ProposalLifecycle *lifecycle = ProposalLifecycle::instance();
+        QJsonObject res;
+        res[QStringLiteral("proposals")] =
+            QJsonArray::fromVariantList(lifecycle->proposals());
+        res[QStringLiteral("queued")] =
+            QJsonArray::fromVariantList(lifecycle->queuedIds());
+        res[QStringLiteral("ok")] = true;
+        return makeToolResult(id, res);
+    }
+
     // Le reste s'appuie sur les hooks de la scène (éditeur chargé requis).
     QString hook;
     QVariantList args;
@@ -1030,10 +1066,11 @@ QJsonObject AiGatewayServer::toolStateQuery(const QJsonValue &id, const QJsonObj
         hook = QStringLiteral("listRoster");
         args = {};
     } else {
-        // memory → S-3, rules → T4-4, proposals → S-1 : capacités à venir.
-        return toolNotImplemented(
-            id, QStringLiteral("state_query(%1)").arg(what),
-            QStringLiteral("S-3/S-1/T4-4 (memory/proposals/rules)"));
+        return makeAppError(
+            id, kInvalidParams, kAppInvalidParams,
+            QStringLiteral("state_query: 'what' inconnu '%1' (tiles|tile|enums|"
+                           "roster|players|rules|memory|proposals)").arg(what),
+            /*retryable=*/false);
     }
 
     bool ok = false;
@@ -1621,6 +1658,163 @@ bool AiGatewayServer::consumeScreenshotBudget(const QString &token)
         return false;
     ++it->screenshotsTaken;
     return true;
+}
+
+// ============================================================================
+// Pivot de proposition (S-1/S-2) et espace mémoire (S-3/S-4)
+// ============================================================================
+
+QJsonObject AiGatewayServer::toolMemorySet(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString scope = arguments.value(QStringLiteral("scope")).toString();
+    const QString key = arguments.value(QStringLiteral("key")).toString();
+    const QJsonValue value = arguments.value(QStringLiteral("value"));
+    if (scope.isEmpty() || key.isEmpty() || value.isUndefined())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("memory_set: scope, key et value requis"),
+                            /*retryable=*/false);
+    // Le namespace `state` (runtime) ne s'écrit JAMAIS par ce tool : il passe
+    // par le bus d'état (D35). Seul le pipeline édition (`config`) est ouvert.
+    if (key.startsWith(QLatin1String("state/")))
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("memory_set: le namespace 'state' est en "
+                                           "lecture seule ici (bus d'état, D35) — "
+                                           "clé attendue sous 'config/'"),
+                            /*retryable=*/false);
+
+    const QString uuid = arguments.value(QStringLiteral("uuid")).toString();
+    QJsonObject res;
+    res[QStringLiteral("scope")] = scope;
+    res[QStringLiteral("key")] = key;
+
+    if (scope == QLatin1String("session")) {
+        res[QStringLiteral("written")] =
+            MemoryStore::instance()->setSessionValue(key, value.toVariant());
+    } else if (scope == QLatin1String("player")) {
+        if (uuid.isEmpty())
+            return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                                QStringLiteral("memory_set(player): uuid (id joueur) requis"),
+                                /*retryable=*/false);
+        res[QStringLiteral("uuid")] = uuid;
+        res[QStringLiteral("written")] =
+            MemoryStore::instance()->setPlayerValue(uuid, key, value.toVariant());
+    } else if (scope == QLatin1String("tile")) {
+        if (uuid.isEmpty())
+            return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                                QStringLiteral("memory_set(tile): uuid requis"),
+                                /*retryable=*/false);
+        bool ok = false;
+        QString err;
+        const QJsonObject hookRes = invokeHook(
+            QStringLiteral("setTileMemory"), { uuid, key, value.toVariant() }, ok, err);
+        if (!ok)
+            return makeAppError(id, kInvalidParams, kAppSceneUnavailable, err,
+                                /*retryable=*/true);
+        if (!hookRes.value(QStringLiteral("ok")).toBool())
+            return makeAppError(id, kInvalidParams, kAppToolFailed,
+                                hookRes.value(QStringLiteral("error"))
+                                    .toString(QStringLiteral("memory_set(tile): échec")),
+                                /*retryable=*/false);
+        res[QStringLiteral("uuid")] = uuid;
+        res[QStringLiteral("written")] = true;
+    } else {
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("memory_set: scope inconnu '%1' "
+                                           "(tile|session|player)").arg(scope),
+                            /*retryable=*/false);
+    }
+
+    res[QStringLiteral("ok")] = true;
+    return makeToolResult(id, res);
+}
+
+QJsonObject AiGatewayServer::toolArtifactSubmit(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString source = arguments.value(QStringLiteral("source")).toString();
+    if (source.isEmpty())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("artifact_submit: source requis"),
+                            /*retryable=*/false);
+    const QString target = arguments.value(QStringLiteral("target")).toString();
+    const QJsonObject meta = arguments.value(QStringLiteral("meta")).toObject();
+
+    // Enveloppe de proposition (doc 13 §3) construite côté hôte : requestType
+    // et writeSet sont de toute façon RECALCULÉS par le P0, jamais déclarés.
+    QJsonObject author;
+    author[QStringLiteral("playerId")] =
+        meta.value(QStringLiteral("playerId")).toString(QStringLiteral("proposer"));
+    author[QStringLiteral("role")] = QStringLiteral("proposer");
+
+    QJsonObject intent;
+    if (meta.contains(QStringLiteral("playerPrompt")))
+        intent[QStringLiteral("playerPrompt")] = meta.value(QStringLiteral("playerPrompt"));
+    intent[QStringLiteral("aiSummary")] =
+        meta.value(QStringLiteral("aiSummary"))
+            .toString(QStringLiteral("artifact_submit via passerelle MCP"));
+
+    QJsonObject artifact;
+    artifact[QStringLiteral("source")] = source;
+    if (!target.isEmpty())
+        artifact[QStringLiteral("targetUuid")] = target;
+    for (const char *field : { "declaredWriteSet", "listensTo", "requiresModules",
+                               "executionPolicy" }) {
+        const QLatin1String f(field);
+        if (meta.contains(f))
+            artifact[f] = meta.value(f);
+    }
+
+    QJsonObject env;
+    env[QStringLiteral("envelopeVersion")] = 1;
+    env[QStringLiteral("channelVersion")] = QStringLiteral("1.0.0");
+    env[QStringLiteral("author")] = author;
+    env[QStringLiteral("intent")] = intent;
+    env[QStringLiteral("operations")] = QJsonArray{};
+    env[QStringLiteral("artifacts")] = QJsonArray{ artifact };
+
+    // Bloquant jusqu'au verdict (ou rejet mécanique) dans la limite de
+    // MEOW_PROPOSAL_TIMEOUT_MS ; au-delà : { status: "pending", proposalId } —
+    // le verdict arrive alors par events_poll / state_query(proposals).
+    const QVariantMap ret = ProposalGateway::instance()->artifactSubmit(env.toVariantMap());
+    QJsonObject res = QJsonObject::fromVariantMap(ret);
+    res[QStringLiteral("ok")] = true;
+    return makeToolResult(id, res);
+}
+
+QJsonObject AiGatewayServer::toolArbiterVerdict(const QJsonValue &id, const QJsonObject &arguments)
+{
+    const QString proposalId = arguments.value(QStringLiteral("proposalId")).toString();
+    const QString verdict = arguments.value(QStringLiteral("verdict")).toString();
+    const QJsonValue reasons = arguments.value(QStringLiteral("reasons"));
+    if (proposalId.isEmpty() || verdict.isEmpty() || !reasons.isArray())
+        return makeAppError(id, kInvalidParams, kAppInvalidParams,
+                            QStringLiteral("arbiter_verdict: proposalId, verdict et "
+                                           "reasons[] requis"),
+                            /*retryable=*/false);
+
+    QJsonObject verdictDoc;
+    verdictDoc[QStringLiteral("verdict")] = verdict;
+    verdictDoc[QStringLiteral("reasons")] = reasons.toArray();
+    if (arguments.contains(QStringLiteral("amendment")))
+        verdictDoc[QStringLiteral("amendment")] =
+            arguments.value(QStringLiteral("amendment"));
+
+    const bool accepted = ProposalLifecycle::instance()->provideVerdictDoc(
+        proposalId, verdictDoc.toVariantMap(), QStringLiteral("arbiter"));
+    if (!accepted)
+        return makeAppError(id, kInvalidParams, kAppToolFailed,
+                            QStringLiteral("arbiter_verdict refusé : proposition "
+                                           "inconnue, état ≠ arbitrating, ou document "
+                                           "mal formé (verdict ∈ accepted|rejected|"
+                                           "amended, reasons avec audience)"),
+                            /*retryable=*/false);
+
+    QJsonObject res;
+    res[QStringLiteral("ok")] = true;
+    res[QStringLiteral("proposalId")] = proposalId;
+    res[QStringLiteral("verdict")] = verdict;
+    res[QStringLiteral("note")] =
+        QStringLiteral("Accusé : l'application des effets reste sous autorité hôte.");
+    return makeToolResult(id, res);
 }
 
 QString AiGatewayServer::extractBearer(const QString &authHeaderValue)

@@ -5,7 +5,10 @@
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QQmlEngine>
 #include <QStandardPaths>
+
+#include <utility>
 
 // ============================================================================
 // ArtifactManifest (de)sérialisation
@@ -107,6 +110,52 @@ ArtifactRegistry *ArtifactRegistry::instance()
     if (!s_instance)
         s_instance = new ArtifactRegistry();
     return s_instance;
+}
+
+void ArtifactRegistry::registerQml()
+{
+    qmlRegisterSingletonType<ArtifactRegistry>(
+        "MeowArtifacts", 1, 0, "ArtifactRegistry", &ArtifactRegistry::qmlInstance);
+}
+
+QObject *ArtifactRegistry::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+    ArtifactRegistry *reg = instance();
+    QQmlEngine::setObjectOwnership(reg, QQmlEngine::CppOwnership);
+    return reg;
+}
+
+QString ArtifactRegistry::registerTextArtifact(const QString &content,
+                                               const QString &kind,
+                                               const QString &author)
+{
+    ArtifactManifest m;
+    m.kind = kind;
+    m.author = author;
+    return registerArtifact(content.toUtf8(), std::move(m));
+}
+
+QString ArtifactRegistry::contentText(const QString &contentHash) const
+{
+    return QString::fromUtf8(content(contentHash));
+}
+
+QVariantMap ArtifactRegistry::manifestInfo(const QString &contentHash) const
+{
+    const ArtifactManifest m = manifest(contentHash);
+    if (!m.isValid())
+        return {};
+    QVariantMap info = m.toJson().toVariantMap();
+    info.insert(QStringLiteral("available"), isAvailable(contentHash));
+    info.insert(QStringLiteral("refCount"), refCount(contentHash));
+    return info;
+}
+
+int ArtifactRegistry::collectGarbageList(const QStringList &liveHashes)
+{
+    return collectGarbage(QSet<QString>(liveHashes.begin(), liveHashes.end()));
 }
 
 QString ArtifactRegistry::manifestDir() const

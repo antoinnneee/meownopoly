@@ -65,12 +65,19 @@ struct ArtifactRef
 // ArtifactStore. Un artefact absent → l'appelant désactive l'élément avec
 // diagnostic (D16), la référence n'est pas perdue.
 // =============================================================================
+class QQmlEngine;
+class QJSEngine;
+
 class ArtifactRegistry : public QObject
 {
     Q_OBJECT
 public:
     explicit ArtifactRegistry(QObject *parent = nullptr);
     static ArtifactRegistry *instance();
+
+    // Singleton QML `MeowArtifacts 1.0 · ArtifactRegistry` (patron MemoryStore).
+    static void registerQml();
+    static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     // Enregistre un artefact : écrit le blob (dédup) + le manifeste. Le
     // contentHash du manifeste est (re)calculé sur le contenu — jamais déclaré
@@ -98,7 +105,19 @@ public:
     // nombre d'artefacts purgés.
     Q_INVOKABLE int collectGarbage(const QSet<QString> &liveHashes);
 
-    QStringList knownHashes() const;
+    Q_INVOKABLE QStringList knownHashes() const;
+
+    // ---- Surface QML/harness (test des features IA depuis l'éditeur/jeu) ----
+    // QSet/QByteArray ne traversent pas proprement le pont QML : variantes
+    // texte + QStringList. registerTextArtifact couvre les artefacts QML/DSL
+    // (contenu UTF-8) ; les blobs binaires passent par l'API C++.
+    Q_INVOKABLE QString registerTextArtifact(const QString &content,
+                                             const QString &kind,
+                                             const QString &author);
+    Q_INVOKABLE QString contentText(const QString &contentHash) const;
+    Q_INVOKABLE QVariantMap manifestInfo(const QString &contentHash) const;
+    Q_INVOKABLE int refCountOf(const QString &contentHash) const { return refCount(contentHash); }
+    Q_INVOKABLE int collectGarbageList(const QStringList &liveHashes);
 
 signals:
     void artifactRegistered(const QString &contentHash);

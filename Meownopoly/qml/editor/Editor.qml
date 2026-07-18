@@ -3342,6 +3342,17 @@ Base_Board {
             return { ok: true, tile: obj }
         }
 
+        // Écrit une clé mémoire d'une tile (memory_set scope=tile du canal IA,
+        // namespace config — doc 05/D15). Réveil ciblé via memoryValueChanged.
+        function setTileMemory(uuid, key, value) {
+            if (!uuid || !key) return { ok: false, error: "uuid et key requis" }
+            const t = _findTileByUuid(uuid)
+            if (!t || !t.snapableParameters)
+                return { ok: false, error: "tile introuvable: " + uuid }
+            t.snapableParameters.setMemoryValue(key, value)
+            return { ok: true, uuid: uuid, key: key }
+        }
+
         // ── Édition ciblée par uuid (editor_edit, C4 / doc 02 §5.2) ──────
         // Toutes ces opérations mutent la tile localement puis Game.updateMap
         // (persistance + undo + broadcast collab via submitFromDelta).

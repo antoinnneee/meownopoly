@@ -87,6 +87,8 @@
 #include "ai/proposal/proposal_gateway.h"
 #include "ai/instrumentation/slice_instrumentation.h"
 #include "ai/instrumentation/slice_scenarios.h"
+#include "artifacts/artifact_registry.h"
+#include "game/save/game_save.h"
 
 #include <QImageWriter>
 
@@ -165,6 +167,8 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     ProposalCollabBridge::registerQml();   // MeowProposal 1.0 · ProposalCollabBridge
     SliceInstrumentation::registerQml();   // MeowSlice 1.0 · SliceInstrumentation
     SliceScenarioRunner::registerQml();    // MeowSlice 1.0 · SliceScenarioRunner
+    ArtifactRegistry::registerQml();       // MeowArtifacts 1.0 · ArtifactRegistry (T4-1)
+    GameSave::registerQml();               // MeowSave 1.0 · GameSave (type instanciable, T4-2)
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
