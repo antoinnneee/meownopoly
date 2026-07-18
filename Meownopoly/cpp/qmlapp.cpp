@@ -80,6 +80,7 @@
 // aucune instance globale à créer, cf. GameplayEventBus/AiProcessSupervisor).
 #include "game/memory/state_bus.h"
 #include "game/memory/memory_store.h"
+#include "game/rules/rules_engine.h"
 #include "ai/network/proposal_session.h"
 #include "ai/network/proposal_collab_bridge.h"
 #include "ai/proposal/proposal_lifecycle.h"
@@ -157,6 +158,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     //   MeowSlice 1.0    — SliceInstrumentation, SliceScenarioRunner
     StateBus::registerQml();               // MeowMemory 1.0 · StateBus
     MemoryStore::registerQml();            // MeowMemory 1.0 · MemoryStore
+    RulesEngine::registerQml();            // MeowRules 1.0 · RulesEngine (T4-4)
     ProposalSession::registerQml();        // ProposalSession 1.0 · ProposalSession
     ProposalLifecycle::registerQml();      // MeowProposal 1.0 · ProposalLifecycle
     ProposalGateway::registerQml();        // MeowProposal 1.0 · ProposalGateway

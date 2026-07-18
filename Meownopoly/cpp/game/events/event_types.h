@@ -40,6 +40,8 @@ enum class EventSource : quint32 {
     Tiles     = 3,   // ItemSnapableEvents — vie des tuiles
     Physics   = 4,   // PhysicsSession — combat / runtime physique
     System    = 5,   // interne au bus
+    Memory    = 6,   // MemoryStore (D15) — écritures session/joueur, ingérées par RulesEngine (T4-4)
+    Rules     = 7,   // RulesEngine (T4-4) — règlement + déclenchements de règles
 };
 
 // Type métier de l'événement. Numérotation stable, par plages de 100 alignées
@@ -53,6 +55,7 @@ enum class EventType : quint32 {
     MapCleared           = 102,
     TileRemovedGame      = 103,
     MapRestored          = 104,
+    GameTick             = 105,   // pas de simulation hôte (T4-4/D33 — émis par RulesEngine::tick)
 
     // --- EditorOpBus ---
     EditorOpLocal        = 200,
@@ -67,6 +70,14 @@ enum class EventType : quint32 {
     // --- Physique (PhysicsSession) ---
     CombatRequest        = 400,
     CombatResolved       = 401,
+
+    // --- Mémoire (MemoryStore D15, ingérée par RulesEngine — T4-4) ---
+    MemoryChanged        = 500,   // écriture d'une portée session/joueur
+
+    // --- Règles (RulesEngine — T4-4, doc v3/06 §5) ---
+    RulesChanged         = 600,   // règlement modifié (rulebook_set appliqué)
+    RuleTriggered        = 601,   // une règle a matché (dsl exécutée / artifact notifié)
+    RuleEventEmitted     = 602,   // effet event.emit d'une règle
 };
 
 // Durabilité de l'événement (M5 : « distinguer durables/auditables des

@@ -28,6 +28,12 @@ EventDurability durabilityOf(EventType type)
     case EventType::TileMoved:
     case EventType::ZoneParameterChanged:
     case EventType::CombatRequest:
+    // T4-4 : haute fréquence runtime — diffusés mais non archivés dans le
+    // noyau d'audit (les effets DURABLES qu'ils produisent, eux, le sont).
+    case EventType::GameTick:
+    case EventType::MemoryChanged:
+    case EventType::RuleTriggered:
+    case EventType::RuleEventEmitted:
         return EventDurability::Ephemeral;
     // Tout le reste est durable (structure de carte, cycle de vie, ops,
     // résolution de combat).
@@ -52,6 +58,11 @@ QString eventTypeName(EventType type)
     case EventType::ZoneParameterChanged: return QStringLiteral("ZoneParameterChanged");
     case EventType::CombatRequest:        return QStringLiteral("CombatRequest");
     case EventType::CombatResolved:       return QStringLiteral("CombatResolved");
+    case EventType::GameTick:             return QStringLiteral("GameTick");
+    case EventType::MemoryChanged:        return QStringLiteral("MemoryChanged");
+    case EventType::RulesChanged:         return QStringLiteral("RulesChanged");
+    case EventType::RuleTriggered:        return QStringLiteral("RuleTriggered");
+    case EventType::RuleEventEmitted:     return QStringLiteral("RuleEventEmitted");
     case EventType::Unknown:              break;
     }
     return QStringLiteral("Unknown");
@@ -65,6 +76,8 @@ QString eventSourceName(EventSource source)
     case EventSource::Tiles:     return QStringLiteral("Tiles");
     case EventSource::Physics:   return QStringLiteral("Physics");
     case EventSource::System:    return QStringLiteral("System");
+    case EventSource::Memory:    return QStringLiteral("Memory");
+    case EventSource::Rules:     return QStringLiteral("Rules");
     case EventSource::Unknown:   break;
     }
     return QStringLiteral("Unknown");
@@ -420,6 +433,11 @@ QString GameplayEventBus::canalTypeName(meow::EventType type)
     case meow::EventType::ZoneParameterChanged: return QStringLiteral("zone.changed");
     case meow::EventType::CombatRequest:        return QStringLiteral("combat.request");
     case meow::EventType::CombatResolved:       return QStringLiteral("combat.resolved");
+    case meow::EventType::GameTick:             return QStringLiteral("game.tick");
+    case meow::EventType::MemoryChanged:        return QStringLiteral("memory.changed");
+    case meow::EventType::RulesChanged:         return QStringLiteral("rules.changed");
+    case meow::EventType::RuleTriggered:        return QStringLiteral("rule.triggered");
+    case meow::EventType::RuleEventEmitted:     return QStringLiteral("rule.event");
     case meow::EventType::Unknown:              break;
     }
     return QStringLiteral("unknown");
@@ -492,6 +510,24 @@ QString GameplayEventBus::canalPhraseOf(const meow::GameplayEvent &ev)
     case meow::EventType::ZoneParameterChanged: return QStringLiteral("paramètre de zone modifié");
     case meow::EventType::CombatRequest:        return QStringLiteral("demande de combat");
     case meow::EventType::CombatResolved:       return QStringLiteral("combat résolu");
+    case meow::EventType::GameTick:             return QStringLiteral("pas de simulation");
+    case meow::EventType::MemoryChanged: {
+        const QString ns  = ev.payload.value(QStringLiteral("ns")).toString();
+        const QString key = ev.payload.value(QStringLiteral("key")).toString();
+        return QStringLiteral("mémoire %1/%2 modifiée").arg(ns, key);
+    }
+    case meow::EventType::RulesChanged: {
+        const qint64 v = ev.payload.value(QStringLiteral("version")).toLongLong();
+        return QStringLiteral("règlement modifié (v%1)").arg(v);
+    }
+    case meow::EventType::RuleTriggered: {
+        const QString rid = ev.payload.value(QStringLiteral("ruleId")).toString();
+        return QStringLiteral("règle déclenchée : %1").arg(rid);
+    }
+    case meow::EventType::RuleEventEmitted: {
+        const QString name = ev.payload.value(QStringLiteral("name")).toString();
+        return QStringLiteral("événement de règle : %1").arg(name);
+    }
     case meow::EventType::Unknown:              break;
     }
     return meow::eventTypeName(ev.type);
