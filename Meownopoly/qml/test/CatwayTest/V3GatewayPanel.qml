@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import AiSupervisor 1.0
 import theme
+import ui_item
 
 // Harness V3 — passerelle MCP du canal IA (C1-C4, D2/D20/D21).
 //
@@ -57,22 +58,14 @@ Rectangle {
         font.pixelSize: Theme.fontSizeSmall
         font.family: "Consolas"
     }
-    component StyledButton: Button {
-        id: btn
+    component StyledButton: MeowButton {
         property color tint: root.host.accent
+        baseColor: tint
         implicitHeight: Theme.px(26)
         padding: Theme.spacingM
-        font.pixelSize: Theme.fontSizeSmall
-        contentItem: Text {
-            text: btn.text; color: Theme.textPrimary; font: btn.font
-            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-        }
-        background: Rectangle {
-            radius: Theme.radiusS
-            color: btn.down ? Qt.darker(btn.tint, 1.3)
-                 : btn.hovered ? Qt.lighter(btn.tint, 1.15) : btn.tint
-            border.color: root.host.cardBorder; border.width: 1
-        }
+        fontSize: Theme.fontSizeSmall
+        hoverZoom: false
+        glossy: false
     }
 
     ColumnLayout {

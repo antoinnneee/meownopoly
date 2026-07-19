@@ -211,7 +211,7 @@ T4-3 après T4-1+T4-2 ; T4-4 cadrable en parallèle dès la Phase 2.
 T5-1 ∥ T5-2, et T5-1 peut même démarrer plus tôt ([doc 07](./07_BIBLIOTHEQUE.md) §4 : le versant assets 3D ne dépend
 pas du sandbox — instructible dès la Phase 1 si des bras sont libres).
 
-### État d'implémentation — observabilité UI T4/T5 (2026-07-18)
+### État d'implémentation — observabilité UI T4/T5 (2026-07-19)
 
 L'onglet **Test Catway → V3 IA** couvre désormais les phases 0 à 5. Les
 fonctionnalités livrées depuis T4-1 ne sont plus limitées aux API C++/hooks MCP :
@@ -230,6 +230,12 @@ fonctionnalités livrées depuis T4-1 ne sont plus limitées aux API C++/hooks M
 Écart assumé : T5-2 reste visible par les panneaux superviseur/passerelle et
 par la CI, car la génération de skill et la détection de dérive n'ont pas
 d'état runtime supplémentaire à administrer dans l'application.
+
+Tous les contrôles interactifs de ces onze panneaux utilisent désormais les
+composants canoniques `qml/ui_item` (`MeowButton`, champs, listes, switches,
+cases à cocher, ainsi que `MeowTextArea` et `MeowTabButton`). Le parcours est
+documenté dans la [présentation web interactive](./tutorial-interface-v3/index.html),
+illustrée par des captures du build Release.
 
 ## Transversal — M13 · Qualification Linux (démarre en Phase 1)
 

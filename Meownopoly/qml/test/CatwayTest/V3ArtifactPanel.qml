@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import MeowArtifacts 1.0
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -77,14 +78,14 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            ComboBox {
+            MeowComboBox {
                 id: kindCombo
                 objectName: "artifactKindCombo"
                 model: ["qml", "primitive", "module", "asset3d", "skin"]
                 Layout.preferredWidth: Theme.px(120)
                 font.pixelSize: Theme.fontSizeSmall
             }
-            TextField {
+            MeowTextField {
                 id: authorField
                 objectName: "artifactAuthorField"
                 text: "harness"
@@ -93,7 +94,7 @@ Rectangle {
                 font.pixelSize: Theme.fontSizeSmall
             }
         }
-        TextArea {
+        MeowTextArea {
             id: sourceArea
             objectName: "artifactSourceArea"
             Layout.fillWidth: true
@@ -103,23 +104,17 @@ Rectangle {
             font.family: "Consolas"
             font.pixelSize: Theme.fontSizeSmall
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            Button {
+            MeowButton {
                 objectName: "artifactRegisterButton"
                 text: "Enregistrer"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._register()
             }
-            Button {
+            MeowButton {
                 objectName: "artifactRefreshButton"
                 text: "Actualiser"
                 font.pixelSize: Theme.fontSizeSmall
@@ -133,7 +128,7 @@ Rectangle {
             }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: root.host.cardBorder }
-        ComboBox {
+        MeowComboBox {
             id: hashCombo
             objectName: "artifactHashCombo"
             Layout.fillWidth: true
@@ -181,14 +176,14 @@ Rectangle {
         }
         RowLayout {
             Layout.fillWidth: true
-            CheckBox {
+            MeowCheckBox {
                 id: keepSelectedCheck
                 objectName: "artifactKeepSelectedCheck"
                 text: "conserver la sélection"
                 checked: true
                 font.pixelSize: Theme.fontSizeCaption
             }
-            Button {
+            MeowButton {
                 objectName: "artifactGcButton"
                 text: "GC non référencés"
                 font.pixelSize: Theme.fontSizeSmall

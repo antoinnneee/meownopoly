@@ -97,63 +97,26 @@ Rectangle {
     }
 
     // — Inline styled controls (Theme) —
-    component StyledButton: Button {
-        id: btn
+    component StyledButton: MeowButton {
         property color tint: root.host.accent
+        baseColor: tint
         implicitHeight: Theme.px(28)
         padding: Theme.spacingM
-        font.pixelSize: Theme.fontSizeSmall
-        contentItem: Text {
-            text: btn.text
-            color: Theme.textPrimary
-            font: btn.font
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        background: Rectangle {
-            radius: Theme.radiusS
-            color: !btn.enabled ? Theme.surfaceAlt
-                 : btn.down ? Qt.darker(btn.tint, 1.3)
-                 : btn.hovered ? Qt.lighter(btn.tint, 1.15) : btn.tint
-            border.color: root.host.cardBorder
-            border.width: 1
-        }
+        fontSize: Theme.fontSizeSmall
+        hoverZoom: false
+        glossy: false
     }
     component FieldLabel: Text {
         color: root.host.textSecondary
         font.pixelSize: Theme.fontSizeSmall
     }
-    component StyledField: TextField {
-        color: root.host.textPrimary
-        font.pixelSize: Theme.fontSizeSmall
-        placeholderTextColor: root.host.textSecondary
-        background: Rectangle {
-            radius: Theme.radiusS
-            color: Theme.surfaceAlt
-            border.color: root.host.cardBorder
-            border.width: 1
-        }
+    component StyledField: MeowTextField {
+        fieldColor: Theme.surfaceAlt
+        borderColor: root.host.cardBorder
     }
 
-    component RoleTabButton: TabButton {
-        id: tabButton
-        implicitHeight: Theme.px(36)
-        font.pixelSize: Theme.fontSizeBody
-        font.bold: checked
-        contentItem: Text {
-            text: tabButton.text
-            color: tabButton.checked ? Theme.textPrimary : root.host.textSecondary
-            font: tabButton.font
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        background: Rectangle {
-            color: tabButton.checked ? Theme.surfaceAlt
-                                     : (tabButton.hovered ? Theme.hover(Theme.surface) : Theme.surface)
-            radius: Theme.radiusS
-            border.width: 1
-            border.color: tabButton.checked ? Theme.accentAlt : root.host.cardBorder
-        }
+    component RoleTabButton: MeowTabButton {
+        accentColor: Theme.accentAlt
     }
 
     component RolePane: ColumnLayout {
@@ -446,7 +409,7 @@ Rectangle {
                 anchors.fill: parent
                 anchors.margins: Theme.spacingXS
                 clip: true
-                TextArea {
+                MeowTextArea {
                     id: outputArea
                     objectName: "supRecentOutput"
                     readOnly: true
@@ -455,7 +418,6 @@ Rectangle {
                     font.pixelSize: Theme.fontSizeCaption
                     font.family: "Consolas"
                     wrapMode: TextArea.WrapAnywhere
-                    background: null
                 }
             }
         }

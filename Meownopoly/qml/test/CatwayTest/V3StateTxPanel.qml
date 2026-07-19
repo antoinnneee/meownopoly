@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import MeowMemory 1.0
 import Game 1.0
 import theme
+import ui_item
 
 // Panneau de test interactif — état runtime + mémoire + transactions.
 //   - écriture/lecture live d'une valeur mémoire (scope tile/session/player) via
@@ -146,7 +147,7 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingS
 
-            ComboBox {
+            MeowComboBox {
                 id: scopeCombo
                 objectName: "memoryScopeCombo"
                 Layout.preferredWidth: Theme.px(96)
@@ -154,7 +155,7 @@ Rectangle {
                 model: ["session", "player", "tile"]
                 onCurrentIndexChanged: root._readValue()
             }
-            TextField {
+            MeowTextField {
                 id: playerIdField
                 objectName: "memoryScopeIdField"
                 visible: scopeCombo.currentIndex !== 0
@@ -163,9 +164,8 @@ Rectangle {
                 placeholderText: scopeCombo.currentIndex === 2 ? "tileId" : "playerId"
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
-            TextField {
+            MeowTextField {
                 id: keyField
                 objectName: "memoryKeyField"
                 Layout.preferredWidth: Theme.px(80)
@@ -173,9 +173,8 @@ Rectangle {
                 placeholderText: "clé"
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
-            TextField {
+            MeowTextField {
                 id: valueField
                 objectName: "memoryValueField"
                 Layout.fillWidth: true
@@ -183,19 +182,18 @@ Rectangle {
                 placeholderText: "valeur"
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
         }
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingM
-            Button {
+            MeowButton {
                 objectName: "memoryWriteButton"
                 text: "écrire"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._writeValue()
             }
-            Button {
+            MeowButton {
                 objectName: "memoryReadButton"
                 text: "relire"
                 font.pixelSize: Theme.fontSizeSmall
@@ -259,10 +257,10 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            Button { objectName: "txBeginButton"; text: "begin"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txBegin() }
-            Button { objectName: "txPrepareButton"; text: "prepare"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txPrepare() }
-            Button { objectName: "txCommitButton"; text: "commit"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txCommit() }
-            Button { objectName: "txRollbackButton"; text: "rollback"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txRollback() }
+            MeowButton { objectName: "txBeginButton"; text: "begin"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txBegin() }
+            MeowButton { objectName: "txPrepareButton"; text: "prepare"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txPrepare() }
+            MeowButton { objectName: "txCommitButton"; text: "commit"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txCommit() }
+            MeowButton { objectName: "txRollbackButton"; text: "rollback"; font.pixelSize: Theme.fontSizeSmall; onClicked: root._txRollback() }
         }
         GridLayout {
             columns: 2
@@ -289,7 +287,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingM
-            Button {
+            MeowButton {
                 objectName: "txDemoRollbackButton"
                 text: "Démo rollback (valeur restaurée)"
                 font.pixelSize: Theme.fontSizeSmall

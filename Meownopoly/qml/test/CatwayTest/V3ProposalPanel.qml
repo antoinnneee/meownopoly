@@ -5,6 +5,7 @@ import ProposalSession 1.0
 import MeowProposal 1.0
 import EditorOpBus 1.0
 import theme
+import ui_item
 
 // Panneau de test interactif — pipeline de PROPOSITION (doc v3 13).
 //   - soumission d'une enveloppe de test via ProposalLifecycle.submit (S-1) ;
@@ -165,7 +166,7 @@ Rectangle {
             color: root.host.textSecondary
             font.pixelSize: Theme.fontSizeSmall
         }
-        TextField {
+        MeowTextField {
             id: authorField
             objectName: "proposalAuthorField"
             Layout.fillWidth: true
@@ -173,12 +174,6 @@ Rectangle {
             placeholderText: "playerId auteur"
             font.pixelSize: Theme.fontSizeBody
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
 
         Text {
@@ -186,7 +181,7 @@ Rectangle {
             color: root.host.textSecondary
             font.pixelSize: Theme.fontSizeSmall
         }
-        ComboBox {
+        MeowComboBox {
             id: typeCombo
             objectName: "proposalTypeCombo"
             Layout.fillWidth: true
@@ -195,7 +190,7 @@ Rectangle {
                     "rules_edit (rules → arbitre)", "artefact QML (code → arbitre)"]
         }
 
-        TextField {
+        MeowTextField {
             id: artifactField
             objectName: "proposalArtifactField"
             visible: typeCombo.currentIndex === 3
@@ -204,15 +199,9 @@ Rectangle {
             text: "Item { }"
             font.pixelSize: Theme.fontSizeBody
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
 
-        TextField {
+        MeowTextField {
             id: promptField
             objectName: "proposalPromptField"
             Layout.fillWidth: true
@@ -220,19 +209,13 @@ Rectangle {
             text: "Pose une tour ici"
             font.pixelSize: Theme.fontSizeBody
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
 
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingM
 
-            Button {
+            MeowButton {
                 objectName: "proposalSubmitButton"
                 text: "Soumettre"
                 font.pixelSize: Theme.fontSizeBody
@@ -244,7 +227,7 @@ Rectangle {
                 color: root.host.textSecondary
                 font.pixelSize: Theme.fontSizeSmall
             }
-            Switch {
+            MeowSwitch {
                 objectName: "arbiterAvailableSwitch"
                 checked: ProposalLifecycle.arbiterAvailable
                 onToggled: ProposalLifecycle.arbiterAvailable = checked
@@ -293,17 +276,17 @@ Rectangle {
                 font.pixelSize: Theme.fontSizeSmall
                 Layout.alignment: Qt.AlignVCenter
             }
-            Button {
+            MeowButton {
                 objectName: "verdictAcceptButton"
                 text: "accepter"; font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._sendVerdict("accepted")
             }
-            Button {
+            MeowButton {
                 objectName: "verdictAmendButton"
                 text: "amender"; font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._sendVerdict("amended")
             }
-            Button {
+            MeowButton {
                 objectName: "verdictRejectButton"
                 text: "rejeter"; font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._sendVerdict("rejected")
@@ -367,7 +350,7 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingM
 
-            Button {
+            MeowButton {
                 objectName: "undoProposalButton"
                 text: "Undo proposition"
                 font.pixelSize: Theme.fontSizeSmall
@@ -379,7 +362,7 @@ Rectangle {
                     root._revertResult = "undo → " + ok;
                 }
             }
-            Button {
+            MeowButton {
                 objectName: "redoProposalButton"
                 text: "Redo"
                 font.pixelSize: Theme.fontSizeSmall

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import MeowEvents 1.0
 import theme
+import ui_item
 
 // Panneau de test interactif — bus d'événements métier (M5, D1-D4).
 //   - journal live scrollable (eventPublished → ListModel : seq/type/actor/résumé) ;
@@ -135,14 +136,14 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingS
 
-            ComboBox {
+            MeowComboBox {
                 id: typeCombo
                 objectName: "eventTypeCombo"
                 Layout.preferredWidth: Theme.px(150)
                 font.pixelSize: Theme.fontSizeSmall
                 model: root._eventTypes.map(function (e) { return e.label; })
             }
-            TextField {
+            MeowTextField {
                 id: actorField
                 objectName: "eventActorField"
                 Layout.preferredWidth: Theme.px(80)
@@ -150,9 +151,8 @@ Rectangle {
                 placeholderText: "actor"
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
-            TextField {
+            MeowTextField {
                 id: summaryField
                 objectName: "eventSummaryField"
                 Layout.fillWidth: true
@@ -160,9 +160,8 @@ Rectangle {
                 placeholderText: "summary (payload)"
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
-            Button {
+            MeowButton {
                 objectName: "eventPublishButton"
                 text: "publish"
                 font.pixelSize: Theme.fontSizeSmall
@@ -215,7 +214,7 @@ Rectangle {
             spacing: Theme.spacingS
 
             Text { text: "cursor"; color: root.host.textSecondary; font.pixelSize: Theme.fontSizeSmall; Layout.alignment: Qt.AlignVCenter }
-            TextField {
+            MeowTextField {
                 id: cursorField
                 objectName: "eventCursorField"
                 Layout.preferredWidth: Theme.px(64)
@@ -223,23 +222,22 @@ Rectangle {
                 inputMethodHints: Qt.ImhDigitsOnly
                 font.pixelSize: Theme.fontSizeSmall
                 color: root.host.textPrimary
-                background: Rectangle { color: Theme.background; radius: Theme.radiusM; border.color: root.host.cardBorder; border.width: 1 }
             }
             Text { text: "audience"; color: root.host.textSecondary; font.pixelSize: Theme.fontSizeSmall; Layout.alignment: Qt.AlignVCenter }
-            ComboBox {
+            MeowComboBox {
                 id: audienceCombo
                 objectName: "eventAudienceCombo"
                 Layout.preferredWidth: Theme.px(96)
                 font.pixelSize: Theme.fontSizeSmall
                 model: ["proposer", "arbiter"]
             }
-            Button {
+            MeowButton {
                 objectName: "eventPollButton"
                 text: "events_poll"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._poll()
             }
-            Button {
+            MeowButton {
                 objectName: "eventSummaryButton"
                 text: "canalSummary"
                 font.pixelSize: Theme.fontSizeSmall

@@ -25,10 +25,15 @@ cf. [doc 00](./00_VISION.md) §4).
 
 ## Ordre de lecture
 
+> **Prise en main :** la [présentation web interactive de l’interface V3 IA](./tutorial-interface-v3/index.html)
+> guide l’accès au harness et l’utilisation des onze panneaux. Elle fonctionne
+> hors ligne dans un navigateur moderne.
+
 | # | Document | Rôle | Statut |
 |---|----------|------|--------|
 | — | [`README.md`](./README.md) | Index (ce fichier) | draft |
 | — | [`RECAP_CADRAGE.md`](./RECAP_CADRAGE.md) | Récapitulatif synthétique du cadrage (photo à date) | 2026-07-12 |
+| UI | [`tutorial-interface-v3/index.html`](./tutorial-interface-v3/index.html) | Tutoriel web de l’interface Test Catway → V3 IA | **à jour 2026-07-19** |
 | 00 | [`00_VISION.md`](./00_VISION.md) | Vision, principes directeurs, ce qui change / ce qui reste | draft |
 | 01 | [`01_ARCHITECTURE_CIBLE.md`](./01_ARCHITECTURE_CIBLE.md) | Vue d'ensemble des briques + flux, réutilisation du socle V2 | draft |
 | 02 | [`02_CANAL_IA.md`](./02_CANAL_IA.md) | Le canal MCP local IA↔jeu (distinct de l'automation ; ex-WS, D20) | draft |

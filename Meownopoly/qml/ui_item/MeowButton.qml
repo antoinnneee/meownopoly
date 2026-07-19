@@ -49,6 +49,10 @@ Button {
     // pour un rendu plat dans les panneaux de formulaire.
     property bool glossy: true
 
+    // Synchronise l'API font.pixelSize native avec fontSize. Un appelant
+    // peut toujours surcharger directement font.pixelSize dans un panneau.
+    font.pixelSize: control.fontSize
+
     // ── Résolution interne des couleurs par variante ─────────────
     readonly property bool _isGhost: control.variant === "ghost"
     readonly property color _variantColor: {
@@ -139,7 +143,7 @@ Button {
             Text {
                 visible: control.iconText !== ""
                 text: control.iconText
-                font.pixelSize: control.fontSize
+                font.pixelSize: control.font.pixelSize
                 font.bold: true
                 color: control.enabled ? control.textColor : Theme.textDisabled
                 anchors.verticalCenter: parent.verticalCenter
@@ -147,7 +151,7 @@ Button {
             Text {
                 visible: control.text !== ""
                 text: control.text
-                font.pixelSize: control.fontSize
+                font.pixelSize: control.font.pixelSize
                 font.bold: true
                 color: control.enabled ? control.textColor : Theme.textDisabled
                 anchors.verticalCenter: parent.verticalCenter

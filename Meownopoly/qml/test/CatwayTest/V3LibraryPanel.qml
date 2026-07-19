@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import AssetManager 1.0
 import LauncherManager 1.0
 import theme
+import ui_item
 
 // T5-1 / M11 — package versionné de la bibliothèque officielle GLB.
 Rectangle {
@@ -70,7 +71,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            ComboBox {
+            MeowComboBox {
                 id: modelCombo
                 objectName: "libraryModelCombo"
                 model: root._models
@@ -78,14 +79,14 @@ Rectangle {
                 font.pixelSize: Theme.fontSizeSmall
                 onCurrentTextChanged: root._inspect(currentText)
             }
-            Button {
+            MeowButton {
                 objectName: "libraryRefreshButton"
                 text: "Scanner"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._refresh()
             }
         }
-        TextArea {
+        MeowTextArea {
             objectName: "libraryInspectionArea"
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.px(190)
@@ -95,12 +96,6 @@ Rectangle {
             font.family: "Consolas"
             font.pixelSize: Theme.fontSizeCaption
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: root.host.cardBorder }
         Text {
@@ -109,7 +104,7 @@ Rectangle {
             font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
-        TextArea {
+        MeowTextArea {
             id: manifestArea
             objectName: "libraryManifestArea"
             Layout.fillWidth: true
@@ -128,16 +123,10 @@ Rectangle {
             font.family: "Consolas"
             font.pixelSize: Theme.fontSizeCaption
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
         RowLayout {
             Layout.fillWidth: true
-            Button {
+            MeowButton {
                 objectName: "libraryValidateButton"
                 text: "Valider manifeste"
                 font.pixelSize: Theme.fontSizeSmall

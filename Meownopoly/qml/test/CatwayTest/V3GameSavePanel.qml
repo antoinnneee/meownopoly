@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import MeowSave 1.0
 import MeowRules 1.0
 import theme
+import ui_item
 
 // T4-2 / M7 — format de sauvegarde de partie distinct des maps.
 Rectangle {
@@ -82,7 +83,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            TextField {
+            MeowTextField {
                 id: saveNameField
                 objectName: "gameSaveNameField"
                 text: "partie_v3"
@@ -90,13 +91,13 @@ Rectangle {
                 Layout.fillWidth: true
                 font.pixelSize: Theme.fontSizeSmall
             }
-            Button {
+            MeowButton {
                 objectName: "gameSaveCaptureButton"
                 text: "Capturer"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._capture()
             }
-            Button {
+            MeowButton {
                 objectName: "gameSaveWriteButton"
                 text: "Sauvegarder"
                 font.pixelSize: Theme.fontSizeSmall
@@ -106,21 +107,21 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            ComboBox {
+            MeowComboBox {
                 id: saveCombo
                 objectName: "gameSaveCombo"
                 model: root._saves
                 Layout.fillWidth: true
                 font.pixelSize: Theme.fontSizeSmall
             }
-            Button {
+            MeowButton {
                 objectName: "gameSaveLoadButton"
                 text: "Charger"
                 enabled: saveCombo.currentText !== ""
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._load()
             }
-            Button {
+            MeowButton {
                 text: "Actualiser"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._refresh()
@@ -152,7 +153,7 @@ Rectangle {
                 elide: Text.ElideMiddle
             }
         }
-        TextArea {
+        MeowTextArea {
             objectName: "gameSavePreviewArea"
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.px(190)
@@ -162,12 +163,6 @@ Rectangle {
             font.family: "Consolas"
             font.pixelSize: Theme.fontSizeCaption
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
         Text {
             objectName: "gameSaveStatusLabel"

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171717">
+  <title>Tutoriel — Interface de test V3 IA · Meownopoly</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="presentation.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#slide-1" aria-label="Retour au début">
+      <span class="brand-mark">M</span><span>Meownopoly · V3 IA</span>
+    </a>
+    <button class="outline-button" id="overviewButton" type="button">Sommaire</button>
+    <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+    <span class="slide-counter" id="slideCounter">01 / 12</span>
+  </header>
+
+  <main class="deck" id="deck">
+    <section class="slide hero is-active" id="slide-1" data-title="Bienvenue">
+      <div class="slide-inner split hero-grid">
+        <div>
+          <p class="eyebrow">Tutoriel interactif · phases 0–5</p>
+          <h1>Prendre en main<br><span>l’interface V3 IA</span></h1>
+          <p class="lead">Du premier scénario au package GLB : un parcours concret pour tester le canal IA, le runtime et la distribution sans quitter Meownopoly.</p>
+          <div class="hero-actions">
+            <button class="primary-button" data-next type="button">Commencer <span>→</span></button>
+            <span class="key-hint"><kbd>→</kbd> ou <kbd>Espace</kbd></span>
+          </div>
+        </div>
+        <figure class="app-frame hero-shot">
+          <img src="assets/overview.png" alt="Vue d’ensemble de l’onglet V3 IA">
+          <figcaption>Interface réelle · build Release Qt 6.11</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-2" data-title="Accéder à l’interface">
+      <div class="slide-inner">
+        <p class="eyebrow">01 · Accès</p>
+        <h2>Deux clics pour ouvrir le banc</h2>
+        <div class="path-flow" aria-label="Chemin d’accès">
+          <div class="path-card"><span>1</span><strong>Écran d’accueil</strong><p>Choisir « Test Catway ».</p></div>
+          <div class="path-arrow">→</div>
+          <div class="path-card"><span>2</span><strong>Test Catway</strong><p>Ouvrir l’onglet « V3 IA ».</p></div>
+          <div class="path-arrow">→</div>
+          <div class="path-card success"><span>3</span><strong>Prêt</strong><p>Faire défiler les panneaux en deux colonnes.</p></div>
+        </div>
+        <aside class="callout"><strong>Conseil</strong><p>Utilise une fenêtre d’au moins 1280 × 720. Les panneaux restent indépendants : tu peux tester une brique sans démarrer tout le pipeline.</p></aside>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-3" data-title="Lire l’écran">
+      <div class="slide-inner split visual-first">
+        <figure class="app-frame annotated">
+          <img src="assets/overview.png" alt="Partie supérieure de l’interface V3 IA">
+          <span class="pin p1">1</span><span class="pin p2">2</span><span class="pin p3">3</span>
+        </figure>
+        <div>
+          <p class="eyebrow">02 · Repères</p>
+          <h2>Une grille, trois niveaux de lecture</h2>
+          <ol class="numbered-list">
+            <li><span>1</span><div><strong>Le panneau</strong><p>Chaque carte correspond à une brique autonome du système.</p></div></li>
+            <li><span>2</span><div><strong>Les actions</strong><p>Bleu/violet pour agir, vert pour réussir ou démarrer, gris lorsque l’action n’est pas disponible.</p></div></li>
+            <li><span>3</span><div><strong>Le diagnostic</strong><p>Compteurs, états et sorties monospace permettent de confirmer immédiatement le résultat.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-4" data-title="Banc d’essai">
+      <div class="slide-inner">
+        <p class="eyebrow">03 · Valider une slice</p>
+        <h2>Commencer par un signal vert</h2>
+        <div class="steps-grid">
+          <article><span>01</span><h3>Choisir la source</h3><p>Garde l’artefact sain fourni ou colle une source QML dans la grande zone de texte.</p></article>
+          <article><span>02</span><h3>Valider au banc</h3><p>Le P0 statique puis le banc hors-process produisent un verdict et des métriques.</p></article>
+          <article><span>03</span><h3>Lancer S1/S2/S3</h3><p>Teste chaque scénario séparément, ou utilise « Lancer S1/S2/S3 » pour la campagne complète.</p></article>
+          <article><span>04</span><h3>Lire les compteurs</h3><p><code>offChannelAccess = 0</code> et <code>overallPass = true</code> sont les deux indicateurs clés.</p></article>
+        </div>
+        <div class="warning-strip"><span>!</span><p>Après une modification, relance toujours la validation avant les scénarios : un verdict ancien ne couvre pas la nouvelle source.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-5" data-title="Agents et passerelle">
+      <div class="slide-inner split">
+        <div>
+          <p class="eyebrow">04 · Canal IA</p>
+          <h2>Démarrer un agent, puis vérifier son canal</h2>
+          <ol class="timeline">
+            <li><span></span><div><strong>Choisis le rôle</strong><p>« Proposante » fabrique les propositions ; « Arbitre » les juge.</p></div></li>
+            <li><span></span><div><strong>Configure l’adaptateur</strong><p>Sélectionne Claude ou Codex, le programme, le modèle et le prompt initial.</p></div></li>
+            <li><span></span><div><strong>Démarre</strong><p>Attends l’état <code>Ready</code>. Pour l’arbitre, lance aussi le test de handshake.</p></div></li>
+            <li><span></span><div><strong>Contrôle MCP</strong><p>Dans « Passerelle MCP », vérifie présence, écoute, port et disponibilité HTTP.</p></div></li>
+          </ol>
+        </div>
+        <div class="status-stack">
+          <div class="status-card"><span class="status-dot success-dot"></span><div><small>Agent</small><strong>Ready</strong></div></div>
+          <div class="status-card"><span class="status-dot success-dot"></span><div><small>Passerelle</small><strong>Listening · HTTP disponible</strong></div></div>
+          <aside class="callout compact"><strong>Secrets</strong><p>Les tokens loopback sont masqués par défaut et ne doivent servir qu’au diagnostic local.</p></aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-6" data-title="Propositions">
+      <div class="slide-inner split visual-first">
+        <figure class="app-frame">
+          <img src="assets/runtime.png" alt="Panneaux proposition, événements et mémoire">
+          <figcaption>Le journal et les compteurs restent visibles pendant le test.</figcaption>
+        </figure>
+        <div>
+          <p class="eyebrow">05 · Cycle de décision</p>
+          <h2>Soumettre et arbitrer une proposition</h2>
+          <div class="mini-steps">
+            <div><b>1</b><p>Renseigne l’auteur, le type d’opération et le prompt joueur.</p></div>
+            <div><b>2</b><p>Active « arbitre dispo », puis clique sur « Soumettre ».</p></div>
+            <div><b>3</b><p>Observe <code>proposalId</code>, <code>requestType</code> et les transitions du journal.</p></div>
+            <div><b>4</b><p>Accepte, amende ou rejette. Utilise Undo/Redo seulement après une proposition appliquée.</p></div>
+          </div>
+          <p class="success-note">Résultat attendu : le compteur <code>queued</code> retombe à 0 et l’état final apparaît dans le journal.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-7" data-title="Événements et mémoire">
+      <div class="slide-inner">
+        <p class="eyebrow">06 · Runtime observable</p>
+        <h2>Tracer un événement jusqu’à son état</h2>
+        <div class="pipeline">
+          <article><span>Événement</span><h3>Publier</h3><p>Choisis le type, l’acteur et le résumé, puis clique sur <strong>publish</strong>.</p></article>
+          <i>→</i>
+          <article><span>Journal</span><h3>Interroger</h3><p>Utilise le curseur et l’audience avec <strong>events_poll</strong> ou <strong>canalSummary</strong>.</p></article>
+          <i>→</i>
+          <article><span>Mémoire</span><h3>Vérifier</h3><p>Sélectionne la portée session/joueur/tile, écris une clé, puis relis-la.</p></article>
+        </div>
+        <aside class="callout"><strong>Tester le rollback</strong><p>Dans « État runtime + mémoire », la démo rollback écrit une valeur dans une transaction puis confirme que la valeur initiale a bien été restaurée.</p></aside>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-8" data-title="Artefacts et sauvegardes">
+      <div class="slide-inner split">
+        <div>
+          <p class="eyebrow">07 · Contenu et persistance</p>
+          <h2>Enregistrer un artefact, capturer une partie</h2>
+          <div class="compare-grid">
+            <article><span class="tag">ArtifactRegistry</span><h3>Artefact adressé par hash</h3><ul><li>Choisir le kind et l’auteur.</li><li>Coller le contenu puis enregistrer.</li><li>Sélectionner le hash pour lire manifeste et contenu.</li><li>Lancer le GC uniquement sur les entrées non référencées.</li></ul></article>
+            <article><span class="tag">GameSave</span><h3>Snapshot de runtime</h3><ul><li>Donner un nom à la sauvegarde.</li><li>Capturer l’état courant.</li><li>Sauvegarder le document JSON.</li><li>Actualiser la liste puis charger pour vérifier.</li></ul></article>
+          </div>
+        </div>
+        <figure class="app-frame portrait-shot"><img src="assets/artifacts-save.png" alt="Panneaux artefacts et sauvegardes"><figcaption>Les zones monospace affichent la donnée sérialisée réelle.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-9" data-title="Migration d’hôte">
+      <div class="slide-inner split visual-first">
+        <figure class="app-frame"><img src="assets/distribution.png" alt="Panneaux migration, règles et bibliothèque"><figcaption>Les actions restent grisées tant que leur précondition n’est pas satisfaite.</figcaption></figure>
+        <div>
+          <p class="eyebrow">08 · Continuité de session</p>
+          <h2>Observer une migration sans forcer l’état</h2>
+          <ol class="numbered-list compact-list">
+            <li><span>1</span><div><strong>Démarrer deux instances</strong><p>La migration réelle vient d’une session Editor Network.</p></div></li>
+            <li><span>2</span><div><strong>Déclencher le handover</strong><p>Le panneau affiche rôle, roster, suspension des propositions et checkpoint.</p></div></li>
+            <li><span>3</span><div><strong>Appliquer le checkpoint</strong><p>Le bouton devient actif uniquement lorsque le checkpoint est complet.</p></div></li>
+            <li><span>4</span><div><strong>Reprendre</strong><p>Réactive les propositions après promotion/reconnexion.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-10" data-title="Règles runtime">
+      <div class="slide-inner">
+        <p class="eyebrow">09 · Rulebook</p>
+        <h2>Tester le moteur de règles en sécurité</h2>
+        <div class="rule-layout">
+          <div class="rule-card"><span class="toggle-visual on"></span><h3>Moteur actif</h3><p>Autorise l’évaluation des règles.</p></div>
+          <div class="rule-card"><span class="toggle-visual on"></span><h3>Autorité hôte</h3><p>Autorise le tick et l’application autoritaire.</p></div>
+          <div class="rule-card accent-card"><span>+</span><h3>Règle démo</h3><p>Ajoute une règle connue, puis « Publier tick » permet de constater son déclenchement.</p></div>
+        </div>
+        <div class="warning-strip danger"><span>!</span><p>« Vider » supprime le règlement courant du harness. Utilise cette action seulement dans une session de test et vérifie le statut affiché dessous.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-11" data-title="Bibliothèque GLB">
+      <div class="slide-inner split">
+        <div>
+          <p class="eyebrow">10 · Distribution</p>
+          <h2>Inspecter un modèle et valider son manifeste</h2>
+          <ol class="timeline">
+            <li><span></span><div><strong>Scanner</strong><p>Actualise les modèles officiels GLB disponibles.</p></div></li>
+            <li><span></span><div><strong>Inspecter</strong><p>Choisis un modèle pour lire id, kind, version, hash et publisher.</p></div></li>
+            <li><span></span><div><strong>Préparer le manifeste</strong><p>Renseigne version, id, type, version minimale et budgets.</p></div></li>
+            <li><span></span><div><strong>Valider</strong><p>Corrige chaque erreur signalée avant toute distribution.</p></div></li>
+          </ol>
+        </div>
+        <div class="code-card"><div class="code-head"><span></span><span></span><span></span><b>package_manifest.json</b></div><pre><code>{
+  "manifestVersion": 1,
+  "id": "demo-cat",
+  "version": "1.0.0",
+  "kind": "asset3d",
+  "minGameVersion": "3.0.0",
+  "budgets": {
+    "triangles": 2000,
+    "maxTextureSize": 1024
+  }
+}</code></pre></div>
+      </div>
+    </section>
+
+    <section class="slide finale" id="slide-12" data-title="Parcours recommandé">
+      <div class="slide-inner split">
+        <div>
+          <p class="eyebrow">11 · Check-list</p>
+          <h2>Le parcours complet en 8 validations</h2>
+          <ol class="checklist">
+            <li><span>✓</span>Valider l’artefact et S1/S2/S3</li>
+            <li><span>✓</span>Démarrer l’agent et vérifier MCP</li>
+            <li><span>✓</span>Soumettre puis arbitrer une proposition</li>
+            <li><span>✓</span>Publier un événement et relire la mémoire</li>
+            <li><span>✓</span>Enregistrer l’artefact et contrôler son hash</li>
+            <li><span>✓</span>Capturer, sauvegarder puis recharger</li>
+            <li><span>✓</span>Tester migration et règles dans une session dédiée</li>
+            <li><span>✓</span>Scanner le GLB et valider son manifeste</li>
+          </ol>
+        </div>
+        <div class="finish-card"><span class="finish-mark">M</span><h3>Tu es prêt.</h3><p>Reviens au sommaire pour rejouer une section, ou ouvre directement l’interface et suis cette check-list.</p><button class="primary-button" data-go="1" type="button">Recommencer</button><p class="small-note">Navigation : ← → · Espace · Accueil · Fin · Échap</p></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="controls" aria-label="Navigation des diapositives">
+    <button id="prevButton" type="button" aria-label="Diapositive précédente">←</button>
+    <div class="dot-nav" id="dotNav" aria-label="Choisir une diapositive"></div>
+    <button id="nextButton" type="button" aria-label="Diapositive suivante">→</button>
+  </nav>
+
+  <dialog id="overviewDialog">
+    <div class="dialog-head"><div><p class="eyebrow">Navigation</p><h2>Sommaire</h2></div><button id="closeOverview" type="button" aria-label="Fermer">×</button></div>
+    <ol id="overviewList"></ol>
+  </dialog>
+</body>
+</html>

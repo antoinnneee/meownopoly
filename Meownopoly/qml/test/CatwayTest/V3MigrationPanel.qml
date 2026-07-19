@@ -5,6 +5,7 @@ import EditorSession 1.0
 import ProposalSession 1.0
 import MeowMemory 1.0
 import theme
+import ui_item
 
 // T4-3 — observabilité de la migration d'hôte et du checkpoint D37.
 Rectangle {
@@ -96,7 +97,7 @@ Rectangle {
                 font.pixelSize: Theme.fontSizeCaption
             }
         }
-        TextArea {
+        MeowTextArea {
             objectName: "migrationCheckpointArea"
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.px(175)
@@ -106,17 +107,11 @@ Rectangle {
             font.family: "Consolas"
             font.pixelSize: Theme.fontSizeCaption
             color: root.host.textPrimary
-            background: Rectangle {
-                color: Theme.background
-                radius: Theme.radiusM
-                border.color: root.host.cardBorder
-                border.width: 1
-            }
         }
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            Button {
+            MeowButton {
                 objectName: "migrationApplyCheckpointButton"
                 text: "Appliquer checkpoint"
                 enabled: EditorSession.migrationInProgress
@@ -126,7 +121,7 @@ Rectangle {
                     root._status = ok ? "Checkpoint appliqué" : "Checkpoint bloquant incomplet"
                 }
             }
-            Button {
+            MeowButton {
                 objectName: "migrationResumeButton"
                 text: "Reprendre propositions"
                 enabled: EditorSession.proposalsSuspended
@@ -136,7 +131,7 @@ Rectangle {
                     root._status = "Reprise demandée"
                 }
             }
-            Button {
+            MeowButton {
                 objectName: "migrationClearButton"
                 text: "Effacer état"
                 enabled: EditorSession.migrationInProgress

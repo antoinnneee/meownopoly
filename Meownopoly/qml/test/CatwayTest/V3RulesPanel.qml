@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import MeowRules 1.0
 import theme
+import ui_item
 
 // T4-4/T4-5 — règlement versionné et exécution host-authoritative.
 Rectangle {
@@ -77,13 +78,13 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Text { text: "moteur"; color: root.host.textSecondary; font.pixelSize: Theme.fontSizeSmall }
-            Switch {
+            MeowSwitch {
                 objectName: "rulesEnabledSwitch"
                 checked: RulesEngine.engineEnabled
                 onToggled: RulesEngine.engineEnabled = checked
             }
             Text { text: "autorité hôte"; color: root.host.textSecondary; font.pixelSize: Theme.fontSizeSmall }
-            Switch {
+            MeowSwitch {
                 objectName: "rulesHostSwitch"
                 checked: RulesEngine.hostAuthority
                 onToggled: RulesEngine.hostAuthority = checked
@@ -112,13 +113,13 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingS
-            Button {
+            MeowButton {
                 objectName: "rulesAddDemoButton"
                 text: "Ajouter règle démo"
                 font.pixelSize: Theme.fontSizeSmall
                 onClicked: root._addDemoRule()
             }
-            Button {
+            MeowButton {
                 objectName: "rulesTickButton"
                 text: "Publier tick"
                 font.pixelSize: Theme.fontSizeSmall
@@ -129,7 +130,7 @@ Rectangle {
                     root._status = "Tick drainé : " + drained + " événement(s)"
                 }
             }
-            Button {
+            MeowButton {
                 objectName: "rulesClearButton"
                 text: "Vider"
                 font.pixelSize: Theme.fontSizeSmall

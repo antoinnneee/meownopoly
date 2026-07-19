@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import MeowSlice 1.0
 import theme
+import ui_item
 
 // Harness V3 — banc d'essai R1 + instrumentation de la slice (A7/A8, doc 11-12).
 //
@@ -72,23 +73,14 @@ Item {
         color: root.host.textSecondary
         font.pixelSize: Theme.fontSizeSmall
     }
-    component StyledButton: Button {
-        id: btn
+    component StyledButton: MeowButton {
         property color tint: root.host.accent
+        baseColor: tint
         implicitHeight: Theme.px(28)
         padding: Theme.spacingM
-        font.pixelSize: Theme.fontSizeSmall
-        contentItem: Text {
-            text: btn.text; color: Theme.textPrimary; font: btn.font
-            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-        }
-        background: Rectangle {
-            radius: Theme.radiusS
-            color: !btn.enabled ? Theme.surfaceAlt
-                 : btn.down ? Qt.darker(btn.tint, 1.3)
-                 : btn.hovered ? Qt.lighter(btn.tint, 1.15) : btn.tint
-            border.color: root.host.cardBorder; border.width: 1
-        }
+        fontSize: Theme.fontSizeSmall
+        hoverZoom: false
+        glossy: false
     }
 
     ColumnLayout {
@@ -125,7 +117,7 @@ Item {
                 anchors.fill: parent
                 anchors.margins: Theme.spacingXS
                 clip: true
-                TextArea {
+                MeowTextArea {
                     id: sourceArea
                     objectName: "benchSourceArea"
                     text: root._sampleArtifact
@@ -133,7 +125,6 @@ Item {
                     font.pixelSize: Theme.fontSizeCaption
                     font.family: "Consolas"
                     wrapMode: TextArea.NoWrap
-                    background: null
                 }
             }
         }
