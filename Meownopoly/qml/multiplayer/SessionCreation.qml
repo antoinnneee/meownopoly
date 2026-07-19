@@ -15,6 +15,7 @@ import MapTypes
  */
 Rectangle {
     id: root
+    objectName: root.isAiMode ? "aiSessionCreation" : "sessionCreation"
 
     // Animation fluide sur le fond
     Behavior on color { ColorAnimation { duration: 300 } }
@@ -49,6 +50,12 @@ Rectangle {
     // Mode : Edition ou Jeu — par défaut on crée une session éditeur collab
     // (le mode "Jeu" n'est pas encore câblé sur le networking côté main.qml).
     property bool isEditionMode: true
+
+    // Parcours lancé depuis AiHostLobby : l'éditeur est la seule surface qui
+    // expose actuellement l'assistant proposant. La configuration ne contient
+    // que le choix d'adaptateur/programme/modèle (aucun secret).
+    property bool isAiMode: false
+    property var aiConfig: ({})
 
     // Choix de la carte de départ (Edition uniquement) : soit "new" pour une
     // carte vierge (le nom utilisé sur disque sera celui de la session), soit
@@ -474,6 +481,7 @@ Rectangle {
                             color: root.textHighlight
                             font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
+                            visible: !root.isAiMode
                             Behavior on color { ColorAnimation { duration: 300 } }
                         }
 
@@ -481,6 +489,7 @@ Rectangle {
                         Row {
                             Layout.topMargin: Theme.spacingXL
                             spacing: Theme.spacingXXL
+                            visible: !root.isAiMode
 
                             CheckBox {
                                 id: modeCheckbox
@@ -524,6 +533,15 @@ Rectangle {
                             }
                         }
 
+                        MeowInfoBox {
+                            Layout.fillWidth: true
+                            Layout.topMargin: Theme.spacingXL
+                            visible: root.isAiMode
+                            variant: "info"
+                            title: "✨ Co-construction avec une IA"
+                            text: "La session ouvrira directement l'éditeur. L'assistant proposant sera disponible dans le rail et s'ouvrira à l'entrée ; l'arbitre déjà validé contrôle les propositions."
+                        }
+
                         // Description du mode
                         Rectangle {
                             Layout.fillWidth: true
@@ -543,7 +561,9 @@ Rectangle {
                                 anchors.centerIn: parent
                                 width: parent.width - 24
                                 text: root.isEditionMode ?
-                                          "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs" :
+                                          (root.isAiMode
+                                               ? "🤖 Construire la carte avec l'assistant proposant"
+                                               : "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs") :
                                           "🎲 Lancer une partie de Meownopoly classique"
                                 color: root.isEditionMode ? "#c9a8e8" : "#e8c8a0"
                                 font.pixelSize: Theme.fontSizeBody
@@ -709,7 +729,7 @@ Rectangle {
 
                             // Créer
                             ParticleButton {
-                                text: "✨ Créer"
+                                text: root.isAiMode ? "✨ Créer et ouvrir l'éditeur" : "✨ Créer"
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 48
                                 enabled: root.formValid
@@ -750,7 +770,9 @@ Rectangle {
                                         name:         sessionNameInput.text,
                                         password:     sessionPasswordInput.text,
                                         isEditionMode: root.isEditionMode,
-                                        initialMap:   initialMap
+                                        initialMap:   initialMap,
+                                        isAiMode:     root.isAiMode,
+                                        aiConfig:     root.aiConfig
                                     })
                                 }
                             }
@@ -765,6 +787,8 @@ Rectangle {
     // le picker "Carte existante".
     opacity: 0
     Component.onCompleted: {
+        if (root.isAiMode)
+            root.isEditionMode = true
         fadeInAnimation.start()
         // Exclut l'autosave de la liste sélectionnable (démarrer une session
         // depuis autosave_tmp n'a pas de sens utilisateur — c'est un

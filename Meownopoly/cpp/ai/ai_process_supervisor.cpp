@@ -114,6 +114,16 @@ void appendUniquePath(QStringList *paths, const QString &path)
     paths->append(cleanPath);
 }
 
+QString tomlString(const QString &value)
+{
+    QString escaped = value;
+    escaped.replace(u'\\', QStringLiteral("\\\\"));
+    escaped.replace(u'\"', QStringLiteral("\\\""));
+    escaped.replace(u'\n', QStringLiteral("\\n"));
+    escaped.replace(u'\r', QStringLiteral("\\r"));
+    return u'\"' + escaped + u'\"';
+}
+
 void appendPathList(QStringList *paths, const QString &pathList)
 {
     for (const QString &path : pathList.split(QDir::listSeparator(), Qt::SkipEmptyParts))
@@ -555,9 +565,14 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     // invocationCompleted pollué par les runs passés).
     a->outputBuf.clear();
 
-    // Secret (token) → fichier MCP à permissions restreintes. JAMAIS l'argv.
+    // Claude reçoit un fichier MCP temporaire à permissions restreintes.
+    // Codex reçoit l'URL via overrides TOML et lit le secret depuis une variable
+    // d'environnement dédiée (son CLI n'accepte pas un fichier JSON ici).
+    // Dans les deux cas le token ne touche jamais l'argv.
     cleanupMcpFileOnly(a);
-    a->mcpConfigPath = writeMcpConfigFile(a->role, opts);
+    a->mcpConfigPath = adapter == ClaudeCli
+                           ? writeMcpConfigFile(a->role, opts)
+                           : QString();
 
     emit logMessage(
         QStringLiteral("[AiSupervisor] configuration %1 : adaptateur=%2, "
@@ -589,6 +604,11 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     env.insert(QStringLiteral("MEOW_AI_GATEWAY_URL"), gatewayUrlFromOpts(opts));
     if (!a->mcpConfigPath.isEmpty())
         env.insert(QStringLiteral("MEOW_AI_MCP_CONFIG"), a->mcpConfigPath);
+    if (adapter == Codex) {
+        const QString token = opts.value(QStringLiteral("token")).toString();
+        if (!token.isEmpty())
+            env.insert(QStringLiteral("MEOW_AI_MCP_BEARER_TOKEN"), token);
+    }
     const QString skillPath = opts.value(QStringLiteral("skillPath")).toString();
     if (!skillPath.isEmpty())
         env.insert(QStringLiteral("MEOW_AI_SKILL_PATH"), skillPath);
@@ -1186,8 +1206,13 @@ QStringList AiProcessSupervisor::claudeArgs(const QVariantMap &opts,
     // FICHIER, jamais inline : le secret ne touche pas l'argv journalisable.
     QStringList args;
     args << QStringLiteral("-p");
-    if (!mcpConfigPath.isEmpty())
-        args << QStringLiteral("--mcp-config") << mcpConfigPath;
+    if (!mcpConfigPath.isEmpty()) {
+        args << QStringLiteral("--mcp-config") << mcpConfigPath
+             << QStringLiteral("--strict-mcp-config")
+             << QStringLiteral("--permission-mode") << QStringLiteral("dontAsk")
+             << QStringLiteral("--allowedTools")
+             << QStringLiteral("mcp__meownopoly__*");
+    }
     const QString model = opts.value(QStringLiteral("model")).toString();
     if (!model.isEmpty())
         args << QStringLiteral("--model") << model;
@@ -1199,12 +1224,24 @@ QStringList AiProcessSupervisor::claudeArgs(const QVariantMap &opts,
 QStringList AiProcessSupervisor::codexArgs(const QVariantMap &opts,
                                            const QString &mcpConfigPath)
 {
-    // Codex en mode non interactif (`codex exec`). Même principe : la config MCP
-    // (avec le token) passe par fichier, pas par l'argv.
+    Q_UNUSED(mcpConfigPath)
+    // `codex exec --config` attend des overrides TOML `clé=valeur`, pas un
+    // chemin JSON. L'URL loopback n'est pas secrète ; le jeton est lu par Codex
+    // depuis MEOW_AI_MCP_BEARER_TOKEN dans l'environnement du seul enfant.
     QStringList args;
-    args << QStringLiteral("exec");
-    if (!mcpConfigPath.isEmpty())
-        args << QStringLiteral("--config") << mcpConfigPath;
+    args << QStringLiteral("exec")
+         << QStringLiteral("--ephemeral")
+         << QStringLiteral("--sandbox") << QStringLiteral("read-only")
+         << QStringLiteral("--skip-git-repo-check")
+         << QStringLiteral("--ignore-user-config");
+    const QString gatewayUrl = gatewayUrlFromOpts(opts);
+    if (!gatewayUrl.isEmpty()) {
+        args << QStringLiteral("-c")
+             << (QStringLiteral("mcp_servers.meownopoly.url=")
+                 + tomlString(gatewayUrl))
+             << QStringLiteral("-c")
+             << QStringLiteral("mcp_servers.meownopoly.bearer_token_env_var=\"MEOW_AI_MCP_BEARER_TOKEN\"");
+    }
     const QString model = opts.value(QStringLiteral("model")).toString();
     if (!model.isEmpty())
         args << QStringLiteral("--model") << model;
@@ -1213,7 +1250,7 @@ QStringList AiProcessSupervisor::codexArgs(const QVariantMap &opts,
 }
 
 // ============================================================================
-// Injection MCP (fichier à permissions restreintes) — SEUL vecteur du secret
+// Injection MCP Claude (fichier à permissions restreintes)
 // ============================================================================
 
 QString AiProcessSupervisor::gatewayUrlFromOpts(const QVariantMap &opts)

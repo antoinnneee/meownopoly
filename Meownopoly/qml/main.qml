@@ -195,11 +195,14 @@ ApplicationWindow {
                                         parent.width - 2 * Theme.spacingXXL)
                         height: implicitHeight
 
-                        onHostRequested: {
+                        onHostRequested: function(aiConfig) {
                             // Le handshake reste latché dans le singleton pendant la
-                            // création de session. replace() évite qu'un retour depuis
-                            // le lobby multijoueur ramène sur le préflight IA.
-                            stackView.replace(multiplayerLobby)
+                            // création de session. Le lobby reçoit le contexte IA et
+                            // ouvre directement son formulaire de création éditeur.
+                            stackView.replace(multiplayerLobby, {
+                                "aiModeRequested": true,
+                                "initialAiConfig": aiConfig || ({})
+                            })
                         }
                     }
                 }
@@ -355,7 +358,8 @@ ApplicationWindow {
             // host vient de créer une session (éditeur ou jeu).
             // Si éditeur, on démarre EditorSession.startAsHost et on push l'éditeur.
             // rawSessionName / initialMap : voir MultiplayerLobby.launchNewSession.
-            onLaunchNewSession: function(isEdition, hostId, rawSessionName, initialMap) {
+            onLaunchNewSession: function(isEdition, hostId, rawSessionName, initialMap,
+                                         isAiMode, aiConfig) {
                 if (!isEdition) {
                     console.log("[main] launchNewSession (jeu) — pas encore câblé")
                     return
@@ -382,7 +386,9 @@ ApplicationWindow {
                     "hostInitialMap": {
                         "sessionName": rawSessionName || "",
                         "initialMap":  initialMap || null
-                    }
+                    },
+                    "aiModeEnabled": isAiMode === true,
+                    "aiSessionConfig": aiConfig || ({})
                 })
             }
 
@@ -396,7 +402,7 @@ ApplicationWindow {
             //      + HP:STRIKE (sans ça, seul le heartbeat essaie, ~10 s).
             //   5. Attendre isP2pConnected.
             //   6. Démarrer EditorSession.startAsClient et push editor.
-            onLaunchExistingSession: function(isEdition, hostId) {
+            onLaunchExistingSession: function(isEdition, hostId, isAiMode) {
                 if (!isEdition) {
                     console.log("[main] launchExistingSession (jeu) — pas encore câblé")
                     return
@@ -426,6 +432,7 @@ ApplicationWindow {
                 p2pStateMachine.attempts = 0
                 p2pStateMachine.requestSent = false
                 p2pStateMachine.holePunchSent = false
+                p2pStateMachine.aiMode = isAiMode === true
 
                 // Force un setupNewPort si aucun socket STUN-assigné disponible.
                 // Sinon, on réutilise le dernier port de la liste.
@@ -466,8 +473,11 @@ ApplicationWindow {
                     break
                 }
             }
-            const stripped = oldName.replace(/^\[EDIT:[^\]]+\]\s*/, "")
-            const newName = "[EDIT:" + pid + "] " + (stripped || "Session")
+            const aiMode = stackView.currentItem
+                           && stackView.currentItem.aiModeEnabled === true
+            const stripped = oldName.replace(/^\[(?:AI-EDIT|EDIT):[^\]]+\]\s*/, "")
+            const prefix = aiMode ? "[AI-EDIT:" : "[EDIT:"
+            const newName = prefix + pid + "] " + (stripped || "Session")
             console.log("[main] promotion — renameSession:", oldName, "→", newName)
             Catway.chatClient.renameSession(newName)
             // Transfert d'ownership côté serveur : sans ça, l'ancien hôte
@@ -491,6 +501,7 @@ ApplicationWindow {
         property int attempts: 0
         property bool requestSent: false
         property bool holePunchSent: false
+        property bool aiMode: false
         // true quand on se reconnecte à un nouvel hôte (editor déjà
         // dans la pile) — on n'empile pas un 2e Editor à la fin.
         property bool skipPush: false
@@ -577,7 +588,7 @@ ApplicationWindow {
                         skipPush = false
                     } else {
                         // Garde le lobby + son ChatClient vivant sous l'éditeur.
-                        stackView.push(editor)
+                        stackView.push(editor, { "aiModeEnabled": aiMode })
                     }
                 }
             }

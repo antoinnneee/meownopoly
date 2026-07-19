@@ -60,6 +60,7 @@ import theme
 
 Base_Board {
     id: root
+    objectName: "editorRoot"
 
     color: "lightblue"
     border.width: 0
@@ -130,6 +131,12 @@ Base_Board {
     // lira le mapInfo ainsi positionné.
     property var hostInitialMap: null
 
+    // Contexte de session transmis par le parcours AiHostLobby. Le canal IA
+    // reste distinct du ChatDrawer multijoueur : il pilote le proposant via
+    // AiProcessSupervisor et la passerelle MCP locale.
+    property bool aiModeEnabled: false
+    property var aiSessionConfig: ({})
+
     // la reconnexion auto après host migration est pilotée par main.qml
     // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
     // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
@@ -175,6 +182,12 @@ Base_Board {
 
     Component.onCompleted: {
         initializeEditor()
+
+        // Rendre l'interface du proposant immédiatement découvrable lors du
+        // premier passage dans l'éditeur. Elle reste ensuite accessible par
+        // le bouton ✨ du rail, sans masquer la messagerie multijoueur.
+        if (root.aiModeEnabled)
+            Qt.callLater(function() { aiChatDrawer.open() })
 
         // V3 (T4-5) : le moteur de règles se câble sur ses sources (bus
         // d'événements + mémoire) dès le boot — les règles tournent en solo
@@ -279,6 +292,8 @@ Base_Board {
             btInfoMap.y = y
             btModule.x = x
             btModule.y = y
+            btAi.x = x
+            btAi.y = y
         }
 
         Component.onCompleted: resetPosition()
@@ -308,16 +323,18 @@ Base_Board {
             onExited: retract()
 
             function extand() {
-                height = (btSelection.height * 4) + 10
+                height = (btSelection.height * (root.aiModeEnabled ? 5 : 4)) + 10
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
-                btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
-                btModule.y =    (Screen.pixelDensity * 20) * 3  + 10
+                btAi.y =        (Screen.pixelDensity * 20) * 2  + 10
+                btChat.y =      (Screen.pixelDensity * 20) * (root.aiModeEnabled ? 3 : 2) + 10
+                btModule.y =    (Screen.pixelDensity * 20) * (root.aiModeEnabled ? 4 : 3) + 10
             }
              function retract() {
                  if (btSelection.fixExtand) return
                 btInfoMap.x = btSelection.xOrigin; btInfoMap.y = btSelection.yOrigin
                 btChat.x = btSelection.xOrigin; btChat.y = btSelection.yOrigin
                 btModule.x = btSelection.xOrigin; btModule.y = btSelection.yOrigin
+                btAi.x = btSelection.xOrigin; btAi.y = btSelection.yOrigin
             }
         }
     }
@@ -337,6 +354,16 @@ Base_Board {
         colorBt: Theme.success
         onBtClicked: chatDrawer.open()
         Behavior on y {SmoothedAnimation { velocity : 500}}
+    }
+
+    BtSideMenu {
+        id: btAi
+        objectName: "aiProposerButton"
+        visible: !root._useNewUi && root.aiModeEnabled
+        emojiBt: "✨"
+        colorBt: Theme.accentAlt
+        onBtClicked: aiChatDrawer.open()
+        Behavior on y { SmoothedAnimation { velocity: 500 } }
     }
 
     // Bouton déclencheur du gestionnaire de modules (icône hud "1"), déplacé
@@ -391,6 +418,16 @@ Base_Board {
                 console.log("[Editor] collab actif — Catway.chatClient laissé tel quel (lobby)")
             }
         }
+    }
+
+    AiChatDrawer {
+        id: aiChatDrawer
+        objectName: "aiProposerDrawer"
+        z: UiStyle.z_HUD + 3
+        invocationOpts: root.aiSessionConfig && root.aiSessionConfig.proposer
+                        ? root.aiSessionConfig.proposer : ({})
+        onClosed: root.forceActiveFocus()
+        onFocusReleased: root.forceActiveFocus()
     }
 
     MenuMapAtStart {
@@ -1442,7 +1479,10 @@ Base_Board {
             // portent donc des noms distincts des ids d'Editor.qml.
             editorModuleManager: moduleManager
             editorLogic: logic
+            aiModeEnabled: root.aiModeEnabled
+            aiChatOpen: aiChatDrawer.opened
             onMapInfoRequested: mapInfoPanel.openDrawer()
+            onAiChatRequested: aiChatDrawer.open()
             onChatRequested: chatDrawer.open()
             onMenuRequested: escMenu.show()
             onPathModeToggled: root._togglePathMode(null)

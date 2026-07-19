@@ -20,7 +20,7 @@ import ui_item
  *     l'ouverture (Component.onCompleted) ;
  *   - bouton « Héberger une partie IA » GRISÉ tant que l'état ≠ Prêt.
  *
- * Ce composant ne lance pas la partie lui-même : il émet `hostRequested()` que
+ * Ce composant ne lance pas la partie lui-même : il émet `hostRequested(config)` que
  * le flux d'intégration (C7 / menu) branche. Les options du challenge (token de
  * rôle éphémère D20, programme CLI, URL passerelle, skill) sont fournies par le
  * contexte via `handshakeOpts` — jamais codées en dur ici (doc 14 §2.2).
@@ -67,7 +67,7 @@ Item {
     }
 
     // Émis quand le joueur clique « Héberger une partie IA » (état Prêt requis).
-    signal hostRequested()
+    signal hostRequested(var aiConfig)
 
     implicitWidth: Theme.px(620)
     implicitHeight: content.implicitHeight + 2 * Theme.spacingXL
@@ -127,6 +127,28 @@ Item {
 
         // Les options fournies par l'intégrateur restent prioritaires.
         return Object.assign(opts, root.handshakeOpts)
+    }
+
+    function _sessionRoleConfig(role) {
+        const arbiter = role === AiProcessSupervisor.Arbiter
+        const adapter = arbiter ? aiModelSettings.arbiterAdapter
+                                : aiModelSettings.proposerAdapter
+        const program = arbiter ? aiModelSettings.arbiterProgram
+                                : aiModelSettings.proposerProgram
+        const model = arbiter ? aiModelSettings.arbiterModel
+                              : aiModelSettings.proposerModel
+        return {
+            "adapter": adapter,
+            "program": program.length > 0 ? program : root._defaultProgram(adapter),
+            "model": model
+        }
+    }
+
+    function sessionConfig() {
+        return {
+            "proposer": root._sessionRoleConfig(AiProcessSupervisor.Proposer),
+            "arbiter": root._sessionRoleConfig(AiProcessSupervisor.Arbiter)
+        }
     }
 
     Rectangle {
@@ -384,7 +406,7 @@ Item {
                     text: qsTr("Héberger une partie IA")
                     // Grisé tant que l'arbitre n'est pas Prêt (D31).
                     enabled: AiProcessSupervisor.arbiterReady
-                    onClicked: root.hostRequested()
+                    onClicked: root.hostRequested(root.sessionConfig())
                 }
             }
 

@@ -24,8 +24,15 @@ Rectangle {
     // rawSessionName = nom utilisateur (sans prefix [EDIT:...]) ; utilisé
     // par main.qml pour nommer la carte collab côté hôte.
     // initialMap peut être null (rejoin de session existante ou non-éditeur).
-    signal launchNewSession(bool isEdition, string hostId, string rawSessionName, var initialMap)
-    signal launchExistingSession(bool isEdition, string hostId)
+    signal launchNewSession(bool isEdition, string hostId, string rawSessionName,
+                            var initialMap, bool isAiMode, var aiConfig)
+    signal launchExistingSession(bool isEdition, string hostId, bool isAiMode)
+
+    // Positionné par main.qml quand le parcours vient du préflight arbitre.
+    // Le formulaire de création est alors l'écran initial et reste verrouillé
+    // sur l'éditeur, seule surface actuellement câblée au canal IA.
+    property bool aiModeRequested: false
+    property var initialAiConfig: ({})
 
     // Stash du payload sessionCreateRequested en attente du callback
     // sessionCreated (round-trip serveur). Permet de retrouver le nom brut
@@ -37,22 +44,29 @@ Rectangle {
     // Format : "[EDIT:<hostPlayerId>] <nom affiché>". Évite de modifier le
     // serveur chat ; le champ name est déjà transmis nativement.
     readonly property var _editPrefixRe: /^\[EDIT:([^\]]+)\]\s*(.*)$/
+    readonly property var _aiEditPrefixRe: /^\[AI-EDIT:([^\]]+)\]\s*(.*)$/
 
-    function _wrapEditorName(userName, hostId) {
-        return "[EDIT:" + hostId + "] " + userName
+    function _wrapEditorName(userName, hostId, aiMode) {
+        return (aiMode ? "[AI-EDIT:" : "[EDIT:") + hostId + "] " + userName
     }
 
     function _parseEditorPrefix(rawName) {
-        if (!rawName) return { isEdit: false, hostId: "", cleanName: rawName || "" }
-        const m = _editPrefixRe.exec(rawName)
-        if (!m) return { isEdit: false, hostId: "", cleanName: rawName }
-        return { isEdit: true, hostId: m[1], cleanName: m[2] || "" }
+        if (!rawName)
+            return { isEdit: false, isAi: false, hostId: "", cleanName: "" }
+        const ai = _aiEditPrefixRe.exec(rawName)
+        if (ai)
+            return { isEdit: true, isAi: true, hostId: ai[1], cleanName: ai[2] || "" }
+        const edit = _editPrefixRe.exec(rawName)
+        if (edit)
+            return { isEdit: true, isAi: false, hostId: edit[1], cleanName: edit[2] || "" }
+        return { isEdit: false, isAi: false, hostId: "", cleanName: rawName }
     }
 
     // État d'un join en cours : on mémorise le hostId extrait du nom quand
     // l'utilisateur sélectionne une session, pour émettre launchExistingSession
     // une fois la connexion chat établie.
     property bool _pendingJoinEdit: false
+    property bool _pendingJoinAi: false
     property string _pendingJoinHostId: ""
     property string _pendingJoinSessionId: ""
 
@@ -98,6 +112,8 @@ Rectangle {
             const rawName     = pending ? String(pending.name || "") :
                                            String(parsed.cleanName || "")
             const initialMap  = pending ? pending.initialMap : null
+            const aiMode      = parsed.isAi || (pending && pending.isAiMode === true)
+            const aiConfig    = pending ? (pending.aiConfig || ({})) : ({})
             if (parsed.isEdit) {
                 // si EditorSession est déjà hôte actif, c'est une
                 // re-publication faite par un client qui vient de se promouvoir
@@ -109,9 +125,11 @@ Rectangle {
                 }
                 console.log("🛠️ Session éditeur créée (host =", parsed.hostId + ") → launchNewSession")
                 Catway.setChatClient(lobbyChatClient)
-                root.launchNewSession(true, parsed.hostId, rawName, initialMap)
+                root.launchNewSession(true, parsed.hostId, rawName, initialMap,
+                                      aiMode, aiConfig)
             } else {
-                root.launchNewSession(false, AccountManager.uniqueId, rawName, null)
+                root.launchNewSession(false, AccountManager.uniqueId, rawName, null,
+                                      false, ({}))
             }
         }
 
@@ -127,10 +145,12 @@ Rectangle {
             console.log("🛠️ Session éditeur rejointe (host =", root._pendingJoinHostId + ") → launchExistingSession")
             Catway.setChatClient(lobbyChatClient)
             const hid = root._pendingJoinHostId
+            const aiMode = root._pendingJoinAi
             root._pendingJoinEdit = false
+            root._pendingJoinAi = false
             root._pendingJoinHostId = ""
             root._pendingJoinSessionId = ""
-            root.launchExistingSession(true, hid)
+            root.launchExistingSession(true, hid, aiMode)
         }
 
         Component.onCompleted: {
@@ -245,14 +265,16 @@ Rectangle {
                         // déjà. Editor.qml en mode "new" refait un mapExists
                         // check et loadMap directement si présent, donc pas
                         // besoin d'initialMap explicite.
-                        root.launchNewSession(true, parsed.hostId, parsed.cleanName, null)
+                        root.launchNewSession(true, parsed.hostId, parsed.cleanName, null,
+                                              parsed.isAi, ({}))
                     } else {
                         console.log("🛠️ Rejoin même session éditeur (host =", parsed.hostId + ") → launchExistingSession direct")
-                        root.launchExistingSession(true, parsed.hostId)
+                        root.launchExistingSession(true, parsed.hostId, parsed.isAi)
                     }
                     return
                 }
                 root._pendingJoinEdit     = parsed.isEdit
+                root._pendingJoinAi       = parsed.isAi
                 root._pendingJoinHostId   = parsed.hostId
                 root._pendingJoinSessionId = sessionData.sessionId
                 lobbyChatClient.connectToSessionDirect(sessionData.sessionId, sessionData.password)
@@ -278,9 +300,14 @@ Rectangle {
         SessionCreation {
             // Passer le ChatClient mutualisé
             chatClient: lobbyChatClient
+            isAiMode: root.aiModeRequested
+            aiConfig: root.initialAiConfig
 
             onBackRequested: {
-                multiplayerStackView.pop()
+                if (multiplayerStackView.depth > 1)
+                    multiplayerStackView.pop()
+                else
+                    root.backToTitleScreen()
             }
 
             onSessionCreateRequested: function(sessionData) {
@@ -288,7 +315,9 @@ Rectangle {
                 // "[EDIT:<hostId>]" — évite toute modification du serveur chat.
                 let finalName = sessionData.name
                 if (sessionData.isEditionMode) {
-                    finalName = root._wrapEditorName(sessionData.name, AccountManager.uniqueId)
+                    finalName = root._wrapEditorName(sessionData.name,
+                                                     AccountManager.uniqueId,
+                                                     sessionData.isAiMode === true)
                     console.log("🛠️ Création session éditeur — nom encodé :", finalName)
                 } else {
                     console.log("📝 Création de session:", sessionData.name)
@@ -357,7 +386,8 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            initialItem: sessionListComponent
+            initialItem: root.aiModeRequested ? sessionCreationComponent
+                                              : sessionListComponent
 
             // Animations de transition
             pushEnter: Transition {

@@ -173,6 +173,17 @@ Drawer {
         return null
     }
 
+    function _proposerPrompt(playerRequest) {
+        if (aiDrawer.aiRole === AiProcessSupervisor.Arbiter)
+            return playerRequest
+        return "Tu es l'assistant proposant de Meownopoly, actuellement dans l'éditeur de carte. "
+             + "Utilise les outils du serveur MCP meownopoly pour inspecter l'état courant et réaliser les modifications demandées. "
+             + "Ne prétends jamais avoir modifié la carte sans appel d'outil réussi. "
+             + "Si une action doit être soumise à l'arbitre, utilise le flux de proposition exposé par les outils. "
+             + "Réponds ensuite en français avec un résumé bref et concret.\n\n"
+             + "Demande du joueur : " + playerRequest
+    }
+
     // Envoie un tour de tchat : une invocation de l'agent. Modèle « une
     // invocation = un tour » (doc 02 §4) : chaque tour est une invocation
     // one-shot de l'agent avec le prompt du joueur.
@@ -185,11 +196,11 @@ Drawer {
         // Option prioritaire : agent persistant déjà lancé → pousser le tour sur
         // son stdin. Sinon, invocation one-shot avec le prompt.
         if (AiProcessSupervisor.isRunning(aiDrawer.aiRole)) {
-            AiProcessSupervisor.sendInput(aiDrawer.aiRole, text)
+            AiProcessSupervisor.sendInput(aiDrawer.aiRole, _proposerPrompt(text))
             return
         }
         const opts = Object.assign(aiDrawer._configuredInvocationOpts(),
-                                   { oneShot: true, prompt: text })
+                                   { oneShot: true, prompt: _proposerPrompt(text) })
         const ok = AiProcessSupervisor.startAgent(aiDrawer.aiRole, opts)
         if (!ok) {
             aiDrawer._invocationPending = false

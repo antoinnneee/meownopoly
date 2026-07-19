@@ -1,9 +1,28 @@
 # 14 — Adaptateur d'agents & tchat ingame
 
-> **Statut : cadrage (draft, créé le 2026-07-13).** Brique identifiée dès le
-> chantier M2 ([doc 10](./10_AUDIT_STACK_EXISTANTE.md)) mais sans document dédié jusqu'ici — le [doc 01](./01_ARCHITECTURE_CIBLE.md) §2.7 la
-> réintègre dans la vue d'ensemble. Ce document rassemble ce qui est déjà
-> tranché (D10/D17/D20/D24/D31) et liste ce qui reste à cadrer.
+> **Statut : socle implémenté (mis à jour le 2026-07-19).** Le superviseur,
+> la passerelle MCP loopback, le préflight arbitre, le parcours d'hébergement
+> et le drawer du proposant sont intégrés. Le pipeline d'arbitrage complet des
+> propositions continue dans le vertical slice Phase 2.
+
+## 0. Parcours utilisateur implémenté
+
+1. Depuis le titre, **Héberger une partie IA** ouvre `AiHostLobby`.
+2. L'hôte choisit séparément adaptateur/programme/modèle de l'arbitre et du
+   proposant, puis valide le handshake de l'arbitre.
+3. **Héberger une partie IA** ouvre directement `SessionCreation`, verrouillé
+   sur le mode éditeur, avec choix carte vierge/existante.
+4. La session est publiée sous le préfixe compatible serveur
+   `[AI-EDIT:<hostId>]`. Les autres clients la voient avec un badge `✨` et
+   rejoignent le même parcours éditeur/P2P que les sessions `[EDIT:]`.
+5. À l'entrée dans `Editor.qml`, `AiChatDrawer` s'ouvre automatiquement. Il
+   reste accessible par le bouton **✨ Assistant proposant** dans l'interface
+   classique comme dans `NewEditorChrome`; la messagerie multijoueur reste un
+   drawer distinct.
+
+La configuration de modèle est persistée dans `QSettings/AI/ModelConfig` et
+transmise à l'éditeur sans token. Le drawer récupère directement auprès de la
+passerelle locale l'URL et le token éphémère du rôle proposant.
 
 ## 1. Rôle
 
@@ -40,6 +59,12 @@ responsabilités liées :
   journalisée (secrets hors logs, critère M2).
 - Adaptateurs séparés par CLI (`claude -p` vs Codex), arguments non codés en
   dur dans l'UI.
+- Claude reçoit un fichier MCP JSON temporaire (permissions propriétaire),
+  `--strict-mcp-config`, le mode non interactif `dontAsk` et uniquement les
+  tools `mcp__meownopoly__*`.
+- Codex reçoit les clés TOML `mcp_servers.meownopoly.*` via `-c`; son token est
+  lu depuis `MEOW_AI_MCP_BEARER_TOKEN`. Le faux appel historique
+  `codex exec --config <json>` a été supprimé (`--config` attend `clé=valeur`).
 
 ### 2.3 Handshake & challenge de l'arbitre (D24/D31)
 - Avant d'ouvrir le mode IA : handshake de rôle (l'agent `arbiter` répond et
@@ -76,13 +101,13 @@ responsabilités liées :
 
 - **Onboarding guidé** : détection des CLIs installés, aide à la connexion au
   compte fournisseur (prérequis [doc 00](./00_VISION.md) §8) — périmètre exact à cadrer.
-- **Politique de redémarrage** : combien de retries avant `Failed` définitif ?
-  Backoff ?
+- **Politique de redémarrage** : le socle utilise 2 retries et un backoff
+  linéaire de 1,5 s ; confirmer ces valeurs après instrumentation réelle.
 - **Multi-invocations** : une invocation à la fois par rôle (file), ou
   proposante et arbitre en parallèle ? (Le pipeline [doc 13](./13_ENVELOPPE_PROPOSITION.md) sérialise déjà les
   propositions côté hôte.)
-- **UI du tchat** : panneau dédié, drawer (façon `ChatDrawer`), ou scène ?
-  Partage de composants avec le chat multijoueur ?
+- **UI du tchat** : le choix actuel est un drawer dédié `AiChatDrawer`, qui
+  réutilise les bulles/statuts du chat mais aucun `ChatClient`.
 - **Détection de fin d'invocation** : critère de terminaison d'un `claude -p`
   (exit process) vs timeout applicatif ; affichage de la progression pendant
   les tours longs.

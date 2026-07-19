@@ -23,10 +23,13 @@ Item {
     // Références injectées depuis Editor.qml.
     property var editorModuleManager: null
     property var editorLogic: null
+    property bool aiModeEnabled: false
+    property bool aiChatOpen: false
 
     // Délégations vers Editor.qml (drawers/menus partagés).
     signal mapInfoRequested()
     signal chatRequested()
+    signal aiChatRequested()
     signal menuRequested()
     // Toggle du mode « Chemin » (tracé des connexions entre cases).
     signal pathModeToggled()
@@ -134,25 +137,76 @@ Item {
                 color: Theme.border
             }
 
-            // Grands modes de pose/édition (pilotent moduleManager).
-            Repeater {
-                model: [
-                    { "id": "deco",     "icon": "🌳", "label": "Décors" },
-                    { "id": "case",     "icon": "📦", "label": "Cases" },
-                    { "id": "zone",     "icon": "🟥", "label": "Zones" },
-                    { "id": "npc",      "icon": "🎭", "label": "PNJ" },
-                    { "id": "enemy",    "icon": "👹", "label": "Ennemis" },
-                    { "id": "crate",    "icon": "🗃️", "label": "Caisses" },
-                    { "id": "template", "icon": "🧩", "label": "Templates" },
-                    { "id": "player",   "icon": "🐱", "label": "Joueurs" },
-                    { "id": "config3d", "icon": "🧊", "label": "Réglages 3D" }
-                ]
-                delegate: RailButton {
-                    required property var modelData
-                    icon: modelData.icon
-                    label: modelData.label
-                    active: root._activeModule === modelData.id
-                    onClicked: if (root.editorModuleManager) root.editorModuleManager.toggleModule(modelData.id)
+            // La liste d'outils peut dépasser la hauteur sur les petites
+            // fenêtres / grandes échelles UI. Seule cette zone défile : les
+            // actions globales (IA, chat, menu) restent toujours accessibles.
+            Flickable {
+                id: toolsFlick
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: width
+                contentHeight: toolsColumn.implicitHeight
+                clip: true
+                interactive: contentHeight > height
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar {
+                    policy: toolsFlick.interactive ? ScrollBar.AsNeeded
+                                                   : ScrollBar.AlwaysOff
+                }
+
+                ColumnLayout {
+                    id: toolsColumn
+                    width: toolsFlick.width
+                    spacing: Theme.spacingXS
+
+                    // Grands modes de pose/édition (pilotent moduleManager).
+                    Repeater {
+                        model: [
+                            { "id": "deco",     "icon": "🌳", "label": "Décors" },
+                            { "id": "case",     "icon": "📦", "label": "Cases" },
+                            { "id": "zone",     "icon": "🟥", "label": "Zones" },
+                            { "id": "npc",      "icon": "🎭", "label": "PNJ" },
+                            { "id": "enemy",    "icon": "👹", "label": "Ennemis" },
+                            { "id": "crate",    "icon": "🗃️", "label": "Caisses" },
+                            { "id": "template", "icon": "🧩", "label": "Templates" },
+                            { "id": "player",   "icon": "🐱", "label": "Joueurs" },
+                            { "id": "config3d", "icon": "🧊", "label": "Réglages 3D" }
+                        ]
+                        delegate: RailButton {
+                            required property var modelData
+                            icon: modelData.icon
+                            label: modelData.label
+                            active: root._activeModule === modelData.id
+                            onClicked: if (root.editorModuleManager) root.editorModuleManager.toggleModule(modelData.id)
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: root.railWidth - Theme.spacingL * 2
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    RailButton {
+                        icon: "🔗"
+                        label: "Tracer un chemin"
+                        active: root.editorLogic
+                                && root.editorLogic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
+                        onClicked: root.pathModeToggled()
+                    }
+
+                    RailButton {
+                        icon: "👁"
+                        label: "Afficher les connexions"
+                        active: root.editorLogic && root.editorLogic.tileLogic
+                                && root.editorLogic.tileLogic.displayLinkEnable === true
+                        onClicked: {
+                            if (root.editorLogic && root.editorLogic.tileLogic)
+                                root.editorLogic.tileLogic.displayLinkEnable
+                                        = !root.editorLogic.tileLogic.displayLinkEnable
+                        }
+                    }
                 }
             }
 
@@ -163,44 +217,23 @@ Item {
                 color: Theme.border
             }
 
-            // La configuration de la sélection passe désormais par
-            // l'inspecteur contextuel (dock droit, InspectorPanel) : plus de
-            // module "config" à activer — la sélection est le déclencheur.
-            // (Le module reste dans le catalogue ModuleManager pour l'UI
-            // classique.)
-
-            // Outil « Chemin » : chaînage des connexions A→B→C au clic
-            // (mode EM_SELECTION_LINK en chainMode). Remplace les boutons
-            // « Ajouter Précédent/Suivant » du panneau de config.
-            RailButton {
-                icon: "🔗"
-                label: "Tracer un chemin"
-                active: root.editorLogic
-                        && root.editorLogic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
-                onClicked: root.pathModeToggled()
-            }
-
-            // Affichage persistant des flèches de connexion (indépendant du
-            // mode chemin, qui les force déjà pendant le tracé).
-            RailButton {
-                icon: "👁"
-                label: "Afficher les connexions"
-                active: root.editorLogic && root.editorLogic.tileLogic
-                        && root.editorLogic.tileLogic.displayLinkEnable === true
-                onClicked: {
-                    if (root.editorLogic && root.editorLogic.tileLogic)
-                        root.editorLogic.tileLogic.displayLinkEnable
-                                = !root.editorLogic.tileLogic.displayLinkEnable
-                }
-            }
-
-            // Espace flexible : pousse les actions globales en bas du rail.
-            Item { Layout.fillHeight: true; Layout.fillWidth: true }
-
             RailButton {
                 icon: "ℹ️"
                 label: "Infos de la carte"
                 onClicked: root.mapInfoRequested()
+            }
+            RailButton {
+                objectName: "aiProposerRailButton"
+                // Réserve sa place dans le layout même hors mode IA : Qt
+                // Layouts peut conserver width/height=0 lorsqu'un item
+                // initialement invisible devient visible dynamiquement.
+                enabled: root.aiModeEnabled
+                opacity: root.aiModeEnabled ? 1 : 0
+                icon: "✨"
+                label: "Assistant proposant"
+                active: root.aiChatOpen
+                onClicked: root.aiChatRequested()
+                Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
             }
             RailButton {
                 icon: "💬"

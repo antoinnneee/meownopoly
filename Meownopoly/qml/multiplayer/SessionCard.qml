@@ -18,15 +18,19 @@ Rectangle {
      property string hostNickname // Nouveau
      property int onlineCount     // Nouveau
 
-     // détection du prefix "[EDIT:<hostId>]" pour décorer la carte
-     // et afficher un nom propre à l'utilisateur.
+     // Détection des préfixes éditeur pour décorer la carte et afficher un nom
+     // propre. `[EDIT:]` reste compatible ; `[AI-EDIT:]` identifie le parcours
+     // de co-construction avec le proposant.
      readonly property var _editInfo: {
-         const re = /^\[EDIT:([^\]]+)\]\s*(.*)$/
-         const m = re.exec(root.name || "")
-         return m ? { isEdit: true, hostId: m[1], cleanName: m[2] || "" }
-                  : { isEdit: false, hostId: "", cleanName: root.name || "" }
+         const ai = /^\[AI-EDIT:([^\]]+)\]\s*(.*)$/.exec(root.name || "")
+         if (ai)
+             return { isEdit: true, isAi: true, hostId: ai[1], cleanName: ai[2] || "" }
+         const edit = /^\[EDIT:([^\]]+)\]\s*(.*)$/.exec(root.name || "")
+         return edit ? { isEdit: true, isAi: false, hostId: edit[1], cleanName: edit[2] || "" }
+                     : { isEdit: false, isAi: false, hostId: "", cleanName: root.name || "" }
      }
      readonly property bool isEditorSession: _editInfo.isEdit
+     readonly property bool isAiSession: _editInfo.isAi
      readonly property string displayName: _editInfo.cleanName
     
     width: ListView.view.width - 32
@@ -37,7 +41,8 @@ Rectangle {
     // Bordure colorée selon disponibilité (ou violette pour session éditeur).
     border.width: 2
     border.color: {
-        if (root.isEditorSession) return "#a78bfa"            // Violet: session éditeur
+        if (root.isAiSession) return Theme.accentAlt            // Vert: session IA
+        if (root.isEditorSession) return "#a78bfa"              // Violet: session éditeur
         if (players === maxPlayers) return Theme.warning      // Orange: pleine
         if (players >= maxPlayers * 0.75) return "#ffeb3b"    // Jaune: presque pleine
         return Theme.success                                  // Vert: disponible
@@ -65,7 +70,7 @@ Rectangle {
             
             // Nom de la session (prefix "[EDIT:...]" stripé, 🛠️ ajouté).
             Text {
-                text: (root.isEditorSession ? "🛠️ " : "")
+                text: (root.isAiSession ? "✨ " : (root.isEditorSession ? "🛠️ " : ""))
                       + "Name: " + root.displayName
                 color: Theme.textPrimary
                 font.pixelSize: Theme.fontSizeTitle

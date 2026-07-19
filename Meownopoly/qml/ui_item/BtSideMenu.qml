@@ -43,7 +43,7 @@ Image {
     width: Screen.pixelDensity * 20
     height: Screen.pixelDensity * 20
     
-    property string colorBt : "transparent"
+    property color colorBt : "transparent"
     property string emojiBt : ""
 
     signal btClicked()

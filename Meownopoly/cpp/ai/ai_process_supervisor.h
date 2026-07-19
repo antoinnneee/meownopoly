@@ -142,8 +142,9 @@ public:
      *   - `gatewayUrl`   : endpoint MCP loopback (défaut dérivé de
      *                      MEOW_AI_GATEWAY_PORT : http://127.0.0.1:<port>/mcp) ;
      *   - `token`        : token éphémère de rôle (D20) — **secret**, injecté
-     *                      via fichier de config MCP à permissions restreintes,
-     *                      jamais sur la ligne de commande ni journalisé ;
+     *                      via fichier MCP restreint (Claude) ou variable
+     *                      d'environnement dédiée (Codex), jamais sur la ligne
+     *                      de commande ni journalisé ;
      *   - `skillPath`    : chemin du pré-prompt SKILL.md (D17) ;
      *   - `prompt`       : instruction initiale (poussée sur stdin) ;
      *   - `workingDir`   : répertoire de travail du process ;
@@ -310,7 +311,8 @@ private:
     void appendOutput(Agent *a, const QByteArray &data, bool isError);
 
     // — Adaptateurs CLI (séparés) : programme + arguments —
-    // Aucun secret dans l'argv (journalisable). Le token voyage par fichier MCP.
+    // Aucun secret dans l'argv (journalisable). Le token voyage par fichier MCP
+    // temporaire (Claude) ou variable d'environnement dédiée (Codex).
     static QString defaultProgram(Adapter adapter);
     static QStringList claudeArgs(const QVariantMap &opts, const QString &mcpConfigPath);
     static QStringList codexArgs(const QVariantMap &opts, const QString &mcpConfigPath);
@@ -318,7 +320,7 @@ private:
     // — Injection (env + fichier MCP à permissions restreintes) —
     // Écrit un fichier de config MCP loopback portant l'en-tête Authorization
     // (token de rôle). Retourne son chemin (vide si pas de token). Permissions
-    // réduites au propriétaire. C'est le seul vecteur du secret — jamais l'argv.
+    // réduites au propriétaire. Utilisé par Claude ; jamais dans l'argv.
     QString writeMcpConfigFile(Role role, const QVariantMap &opts);
     static QString gatewayUrlFromOpts(const QVariantMap &opts);
 
