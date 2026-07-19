@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtCore
 import Meownopoly.Account 1.0
 import AiSupervisor 1.0
+import MeowProposal 1.0
 import "."
 import theme
 
@@ -40,6 +41,13 @@ Drawer {
     // en clair dans l'UI). Fournies par l'hôte du mode IA (budget D10, token D20,
     // endpoint MCP loopback D21, pré-prompt skill D17…).
     property var invocationOpts: ({})
+    // Configuration du second agent, volontairement distincte de celle du
+    // proposant. Une proposition `rules`/`code` déclenche une invocation
+    // one-shot de cet arbitre dès son entrée dans l'état `arbitrating`.
+    property var arbiterInvocationOpts: ({})
+    // L'orchestration ne doit tourner que dans une partie IA et sur l'hôte.
+    property bool arbitrationEnabled: false
+    property bool arbitrationAuthority: false
 
     // Flag développeur opt-in : `Meownopoly.exe --ai-chat-errors` affiche les
     // sorties stderr du CLI dans ce fil. Désactivé par défaut pour ne pas
@@ -76,6 +84,10 @@ Drawer {
     // compte/CLI (doc 00 §8), affiché une fois au lancement du mode IA.
     property bool _showCaptureNotice: true
     property string _developerErrorBuffer: ""
+    property string _arbiterDeveloperErrorBuffer: ""
+    property var _arbitrationQueue: []
+    property string _activeArbitrationId: ""
+    property var _displayedVerdicts: ({})
     // Modèle de conversation : tableau JS (pas ListModel) pour que
     // ChatMessageDelegate reçoive un `modelData` objet (mêmes champs que les
     // messages du chat multijoueur : sender/senderNickname/text/timestamp…).
@@ -86,10 +98,20 @@ Drawer {
     // — API pour l'intégrateur (pipeline de proposition, Phase 2) —
     // Affiche un verdict d'arbitre côté joueur (reasons[audience=player], doc 13 §4).
     function pushVerdict(accepted, playerReason) {
-        appendEntry("ai", accepted ? "⚖️ Arbitre — accepté" : "⚖️ Arbitre — refusé",
+        pushVerdictOutcome(accepted ? "accepted" : "rejected", playerReason)
+    }
+    function pushVerdictOutcome(outcome, playerReason) {
+        const accepted = outcome === "accepted"
+        const amended = outcome === "amended"
+        const title = accepted ? "⚖️ Arbitre — accepté"
+                              : amended ? "⚖️ Arbitre — amendé"
+                                        : "⚖️ Arbitre — refusé"
+        appendEntry("ai", title,
                     (playerReason && playerReason.length > 0)
                         ? playerReason
-                        : (accepted ? "Proposition acceptée." : "Proposition refusée."),
+                        : (accepted ? "Proposition acceptée."
+                                    : amended ? "Proposition acceptée avec amendements."
+                                              : "Proposition refusée."),
                     "verdict")
     }
     // Affiche une note de progression d'une proposition (benching/applying…).
@@ -120,8 +142,9 @@ Drawer {
         return role === AiProcessSupervisor.Arbiter ? "Arbitre" : "Assistant IA"
     }
 
-    function _configuredInvocationOpts() {
-        const arbiter = aiDrawer.aiRole === AiProcessSupervisor.Arbiter
+    function _configuredInvocationOpts(role) {
+        const effectiveRole = role === undefined ? aiDrawer.aiRole : role
+        const arbiter = effectiveRole === AiProcessSupervisor.Arbiter
         const adapter = arbiter ? aiModelSettings.arbiterAdapter
                                 : aiModelSettings.proposerAdapter
         const program = arbiter ? aiModelSettings.arbiterProgram
@@ -144,7 +167,125 @@ Drawer {
             opts["gatewayUrl"] = "http://127.0.0.1:" + port + "/mcp"
         if (token.length > 0)
             opts["token"] = token
-        return Object.assign(opts, aiDrawer.invocationOpts)
+        const overrides = arbiter ? aiDrawer.arbiterInvocationOpts
+                                  : aiDrawer.invocationOpts
+        return Object.assign(opts, overrides || ({}))
+    }
+
+    function _shortProposalId(proposalId) {
+        return proposalId && proposalId.length > 8
+                ? proposalId.substring(0, 8) : proposalId
+    }
+
+    function _proposalData(proposalId) {
+        const proposal = ProposalLifecycle.proposalById(proposalId)
+        return proposal ? proposal.toVariantMap() : null
+    }
+
+    function _lastProposalReason(proposalId) {
+        const data = _proposalData(proposalId)
+        const history = data && data.history ? data.history : []
+        return history.length > 0 ? (history[history.length - 1].reason || "") : ""
+    }
+
+    function _playerVerdictReason(verdict) {
+        const reasons = verdict && verdict.reasons ? verdict.reasons : []
+        for (let i = 0; i < reasons.length; ++i) {
+            if (reasons[i].audience === "player")
+                return reasons[i].text || ""
+        }
+        return ""
+    }
+
+    function _arbiterPrompt(proposalId) {
+        return "Tu es l'arbitre autoritaire de Meownopoly. Une proposition attend ton verdict : "
+             + proposalId + ". Utilise obligatoirement state_query(what=\"proposals\") "
+             + "pour lire son enveloppe complète et son historique, puis examine sa sûreté, "
+             + "sa cohérence avec la demande du joueur et les règles courantes. "
+             + "Tu dois ensuite appeler obligatoirement arbiter_verdict avec ce proposalId, "
+             + "verdict=accepted, rejected ou amended, et reasons contenant au minimum deux objets : "
+             + "{audience:\"player\", code:\"...\", text:\"explication claire en français\", retryable:false} "
+             + "et {audience:\"ai\", code:\"...\", text:\"consigne technique précise\", retryable:false}. "
+             + "N'annonce jamais un verdict sans que l'appel arbiter_verdict ait réussi."
+    }
+
+    function _enqueueArbitration(proposalId) {
+        if (!aiDrawer.arbitrationEnabled || !aiDrawer.arbitrationAuthority)
+            return
+        if (proposalId === aiDrawer._activeArbitrationId
+                || aiDrawer._arbitrationQueue.indexOf(proposalId) >= 0)
+            return
+        console.info("[AiArbitration] mise en file", proposalId)
+        aiDrawer._arbitrationQueue = aiDrawer._arbitrationQueue.concat([proposalId])
+        Qt.callLater(aiDrawer._startNextArbitration)
+    }
+
+    function _startNextArbitration() {
+        if (!aiDrawer.arbitrationEnabled || !aiDrawer.arbitrationAuthority
+                || aiDrawer._activeArbitrationId.length > 0
+                || aiDrawer._arbitrationQueue.length === 0)
+            return
+        if (AiProcessSupervisor.isRunning(AiProcessSupervisor.Arbiter)) {
+            arbitrationRetryTimer.restart()
+            return
+        }
+
+        const proposalId = aiDrawer._arbitrationQueue[0]
+        aiDrawer._arbitrationQueue = aiDrawer._arbitrationQueue.slice(1)
+        const data = aiDrawer._proposalData(proposalId)
+        if (!data || data.state !== "arbitrating") {
+            console.warn("[AiArbitration] proposition ignorée, état courant", proposalId,
+                         data ? data.state : "introuvable")
+            Qt.callLater(aiDrawer._startNextArbitration)
+            return
+        }
+
+        aiDrawer._activeArbitrationId = proposalId
+        aiDrawer._arbiterDeveloperErrorBuffer = ""
+        const opts = Object.assign(
+            aiDrawer._configuredInvocationOpts(AiProcessSupervisor.Arbiter),
+            { oneShot: true, prompt: aiDrawer._arbiterPrompt(proposalId) })
+        console.info("[AiArbitration] lancement de l'arbitre", proposalId,
+                     "adapter", opts.adapter, "model", opts.model || "défaut")
+        const ok = AiProcessSupervisor.startAgent(AiProcessSupervisor.Arbiter, opts)
+        if (!ok) {
+            aiDrawer._activeArbitrationId = ""
+            aiDrawer._arbitrationQueue = [proposalId].concat(aiDrawer._arbitrationQueue)
+            aiDrawer.pushSystem("Impossible de lancer l'arbitre pour la proposition "
+                                + aiDrawer._shortProposalId(proposalId) + ".")
+            console.error("[AiArbitration] démarrage refusé", proposalId)
+            arbitrationRetryTimer.restart()
+        }
+    }
+
+    function _finishArbiterInvocation(exitCode, output) {
+        const proposalId = aiDrawer._activeArbitrationId
+        aiDrawer._activeArbitrationId = ""
+        const diagnostics = aiDrawer._arbiterDeveloperErrorBuffer.trim()
+        aiDrawer._arbiterDeveloperErrorBuffer = ""
+        if (aiDrawer.showDeveloperErrors && diagnostics.length > 0)
+            aiDrawer.appendEntry("ai", "🛠 Diagnostic arbitre", diagnostics, "system")
+
+        const data = proposalId.length > 0 ? aiDrawer._proposalData(proposalId) : null
+        console.info("[AiArbitration] invocation terminée", proposalId,
+                     "exitCode", exitCode, "state", data ? data.state : "introuvable")
+        if (proposalId.length > 0 && data && data.state === "arbitrating") {
+            const response = ("" + (output || "")).trim()
+            aiDrawer.pushSystem("L'arbitre a terminé sans rendre de verdict pour la proposition "
+                                + aiDrawer._shortProposalId(proposalId) + "."
+                                + (response.length > 0 ? " Réponse : " + response : ""))
+        }
+        Qt.callLater(aiDrawer._startNextArbitration)
+    }
+
+    function _recoverPendingArbitrations() {
+        if (!aiDrawer.arbitrationEnabled || !aiDrawer.arbitrationAuthority)
+            return
+        const proposals = ProposalLifecycle.proposals()
+        for (let i = 0; i < proposals.length; ++i) {
+            if (proposals[i].state === "arbitrating")
+                aiDrawer._enqueueArbitration(proposals[i].proposalId)
+        }
     }
 
     function appendEntry(sender, nickname, text, kind) {
@@ -224,12 +365,72 @@ Drawer {
             AiProcessSupervisor.sendInput(aiDrawer.aiRole, _proposerPrompt(text))
             return
         }
-        const opts = Object.assign(aiDrawer._configuredInvocationOpts(),
+        const opts = Object.assign(aiDrawer._configuredInvocationOpts(aiDrawer.aiRole),
                                    { oneShot: true, prompt: _proposerPrompt(text) })
         const ok = AiProcessSupervisor.startAgent(aiDrawer.aiRole, opts)
         if (!ok) {
             aiDrawer._invocationPending = false
             pushSystem("Impossible de démarrer l'IA. Vérifiez les prérequis (compte fournisseur + CLI installé, doc §8) et la configuration du mode IA.")
+        }
+    }
+
+    Timer {
+        id: arbitrationRetryTimer
+        interval: 500
+        repeat: false
+        onTriggered: aiDrawer._startNextArbitration()
+    }
+
+    Connections {
+        target: ProposalLifecycle
+
+        function onProposalStateChanged(proposalId, state) {
+            if (!aiDrawer.arbitrationEnabled)
+                return
+            const shortId = aiDrawer._shortProposalId(proposalId)
+            console.info("[AiArbitration] transition", proposalId, state)
+            if (state === "arbitrating") {
+                aiDrawer.pushProgress("Proposition " + shortId
+                                      + " : examen de l'arbitre en cours…")
+                aiDrawer._enqueueArbitration(proposalId)
+            } else if (state === "queued") {
+                aiDrawer.pushProgress("Proposition " + shortId
+                                      + " : arbitre indisponible, mise en file.")
+            } else if (state === "benching") {
+                aiDrawer.pushProgress("Proposition " + shortId
+                                      + " : verdict reçu, passage au banc d'essai.")
+            } else if (state === "validated") {
+                aiDrawer.pushProgress("Proposition " + shortId + " validée.")
+            } else if (state === "applying") {
+                aiDrawer.pushProgress("Proposition " + shortId + " : application en cours…")
+            } else if (state === "applied") {
+                aiDrawer.pushProgress("Proposition " + shortId + " appliquée.")
+            }
+        }
+
+        function onProposalVerdictReady(proposalId) {
+            if (!aiDrawer.arbitrationEnabled || aiDrawer._displayedVerdicts[proposalId])
+                return
+            const data = aiDrawer._proposalData(proposalId)
+            if (!data || !data.verdict)
+                return
+            aiDrawer._displayedVerdicts = Object.assign({}, aiDrawer._displayedVerdicts,
+                                                        { [proposalId]: true })
+            const outcome = data.verdict.verdict || "rejected"
+            aiDrawer.pushVerdictOutcome(outcome,
+                                        aiDrawer._playerVerdictReason(data.verdict))
+        }
+
+        function onProposalSettled(proposalId, state) {
+            if (!aiDrawer.arbitrationEnabled || aiDrawer._displayedVerdicts[proposalId])
+                return
+            if (state === "rejected_mechanical" || state === "rejected_bench"
+                    || state === "failed") {
+                const reason = aiDrawer._lastProposalReason(proposalId)
+                aiDrawer.pushSystem("Proposition " + aiDrawer._shortProposalId(proposalId)
+                                    + " interrompue (" + state + ")"
+                                    + (reason.length > 0 ? " : " + reason : "."))
+            }
         }
     }
 
@@ -246,6 +447,11 @@ Drawer {
 
         // Fin d'un tour one-shot : rendre la réponse (ou le verdict).
         function onInvocationCompleted(role, exitCode, output) {
+            if (role === AiProcessSupervisor.Arbiter
+                    && aiDrawer._activeArbitrationId.length > 0) {
+                aiDrawer._finishArbiterInvocation(exitCode, output)
+                return
+            }
             if (role !== aiDrawer.aiRole) return
             aiDrawer._invocationPending = false
             aiDrawer._flushDeveloperErrors()
@@ -268,6 +474,17 @@ Drawer {
 
         // Échec d'agent pendant un tour → message actionnable.
         function onAgentFailed(role, reason) {
+            if (role === AiProcessSupervisor.Arbiter
+                    && aiDrawer._activeArbitrationId.length > 0) {
+                const proposalId = aiDrawer._activeArbitrationId
+                aiDrawer._activeArbitrationId = ""
+                aiDrawer.pushSystem("L'arbitre a échoué pour la proposition "
+                                    + aiDrawer._shortProposalId(proposalId)
+                                    + (reason && reason.length > 0 ? " : " + reason : "."))
+                console.error("[AiArbitration] échec", proposalId, reason)
+                Qt.callLater(aiDrawer._startNextArbitration)
+                return
+            }
             if (role !== aiDrawer.aiRole || !aiDrawer._invocationPending) return
             aiDrawer._invocationPending = false
             aiDrawer._flushDeveloperErrors()
@@ -275,11 +492,23 @@ Drawer {
         }
 
         function onOutputReceived(role, chunk, isError) {
+            if (role === AiProcessSupervisor.Arbiter
+                    && aiDrawer._activeArbitrationId.length > 0 && isError) {
+                aiDrawer._arbiterDeveloperErrorBuffer += chunk
+                if (aiDrawer._arbiterDeveloperErrorBuffer.length > 8000)
+                    aiDrawer._arbiterDeveloperErrorBuffer =
+                            aiDrawer._arbiterDeveloperErrorBuffer.slice(-8000)
+                return
+            }
             if (role !== aiDrawer.aiRole || !aiDrawer._invocationPending || !isError)
                 return
             aiDrawer._appendDeveloperError(chunk)
         }
     }
+
+    onArbitrationEnabledChanged: Qt.callLater(aiDrawer._recoverPendingArbitrations)
+    onArbitrationAuthorityChanged: Qt.callLater(aiDrawer._recoverPendingArbitrations)
+    Component.onCompleted: Qt.callLater(aiDrawer._recoverPendingArbitrations)
 
     ColumnLayout {
         anchors.fill: parent
@@ -449,6 +678,10 @@ Drawer {
 
             ListView {
                 id: messageList
+                objectName: "aiChatMessageList"
+                // Projection lisible par le serveur d'automation (ListView.model
+                // est enveloppé par Qt et n'est pas sérialisable tel quel).
+                readonly property var automationMessages: aiDrawer._messages
                 anchors.fill: parent
                 anchors.margins: Theme.spacingM
                 model: aiDrawer._messages

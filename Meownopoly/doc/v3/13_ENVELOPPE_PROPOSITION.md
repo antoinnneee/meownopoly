@@ -191,6 +191,11 @@ Notes de conception :
   `MEOW_PROPOSAL_TIMEOUT_MS` (défaut **60 000 ms** — l'arbitrage LLM p95
   visé est 15 s, Q-J04). C'est le mode le plus simple pour l'IA : soumettre,
   lire le verdict, itérer dans le même tour.
+- Dès l'entrée dans `arbitrating`, le runtime de l'hôte lance automatiquement
+  le modèle arbitre configuré. Celui-ci relit la projection autoritaire par
+  `state_query(proposals)` et rend sa décision avec le tool protégé
+  `arbiter_verdict`; le signal `proposalVerdictReady` réveille alors l'appel
+  bloquant et alimente le tchat joueur.
 - **Au timeout** : réponse `{ "status": "pending", "proposalId": … }` —
   l'IA continue, le verdict arrivera dans le résumé d'événements injecté au
   tour suivant et reste lisible via `events_poll` / `state_query(proposals)`.

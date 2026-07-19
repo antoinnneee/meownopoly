@@ -426,6 +426,11 @@ Base_Board {
         z: UiStyle.z_HUD + 3
         invocationOpts: root.aiSessionConfig && root.aiSessionConfig.proposer
                         ? root.aiSessionConfig.proposer : ({})
+        arbiterInvocationOpts: root.aiSessionConfig && root.aiSessionConfig.arbiter
+                               ? root.aiSessionConfig.arbiter : ({})
+        arbitrationEnabled: root.aiModeEnabled
+        arbitrationAuthority: root.aiModeEnabled
+                              && (!EditorSession.active || EditorSession.isHost)
         onClosed: root.forceActiveFocus()
         onFocusReleased: root.forceActiveFocus()
     }

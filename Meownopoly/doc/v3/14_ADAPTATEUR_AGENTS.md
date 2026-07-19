@@ -1,9 +1,9 @@
 # 14 — Adaptateur d'agents & tchat ingame
 
-> **Statut : socle implémenté (mis à jour le 2026-07-19).** Le superviseur,
-> la passerelle MCP loopback, le préflight arbitre, le parcours d'hébergement
-> et le drawer du proposant sont intégrés. Le pipeline d'arbitrage complet des
-> propositions continue dans le vertical slice Phase 2.
+> **Statut : socle et déclenchement d'arbitrage implémentés (mis à jour le
+> 2026-07-19).** Le superviseur, la passerelle MCP loopback, le préflight
+> arbitre, le parcours d'hébergement, le drawer du proposant et l'invocation
+> automatique de l'arbitre sur les propositions `code`/`rules` sont intégrés.
 
 ## 0. Parcours utilisateur implémenté
 
@@ -26,7 +26,8 @@ passerelle locale l'URL et le token éphémère du rôle proposant.
 
 Pour le développement, lancer l'application avec `--ai-chat-errors` affiche
 dans le drawer un badge `DEV · stderr` et regroupe les sorties d'erreur du CLI
-dans des messages `🛠 Diagnostic CLI`. Le flag est désactivé par défaut.
+dans des messages `🛠 Diagnostic CLI` / `🛠 Diagnostic arbitre`. Le flag est
+désactivé par défaut.
 
 ## 1. Rôle
 
@@ -100,6 +101,23 @@ responsabilités liées :
 - Budget/coût : l'hôte configure un budget (D10) ; les joueurs configurent
   ensemble le prompt/personnalité initiale de l'arbitre (D10 — extension
   « objectifs propres » à cadrer, [doc 00](./00_VISION.md) §4 note, [doc 08](./08_DECISIONS_ET_QUESTIONS.md) §2).
+
+### 2.5 Orchestration d'un verdict en partie
+
+- `AiChatDrawer` écoute `ProposalLifecycle.proposalStateChanged`. Sur l'hôte
+  d'une partie IA, toute entrée dans `arbitrating` est placée dans une FIFO
+  locale puis lance une invocation one-shot du **modèle arbitre configuré**.
+- L'arbitre reçoit son token de rôle distinct et une consigne corrélée au
+  `proposalId` : lire l'enveloppe via `state_query(proposals)`, puis appeler
+  obligatoirement `arbiter_verdict`. Sa réponse textuelle seule ne vaut jamais
+  verdict.
+- `proposalVerdictReady` affiche immédiatement la raison
+  `audience=player`. Les transitions `queued`, `benching`, `validated`,
+  `applying` et `applied` sont affichées comme progression dans le même fil.
+- Si le process se termine sans appel à `arbiter_verdict`, le drawer publie une
+  erreur explicite au lieu de laisser croire que la proposition a été jugée.
+  Les traces console portent le préfixe `[AiArbitration]` et n'incluent aucun
+  token.
 
 ## 3. Socle V2 et frontières
 
