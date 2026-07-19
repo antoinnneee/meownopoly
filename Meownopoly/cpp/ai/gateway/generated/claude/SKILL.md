@@ -118,8 +118,8 @@ contrat machine `channel_contract.json`. Ci-dessous, l'**usage** de chaque tool.
 - **Rôles** : `proposer`, `arbiter`
 - **Objet** : Lecture d'état structurée, résultats compacts et paginés.
 - **Paramètres** :
-  - `what` : enum(tiles | tile | enums | roster | players | rules | memory | proposals), **requis**
-  - `filter` : object, optionnel — ex. { uuid } pour 'tile'/'memory', { type } pour 'enums', pagination { limit, offset }
+  - `what` : enum(tiles | tile | enums | roster | players | rules | memory | proposals | asset_categories | assets), **requis**
+  - `filter` : object, optionnel — ex. { uuid } pour 'tile', { name } pour 'enums', { category, type } pour 'assets', pagination { limit, offset }
   - `cursor` : string, optionnel — pagination de listes longues
 - **Retour** : JSON compact (ids plutôt que dumps ; tile inclut l'espace mémoire, doc 05)
 
@@ -129,7 +129,7 @@ contrat machine `channel_contract.json`. Ci-dessous, l'**usage** de chaque tool.
 - **Objet** : Pose d'un élément posable via le chemin UI exact (compatible collab/undo).
 - **Paramètres** :
   - `kind` : enum(asset | case | zone | npc | enemy | crate), **requis**
-  - `params` : object, **requis** — params spécifiques au kind (position grille, type, dimensions…)
+  - `params` : object, **requis** — asset={assetId,category,type,gridX,gridY}; case={caseType,gridX,gridY}; zone={points,options}; npc={visualKind,ref,gridX,gridY,options}; enemy={modelName,gridX,gridY,options}; crate={gridX,gridY,options}
 - **Retour** : { uuid } de la tuile créée
 
 ### `editor_edit`

@@ -6,6 +6,7 @@
 #include <QRandomGenerator>
 #include <QDateTime>
 #include <QDebug>
+#include <QElapsedTimer>
 
 // Accès à la scène QML pour la traduction des tools vers les hooks (C3). Ces
 // en-têtes sont compilés quel que soit MEOW_HAS_HTTP_SERVER (le dispatch de tool
@@ -392,6 +393,14 @@ QJsonObject AiGatewayServer::handleRpc(const QJsonObject &request, Role role)
                             /*retryable=*/false);
     }
 
+    qInfo().noquote()
+        << QStringLiteral("[AiGateway] RPC rôle=%1 méthode=%2 id=%3")
+               .arg(role == Role::Proposer ? QStringLiteral("proposer")
+                                           : QStringLiteral("arbiter"),
+                    method,
+                    isNotification ? QStringLiteral("notification")
+                                   : id.toVariant().toString());
+
     // Notifications MCP (ex. notifications/initialized) : traitées comme des
     // no-op côté serveur, sans réponse.
     if (method.startsWith(QStringLiteral("notifications/")))
@@ -481,7 +490,30 @@ QJsonObject AiGatewayServer::handleToolsCall(const QJsonValue &id, const QJsonOb
 
     // MCP transporte les paramètres du tool dans `params.arguments`.
     const QJsonObject arguments = params.value(QStringLiteral("arguments")).toObject();
-    return dispatchTool(id, name, arguments, role);
+    qInfo().noquote()
+        << QStringLiteral("[AiGateway] Tool début rôle=%1 nom=%2 clés=[%3]")
+               .arg(role == Role::Proposer ? QStringLiteral("proposer")
+                                           : QStringLiteral("arbiter"),
+                    name, arguments.keys().join(u','));
+    QElapsedTimer elapsed;
+    elapsed.start();
+    const QJsonObject response = dispatchTool(id, name, arguments, role);
+    const QJsonObject rpcError = response.value(QStringLiteral("error")).toObject();
+    const bool applicationError =
+        response.value(QStringLiteral("result")).toObject()
+            .value(QStringLiteral("isError")).toBool(false);
+    const bool ok = rpcError.isEmpty() && !applicationError;
+    const QString errorCode = rpcError.value(QStringLiteral("data")).toObject()
+                                  .value(QStringLiteral("code")).toString();
+    qInfo().noquote()
+        << QStringLiteral("[AiGateway] Tool fin rôle=%1 nom=%2 résultat=%3 "
+                          "duréeMs=%4 code=%5")
+               .arg(role == Role::Proposer ? QStringLiteral("proposer")
+                                           : QStringLiteral("arbiter"),
+                    name, ok ? QStringLiteral("ok") : QStringLiteral("erreur"))
+               .arg(elapsed.elapsed())
+               .arg(errorCode.isEmpty() ? QStringLiteral("-") : errorCode);
+    return response;
 }
 
 // ============================================================================
@@ -494,19 +526,19 @@ const QVector<AiGatewayServer::ToolDef> &AiGatewayServer::toolTable()
     // allow-lists par rôle recopiés de roles.<role>.toolAllowList. À régénérer
     // depuis le manifeste au build en M12 (C8).
     static const QVector<ToolDef> table = {
-        //             name              proposer  arbiter
-        { "help",             true,  true  },
-        { "state_query",      true,  true  },
-        { "editor_place",     true,  false },
-        { "editor_edit",      true,  false },
-        { "memory_set",       true,  false },
-        { "roster_edit",      true,  false },
-        { "module_config",    true,  false },
-        { "artifact_submit",  true,  false },
-        { "artifact_dryrun",  true,  false },
-        { "events_poll",      true,  true  },
-        { "screenshot",       true,  true  },
-        { "arbiter_verdict",  false, true  },
+        // name              proposer arbiter readOnly destructive idempotent openWorld
+        { "help",             true,  true,   true,  false, true,  false },
+        { "state_query",      true,  true,   true,  false, true,  false },
+        { "editor_place",     true,  false,  false, false, false, false },
+        { "editor_edit",      true,  false,  false, false, false, false },
+        { "memory_set",       true,  false,  false, false, true,  false },
+        { "roster_edit",      true,  false,  false, false, false, false },
+        { "module_config",    true,  false,  false, false, true,  false },
+        { "artifact_submit",  true,  false,  false, false, false, false },
+        { "artifact_dryrun",  true,  false,  false, false, false, false },
+        { "events_poll",      true,  true,   true,  false, true,  false },
+        { "screenshot",       true,  true,   true,  false, false, false },
+        { "arbiter_verdict",  false, true,   false, false, false, false },
     };
     return table;
 }
@@ -574,9 +606,12 @@ QJsonObject AiGatewayServer::toolDescriptor(const QString &name)
         props[QStringLiteral("what")] = prop(
             QStringLiteral("string"), QStringLiteral("nature de la lecture"),
             QJsonArray{ "tiles", "tile", "enums", "roster", "players", "rules",
-                        "memory", "proposals" });
+                        "memory", "proposals", "asset_categories", "assets" });
         props[QStringLiteral("filter")] =
-            prop(QStringLiteral("object"), QStringLiteral("ex. { uuid } ou { type } ; pagination { limit, offset }"));
+            prop(QStringLiteral("object"),
+                 QStringLiteral("ex. { uuid }, { name } pour enums, ou "
+                                "{ category, type } pour assets ; pagination "
+                                "{ limit, offset }"));
         props[QStringLiteral("cursor")] =
             prop(QStringLiteral("string"), QStringLiteral("pagination de listes longues"));
         descriptor[QStringLiteral("inputSchema")] = schema(props, { QStringLiteral("what") });
@@ -589,7 +624,12 @@ QJsonObject AiGatewayServer::toolDescriptor(const QString &name)
             QStringLiteral("string"), QStringLiteral("type d'élément à poser"),
             QJsonArray{ "asset", "case", "zone", "npc", "enemy", "crate" });
         props[QStringLiteral("params")] =
-            prop(QStringLiteral("object"), QStringLiteral("params spécifiques au kind (position grille, type, dimensions…)"));
+            prop(QStringLiteral("object"),
+                 QStringLiteral("asset={assetId,category,type,gridX,gridY}; "
+                                "case={caseType,gridX,gridY}; "
+                                "zone={points,options}; npc={visualKind,ref,gridX,gridY,options}; "
+                                "enemy={modelName,gridX,gridY,options}; "
+                                "crate={gridX,gridY,options}"));
         descriptor[QStringLiteral("inputSchema")] =
             schema(props, { QStringLiteral("kind"), QStringLiteral("params") });
     } else if (name == QLatin1String("editor_edit")) {
@@ -692,6 +732,18 @@ QJsonObject AiGatewayServer::toolDescriptor(const QString &name)
         // Sécurité : un tool listé sans descripteur reste au moins déclaré.
         descriptor[QStringLiteral("description")] = QStringLiteral("(sans description)");
         descriptor[QStringLiteral("inputSchema")] = schema({}, {});
+    }
+
+    for (const ToolDef &def : toolTable()) {
+        if (name != QLatin1String(def.name))
+            continue;
+        QJsonObject annotations;
+        annotations[QStringLiteral("readOnlyHint")] = def.readOnly;
+        annotations[QStringLiteral("destructiveHint")] = def.destructive;
+        annotations[QStringLiteral("idempotentHint")] = def.idempotent;
+        annotations[QStringLiteral("openWorldHint")] = def.openWorld;
+        descriptor[QStringLiteral("annotations")] = annotations;
+        break;
     }
     return descriptor;
 }
@@ -1065,11 +1117,25 @@ QJsonObject AiGatewayServer::toolStateQuery(const QJsonValue &id, const QJsonObj
     } else if (what == QLatin1String("roster") || what == QLatin1String("players")) {
         hook = QStringLiteral("listRoster");
         args = {};
+    } else if (what == QLatin1String("asset_categories")) {
+        hook = QStringLiteral("listAssetCategories");
+        args = {};
+    } else if (what == QLatin1String("assets")) {
+        const QString category = filter.value(QStringLiteral("category")).toString();
+        const QString type = filter.value(QStringLiteral("type")).toString();
+        if (category.isEmpty() || type.isEmpty())
+            return makeAppError(
+                id, kInvalidParams, kAppInvalidParams,
+                QStringLiteral("state_query(assets): filter.category et filter.type requis"),
+                /*retryable=*/false);
+        hook = QStringLiteral("listAssets");
+        args = { category, type };
     } else {
         return makeAppError(
             id, kInvalidParams, kAppInvalidParams,
             QStringLiteral("state_query: 'what' inconnu '%1' (tiles|tile|enums|"
-                           "roster|players|rules|memory|proposals)").arg(what),
+                           "roster|players|rules|memory|proposals|asset_categories|"
+                           "assets)").arg(what),
             /*retryable=*/false);
     }
 

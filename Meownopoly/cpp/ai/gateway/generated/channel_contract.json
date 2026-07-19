@@ -59,6 +59,12 @@
         "proposer",
         "arbiter"
       ],
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "summary": "Divulgation progressive de la doc détaillée d'une famille de commandes (doc 02 §3).",
       "params": {
         "topic": {
@@ -75,6 +81,12 @@
         "proposer",
         "arbiter"
       ],
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "summary": "Lecture d'état structurée, résultats compacts et paginés.",
       "params": {
         "what": {
@@ -87,14 +99,16 @@
             "players",
             "rules",
             "memory",
-            "proposals"
+            "proposals",
+            "asset_categories",
+            "assets"
           ],
           "required": true
         },
         "filter": {
           "type": "object",
           "required": false,
-          "doc": "ex. { uuid } pour 'tile'/'memory', { type } pour 'enums', pagination { limit, offset }"
+          "doc": "ex. { uuid } pour 'tile', { name } pour 'enums', { category, type } pour 'assets', pagination { limit, offset }"
         },
         "cursor": {
           "type": "string",
@@ -109,6 +123,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Pose d'un élément posable via le chemin UI exact (compatible collab/undo).",
       "params": {
         "kind": {
@@ -126,7 +146,7 @@
         "params": {
           "type": "object",
           "required": true,
-          "doc": "params spécifiques au kind (position grille, type, dimensions…)"
+          "doc": "asset={assetId,category,type,gridX,gridY}; case={caseType,gridX,gridY}; zone={points,options}; npc={visualKind,ref,gridX,gridY,options}; enemy={modelName,gridX,gridY,options}; crate={gridX,gridY,options}"
         }
       },
       "returns": "{ uuid } de la tuile créée"
@@ -136,6 +156,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Édition d'un existant identifié par uuid.",
       "params": {
         "uuid": {
@@ -169,6 +195,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "summary": "Écriture dans l'espace mémoire 'config' (pipeline édition, doc 05 / D15).",
       "params": {
         "scope": {
@@ -203,6 +235,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Profils joueurs et limites min/max de la map (ops collab 12-16).",
       "params": {
         "op": {
@@ -228,6 +266,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "summary": "Activation/config d'un module gameplay (D41). Produit une op 'structure' ; satisfait les requiresModules d'un artefact du même lot atomique.",
       "params": {
         "id": {
@@ -252,6 +296,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Soumission d'un artefact QML/JS → enveloppe de proposition (D11). Bloquant par défaut jusqu'au verdict.",
       "params": {
         "source": {
@@ -278,6 +328,12 @@
       "roles": [
         "proposer"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Itération pré-soumission sur le banc d'essai local (D42). Verdict + métriques complets. Quota par invocation. Pass local ≠ acceptation.",
       "params": {
         "source": {
@@ -302,6 +358,12 @@
         "proposer",
         "arbiter"
       ],
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "summary": "Resynchronisation en cours de tâche sur le journal métier (Q-E06).",
       "params": {
         "cursor": {
@@ -318,6 +380,12 @@
         "proposer",
         "arbiter"
       ],
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Capture de l'écran de jeu à la demande (D22). Plafond par requête via #define.",
       "params": {
         "view": {
@@ -339,6 +407,12 @@
       "roles": [
         "arbiter"
       ],
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "summary": "Rendu du verdict d'une proposition. TOKEN ARBITRE UNIQUEMENT.",
       "params": {
         "proposalId": {

@@ -223,6 +223,7 @@ function buildContract(manifest) {
   const tools = manifest.tools.map((t) => stripMeta({
     name: t.name,
     roles: t.roles,
+    annotations: t.annotations,
     summary: t.summary,
     params: t.params,
     returns: t.returns,

@@ -59,6 +59,7 @@
     {
       "name": "help",
       "roles": ["proposer", "arbiter"],
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
       "summary": "Divulgation progressive de la doc détaillée d'une famille de commandes (doc 02 §3).",
       "params": {
         "topic": { "type": "string", "required": false, "doc": "famille ou concept ; vide = sommaire" }
@@ -69,22 +70,24 @@
     {
       "name": "state_query",
       "roles": ["proposer", "arbiter"],
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
       "summary": "Lecture d'état structurée, résultats compacts et paginés.",
       "params": {
-        "what": { "type": "enum", "values": ["tiles", "tile", "enums", "roster", "players", "rules", "memory", "proposals"], "required": true },
-        "filter": { "type": "object", "required": false, "doc": "ex. { uuid } pour 'tile'/'memory', { type } pour 'enums', pagination { limit, offset }" },
+        "what": { "type": "enum", "values": ["tiles", "tile", "enums", "roster", "players", "rules", "memory", "proposals", "asset_categories", "assets"], "required": true },
+        "filter": { "type": "object", "required": false, "doc": "ex. { uuid } pour 'tile', { name } pour 'enums', { category, type } pour 'assets', pagination { limit, offset }" },
         "cursor": { "type": "string", "required": false, "doc": "pagination de listes longues" }
       },
       "returns": "JSON compact (ids plutôt que dumps ; tile inclut l'espace mémoire, doc 05)",
-      "groups": ["listTiles", "getTile", "enum", "roster", "getMemory", "state_query(proposals)"]
+      "groups": ["listTiles", "getTile", "enum", "roster", "getMemory", "state_query(proposals)", "listAssetCategories", "listAssets"]
     },
     {
       "name": "editor_place",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Pose d'un élément posable via le chemin UI exact (compatible collab/undo).",
       "params": {
         "kind": { "type": "enum", "values": ["asset", "case", "zone", "npc", "enemy", "crate"], "required": true },
-        "params": { "type": "object", "required": true, "doc": "params spécifiques au kind (position grille, type, dimensions…)" }
+        "params": { "type": "object", "required": true, "doc": "asset={assetId,category,type,gridX,gridY}; case={caseType,gridX,gridY}; zone={points,options}; npc={visualKind,ref,gridX,gridY,options}; enemy={modelName,gridX,gridY,options}; crate={gridX,gridY,options}" }
       },
       "returns": "{ uuid } de la tuile créée",
       "groups": ["placeAsset", "placeCase", "placeZone", "placeNPC", "placeEnemy", "placeCrate"]
@@ -92,6 +95,7 @@
     {
       "name": "editor_edit",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Édition d'un existant identifié par uuid.",
       "params": {
         "uuid": { "type": "string", "required": true },
@@ -104,6 +108,7 @@
     {
       "name": "memory_set",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
       "summary": "Écriture dans l'espace mémoire 'config' (pipeline édition, doc 05 / D15).",
       "params": {
         "scope": { "type": "enum", "values": ["tile", "session", "player"], "required": true },
@@ -118,6 +123,7 @@
     {
       "name": "roster_edit",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Profils joueurs et limites min/max de la map (ops collab 12-16).",
       "params": {
         "op": { "type": "enum", "values": ["add_profile", "remove_profile", "update_profile", "reorder_profile", "set_limits"], "required": true },
@@ -129,6 +135,7 @@
     {
       "name": "module_config",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
       "summary": "Activation/config d'un module gameplay (D41). Produit une op 'structure' ; satisfait les requiresModules d'un artefact du même lot atomique.",
       "params": {
         "id": { "type": "string", "required": true, "doc": "ex. 'stats'" },
@@ -142,6 +149,7 @@
     {
       "name": "artifact_submit",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Soumission d'un artefact QML/JS → enveloppe de proposition (D11). Bloquant par défaut jusqu'au verdict.",
       "params": {
         "source": { "type": "string", "required": true, "doc": "QML/JS inline, ≤ 20 KB" },
@@ -155,6 +163,7 @@
     {
       "name": "artifact_dryrun",
       "roles": ["proposer"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Itération pré-soumission sur le banc d'essai local (D42). Verdict + métriques complets. Quota par invocation. Pass local ≠ acceptation.",
       "params": {
         "source": { "type": "string", "required": true },
@@ -167,6 +176,7 @@
     {
       "name": "events_poll",
       "roles": ["proposer", "arbiter"],
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
       "summary": "Resynchronisation en cours de tâche sur le journal métier (Q-E06).",
       "params": {
         "cursor": { "type": "integer", "required": true, "doc": "seq du journal métier hôte (D19)" }
@@ -177,6 +187,7 @@
     {
       "name": "screenshot",
       "roles": ["proposer", "arbiter"],
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Capture de l'écran de jeu à la demande (D22). Plafond par requête via #define.",
       "params": {
         "view": { "type": "string", "required": false, "doc": "vue ciblée (défaut : écran de jeu)" }
@@ -188,6 +199,7 @@
     {
       "name": "arbiter_verdict",
       "roles": ["arbiter"],
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
       "summary": "Rendu du verdict d'une proposition. TOKEN ARBITRE UNIQUEMENT.",
       "params": {
         "proposalId": { "type": "string", "required": true },

@@ -564,6 +564,7 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     // être attribué au nouveau process (faux « Prêt » au challenge C6,
     // invocationCompleted pollué par les runs passés).
     a->outputBuf.clear();
+    a->stdoutBuf.clear();
 
     // Claude reçoit un fichier MCP temporaire à permissions restreintes.
     // Codex reçoit l'URL via overrides TOML et lit le secret depuis une variable
@@ -761,7 +762,7 @@ void AiProcessSupervisor::onFinished(Agent *a, int exitCode, int exitStatus)
     if (a->invocationTimer) a->invocationTimer->stop();
 
     const bool crashed = (exitStatus == kCrashExit);
-    const QString output = QString::fromUtf8(a->outputBuf);
+    const QString responseOutput = QString::fromUtf8(a->stdoutBuf);
 
     emit logMessage(QStringLiteral(
                         "[AiSupervisor] %1 terminé : code=%2, statut=%3, sortie=%4 octets")
@@ -782,13 +783,13 @@ void AiProcessSupervisor::onFinished(Agent *a, int exitCode, int exitStatus)
     // C6 — un challenge d'arbitre en cours court-circuite la politique normale
     // (invocation/restart) : le résultat est décidé par la sortie du one-shot.
     if (a->handshakePhase == HsInProgress) {
-        finishArbiterHandshake(a, output, crashed);
+        finishArbiterHandshake(a, responseOutput, crashed);
         return;
     }
 
     if (a->oneShot && !crashed && exitCode == 0) {
         // Invocation terminée normalement.
-        emit invocationCompleted(a->role, exitCode, output);
+        emit invocationCompleted(a->role, exitCode, responseOutput);
         a->intentionalStop = false;
         setState(a, Stopped);
         return;
@@ -866,6 +867,11 @@ void AiProcessSupervisor::appendOutput(Agent *a, const QByteArray &data, bool is
     // Anneau : on ne conserve que la fin (les derniers octets).
     if (a->outputBuf.size() > MEOW_AI_OUTPUT_BUFFER_BYTES)
         a->outputBuf = a->outputBuf.right(MEOW_AI_OUTPUT_BUFFER_BYTES);
+    if (!isError) {
+        a->stdoutBuf.append(data);
+        if (a->stdoutBuf.size() > MEOW_AI_OUTPUT_BUFFER_BYTES)
+            a->stdoutBuf = a->stdoutBuf.right(MEOW_AI_OUTPUT_BUFFER_BYTES);
+    }
     emit outputReceived(a->role, QString::fromUtf8(data), isError);
 }
 

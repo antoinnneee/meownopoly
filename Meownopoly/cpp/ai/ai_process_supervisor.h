@@ -266,7 +266,8 @@ private:
         int invocationTimeoutMs = 0;
         QTimer *startupTimer = nullptr;   // Starting → Failed si non prêt à temps
         QTimer *invocationTimer = nullptr; // borne d'exécution d'une invocation
-        QByteArray outputBuf;             // stdout+stderr entremêlés, borné
+        QByteArray outputBuf;             // stdout+stderr entremêlés, diagnostic borné
+        QByteArray stdoutBuf;             // réponse agent seule, sans diagnostics CLI
         QString lastError;
         QString mcpConfigPath;            // fichier temporaire (token) à purger
         QVariantMap lastOpts;             // pour redémarrer à l'identique

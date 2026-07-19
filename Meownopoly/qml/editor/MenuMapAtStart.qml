@@ -288,7 +288,10 @@ MouseArea {
                                 decimals: 0
 
                                 onValueChanged: {
-                                    logic.mapInfo.backgroundTileSize = value
+                                    // Le Slider peut émettre pendant la création
+                                    // du composant, avant l'injection de `logic`.
+                                    if (root.logic && root.logic.mapInfo)
+                                        root.logic.mapInfo.backgroundTileSize = value
                                     newMapInfo.backgroundTileSize = value
                                 }
                             }

@@ -24,6 +24,10 @@ La configuration de modèle est persistée dans `QSettings/AI/ModelConfig` et
 transmise à l'éditeur sans token. Le drawer récupère directement auprès de la
 passerelle locale l'URL et le token éphémère du rôle proposant.
 
+Pour le développement, lancer l'application avec `--ai-chat-errors` affiche
+dans le drawer un badge `DEV · stderr` et regroupe les sorties d'erreur du CLI
+dans des messages `🛠 Diagnostic CLI`. Le flag est désactivé par défaut.
+
 ## 1. Rôle
 
 L'adaptateur d'agents est le composant par lequel le joueur **entre** dans la
@@ -65,6 +69,14 @@ responsabilités liées :
 - Codex reçoit les clés TOML `mcp_servers.meownopoly.*` via `-c`; son token est
   lu depuis `MEOW_AI_MCP_BEARER_TOKEN`. Le faux appel historique
   `codex exec --config <json>` a été supprimé (`--config` attend `clé=valeur`).
+- Les descripteurs `tools/list` portent les annotations MCP 2025-06-18
+  (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`). Elles
+  sont obligatoires pour Codex en `exec` non interactif : sans annotations,
+  Codex 0.144.5 considère l'appel potentiellement destructif et l'annule avant
+  d'envoyer `tools/call` (`user cancelled MCP tool call`).
+- `state_query(asset_categories)` puis `state_query(assets,
+  {category,type})` exposent le catalogue de l'éditeur avant un
+  `editor_place(kind=asset)` ; l'agent ne doit jamais deviner un `assetId`.
 
 ### 2.3 Handshake & challenge de l'arbitre (D24/D31)
 - Avant d'ouvrir le mode IA : handshake de rôle (l'agent `arbiter` répond et
@@ -78,6 +90,9 @@ responsabilités liées :
 
 ### 2.4 Tchat ingame
 - Une invocation = un tour de tchat (modèle d'événements [doc 02](./02_CANAL_IA.md) §4).
+- Le tchat affiche uniquement stdout (réponse finale de l'agent) ; stderr reste
+  conservé dans `recentOutput` pour le diagnostic CLI/MCP, afin de ne pas
+  montrer les en-têtes et avertissements internes Codex au joueur.
 - Affiche : réponses de l'IA, verdicts (`reasons[audience=player]`, [doc 13](./13_ENVELOPPE_PROPOSITION.md) §4),
   progression des propositions, erreurs actionnables.
 - Information « captures d'écran actives » affichée une fois au lancement du

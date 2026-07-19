@@ -41,6 +41,14 @@ Drawer {
     // endpoint MCP loopback D21, pré-prompt skill D17…).
     property var invocationOpts: ({})
 
+    // Flag développeur opt-in : `Meownopoly.exe --ai-chat-errors` affiche les
+    // sorties stderr du CLI dans ce fil. Désactivé par défaut pour ne pas
+    // exposer de diagnostics techniques aux joueurs.
+    property bool showDeveloperErrors: {
+        const args = Qt.application.arguments || []
+        return args.indexOf("--ai-chat-errors") >= 0
+    }
+
     // Même stockage que le menu du lobby IA : le modèle choisi avant la
     // partie devient le défaut effectif du tchat, sauf override explicite de
     // l'intégrateur dans invocationOpts.
@@ -67,6 +75,7 @@ Drawer {
     // Bandeau d'information « captures d'écran actives » (D22) + prérequis
     // compte/CLI (doc 00 §8), affiché une fois au lancement du mode IA.
     property bool _showCaptureNotice: true
+    property string _developerErrorBuffer: ""
     // Modèle de conversation : tableau JS (pas ListModel) pour que
     // ChatMessageDelegate reçoive un `modelData` objet (mêmes champs que les
     // messages du chat multijoueur : sender/senderNickname/text/timestamp…).
@@ -90,6 +99,20 @@ Drawer {
     // Message système (erreurs actionnables, prérequis).
     function pushSystem(text) {
         appendEntry("ai", "🐾 Système", text, "system")
+    }
+
+    function _appendDeveloperError(chunk) {
+        if (!aiDrawer.showDeveloperErrors || !chunk) return
+        aiDrawer._developerErrorBuffer += chunk
+        if (aiDrawer._developerErrorBuffer.length > 8000)
+            aiDrawer._developerErrorBuffer = aiDrawer._developerErrorBuffer.slice(-8000)
+    }
+
+    function _flushDeveloperErrors() {
+        const details = aiDrawer._developerErrorBuffer.trim()
+        aiDrawer._developerErrorBuffer = ""
+        if (aiDrawer.showDeveloperErrors && details.length > 0)
+            appendEntry("ai", "🛠 Diagnostic CLI", details, "system")
     }
 
     // — Helpers internes —
@@ -178,6 +201,7 @@ Drawer {
             return playerRequest
         return "Tu es l'assistant proposant de Meownopoly, actuellement dans l'éditeur de carte. "
              + "Utilise les outils du serveur MCP meownopoly pour inspecter l'état courant et réaliser les modifications demandées. "
+             + "Pour poser une décoration, découvre d'abord les catégories avec state_query(what=asset_categories), puis les assets avec state_query(what=assets, filter={category,type}), et utilise exactement l'id retourné dans editor_place. "
              + "Ne prétends jamais avoir modifié la carte sans appel d'outil réussi. "
              + "Si une action doit être soumise à l'arbitre, utilise le flux de proposition exposé par les outils. "
              + "Réponds ensuite en français avec un résumé bref et concret.\n\n"
@@ -192,6 +216,7 @@ Drawer {
         if (text.length === 0 || aiDrawer._invocationPending) return
         appendEntry(aiDrawer.playerId, aiDrawer.playerNickname, text, "text")
         aiDrawer._invocationPending = true
+        aiDrawer._developerErrorBuffer = ""
 
         // Option prioritaire : agent persistant déjà lancé → pousser le tour sur
         // son stdin. Sinon, invocation one-shot avec le prompt.
@@ -223,6 +248,7 @@ Drawer {
         function onInvocationCompleted(role, exitCode, output) {
             if (role !== aiDrawer.aiRole) return
             aiDrawer._invocationPending = false
+            aiDrawer._flushDeveloperErrors()
             const verdict = aiDrawer._extractVerdict(output)
             if (verdict) {
                 const playerReason = (verdict.reasons && verdict.reasons.player)
@@ -244,7 +270,14 @@ Drawer {
         function onAgentFailed(role, reason) {
             if (role !== aiDrawer.aiRole || !aiDrawer._invocationPending) return
             aiDrawer._invocationPending = false
+            aiDrawer._flushDeveloperErrors()
             aiDrawer.pushSystem("L'IA a échoué" + (reason && reason.length > 0 ? " : " + reason : "."))
+        }
+
+        function onOutputReceived(role, chunk, isError) {
+            if (role !== aiDrawer.aiRole || !aiDrawer._invocationPending || !isError)
+                return
+            aiDrawer._appendDeveloperError(chunk)
         }
     }
 
@@ -276,6 +309,25 @@ Drawer {
                     font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                     Layout.fillWidth: true
+                }
+
+                Rectangle {
+                    visible: aiDrawer.showDeveloperErrors
+                    Layout.preferredWidth: devLabel.implicitWidth + 2 * Theme.spacingS
+                    Layout.preferredHeight: devLabel.implicitHeight + 2 * Theme.spacingXXS
+                    radius: Theme.radiusS
+                    color: Theme.warningBg
+                    border.color: Theme.warningBorder
+                    border.width: 1
+
+                    Text {
+                        id: devLabel
+                        anchors.centerIn: parent
+                        text: "DEV · stderr"
+                        color: Theme.warningTitle
+                        font.pixelSize: Theme.fontSizeTiny
+                        font.bold: true
+                    }
                 }
 
                 // Pastille d'état de l'agent (Prêt / en test / erreur).
@@ -529,6 +581,7 @@ Drawer {
 
                     TextField {
                         id: inputField
+                        objectName: "aiProposerInput"
                         anchors.fill: parent
                         anchors.margins: Theme.spacingXS
                         enabled: !aiDrawer._invocationPending
@@ -573,6 +626,7 @@ Drawer {
 
                     MouseArea {
                         id: sendBtnArea
+                        objectName: "aiProposerSendButton"
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {

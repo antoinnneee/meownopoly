@@ -159,11 +159,19 @@ private:
         const char *name;
         bool proposer; // exposé au token proposer ?
         bool arbiter;  // exposé au token arbiter ?
+        // Annotations MCP 2025-06-18. Codex non interactif les utilise pour
+        // décider si un appel peut partir sans surface d'approbation. Les omettre
+        // fait traiter un tool comme potentiellement destructif et l'appel est
+        // annulé avant même d'atteindre la passerelle.
+        bool readOnly;
+        bool destructive;
+        bool idempotent;
+        bool openWorld;
     };
     static const QVector<ToolDef> &toolTable();
     static bool toolExists(const QString &name);
     static bool toolAllowedForRole(const QString &name, Role role);
-    /// Descripteur MCP { name, description, inputSchema } d'un tool du manifeste.
+    /// Descripteur MCP { name, description, inputSchema, annotations }.
     static QJsonObject toolDescriptor(const QString &name);
 
     // — Dispatch d'un appel de tool vers les hooks éditeur (C3) —
