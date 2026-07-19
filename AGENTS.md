@@ -150,6 +150,7 @@ No automated test runner is configured. Manual testing via the executable.
 - Use `root.` prefix in children to avoid binding ambiguity
 - Use `const`/`let` (not `var`) in JS functions
 - Reusable components in `ui_item/`, board elements in `meowComponent/`, logic in `board/logic/` or `editor/logic/`
+- **Contrôles UI existants d'abord** : avant d'utiliser un contrôle Qt Quick Controls générique (`Button`, `ComboBox`, `TextField`, `TextArea`, etc.), vérifier `qml/ui_item/` et employer son équivalent Meownopoly (`MeowButton`, `MeowComboBox`, `MeowTextField`, `MeowTextArea`, etc.) lorsqu'il existe.
 - Base types prefixed `Base_` (e.g., `Base_Board`, `Base_logic`)
 
 ## Directory Layout

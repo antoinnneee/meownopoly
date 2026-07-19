@@ -32,6 +32,7 @@ QtObject {
     readonly property int fontSizeHeading: px(20)
     readonly property int fontSizeDisplay: px(24)
     readonly property int fontSizeHero:    px(32)
+    readonly property string fontFamilyMonospace: "monospace"
 
     // ── Espacements (spacing / margins / paddings) ───────────────
     readonly property int spacingXXS:  px(2)

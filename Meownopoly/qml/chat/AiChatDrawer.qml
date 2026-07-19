@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtCore
 import Meownopoly.Account 1.0
 import AiSupervisor 1.0
 import "."
@@ -39,6 +40,20 @@ Drawer {
     // en clair dans l'UI). Fournies par l'hôte du mode IA (budget D10, token D20,
     // endpoint MCP loopback D21, pré-prompt skill D17…).
     property var invocationOpts: ({})
+
+    // Même stockage que le menu du lobby IA : le modèle choisi avant la
+    // partie devient le défaut effectif du tchat, sauf override explicite de
+    // l'intégrateur dans invocationOpts.
+    Settings {
+        id: aiModelSettings
+        category: "AI/ModelConfig"
+        property int arbiterAdapter: AiProcessSupervisor.ClaudeCli
+        property string arbiterProgram: "claude"
+        property string arbiterModel: ""
+        property int proposerAdapter: AiProcessSupervisor.ClaudeCli
+        property string proposerProgram: "claude"
+        property string proposerModel: ""
+    }
 
     // Identité locale (utilisée par ChatMessageDelegate pour distinguer nos
     // bulles de celles de l'IA).
@@ -80,6 +95,33 @@ Drawer {
     // — Helpers internes —
     function _roleLabel(role) {
         return role === AiProcessSupervisor.Arbiter ? "Arbitre" : "Assistant IA"
+    }
+
+    function _configuredInvocationOpts() {
+        const arbiter = aiDrawer.aiRole === AiProcessSupervisor.Arbiter
+        const adapter = arbiter ? aiModelSettings.arbiterAdapter
+                                : aiModelSettings.proposerAdapter
+        const program = arbiter ? aiModelSettings.arbiterProgram
+                                : aiModelSettings.proposerProgram
+        const model = arbiter ? aiModelSettings.arbiterModel
+                              : aiModelSettings.proposerModel
+        const opts = {
+            "adapter": adapter,
+            "program": program.length > 0
+                     ? program
+                     : (adapter === AiProcessSupervisor.Codex ? "codex" : "claude")
+        }
+        if (model.length > 0)
+            opts["model"] = model
+
+        const port = AiProcessSupervisor.gatewayPort()
+        const token = arbiter ? AiProcessSupervisor.gatewayArbiterToken()
+                              : AiProcessSupervisor.gatewayProposerToken()
+        if (port > 0)
+            opts["gatewayUrl"] = "http://127.0.0.1:" + port + "/mcp"
+        if (token.length > 0)
+            opts["token"] = token
+        return Object.assign(opts, aiDrawer.invocationOpts)
     }
 
     function appendEntry(sender, nickname, text, kind) {
@@ -146,7 +188,8 @@ Drawer {
             AiProcessSupervisor.sendInput(aiDrawer.aiRole, text)
             return
         }
-        const opts = Object.assign({}, aiDrawer.invocationOpts, { oneShot: true, prompt: text })
+        const opts = Object.assign(aiDrawer._configuredInvocationOpts(),
+                                   { oneShot: true, prompt: text })
         const ok = AiProcessSupervisor.startAgent(aiDrawer.aiRole, opts)
         if (!ok) {
             aiDrawer._invocationPending = false

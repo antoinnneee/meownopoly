@@ -8,6 +8,7 @@ import "launcher/"
 import "editor"
 import "account/"
 import "multiplayer/"
+import ui_item
 
 import QtQuick.Window
 import Qt.labs.platform
@@ -123,8 +124,85 @@ ApplicationWindow {
                 stackView.push(multiplayerLobby)
             }
 
+            onAiHostLobbyRequested: {
+                stackView.push(aiHostLobbyPage)
+            }
+
             onCatwayTestRequested: {
                 stackView.push(catwayTest)
+            }
+        }
+    }
+
+    Component {
+        id: aiHostLobbyPage
+
+        Rectangle {
+            id: aiHostPage
+            objectName: "aiHostLobbyPage"
+            color: Theme.background
+
+            MeowButton {
+                id: aiHostBackButton
+                objectName: "aiHostLobbyBackButton"
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    margins: Theme.spacingXXL
+                }
+                variant: "ghost"
+                glossy: false
+                hoverZoom: false
+                iconText: "←"
+                text: qsTr("Retour")
+                onClicked: stackView.pop()
+            }
+
+            Text {
+                id: aiHostTitle
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    topMargin: Theme.spacingXXL
+                }
+                text: qsTr("Héberger une partie IA")
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeDisplay
+                font.bold: true
+            }
+
+            ScrollView {
+                id: aiHostScroll
+                anchors {
+                    top: aiHostTitle.bottom
+                    bottom: parent.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: Theme.spacingL
+                }
+                clip: true
+
+                Item {
+                    width: aiHostScroll.availableWidth
+                    height: Math.max(aiHostScroll.availableHeight,
+                                     aiHostLobby.implicitHeight + 2 * Theme.spacingXXL)
+
+                    AiHostLobby {
+                        id: aiHostLobby
+                        objectName: "aiHostLobby"
+                        anchors.centerIn: parent
+                        width: Math.min(implicitWidth,
+                                        parent.width - 2 * Theme.spacingXXL)
+                        height: implicitHeight
+
+                        onHostRequested: {
+                            // Le handshake reste latché dans le singleton pendant la
+                            // création de session. replace() évite qu'un retour depuis
+                            // le lobby multijoueur ramène sur le préflight IA.
+                            stackView.replace(multiplayerLobby)
+                        }
+                    }
+                }
             }
         }
     }

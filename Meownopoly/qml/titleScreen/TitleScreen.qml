@@ -22,6 +22,7 @@ Rectangle {
     signal launcherRequested(); // Add signal for launcher
     signal assetManagerTestRequested(); // Add signal for asset manager test
     signal multiplayerLobbyRequested(); // Signal for multiplayer lobby
+    signal aiHostLobbyRequested(); // Signal for AI host preflight lobby
     signal catwayTestRequested(); // Signal for Catway test interface
 
 
@@ -109,17 +110,34 @@ Rectangle {
             height: 20
         }
 
-        MeowButton {
-            id: startGameButton
-            objectName: "startGameButton"
-            text: "Start Game"
-            Layout.preferredWidth: 200
-            Layout.preferredHeight: 50
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Theme.spacingL
 
-            baseColor: Theme.success
+            MeowButton {
+                id: startGameButton
+                objectName: "startGameButton"
+                text: "Start Game"
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 50
 
-            onClicked: {
-                root.multiplayerLobbyRequested()  // Emit the signal for multiplayer lobby
+                baseColor: Theme.success
+
+                onClicked: {
+                    root.multiplayerLobbyRequested()  // Emit the signal for multiplayer lobby
+                }
+            }
+
+            MeowButton {
+                id: aiHostLobbyButton
+                objectName: "aiHostLobbyButton"
+                text: qsTr("Partie IA")
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 50
+
+                baseColor: Theme.accent
+
+                onClicked: root.aiHostLobbyRequested()
             }
         }
 

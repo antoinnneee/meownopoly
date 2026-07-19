@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtCore
 import theme
 import AiSupervisor
+import ui_item
 
 /*
  * AiHostLobby.qml — Lobby « Héberger une partie IA » (C6, D24/D31).
@@ -34,10 +36,40 @@ Item {
     // Lance-t-on un test automatique dès l'affichage du lobby ? (D31)
     property bool autoTestOnOpen: true
 
+    // Journal local borné du préflight. Les tokens sont masqués avant affichage.
+    property string _diagnosticLog: ""
+    property bool _diagnosticExpanded: false
+    property bool _configExpanded: false
+
+    readonly property var _claudeModels: [
+        { "label": qsTr("Par défaut (Claude CLI)"), "value": "" },
+        { "label": "Sonnet", "value": "sonnet" },
+        { "label": "Opus", "value": "opus" },
+        { "label": "Fable", "value": "fable" }
+    ]
+    readonly property var _codexModels: [
+        { "label": qsTr("Par défaut (Codex CLI)"), "value": "" },
+        { "label": "GPT-5.6-Sol", "value": "gpt-5.6-sol" },
+        { "label": "GPT-5.6-Terra", "value": "gpt-5.6-terra" },
+        { "label": "GPT-5.6-Luna", "value": "gpt-5.6-luna" },
+        { "label": "GPT-5.5", "value": "gpt-5.5" }
+    ]
+
+    Settings {
+        id: aiModelSettings
+        category: "AI/ModelConfig"
+        property int arbiterAdapter: AiProcessSupervisor.ClaudeCli
+        property string arbiterProgram: "claude"
+        property string arbiterModel: ""
+        property int proposerAdapter: AiProcessSupervisor.ClaudeCli
+        property string proposerProgram: "claude"
+        property string proposerModel: ""
+    }
+
     // Émis quand le joueur clique « Héberger une partie IA » (état Prêt requis).
     signal hostRequested()
 
-    implicitWidth: 420
+    implicitWidth: Theme.px(620)
     implicitHeight: content.implicitHeight + 2 * Theme.spacingXL
 
     // Résout l'état lobby courant de l'arbitre en (couleur, libellé).
@@ -52,6 +84,50 @@ Item {
         : _lobby === AiProcessSupervisor.Testing ? qsTr("Test en cours…")
         : _lobby === AiProcessSupervisor.Erreur  ? qsTr("Erreur")
         : qsTr("Absent")
+
+    function _modelsFor(adapter) {
+        return adapter === AiProcessSupervisor.Codex
+                ? root._codexModels : root._claudeModels
+    }
+
+    function _defaultProgram(adapter) {
+        return adapter === AiProcessSupervisor.Codex ? "codex" : "claude"
+    }
+
+    function _modelIndex(modelList, value) {
+        for (let i = 0; i < modelList.length; ++i) {
+            if (modelList[i].value === value)
+                return i
+        }
+        return 0
+    }
+
+    function _configuredOptions(role) {
+        const arbiter = role === AiProcessSupervisor.Arbiter
+        const adapter = arbiter ? aiModelSettings.arbiterAdapter
+                                : aiModelSettings.proposerAdapter
+        const program = arbiter ? aiModelSettings.arbiterProgram
+                                : aiModelSettings.proposerProgram
+        const model = arbiter ? aiModelSettings.arbiterModel
+                              : aiModelSettings.proposerModel
+        const opts = {
+            "adapter": adapter,
+            "program": program.length > 0 ? program : root._defaultProgram(adapter)
+        }
+        if (model.length > 0)
+            opts["model"] = model
+
+        const port = AiProcessSupervisor.gatewayPort()
+        const token = arbiter ? AiProcessSupervisor.gatewayArbiterToken()
+                              : AiProcessSupervisor.gatewayProposerToken()
+        if (port > 0)
+            opts["gatewayUrl"] = "http://127.0.0.1:" + port + "/mcp"
+        if (token.length > 0)
+            opts["token"] = token
+
+        // Les options fournies par l'intégrateur restent prioritaires.
+        return Object.assign(opts, root.handshakeOpts)
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -106,6 +182,163 @@ Item {
                 }
             }
 
+            MeowButton {
+                Layout.fillWidth: true
+                variant: "secondary"
+                glossy: false
+                hoverZoom: false
+                text: root._configExpanded
+                      ? qsTr("Masquer la configuration des modèles")
+                      : qsTr("Configurer les modèles utilisés")
+                onClicked: root._configExpanded = !root._configExpanded
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: modelConfigContent.implicitHeight
+                                        + 2 * Theme.spacingL
+                visible: root._configExpanded
+                color: Theme.surfaceAlt
+                radius: Theme.radiusM
+                border.color: Theme.border
+                border.width: 1
+
+                GridLayout {
+                    id: modelConfigContent
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: Theme.spacingL
+                    }
+                    columns: 3
+                    columnSpacing: Theme.spacingM
+                    rowSpacing: Theme.spacingS
+
+                    Text {
+                        text: qsTr("Rôle")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
+                    Text {
+                        text: qsTr("Fournisseur")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
+                    Text {
+                        text: qsTr("Modèle")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: qsTr("Arbitre")
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeBody
+                        font.bold: true
+                    }
+                    MeowComboBox {
+                        id: arbiterAdapterCombo
+                        objectName: "aiArbiterAdapterCombo"
+                        Layout.preferredWidth: Theme.px(145)
+                        model: ["Claude CLI", "Codex"]
+                        currentIndex: aiModelSettings.arbiterAdapter
+                        onActivated: function(index) {
+                            aiModelSettings.arbiterAdapter = index
+                            aiModelSettings.arbiterProgram = root._defaultProgram(index)
+                            aiModelSettings.arbiterModel = ""
+                        }
+                    }
+                    MeowComboBox {
+                        id: arbiterModelCombo
+                        objectName: "aiArbiterModelCombo"
+                        Layout.fillWidth: true
+                        model: root._modelsFor(aiModelSettings.arbiterAdapter)
+                        textRole: "label"
+                        valueRole: "value"
+                        currentIndex: root._modelIndex(model, aiModelSettings.arbiterModel)
+                        onActivated: aiModelSettings.arbiterModel = currentValue
+                    }
+
+                    Text {
+                        text: qsTr("Exécutable")
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
+                    MeowTextField {
+                        objectName: "aiArbiterProgramField"
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        text: aiModelSettings.arbiterProgram
+                        placeholderText: root._defaultProgram(aiModelSettings.arbiterAdapter)
+                        onEditingFinished: aiModelSettings.arbiterProgram = text.trim()
+                    }
+
+                    Rectangle {
+                        Layout.columnSpan: 3
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Theme.px(1)
+                        color: Theme.border
+                    }
+
+                    Text {
+                        text: qsTr("Assistant")
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeBody
+                        font.bold: true
+                    }
+                    MeowComboBox {
+                        id: proposerAdapterCombo
+                        objectName: "aiProposerAdapterCombo"
+                        Layout.preferredWidth: Theme.px(145)
+                        model: ["Claude CLI", "Codex"]
+                        currentIndex: aiModelSettings.proposerAdapter
+                        onActivated: function(index) {
+                            aiModelSettings.proposerAdapter = index
+                            aiModelSettings.proposerProgram = root._defaultProgram(index)
+                            aiModelSettings.proposerModel = ""
+                        }
+                    }
+                    MeowComboBox {
+                        id: proposerModelCombo
+                        objectName: "aiProposerModelCombo"
+                        Layout.fillWidth: true
+                        model: root._modelsFor(aiModelSettings.proposerAdapter)
+                        textRole: "label"
+                        valueRole: "value"
+                        currentIndex: root._modelIndex(model, aiModelSettings.proposerModel)
+                        onActivated: aiModelSettings.proposerModel = currentValue
+                    }
+
+                    Text {
+                        text: qsTr("Exécutable")
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
+                    MeowTextField {
+                        objectName: "aiProposerProgramField"
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        text: aiModelSettings.proposerProgram
+                        placeholderText: root._defaultProgram(aiModelSettings.proposerAdapter)
+                        onEditingFinished: aiModelSettings.proposerProgram = text.trim()
+                    }
+
+                    Text {
+                        Layout.columnSpan: 3
+                        Layout.fillWidth: true
+                        text: qsTr("L’arbitre est utilisé pour le test ci-dessous. "
+                                   + "L’assistant sera utilisé par le tchat IA en partie.")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeCaption
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+
             // — Motif actionnable en cas d'erreur (D31 : pas de modale) —
             Text {
                 Layout.fillWidth: true
@@ -132,7 +365,10 @@ Item {
                 Layout.fillWidth: true
                 spacing: Theme.spacingM
 
-                Button {
+                MeowButton {
+                    variant: "secondary"
+                    glossy: false
+                    hoverZoom: false
                     text: root._lobby === AiProcessSupervisor.Testing
                           ? qsTr("Test en cours…")
                           : qsTr("Tester l'arbitre")
@@ -142,7 +378,9 @@ Item {
 
                 Item { Layout.fillWidth: true }
 
-                Button {
+                MeowButton {
+                    variant: "success"
+                    hoverZoom: false
                     text: qsTr("Héberger une partie IA")
                     // Grisé tant que l'arbitre n'est pas Prêt (D31).
                     enabled: AiProcessSupervisor.arbiterReady
@@ -162,12 +400,92 @@ Item {
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.fontSizeCaption
             }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.spacingM
+
+                MeowButton {
+                    variant: "ghost"
+                    glossy: false
+                    hoverZoom: false
+                    text: root._diagnosticExpanded
+                          ? qsTr("Masquer les logs") : qsTr("Afficher les logs")
+                    onClicked: root._diagnosticExpanded = !root._diagnosticExpanded
+                }
+                Item { Layout.fillWidth: true }
+                MeowButton {
+                    visible: root._diagnosticExpanded
+                    variant: "ghost"
+                    glossy: false
+                    hoverZoom: false
+                    text: qsTr("Effacer")
+                    onClicked: root._diagnosticLog = ""
+                }
+            }
+
+            MeowTextArea {
+                id: diagnosticArea
+                objectName: "aiHostDiagnosticLog"
+                Layout.fillWidth: true
+                Layout.preferredHeight: root._diagnosticExpanded ? Theme.px(180) : 0
+                visible: root._diagnosticExpanded
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.WrapAnywhere
+                text: root._diagnosticLog.length > 0
+                      ? root._diagnosticLog : qsTr("Aucun événement enregistré.")
+                color: Theme.textSecondary
+                font.family: Theme.fontFamilyMonospace
+                font.pixelSize: Theme.fontSizeCaption
+            }
         }
+    }
+
+    function _sanitize(message) {
+        let safe = String(message)
+        const proposerToken = AiProcessSupervisor.gatewayProposerToken()
+        const arbiterToken = AiProcessSupervisor.gatewayArbiterToken()
+        if (proposerToken.length > 0)
+            safe = safe.split(proposerToken).join("[TOKEN MASQUÉ]")
+        if (arbiterToken.length > 0)
+            safe = safe.split(arbiterToken).join("[TOKEN MASQUÉ]")
+        return safe
+    }
+
+    function _appendDiagnostic(message) {
+        const clean = root._sanitize(message).trim()
+        if (clean.length === 0)
+            return
+        const now = new Date()
+        const hh = now.getHours().toString().padStart(2, "0")
+        const mm = now.getMinutes().toString().padStart(2, "0")
+        const ss = now.getSeconds().toString().padStart(2, "0")
+        const line = "[" + hh + ":" + mm + ":" + ss + "] " + clean
+        const combined = root._diagnosticLog.length > 0
+                       ? root._diagnosticLog + "\n" + line : line
+        root._diagnosticLog = combined.length > 12000
+                            ? combined.slice(combined.length - 12000) : combined
+        diagnosticArea.cursorPosition = diagnosticArea.length
     }
 
     /// Lance (ou relance) le handshake/challenge de l'arbitre.
     function startTest() {
-        AiProcessSupervisor.testArbiter(root.handshakeOpts)
+        root._diagnosticLog = ""
+        const opts = root._configuredOptions(AiProcessSupervisor.Arbiter)
+        root._appendDiagnostic(
+            "Passerelle MCP : présente=" + AiProcessSupervisor.gatewayPresent()
+            + ", écoute=" + AiProcessSupervisor.gatewayListening()
+            + ", HTTP=" + AiProcessSupervisor.gatewayHttpAvailable()
+            + ", port=" + AiProcessSupervisor.gatewayPort())
+        root._appendDiagnostic(
+            "Arbitre : programme=" + opts.program
+            + ", adaptateur=" + (opts.adapter === AiProcessSupervisor.Codex
+                                  ? "Codex" : "Claude")
+            + ", modèle=" + (opts.model || "défaut")
+            + ", token=" + (opts.token ? "présent" : "absent")
+            + ", gatewayUrl=" + (opts.gatewayUrl ? "présente" : "absente"))
+        AiProcessSupervisor.testArbiter(opts)
     }
 
     // Test automatique à l'ouverture du lobby (D31).
@@ -180,9 +498,32 @@ Item {
     // Journalise l'issue du challenge pour diagnostic (optionnel).
     Connections {
         target: AiProcessSupervisor
+        function onLogMessage(message) {
+            root._appendDiagnostic(message)
+            console.log(message)
+        }
+        function onOutputReceived(role, chunk, isError) {
+            if (role !== AiProcessSupervisor.Arbiter)
+                return
+            root._appendDiagnostic((isError ? "stderr | " : "stdout | ") + chunk)
+            if (isError)
+                console.warn("[AiHostLobby][stderr]", root._sanitize(chunk))
+            else
+                console.log("[AiHostLobby][stdout]", root._sanitize(chunk))
+        }
+        function onHandshakeStarted(role) {
+            if (role === AiProcessSupervisor.Arbiter)
+                root._appendDiagnostic("Challenge de l'arbitre démarré.")
+        }
         function onHandshakeCompleted(role, ok, reason) {
-            if (role === AiProcessSupervisor.Arbiter && !ok)
+            if (role !== AiProcessSupervisor.Arbiter)
+                return
+            root._appendDiagnostic(ok ? "Handshake validé."
+                                      : "Handshake refusé : " + reason)
+            if (!ok) {
+                root._diagnosticExpanded = true
                 console.warn("[AiHostLobby] handshake arbitre échoué :", reason)
+            }
         }
     }
 }

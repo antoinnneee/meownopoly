@@ -559,6 +559,20 @@ bool AiProcessSupervisor::launch(Agent *a, const QVariantMap &opts)
     cleanupMcpFileOnly(a);
     a->mcpConfigPath = writeMcpConfigFile(a->role, opts);
 
+    emit logMessage(
+        QStringLiteral("[AiSupervisor] configuration %1 : adaptateur=%2, "
+                       "passerelle=%3, token=%4, configMcp=%5, skill=%6")
+            .arg(roleName(a->role),
+                 adapter == Codex ? QStringLiteral("codex") : QStringLiteral("claude"),
+                 gatewayUrlFromOpts(opts).isEmpty() ? QStringLiteral("absente")
+                                                    : QStringLiteral("configurée"),
+                 opts.value(QStringLiteral("token")).toString().isEmpty()
+                     ? QStringLiteral("absent") : QStringLiteral("présent"),
+                 a->mcpConfigPath.isEmpty() ? QStringLiteral("absente")
+                                            : QStringLiteral("créée"),
+                 opts.value(QStringLiteral("skillPath")).toString().isEmpty()
+                     ? QStringLiteral("absente") : QStringLiteral("présente")));
+
     QStringList args = (adapter == Codex) ? codexArgs(opts, a->mcpConfigPath)
                                           : claudeArgs(opts, a->mcpConfigPath);
 
@@ -685,6 +699,13 @@ void AiProcessSupervisor::onStarted(Agent *a)
 
     setState(a, Ready);
 
+    emit logMessage(QStringLiteral(
+                        "[AiSupervisor] %1 démarré : pid=%2, oneShot=%3, timeout=%4 ms")
+                        .arg(roleName(a->role))
+                        .arg(a->process ? a->process->processId() : 0)
+                        .arg(a->oneShot ? QStringLiteral("oui") : QStringLiteral("non"))
+                        .arg(a->invocationTimeoutMs));
+
     // Prompt initial différé jusqu'ici (canal stdin ouvert).
     const QString prompt = a->lastOpts.value(QStringLiteral("prompt")).toString();
     if (!prompt.isEmpty() && a->process) {
@@ -721,6 +742,13 @@ void AiProcessSupervisor::onFinished(Agent *a, int exitCode, int exitStatus)
 
     const bool crashed = (exitStatus == kCrashExit);
     const QString output = QString::fromUtf8(a->outputBuf);
+
+    emit logMessage(QStringLiteral(
+                        "[AiSupervisor] %1 terminé : code=%2, statut=%3, sortie=%4 octets")
+                        .arg(roleName(a->role))
+                        .arg(exitCode)
+                        .arg(crashed ? QStringLiteral("crash") : QStringLiteral("normal"))
+                        .arg(a->outputBuf.size()));
 
     // Détache le QProcess du runtime avant toute décision de redémarrage.
     QProcess *p = a->process;
@@ -786,8 +814,8 @@ void AiProcessSupervisor::onErrorOccurred(Agent *a, int processError)
                            ? QStringLiteral("binaire introuvable ou non lançable")
                            : QStringLiteral("binaire introuvable ou non lançable : %1")
                                  .arg(nativeError);
-        emit logMessage(QStringLiteral("[AiSupervisor] %1 échec de lancement")
-                            .arg(roleName(a->role)));
+        emit logMessage(QStringLiteral("[AiSupervisor] %1 échec de lancement : %2")
+                            .arg(roleName(a->role), a->lastError));
         // Un challenge d'arbitre qui n'a même pas pu démarrer = Erreur latchée.
         if (a->handshakePhase == HsInProgress) {
             finishArbiterHandshake(a, QString(), /*crashed*/ false);
@@ -979,11 +1007,13 @@ QString AiProcessSupervisor::defaultChallengePrompt()
         "Handshake d'arbitre (challenge). Connecte-toi au serveur MCP fourni "
         "(mcpServers.meownopoly), liste les tools disponibles, puis réponds par "
         "UNE SEULE ligne, sans autre texte, au format exact :\n"
-        "%1{\"role\":\"arbiter\",\"protocolVersion\":\"<version annoncée par le "
-        "serveur MCP>\",\"capabilities\":[<noms des tools que tu vois>]}\n"
-        "N'invente aucune valeur : recopie la version de protocole et les noms de "
-        "tools tels que le serveur MCP te les expose.")
-        .arg(QString::fromLatin1(kHandshakeMarker));
+        "%1{\"role\":\"arbiter\",\"protocolVersion\":\"%2\","
+        "\"capabilities\":[<noms des tools que tu vois>]}\n"
+        "La valeur %2 est la version du canal Meownopoly (et non la version "
+        "du transport MCP). N'invente aucun nom de tool : recopie seulement "
+        "ceux que le serveur MCP expose.")
+        .arg(QString::fromLatin1(kHandshakeMarker),
+             QStringLiteral(MEOW_AI_PROTOCOL_VERSION));
 }
 
 bool AiProcessSupervisor::testArbiter(const QVariantMap &opts)
